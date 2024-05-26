@@ -112,7 +112,7 @@ export const MuiTableNormalOptionsProps: MRT_TableOptions<any> = {
   muiFilterTextFieldProps: MuiFilterTextFieldProps,
   enableColumnResizing: true,
   layoutMode: 'grid',
-  paginationDisplayMode: 'pages',
+  paginationDisplayMode: 'default',
   positionToolbarAlertBanner: 'head-overlay',
   muiPaginationProps: {
     ...MuiTablePaginationProps,
