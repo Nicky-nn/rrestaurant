@@ -11,7 +11,7 @@ const CardRoot = styled(Card)(({ theme }) => ({
     paddingLeft: 1,
     paddingRight: 1,
     paddingTop: 1,
-    paddingBottom: 15,
+    paddingBottom: 25,
   },
   '& .MuiCardContent-root': {
     paddingLeft: 1.5,
