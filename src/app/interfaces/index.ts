@@ -93,6 +93,8 @@ export interface PageInputProps {
 }
 
 export interface PlantillaDetalleExtra {
+  _id: string // identificador primario
+  type: string // HEADER | FOOTER
   title: string
   description: string
   content: string
