@@ -7,7 +7,7 @@ interface CustomProps {
 }
 
 /**
- * @description Realiza un enmascarmiento para registro de un codigo
+ * @description Realiza un enmascaramiento para registro de un codigo
  */
 export const InputCodigoMask = forwardRef<HTMLElement, CustomProps>(
   function InputCodigoMask(props, ref: any) {
@@ -19,7 +19,7 @@ export const InputCodigoMask = forwardRef<HTMLElement, CustomProps>(
         lazy={false}
         inputRef={ref}
         unmask={'typed'}
-        prepare={(s: string) => s.toUpperCase()}
+        prepare={(s: string) => s}
         onAccept={(value: any, mask: any) =>
           onChange({ target: { name: props.name, value } })
         }
