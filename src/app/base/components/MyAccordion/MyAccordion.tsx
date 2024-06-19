@@ -18,6 +18,7 @@ export const MyAccordion = styled((props: AccordionProps) => (
   '&:not(:last-child)': { borderBottom: 0 },
   '&::before': { display: 'none' },
   borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[0],
 }))
 
 /**

@@ -48,7 +48,7 @@ EJEMPLO
 
 type SelectProps<
   Option,
-  IsMulti extends boolean = false,
+  IsMulti extends boolean = true,
   Group extends GroupBase<Option> = GroupBase<Option>,
 > = DefaultProps<Option, IsMulti, Group> & {
   error?: boolean
@@ -64,7 +64,7 @@ type SelectProps<
  */
 const FormSelect = <
   Option,
-  IsMulti extends boolean = false,
+  IsMulti extends boolean = true,
   Group extends GroupBase<Option> = GroupBase<Option>,
 >(
   props: SelectProps<Option, IsMulti, Group>,

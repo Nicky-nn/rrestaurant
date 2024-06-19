@@ -47,7 +47,7 @@ EJEMPLO que reemplaza
 
 type SelectProps<
   Option,
-  IsMulti extends boolean = false,
+  IsMulti extends boolean = true,
   Group extends GroupBase<Option> = GroupBase<Option>,
 > = AsyncProps<Option, IsMulti, Group> & {
   error?: boolean
@@ -63,7 +63,7 @@ type SelectProps<
  */
 const FormAsyncSelect = <
   Option,
-  IsMulti extends boolean = false,
+  IsMulti extends boolean = true,
   Group extends GroupBase<Option> = GroupBase<Option>,
 >(
   props: SelectProps<Option, IsMulti, Group>,
