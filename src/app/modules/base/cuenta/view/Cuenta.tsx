@@ -37,7 +37,7 @@ const Cuenta: FunctionComponent<Props> = (props) => {
     <>
       <SimpleContainer>
         <div className="breadcrumb">
-          <Breadcrumb routeSegments={[{ name: 'Gestión' }]} />
+          <Breadcrumb routeSegments={[{ name: 'Opciones de sistema' }]} />
         </div>
         <Grid container spacing={2} columnSpacing={5}>
           <Grid item sm={4} xs={12}>

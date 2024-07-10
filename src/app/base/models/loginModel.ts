@@ -34,6 +34,8 @@ export interface PerfilProps {
     codigoAmbiente: number
     fechaValidezToken: string
     tienda: string
+    email: string
+    emailFake: string
   }
 }
 
@@ -55,6 +57,8 @@ const mutation = gql`
           codigoModalidad
           codigoAmbiente
           fechaValidezToken
+          email
+          emailFake
         }
         usuario
         razonSocial

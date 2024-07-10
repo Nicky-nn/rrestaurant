@@ -1,4 +1,5 @@
 import {
+  DisplaySettings,
   Menu,
   PowerSettingsNew,
   Settings,
@@ -246,7 +247,13 @@ const Layout1Topbar: FC<any> = () => {
             <StyledItem>
               <Link to={cuentaRouteMap.cuenta}>
                 <Settings> settings </Settings> &nbsp;&nbsp;
-                <Span> Opciones </Span>
+                <Span> Opciones de Sistema </Span>
+              </Link>
+            </StyledItem>
+            <StyledItem>
+              <Link to={cuentaRouteMap.configuracion}>
+                <DisplaySettings> settings </DisplaySettings> &nbsp;&nbsp;
+                <Span> Configuración </Span>
               </Link>
             </StyledItem>
             <StyledItem onClick={() => logout()}>
