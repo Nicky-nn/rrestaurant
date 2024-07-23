@@ -9,6 +9,10 @@ import {
 } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
+/**
+ * @description Espacio de para las acciones de fila
+ * @deprecated
+ */
 export const muiTableApiEstado = ['ANULADO', 'VALIDADA', 'ELABORADO', 'PENDIENTE']
 
 export const tableThemeLigth = 'rgba(254, 254, 254, 1)'
@@ -23,7 +27,7 @@ export type DcdoProps<TData extends MRT_RowData, TValue = unknown> = Partial<{
 export const MuiDisplayColumnDefOptions: DcdoProps<any> = {
   'mrt-row-actions': {
     muiTableHeadCellProps: {
-      align: 'center',
+      align: 'left',
       headers: 'Acciones',
     },
     minSize: 90,
@@ -31,6 +35,22 @@ export const MuiDisplayColumnDefOptions: DcdoProps<any> = {
     grow: true,
   },
 }
+
+/**
+ * @description Custom columns
+ * @param size
+ * @constructor
+ */
+export const MuiDisplayColumnDefOptionsV2 = (size: number = 50): DcdoProps<any> => ({
+  'mrt-row-actions': {
+    muiTableHeadCellProps: {
+      align: 'left',
+      headers: 'Acciones',
+    },
+    size,
+    grow: true,
+  },
+})
 
 /**
  * @description Input para búsquedas

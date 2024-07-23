@@ -10,7 +10,7 @@ const validateGraphQlError = (e: Error): any => {
         parsed.response?.errors[0]?.extensions?.exception?.stacktrace?.join('') || ''
       }</code>`,
       type: parsed.response?.errors[0]?.extensions?.exception?.type || 'BAD_REQUEST',
-      path: parsed.response?.errors[0]?.path[0] || '',
+      path: parsed.response?.errors[0]?.path || '',
     }
   } catch (e: any) {
     return {
