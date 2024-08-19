@@ -16,6 +16,15 @@ const themeOptions: ThemeOptionsProps = {
       fontSize: '14px',
     },
   },
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 640, // 600
+      md: 1000, // 900
+      lg: 1300, // 1200
+      xl: 1650, // 1536
+    },
+  },
   status: {
     danger: red[500],
   },

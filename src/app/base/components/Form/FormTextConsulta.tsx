@@ -1,8 +1,5 @@
-import { AccountCircle, Check, KeyboardArrowRight } from '@mui/icons-material'
-import { InputAdornment, StandardTextFieldProps, styled, TextField } from '@mui/material'
-import React, { FunctionComponent } from 'react'
-
-import { FormTextField } from './index'
+import { StandardTextFieldProps, styled, TextField } from '@mui/material'
+import React from 'react'
 
 interface OwnProps extends StandardTextFieldProps {}
 

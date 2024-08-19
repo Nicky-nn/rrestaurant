@@ -1,5 +1,5 @@
 import { alpha, Box, Menu, MenuItem, styled, ThemeProvider } from '@mui/material'
-import React, { Children, FC, Fragment, ReactElement, useState } from 'react'
+import React, { Children, FC, Fragment, ReactElement, ReactNode, useState } from 'react'
 
 import useSettings from '../../hooks/useSettings'
 
@@ -42,7 +42,7 @@ export const SimpleMenuItem = styled(MenuItem)(({ theme }) => ({
 }))
 
 interface SimpleMenuProps {
-  children: ReactElement | ReactElement[]
+  children: ReactElement | ReactElement[] | ReactNode | ReactNode[]
   menuButton: ReactElement
   shouldCloseOnItemClick?: boolean
   horizontalPosition?: number | 'right' | 'left' | 'center'

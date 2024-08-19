@@ -1,55 +1,58 @@
+// noinspection DuplicatedCode
+
 import { FormControl, FormControlProps, FormHelperText, useTheme } from '@mui/material'
-import { GroupBase } from 'react-select'
-import AsyncSelect from 'react-select/async'
-import { AsyncProps } from 'react-select/dist/declarations/src/useAsync'
+import Select, { GroupBase, Props as DefaultProps } from 'react-select'
 
 import { MyInputLabel } from '../MyInputs/MyInputLabel'
 import { reactSelectStyle } from '../MySelect/ReactSelect'
 
 /*
-EJEMPLO que reemplaza
+EJEMPLO
 <Controller
-    name="cliente"
-    control={control}
-    render={({ field }) => (
-      <FormControl fullWidth error={Boolean(errors.cliente)}>
-        <MyInputLabel shrink>Búsqueda de clientes</MyInputLabel>
-        <AsyncSelect<ClienteProps>
-          {...field}
-          cacheOptions={false}
-          defaultOptions={true}
-          styles={reactSelectStyle(Boolean(errors.cliente))}
-          menuPosition={'fixed'}
-          name="clientes"
-          placeholder={'Seleccione Cliente'}
-          loadOptions={fetchClientes}
-          isClearable={true}
-          value={field.value || null}
-          getOptionValue={(item) => item.codigoCliente}
-          getOptionLabel={(item) =>
-            `${item.numeroDocumento}${item.complemento || ''} - ${item.razonSocial} - ${item.tipoDocumentoIdentidad.descripcion}`
-          }
-          onChange={(cliente: SingleValue<ClienteProps>) => {
-            field.onChange(cliente)
-            setValue('emailCliente', genReplaceEmpty(cliente?.email, ''))
-          }}
-          onBlur={field.onBlur}
-          noOptionsMessage={() =>
-            'Ingrese referencia -> Razon Social, Codigo Cliente, Numero documento'
-          }
-          loadingMessage={() => 'Buscando...'}
-        />
-        <FormHelperText>{errors.cliente?.message}</FormHelperText>
-      </FormControl>
-    )}
-  />
+  control={control}
+  name={'variante.unidadMedida'}
+  render={({ field }) => (
+    <FormControl
+      fullWidth
+      sx={{ mb: 1 }}
+      error={Boolean(errors.variante?.unidadMedida)}
+    >
+      <MyInputLabel shrink>Unidad Medida</MyInputLabel>
+      <Select<SinUnidadMedidaProps>
+        {...field}
+        styles={reactSelectStyle(Boolean(errors.variante?.unidadMedida))}
+        menuPosition={'fixed'}
+        placeholder={'Seleccione la unidad de medida'}
+        value={field.value}
+        onChange={async (unidadMedida: SingleValue<SinUnidadMedidaProps>) => {
+          field.onChange(unidadMedida)
+          setValue(
+            'variantes',
+            variantesWatch.map((vs) => ({
+              ...vs,
+              unidadMedida,
+            })),
+          )
+        }}
+        options={unidadesMedida}
+        getOptionValue={(item) => item.codigoClasificador}
+        getOptionLabel={(item) =>
+          `${item.codigoClasificador} - ${item.descripcion}`
+        }
+      />
+      <FormHelperText>
+        {errors.variante?.unidadMedida?.message}
+      </FormHelperText>
+    </FormControl>
+  )}
+/>
 */
 
 type SelectProps<
   Option,
-  IsMulti extends boolean = false,
+  IsMulti extends boolean = true,
   Group extends GroupBase<Option> = GroupBase<Option>,
-> = AsyncProps<Option, IsMulti, Group> & {
+> = DefaultProps<Option, IsMulti, Group> & {
   error?: boolean
   formHelperText?: string
   inputLabel?: string
@@ -57,13 +60,13 @@ type SelectProps<
 }
 
 /**
- * Componente para realizar el select para formularios
+ * Componente para realizar multiples select para formularios
  * @param props
  * @constructor
  */
-const FormAsyncSelect = <
+const FormMultiSelect = <
   Option,
-  IsMulti extends boolean = false,
+  IsMulti extends boolean = true,
   Group extends GroupBase<Option> = GroupBase<Option>,
 >(
   props: SelectProps<Option, IsMulti, Group>,
@@ -76,7 +79,7 @@ const FormAsyncSelect = <
   return (
     <FormControl error={error || false} {...fc}>
       {inputLabel && <MyInputLabel shrink>{inputLabel}</MyInputLabel>}
-      <AsyncSelect
+      <Select
         menuPosition={'fixed'}
         theme={(theme) => ({
           ...theme,
@@ -85,9 +88,6 @@ const FormAsyncSelect = <
             primary: t.palette.primary.light,
           },
         })}
-        cacheOptions={false}
-        defaultOptions={true}
-        //@ts-ignore
         styles={{
           ...reactSelectStyle(error || false),
           menuPortal: (base) => ({
@@ -120,4 +120,4 @@ const FormAsyncSelect = <
   )
 }
 
-export default FormAsyncSelect
+export default FormMultiSelect

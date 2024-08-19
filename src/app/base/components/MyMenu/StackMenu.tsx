@@ -1,8 +1,8 @@
 import { alpha, Paper, Stack, StackProps } from '@mui/material'
-import React, { FC, ReactElement } from 'react'
+import React, { FC, ReactElement, ReactNode } from 'react'
 
 interface OwnProps {
-  children?: ReactElement | ReactElement[]
+  children?: ReactElement | ReactElement[] | ReactNode | ReactNode[]
   /**
    * menu fixado, se mueve con el cursor del mause
    */
