@@ -8,6 +8,13 @@ const pwaOptions = (env: any): Partial<VitePWAOptions> => ({
   includeAssets: [`${env.ISI_FAVICON}`],
   workbox: {
     globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,webp}'],
+    globIgnores: [
+      'node_modules/**/*',
+      'sw.js',
+      'workbox-*.js',
+      '**/*.png', // the code to ignore caching the icon file
+      '**/*.ico', // the code to ignore caching the icon file
+    ],
   },
   manifest: {
     name: `${env.ISI_TITLE || 'isi.invoice'}`,
