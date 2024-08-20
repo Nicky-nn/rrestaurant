@@ -11,6 +11,10 @@ const SimpleContainer = styled((props: Props) => {
 })(({ theme }) => ({
   marginTop: '30px',
   marginBottom: '30px',
+  [theme.breakpoints.up('xl')]: {
+    paddingLeft: '35px',
+    paddingRight: '35px',
+  },
   [theme.breakpoints.down('sm')]: {
     marginTop: '16px',
     marginBottom: '16px',
