@@ -19,10 +19,10 @@ const themeOptions: ThemeOptionsProps = {
   breakpoints: {
     values: {
       xs: 0,
-      sm: 640, // 600
-      md: 1000, // 900
-      lg: 1300, // 1200
-      xl: 1650, // 1536
+      sm: 950, // 600 - 640
+      md: 1280, // 900 - 1000
+      lg: 1535, // 1200 - 1300
+      xl: 1980, // 1536 - 1650
     },
   },
   status: {

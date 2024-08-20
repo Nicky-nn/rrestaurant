@@ -1,8 +1,9 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv, splitVendorChunkPlugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import pwaOptions from './pwaOptions'
 import zipPack from 'vite-plugin-zip-pack'
+
+import pwaOptions from './pwaOptions'
 // https://vitejs.dev/config/
 /**
  * node_modules es principalmente la razón principal del problema de los fragmentos grandes.
