@@ -10,6 +10,7 @@ const pwaOptions = (env: any): Partial<VitePWAOptions> => ({
     globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,webp}'],
     globIgnores: [
       'node_modules/**/*',
+      'dist/**/*',
       '.gitkeep',
       'sw.js',
       'workbox-*.js',
