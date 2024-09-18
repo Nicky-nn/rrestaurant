@@ -1,12 +1,7 @@
 import { PaperProps, TextFieldProps, Theme } from '@mui/material'
 import { AlertProps } from '@mui/material/Alert'
 import { TableProps } from '@mui/material/Table'
-import {
-  MRT_DisplayColumnDef,
-  MRT_DisplayColumnIds,
-  MRT_RowData,
-  MRT_TableOptions,
-} from 'material-react-table'
+import { MRT_DisplayColumnDef, MRT_RowData, MRT_TableOptions } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
 /**
@@ -18,7 +13,7 @@ export const muiTableApiEstado = ['ANULADO', 'VALIDADA', 'ELABORADO', 'PENDIENTE
 export const tableThemeLigth = 'rgba(254, 254, 254, 1)'
 
 export type DcdoProps<TData extends MRT_RowData, TValue = unknown> = Partial<{
-  [key in MRT_DisplayColumnIds]: Partial<MRT_DisplayColumnDef<TData, TValue>>
+  [key: string]: Partial<MRT_DisplayColumnDef<TData, TValue>>
 }>
 
 /**
@@ -30,9 +25,8 @@ export const MuiDisplayColumnDefOptions: DcdoProps<any> = {
       align: 'left',
       headers: 'Acciones',
     },
-    minSize: 90,
-    maxSize: 110,
-    grow: true,
+    size: 135,
+    grow: false,
   },
 }
 

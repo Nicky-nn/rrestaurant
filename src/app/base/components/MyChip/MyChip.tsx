@@ -31,7 +31,7 @@ export const MyChip = (props: Props): ReactElement => {
                   : theme.palette.error.dark,
           borderRadius: '0.25rem',
           color: '#fff',
-          maxWidth: '9ch',
+          // maxWidth: '9ch',
           pt: '0.25rem',
           pb: '0.25rem',
           pl: '0.5rem',

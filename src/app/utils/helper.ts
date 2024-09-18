@@ -97,7 +97,11 @@ export const genReplaceEmpty = (val: any, replace: any): any => {
   return val
 }
 
-export const handleFocus = (event: any) => event.target.select()
+export const handleFocus = (event: any) => {
+  if (event?.target?.select instanceof Function) {
+    event.target.select()
+  }
+}
 
 function isNumeric(str: any) {
   if (typeof str != 'string') return false // we only process strings!
@@ -147,4 +151,13 @@ export const validateEmail = (mail: string): boolean => {
  */
 export const clearAllLineBreak = (str: string) => {
   return str.replace(/\r?\n|\r/g, ' ')
+}
+
+/**
+ * @description Si el texto sobrepasa la cantidad de caracteres, reemplza por ...
+ * @param text
+ * @param nro
+ */
+export const splitTextAjust = (text: string, nro: number) => {
+  return text.length > nro ? text.substring(0, nro) + '...' : text
 }

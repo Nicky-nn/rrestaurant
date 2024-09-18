@@ -12,13 +12,14 @@ import {
  * Extencion del componente Accordion con estilos propios
  */
 export const MyAccordion = styled((props: AccordionProps) => (
-  <Accordion disableGutters elevation={1} square {...props} />
+  <Accordion disableGutters square {...props}>
+    {props.children}
+  </Accordion>
 ))(({ theme }) => ({
   border: `0.8px solid ${theme.palette.divider}`,
   '&:not(:last-child)': { borderBottom: 0 },
   '&::before': { display: 'none' },
   borderRadius: theme.shape.borderRadius,
-  boxShadow: theme.shadows[0],
 }))
 
 /**
@@ -30,8 +31,9 @@ export const MyAccordionSummary = styled((props: AccordionSummaryProps) => (
     {...props}
   />
 ))(({ theme }) => ({
+  minHeight: '40px',
   backgroundColor:
-    theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, .05)' : 'rgba(0, 0, 0, .01)',
+    theme.palette.mode === 'dark' ? theme.palette.grey['300'] : theme.palette.grey[50],
   flexDirection: 'row-reverse',
   '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': { transform: 'rotate(90deg)' },
   '& .MuiAccordionSummary-content': { marginLeft: theme.spacing(1) },

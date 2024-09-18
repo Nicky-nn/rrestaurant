@@ -7,24 +7,24 @@ const CardRoot = styled(Card)(({ theme }) => ({
   height: '100%',
   padding: '15px 15px',
   overflow: 'inherit', // Cambio realizado para mostrar los hidden selects
-  '& .MuiCardHeader-root': {
+  '& > .MuiCardHeader-root': {
     paddingLeft: 1,
     paddingRight: 1,
     paddingTop: 1,
     paddingBottom: 25,
   },
-  '& .MuiCardContent-root': {
+  '& > .MuiCardContent-root': {
     paddingLeft: 1.5,
     paddingRight: 1,
     paddingTop: 1,
     paddingBottom: 10,
   },
-  '& .MuiCardHeader-avatar': {
+  '& > .MuiCardHeader-avatar': {
     marginRight: '8px',
     color: theme.palette.primary.light,
     marginTop: '-2px',
   },
-  '& .MuiAvatar-root': {
+  '& > .MuiAvatar-root': {
     backgroundColor: theme.palette.primary.light,
   },
 }))
