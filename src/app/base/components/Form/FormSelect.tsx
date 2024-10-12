@@ -115,7 +115,7 @@ const FormSelect = <
         }}
         {...others}
       />
-      <FormHelperText>{formHelperText || ''}</FormHelperText>
+      {formHelperText && <FormHelperText>{formHelperText}</FormHelperText>}
     </FormControl>
   )
 }

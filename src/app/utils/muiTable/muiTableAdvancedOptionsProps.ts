@@ -81,53 +81,47 @@ import {
   })
   // FIN API FETCH
 
-  // RENDER
-  <MaterialReactTable
-      {...(MuiTableAdvancedOptionsProps as MRT_TableOptions<RolesProps>)}
-      columns={columns}
-      data={data ?? []}
-      initialState={{ showColumnFilters: true }}
-      muiToolbarAlertBannerProps={MuiToolbarAlertBannerProps(isError)}
-      onColumnFiltersChange={setColumnFilters}
-      onPaginationChange={setPagination}
-      onSortingChange={setSorting}
-      rowCount={rowCount}
-      state={{
-        isLoading,
-        columnFilters,
-        pagination,
-        showAlertBanner: isError,
-        showProgressBars: isRefetching,
-        density: 'compact',
-        sorting,
-        rowSelection,
-      }}
-      renderTopToolbarCustomActions={() => (
-        <MuiRenderTopToolbarCustomActions refetch={refetch} />
-      )}
-      renderRowActions={({ row }) => (
-        <>
-          <SimpleMenu
-            menuButton={
-              <>
-                <IconButton aria-label="menuGestionRoles">
-                  <MenuOpen />
-                </IconButton>
-              </>
-            }
-          >
-            <SimpleMenuItem
-              onClick={(e) => {
-                e.preventDefault()
-                // row.original.argumento
-              }}
-            >
-              <Edit /> Modificar
-            </SimpleMenuItem>
-          <AuditIconButton row={row.original} />
-        </>
-      )}
-    />
+  // USE TABLE
+  const table = useMaterialReactTable({
+    ...(MuiTableAdvancedOptionsProps as MRT_TableOptions<ArticuloProp>),
+    columns: columns,
+    data: data || [],
+    muiToolbarAlertBannerProps: MuiToolbarAlertBannerProps(isError),
+    state: {
+      isLoading,
+      columnFilters,
+      pagination,
+      showAlertBanner: isError,
+      showProgressBars: isRefetching,
+      density: 'compact',
+      sorting,
+    },
+    renderTopToolbarCustomActions: () => (
+      <MuiRenderTopToolbarCustomActions refetch={refetch} />
+    ),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onPaginationChange: setPagination,
+    rowCount,
+    positionToolbarAlertBanner: 'bottom',
+    renderRowActions: ({ row }) => (<>
+      <SimpleMenu
+        menuButton={
+          <IconButton aria-label="menuGestionRoles">
+            <MenuOpen />
+          </IconButton>
+        }
+      >
+        <SimpleMenuItem>
+          <Link to={genPath(articuloRoutesMap.actualizar.path, { id: row.original._id })}>
+            <Edit /> Actualizar
+          </Link>
+        </SimpleMenuItem>
+      </SimpleMenu>
+      <AuditIconButton row={row.original} />
+      </>
+    ),
+  })
    // FIN RENDER
  */
 

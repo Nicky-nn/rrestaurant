@@ -22,6 +22,7 @@ export const apiEstado = {
   anulado: 'ANULADO',
   eliminado: 'ELIMINADO',
   rechazado: 'RECHAZADA',
+  consultar: 'CONSULTAR',
 }
 
 /**
