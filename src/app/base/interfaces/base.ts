@@ -10,3 +10,8 @@ export interface MonedaParamsProps {
 }
 
 export type TipoRepresentacionGrafica = 'pdf' | 'rollo'
+
+export type KeyValueProp<T> = {
+  key: T
+  value: T
+}
