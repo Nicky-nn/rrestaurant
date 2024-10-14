@@ -1,5 +1,4 @@
-import { toast } from 'react-toastify'
-import { ToastOptions } from 'react-toastify/dist/types'
+import { toast, ToastOptions } from 'react-toastify'
 
 const options: ToastOptions = {
   position: 'top-center',

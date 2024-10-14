@@ -1,7 +1,7 @@
 import { FormControl, FormControlProps, FormHelperText, useTheme } from '@mui/material'
+import { RefAttributes } from 'react'
 import { GroupBase } from 'react-select'
-import AsyncSelect from 'react-select/async'
-import { AsyncProps } from 'react-select/dist/declarations/src/useAsync'
+import AsyncSelect, { AsyncProps } from 'react-select/async'
 
 import { MyInputLabel } from '../MyInputs/MyInputLabel'
 import { reactSelectStyle } from '../MySelect/ReactSelect'
@@ -46,18 +46,20 @@ EJEMPLO que reemplaza
 */
 
 type SelectProps<
-  Option,
+  Option = unknown,
   IsMulti extends boolean = false,
   Group extends GroupBase<Option> = GroupBase<Option>,
-> = AsyncProps<Option, IsMulti, Group> & {
-  error?: boolean
-  formHelperText?: string
-  inputLabel?: string
-  formControlProps?: FormControlProps
-}
+> = AsyncProps<Option, IsMulti, Group> &
+  RefAttributes<any> & {
+    error?: boolean
+    formHelperText?: string
+    inputLabel?: string
+    formControlProps?: FormControlProps
+  }
 
 /**
  * Componente para realizar el select para formularios
+ * ref no es funcional en la funcion
  * @param props
  * @constructor
  */
