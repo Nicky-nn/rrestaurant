@@ -3,55 +3,53 @@ import { Components, Theme } from '@mui/material'
 import { themeShadows } from './themeColors'
 
 interface ComponentsProps extends Components<Omit<Theme, 'components'>> {
-  MUIDataTableSelectCell: any
-  MUIDataTableHeadCell: any
-  MUIDataTableBodyCell: any
+  // MUIDataTableSelectCell: any
+  // MUIDataTableHeadCell: any
+  // MUIDataTableBodyCell: any
   MuiExpansionPanel: any
 }
 
 export const components: ComponentsProps = {
-  MuiTable: {
-    styleOverrides: {
-      root: {
-        tableLayout: 'fixed',
-      },
-    },
-  },
+  // MuiTable: {
+  //   styleOverrides: {
+  //     root: {
+  //       tableLayout: 'fixed',
+  //     },
+  //   },
+  // },
   MuiTableCell: {
     styleOverrides: {
       head: {
-        fontSize: '13px',
-        padding: '12px 0px',
+        fontSize: '0.8775rem',
       },
       root: {
-        fontSize: '14px',
+        fontSize: '0.8775rem',
         whiteSpace: 'pre-wrap',
         wordBreak: 'break-all',
-        padding: '12px 8px 12px 0px',
       },
     },
   },
-  MUIDataTableSelectCell: {
-    styleOverrides: {
-      root: {
-        paddingLeft: 12,
-      },
-    },
-  },
-  MUIDataTableHeadCell: {
-    styleOverrides: {
-      root: {
-        paddingLeft: 16,
-      },
-    },
-  },
-  MUIDataTableBodyCell: {
-    styleOverrides: {
-      root: {
-        paddingLeft: 8,
-      },
-    },
-  },
+  // MUIDataTableSelectCell: {
+  //   styleOverrides: {
+  //     root: {
+  //       paddingLeft: 12,
+  //     },
+  //   },
+  // },
+  // MUIDataTableHeadCell: {
+  //   styleOverrides: {
+  //     root: {
+  //       paddingLeft: 16,
+  //     },
+  //   },
+  // },
+  // MUIDataTableBodyCell: {
+  //   styleOverrides: {
+  //     root: {
+  //       paddingLeft: 8,
+  //     },
+  //   },
+  // },
   MuiButton: {
     styleOverrides: {
       root: {

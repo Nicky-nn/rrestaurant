@@ -1,30 +1,13 @@
-.react-datepicker {
-    box-shadow: -1px 6px 22px -3px rgba(65, 65, 65, 0.82);
-    -webkit-box-shadow: -1px 6px 22px -3px rgba(65, 65, 65, 0.82);
-    -moz-box-shadow: -1px 6px 22px -3px rgba(65, 65, 65, 0.82);
-}
-
-.react-datepicker__header {
-    background-color: #fafafa !important;
-}
-
-.react-datepicker__input-container input {
+.myDatePicker {
     width: 100%;
-    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
-    -moz-padding-start: calc(0.75rem - 3px);
-    font-size: 1rem;
-    font-weight: 400;
+}
+
+.myDatePicker input {
+    width: 100%;
     line-height: 1.5;
-    color: #212529;
-    background-color: #fff;
+    padding-top: 7px;
+    padding-bottom: 7px;
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    appearance: none;
-}
-
-.react-datepicker-popper {
-    position: fixed !important;
-    z-index: 999 !important;
-    overflow: visible !important;
 }
