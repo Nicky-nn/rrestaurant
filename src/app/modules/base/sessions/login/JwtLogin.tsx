@@ -171,7 +171,7 @@ const JwtLogin = () => {
           <Grid size={{ xs: 12, sm: 12 }}>
             <ContentBox>
               <form onSubmit={form.handleSubmit(onSubmit)}>
-                <Grid container spacing={1} rowSpacing={2} sx={{ mt: 0 }}>
+                <Grid container spacing={1} rowSpacing={2.5} sx={{ mt: 0 }}>
                   <Grid size={12}>
                     <Controller
                       control={form.control}
@@ -268,6 +268,7 @@ const JwtLogin = () => {
                   <Grid size={12}>
                     <Turnstile
                       ref={ref}
+                      style={{ marginTop: '-10px' }}
                       siteKey={import.meta.env.ISI_CAPTCHA_KEY}
                       options={{
                         action: 'submit-form',
@@ -284,7 +285,7 @@ const JwtLogin = () => {
                         setBlockButton(true)
                       }}
                       onExpire={() => {
-                        setMessage('Captcha Expirado')
+                        setMessage('Captcha Expirado, presione CTRL + F5')
                         setBlockButton(true)
                         ref.current?.reset()
                       }}
