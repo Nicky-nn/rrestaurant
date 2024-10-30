@@ -34,7 +34,6 @@ export const H1: FC<H1Props> = ({
     <StyledBox
       // textTransformStyle={textTransform}
       className={clsx({ [className || '']: true })}
-      component="h1"
       mb={0}
       mt={0}
       fontSize="28px"
@@ -67,7 +66,6 @@ export const H2: FC<H2Props> = ({
       // textTransformStyle={textTransform}
       ellipsis={ellipsis}
       className={clsx({ [className || '']: true })}
-      component="h2"
       mb={0}
       mt={0}
       fontSize="24px"
@@ -99,7 +97,6 @@ export const H3 = ({
       // textTransformStyle={textTransform}
       ellipsis={ellipsis}
       className={clsx({ [className || '']: true })}
-      component="h3"
       mb={0}
       mt={0}
       fontSize="18px"
@@ -132,7 +129,6 @@ export const H4 = ({
       className={clsx({
         [className || '']: true,
       })}
-      component="h4"
       mb={0}
       mt={0}
       fontSize="16px"
@@ -165,7 +161,6 @@ export const H5: FC<H5Props> = ({
       className={clsx({
         [className || '']: true,
       })}
-      component="h5"
       mb={0}
       mt={0}
       fontSize="14px"
@@ -198,7 +193,6 @@ export const H6: FC<any> = ({
       className={clsx({
         [className || '']: true,
       })}
-      component="h6"
       mb={0}
       mt={0}
       fontSize="13px"
@@ -231,7 +225,6 @@ export const Paragraph: FC<any> = ({
       className={clsx({
         [className || '']: true,
       })}
-      component="p"
       mb={0}
       mt={0}
       fontSize="14px"
@@ -262,7 +255,6 @@ export const Small: FC<any> = ({
       className={clsx({
         [className || '']: true,
       })}
-      component="small"
       fontSize="12px"
       fontWeight="500"
       lineHeight="1.5"
@@ -304,7 +296,6 @@ export const Span: any = ({
       className={clsx({
         [className || '']: true,
       })}
-      component="span"
       lineHeight="1.5"
       {...props}
     >
@@ -333,7 +324,6 @@ export const Tiny = ({
       className={clsx({
         [className || '']: true,
       })}
-      component="small"
       fontSize="10px"
       lineHeight="1.5"
       {...props}

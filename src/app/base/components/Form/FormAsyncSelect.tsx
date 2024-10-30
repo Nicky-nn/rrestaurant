@@ -1,5 +1,4 @@
 import { FormControl, FormControlProps, FormHelperText, useTheme } from '@mui/material'
-import { RefAttributes } from 'react'
 import { GroupBase } from 'react-select'
 import AsyncSelect, { AsyncProps } from 'react-select/async'
 
@@ -49,13 +48,12 @@ type SelectProps<
   Option = unknown,
   IsMulti extends boolean = false,
   Group extends GroupBase<Option> = GroupBase<Option>,
-> = AsyncProps<Option, IsMulti, Group> &
-  RefAttributes<any> & {
-    error?: boolean
-    formHelperText?: string
-    inputLabel?: string
-    formControlProps?: FormControlProps
-  }
+> = AsyncProps<Option, IsMulti, Group> & {
+  error?: boolean
+  formHelperText?: string
+  inputLabel?: string
+  formControlProps?: FormControlProps
+}
 
 /**
  * Componente para realizar el select para formularios
