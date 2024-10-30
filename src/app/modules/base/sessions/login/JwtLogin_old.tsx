@@ -1,7 +1,6 @@
-// noinspection JSXNamespaceValidation,DuplicatedCode
+// noinspection DuplicatedCode
 
 import { yupResolver } from '@hookform/resolvers/yup'
-import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { LoadingButton } from '@mui/lab'
 import {
@@ -10,6 +9,7 @@ import {
   Checkbox,
   FormControl,
   FormHelperText,
+  Grid,
   IconButton,
   InputAdornment,
   InputLabel,
@@ -18,8 +18,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import Grid from '@mui/material/Grid2'
 import { useEffect, useRef, useState } from 'react'
+import ReCAPTCHA, { ReCAPTCHAProps } from 'react-google-recaptcha'
 import { Controller, SubmitHandler, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import CreatableSelect from 'react-select/creatable'
@@ -92,17 +92,16 @@ interface LoginProps {
 }
 
 /**
- * @description Interfaz principal para el inicio de sesión del usuario, compatible con mui v2.x
+ * @description Interfaz principal para el inicio de sesión del usuario version antigua, con mui v6.x utilizar el nuevo login
  * @constructor
  */
-const JwtLogin = () => {
+const JwtLoginOld = () => {
   const navigate = useNavigate()
-  const ref = useRef<TurnstileInstance | null>(null)
+  const reCaptchaRef = useRef<ReCAPTCHAProps | any>()
 
   const [loading, setLoading] = useState(false)
   const { login }: any = useAuth()
   const [message, setMessage] = useState('')
-  const [blockButton, setBlockButton] = useState(true)
 
   const [showPassword, setShowPassword] = useState<boolean>(false)
 
@@ -125,20 +124,32 @@ const JwtLogin = () => {
   const onSubmit: SubmitHandler<LoginProps> = async (values) => {
     try {
       setLoading(true)
-      setBlockButton(true)
+      setTimeout(() => {
+        setLoading(false)
+      }, 2500)
 
-      const { shop, email, password, remember } = values
-      await login(shop?.value, email, password)
-      if (remember) {
-        storageComercioActualizar(shop!.value)
+      // Verificamos el token captcha
+      const newToken = await reCaptchaRef.current.executeAsync()
+
+      if (newToken) {
+        // setLoading(true)
+        const { shop, email, password, remember } = values
+        await login(shop?.value, email, password)
+        if (remember) {
+          storageComercioActualizar(shop!.value)
+          // localStorage.setItem('shop', shop)
+        } else {
+          storageComercioEliminar(shop!.value)
+          // localStorage.removeItem('shop')
+        }
+        navigate('/')
       } else {
-        storageComercioEliminar(shop!.value)
+        throw new Error('Error validación Captcha, Refresque la pagina CTRL + F5')
       }
-      navigate('/')
     } catch (e: any) {
       setMessage(e.message)
       setLoading(false)
-      ref.current?.reset()
+      setTimeout(() => reCaptchaRef.current.reset(), 500)
     }
   }
 
@@ -149,12 +160,20 @@ const JwtLogin = () => {
     }
   }, [])
 
+  // Ejecutamos el captcha validador
+  useEffect(() => {
+    if (reCaptchaRef) {
+      reCaptchaRef.current.reset()
+    }
+    setLoading(false)
+  }, [])
+
   // @ts-ignore
   return (
     <JWTRoot>
       <Card className="card">
         <Grid container rowSpacing={1}>
-          <Grid size={{ xs: 12, sm: 12 }}>
+          <Grid item sm={12} xs={12}>
             <JustifyBox p={4} height="100%">
               <IMG src={logo} alt="Gestión de ventas y servicios" />
             </JustifyBox>
@@ -168,11 +187,21 @@ const JwtLogin = () => {
             </Typography>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 12 }}>
+          <Grid item sm={12} xs={12}>
             <ContentBox>
               <form onSubmit={form.handleSubmit(onSubmit)}>
-                <Grid container spacing={1} rowSpacing={2} sx={{ mt: 0 }}>
-                  <Grid size={12}>
+                <ReCAPTCHA
+                  size={'invisible'}
+                  sitekey={import.meta.env.ISI_CAPTCHA_KEY}
+                  ref={reCaptchaRef}
+                  onErrored={() =>
+                    setMessage(
+                      `Ocurrió un error en cargar el Captcha, contáctese con el administrador`,
+                    )
+                  }
+                />
+                <Grid container spacing={1} rowSpacing={3} sx={{ mt: 0 }}>
+                  <Grid item xs={12}>
                     <Controller
                       control={form.control}
                       name={'shop'}
@@ -201,7 +230,7 @@ const JwtLogin = () => {
                       )}
                     />
                   </Grid>
-                  <Grid size={12}>
+                  <Grid item xs={12}>
                     <Controller
                       control={form.control}
                       render={({ field }) => (
@@ -215,15 +244,13 @@ const JwtLogin = () => {
                           onChange={field.onChange}
                           error={Boolean(form.formState.errors.email)}
                           helperText={form.formState.errors.email?.message}
-                          slotProps={{
-                            inputLabel: { shrink: true },
-                          }}
+                          InputLabelProps={{ shrink: true }}
                         />
                       )}
                       name={'email'}
                     />
                   </Grid>
-                  <Grid size={12}>
+                  <Grid item xs={12}>
                     <Controller
                       render={({ field }) => (
                         <FormControl
@@ -265,32 +292,7 @@ const JwtLogin = () => {
                       control={form.control}
                     />
                   </Grid>
-                  <Grid size={12}>
-                    <Turnstile
-                      ref={ref}
-                      siteKey={import.meta.env.ISI_CAPTCHA_KEY}
-                      options={{
-                        action: 'submit-form',
-                        theme: 'light',
-                        size: 'flexible',
-                        language: 'es',
-                      }}
-                      onSuccess={() => {
-                        setBlockButton(false)
-                        setMessage('')
-                      }}
-                      onError={(e) => {
-                        setMessage(`Error captcha, presione CTRL + F5, código: ${e}`)
-                        setBlockButton(true)
-                      }}
-                      onExpire={() => {
-                        setMessage('Captcha Expirado')
-                        setBlockButton(true)
-                        ref.current?.reset()
-                      }}
-                    />
-                  </Grid>
-                  <Grid size={12}>
+                  <Grid item xs={12}>
                     <FlexBox justifyContent="space-between">
                       <FlexBox gap={0}>
                         <Controller
@@ -320,11 +322,10 @@ const JwtLogin = () => {
                          */}
                     </FlexBox>
                   </Grid>
-                  <Grid size={12}>
+                  <Grid item xs={12}>
                     <LoadingButton
                       type="submit"
                       color="primary"
-                      disabled={blockButton}
                       loading={loading}
                       variant="contained"
                       size={'large'}
@@ -345,4 +346,4 @@ const JwtLogin = () => {
   )
 }
 
-export default JwtLogin
+export default JwtLoginOld
