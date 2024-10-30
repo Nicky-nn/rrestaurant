@@ -58,7 +58,7 @@ const RestriccionTopBarContainer = styled(Paper)(({ theme }) => ({
 const LayoutRestriccion: FC<any> = () => {
   const theme = useTheme()
   const [open, setOpen] = useState(false)
-  const { logout, user }: any = useAuth()
+  const { user }: any = useAuth()
 
   const handleChangeSucursal = () => {
     setOpen(true)
@@ -140,16 +140,15 @@ const LayoutRestriccion: FC<any> = () => {
 
                   <TableCell align="left" sx={{ width: 60 }}>
                     <Tooltip title={'Cambiar Sucursal / PuntoVenta'} leaveDelay={50}>
-                      <StyledIconButton
+                      <IconButton
                         color={'success'}
                         onClick={handleChangeSucursal}
-                        theme={theme}
                         aria-label="Cambiar Sucursal / Punto Venta"
                         style={{ padding: 0, margin: 0 }}
                         size={'small'}
                       >
                         <RepeatOne fontSize={'large'} />
-                      </StyledIconButton>
+                      </IconButton>
                     </Tooltip>
                   </TableCell>
 
@@ -177,7 +176,7 @@ const LayoutRestriccion: FC<any> = () => {
       </RestriccionTopBarRoot>
       <CuentaRestriccionDialog
         id={'CuentaRestriccion'}
-        keepMounted
+        keepMounted={false}
         open={open}
         onClose={() => {
           setOpen(false)
