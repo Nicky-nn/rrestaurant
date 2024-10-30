@@ -168,7 +168,7 @@ const JwtLogin = () => {
             </Typography>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 12 }}>
+          <Grid size={{ xs: 12, sm: 12 }} sx={{ mt: 1 }}>
             <ContentBox>
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <Grid container spacing={1} rowSpacing={2.5} sx={{ mt: 0 }}>
