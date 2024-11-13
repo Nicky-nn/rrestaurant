@@ -20,10 +20,14 @@ const ParseMonto: FunctionComponent<Props> = (props) => {
   const { monto, sigla, decimales, ...others } = props
   return (
     <Box>
-      <Typography display={'inline'} {...others}>
+      <Typography sx={{ fontSize: '0.77rem' }} display={'inline'} {...others}>
         {numberWithCommasPlaces(monto, decimales || 2)}
       </Typography>
-      <Typography variant={'caption'} sx={{ ml: 1 }} display={'inline'}>
+      <Typography
+        variant={'caption'}
+        sx={{ ml: 0.7, fontSize: '0.65rem' }}
+        display={'inline'}
+      >
         {sigla}
       </Typography>
     </Box>

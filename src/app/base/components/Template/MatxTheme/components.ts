@@ -20,12 +20,11 @@ export const components: ComponentsProps = {
   MuiTableCell: {
     styleOverrides: {
       head: {
-        fontSize: '0.8775rem',
+        fontSize: '0.84rem',
       },
       root: {
-        fontSize: '0.8775rem',
+        fontSize: '0.79rem',
         whiteSpace: 'pre-wrap',
-        wordBreak: 'break-all',
       },
     },
   },

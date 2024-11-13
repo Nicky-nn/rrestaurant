@@ -51,7 +51,7 @@ const Footer: FC<any> = () => {
               <a href={urlEmpresa} target="_blank" rel="noreferrer">
                 © {nombreComercial}
               </a>
-              {' 2024 '} - v2024.07.10.004
+              {' 2024 '} - v2024.005
             </Paragraph>
           </FooterContent>
         </AppFooter>
