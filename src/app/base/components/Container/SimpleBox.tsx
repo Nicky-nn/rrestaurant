@@ -18,10 +18,20 @@ export const SimpleContainerBox = styled(Box)(({ theme }) => ({
   [theme.breakpoints.down('md')]: {
     marginTop: '16px',
     marginBottom: '16px',
+    paddingLeft: '10px',
+    paddingRight: '10px',
   },
   [theme.breakpoints.up('md')]: {
     marginTop: '20px',
     marginBottom: '20px',
+    paddingLeft: '15px',
+    paddingRight: '15px',
+  },
+  [theme.breakpoints.up('lg')]: {
+    marginTop: '20px',
+    marginBottom: '20px',
+    paddingLeft: '20px',
+    paddingRight: '20px',
   },
   '& .breadcrumb': {
     marginBottom: '30px',
@@ -29,8 +39,6 @@ export const SimpleContainerBox = styled(Box)(({ theme }) => ({
       marginBottom: '16px',
     },
   },
-  paddingLeft: '15px',
-  paddingRight: '15px',
   marginLeft: 'auto',
   marginRight: 'auto',
   width: '100%',
