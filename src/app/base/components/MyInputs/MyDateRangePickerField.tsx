@@ -21,6 +21,7 @@ interface OwnProps {
     event?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>,
   ) => void
   placeholderText?: string
+  dateFormat?: string // Formato de la fecha segun date-fns
 }
 
 type Props = OwnProps
@@ -31,7 +32,7 @@ type Props = OwnProps
  * @constructor
  */
 const MyDateRangePickerField: FunctionComponent<Props> = (props) => {
-  const { startDate, endDate, onChange, ...others } = props
+  const { startDate, endDate, onChange, dateFormat, ...others } = props
   const ref = React.useRef<DatePicker | null>(null)
   return (
     <DatePicker
