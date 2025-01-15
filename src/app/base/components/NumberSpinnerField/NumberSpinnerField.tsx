@@ -240,13 +240,14 @@ const NumberSpinnerField: React.FC<NumberInputProps> = ({
           inputComponent={NumeroMask as any}
           startAdornment={
             !hideActionButtons ? (
-              <InputAdornment position="start">
+              <InputAdornment position="start" sx={{ mr: 0.7 }}>
                 <IconButton
                   aria-label="decrease value"
                   onClick={updateValue(-step)}
                   edge="start"
                   disabled={props.disabled || formatValue(internalValue) <= min}
                   sx={{
+                    color: (theme) => props.color || theme.palette.grey[500],
                     '&:hover': {
                       color: (theme) => props.color || theme.palette.primary.main,
                     },
@@ -254,6 +255,7 @@ const NumberSpinnerField: React.FC<NumberInputProps> = ({
                       color: (theme) => props.color || theme.palette.primary.main,
                     },
                     transition: (theme) => theme.transitions.create('color'),
+                    p: 0.6,
                   }}
                 >
                   <RemoveCircle />
@@ -263,7 +265,7 @@ const NumberSpinnerField: React.FC<NumberInputProps> = ({
           }
           endAdornment={
             (unit || !hideActionButtons) && (
-              <InputAdornment position="end">
+              <InputAdornment position="end" sx={{ ml: 0.7 }}>
                 {unit && (
                   <Typography fontSize={'small'} sx={{ lineHeight: 0 }}>
                     {formatValue(internalValue) === 1 ? singleUnit : unit}
@@ -277,6 +279,7 @@ const NumberSpinnerField: React.FC<NumberInputProps> = ({
                     disabled={props.disabled || formatValue(internalValue) >= max}
                     color={undefined}
                     sx={{
+                      color: (theme) => props.color || theme.palette.grey[500],
                       '&:hover': {
                         color: (theme) => props.color || theme.palette.primary.main,
                       },
@@ -284,6 +287,7 @@ const NumberSpinnerField: React.FC<NumberInputProps> = ({
                         color: (theme) => props.color || theme.palette.primary.main,
                       },
                       transition: (theme) => theme.transitions.create('color'),
+                      p: 0.6,
                     }}
                   >
                     <AddCircle />
