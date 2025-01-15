@@ -23,7 +23,7 @@ export const components: ComponentsProps = {
         fontSize: '0.84rem',
       },
       root: {
-        fontSize: '0.79rem',
+        fontSize: '0.80rem',
         whiteSpace: 'pre-wrap',
       },
     },

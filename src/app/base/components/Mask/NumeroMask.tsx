@@ -20,7 +20,7 @@ export const NumeroMask = forwardRef<HTMLElement, CustomProps>(function TextMask
   return (
     <IMaskInput
       {...other}
-      scale={scale || 2}
+      scale={scale === undefined || scale === null ? 2 : scale}
       thousandsSeparator={' '}
       padFractionalZeros={true}
       normalizeZeros={true}
@@ -29,7 +29,8 @@ export const NumeroMask = forwardRef<HTMLElement, CustomProps>(function TextMask
       mapToRadix={[',']}
       mask={Number}
       unmask={true}
-      onAccept={(value: any) => {
+      onAccept={(value: any, mask, e) => {
+        // console.log(e, mask)
         onChange({
           target: {
             name: props.name,

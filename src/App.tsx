@@ -1,6 +1,7 @@
 import './App.css'
 
 import { CssBaseline } from '@mui/material'
+import { ConfirmProvider } from 'material-ui-confirm'
 import { useEffect } from 'react'
 import { useRoutes } from 'react-router-dom'
 
@@ -26,9 +27,38 @@ function App() {
     <SettingsProvider>
       <AuthProvider>
         <MatxTheme>
-          <CssBaseline />
-          {content}
-          <ReloadPrompt />
+          <ConfirmProvider
+            defaultOptions={{
+              title: 'Confirmación',
+              content: '¿Confirma que desea realizar la acción?',
+              allowClose: false,
+              confirmationText: 'Confirmar',
+              cancellationText: 'Cancelar',
+              dialogProps: {
+                fullWidth: true,
+                maxWidth: 'xs',
+              },
+              confirmationButtonProps: {
+                color: 'primary',
+                variant: 'contained',
+                autoFocus: true,
+                size: 'small',
+                sx: { mr: 1.5 },
+                'aria-label': 'confirm',
+              },
+              cancellationButtonProps: {
+                color: 'error',
+                variant: 'text',
+                size: 'small',
+                'aria-label': 'close',
+              },
+              buttonOrder: ['cancel', 'confirm'],
+            }}
+          >
+            <CssBaseline />
+            {content}
+            <ReloadPrompt />
+          </ConfirmProvider>
         </MatxTheme>
       </AuthProvider>
     </SettingsProvider>

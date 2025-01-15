@@ -1,11 +1,11 @@
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale/es'
-import React, { FunctionComponent } from 'react'
-import DatePicker, { registerLocale } from 'react-datepicker'
+import React, { Component, FunctionComponent } from 'react'
+import DatePicker, { DatePickerProps, registerLocale } from 'react-datepicker'
 
 registerLocale('es', es)
 
-interface OwnProps extends DatePicker {
+interface OwnProps {
   value?: Date | null
   onChange: (
     date: Date | null,
@@ -14,6 +14,7 @@ interface OwnProps extends DatePicker {
   placeholderText?: string
   dateFormat?: string // Formato segun la especificación de date-fns
   isError?: boolean
+  showTimeInput?: boolean
 }
 
 type Props = OwnProps
