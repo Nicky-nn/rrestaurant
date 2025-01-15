@@ -1,4 +1,4 @@
-import { AddCircle, RemoveCircle } from '@mui/icons-material'
+import { AddCircle, AddCircleOutlined, RemoveCircle } from '@mui/icons-material'
 import {
   Box,
   FormControl,
@@ -248,6 +248,9 @@ const NumberSpinnerField: React.FC<NumberInputProps> = ({
                   disabled={props.disabled || formatValue(internalValue) <= min}
                   sx={{
                     color: (theme) => props.color || theme.palette.grey[500],
+                    '&:disabled': {
+                      color: (theme) => props.color || theme.palette.grey[300],
+                    },
                     '&:hover': {
                       color: (theme) => props.color || theme.palette.primary.main,
                     },
@@ -280,6 +283,9 @@ const NumberSpinnerField: React.FC<NumberInputProps> = ({
                     color={undefined}
                     sx={{
                       color: (theme) => props.color || theme.palette.grey[500],
+                      '&:disabled': {
+                        color: (theme) => props.color || theme.palette.grey[300],
+                      },
                       '&:hover': {
                         color: (theme) => props.color || theme.palette.primary.main,
                       },
@@ -290,7 +296,7 @@ const NumberSpinnerField: React.FC<NumberInputProps> = ({
                       p: 0.6,
                     }}
                   >
-                    <AddCircle />
+                    <AddCircleOutlined />
                   </IconButton>
                 )}
               </InputAdornment>
