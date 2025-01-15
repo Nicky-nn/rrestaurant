@@ -39,7 +39,7 @@ interface NumberInputProps extends Omit<OutlinedInputProps, 'onChange'> {
     | 'right'
     | 'start'
   hideActionButtons?: boolean
-  onChange?: (value: number) => void
+  onChange?: (value?: number) => void
 }
 
 /**
@@ -125,6 +125,7 @@ const NumberSpinnerField: React.FC<NumberInputProps> = ({
     setErrorMessage(undefined)
     const formattedValue = formatValue(value)
     if (formattedValue?.toString() === value?.toString()) onChange?.(formattedValue)
+    else onChange?.(undefined)
   }
 
   /**
