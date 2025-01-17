@@ -1,16 +1,16 @@
 import { Visibility } from '@mui/icons-material'
-import { Box, IconButton, Popover, Tooltip } from '@mui/material'
+import { Box, IconButton, IconButtonProps, Popover, Tooltip } from '@mui/material'
 import React, { FunctionComponent, useState } from 'react'
 
 import { AuditoriaProps } from '../../../interfaces'
 
-interface OwnProps {
+interface OwnProps extends IconButtonProps {
   row: AuditoriaProps | any
 }
 
 type Props = OwnProps
 
-const AuditIconButton: FunctionComponent<Props> = ({ row }: Props) => {
+const AuditIconButton: FunctionComponent<Props> = ({ row, ...others }: Props) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -26,8 +26,8 @@ const AuditIconButton: FunctionComponent<Props> = ({ row }: Props) => {
 
   return (
     <>
-      <Tooltip title="Auditoria" placement="top" leaveDelay={10}>
-        <IconButton onClick={handleClick}>
+      <Tooltip title="Auditoria" placement="top" leaveDelay={10} disableInteractive>
+        <IconButton onClick={handleClick} {...others}>
           <Visibility color={'warning'} />
         </IconButton>
       </Tooltip>
