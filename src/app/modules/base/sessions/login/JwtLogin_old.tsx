@@ -97,7 +97,7 @@ interface LoginProps {
  */
 const JwtLoginOld = () => {
   const navigate = useNavigate()
-  const reCaptchaRef = useRef<ReCAPTCHAProps | any>()
+  const reCaptchaRef = useRef<ReCAPTCHAProps | any>(null)
 
   const [loading, setLoading] = useState(false)
   const { login }: any = useAuth()

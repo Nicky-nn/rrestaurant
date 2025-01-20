@@ -1,4 +1,5 @@
 import { Box, styled, Theme } from '@mui/material'
+import { JSX } from 'react'
 
 import useSettings from '../../../hooks/useSettings'
 import { Span } from '../Typography'

@@ -1,5 +1,5 @@
 import { styled } from '@mui/material'
-import { FC, Fragment } from 'react'
+import { FC, Fragment, JSX } from 'react'
 import Scrollbar from 'react-perfect-scrollbar'
 
 import { navigations } from '../../../../navigations'

@@ -1,5 +1,5 @@
 import { ThemeProvider, useTheme } from '@mui/material'
-import { FC } from 'react'
+import { FC, JSX } from 'react'
 
 import useSettings from '../../../../hooks/useSettings'
 

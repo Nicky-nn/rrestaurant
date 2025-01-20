@@ -1,5 +1,5 @@
 import { Stack } from '@mui/material'
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, JSX } from 'react'
 
 interface OwnProps {
   children: JSX.Element | JSX.Element[]

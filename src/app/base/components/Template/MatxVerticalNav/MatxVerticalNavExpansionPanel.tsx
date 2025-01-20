@@ -1,6 +1,6 @@
 import { Box, ButtonBase, Icon, styled } from '@mui/material'
 import clsx from 'clsx'
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react'
+import React, { FC, JSX, useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
 const NavExpandRoot = styled('div')(({ theme }) => ({
