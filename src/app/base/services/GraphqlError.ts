@@ -41,7 +41,6 @@ export class MyGraphQlError extends Error {
   constructor(e: Error) {
     const errors = validateGraphQlError(e)
     super(errors.message) // (1)
-    console.log(import.meta.env.DEV, 'env')
     this.name = `${errors.status} ${errors.type} (${errors.path})` // (2)
     this.stack = import.meta.env.DEV ? errors.stacktrace : ''
     this.cause = import.meta.env.DEV ? errors.originalMessage : ''
