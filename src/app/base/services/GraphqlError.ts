@@ -1,7 +1,7 @@
 const validateGraphQlError = (e: Error): any => {
   try {
     const parsed = JSON.parse(JSON.stringify(e, undefined, 2))
-    if (parsed.response.status === 404) {
+    if (!parsed.response || parsed.response?.status === 404) {
       return {
         status: 404,
         message: 'Error conexión con el servidor',
