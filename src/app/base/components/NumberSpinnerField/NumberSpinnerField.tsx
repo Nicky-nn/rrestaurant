@@ -1,4 +1,4 @@
-import { AddCircleOutlined, RemoveCircle } from '@mui/icons-material'
+import { AddCircle, AddCircleOutlined, RemoveCircle } from '@mui/icons-material'
 import {
   Box,
   FormControl,
