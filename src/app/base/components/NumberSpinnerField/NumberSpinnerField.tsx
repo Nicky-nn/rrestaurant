@@ -293,7 +293,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
             startAdornment: !hideActionButtons && (
               <InputAdornment position="start" sx={{ mr: 0.7 }}>
                 <StyledIconButton
-                  aria-label="decrease value"
+                  aria-label="decrementar valor"
                   onClick={decrement}
                   edge="start"
                   disabled={disabled || (stateValue ?? 0) - step < min}
@@ -303,7 +303,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
               </InputAdornment>
             ),
             endAdornment: (unit || !hideActionButtons) && (
-              <InputAdornment position="start" sx={{ mr: 0.7 }}>
+              <InputAdornment position="end">
                 {unit && (
                   <Typography
                     component={'span'}
@@ -315,7 +315,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
                 )}
                 {!hideActionButtons && (
                   <StyledIconButton
-                    aria-label="decrease value"
+                    aria-label="incrementar valor"
                     onClick={increment}
                     edge="end"
                     disabled={disabled || (stateValue ?? 0) + step > max}
