@@ -1,27 +1,75 @@
-import { AddCircle, AddCircleOutlined, RemoveCircle } from '@mui/icons-material'
+import { AddCircleOutlined, RemoveCircle } from '@mui/icons-material'
 import {
-  Box,
-  FormControl,
-  FormHelperText,
   IconButton,
   InputAdornment,
-  InputLabel,
-  OutlinedInput,
-  OutlinedInputProps,
+  styled,
+  TextField,
+  type TextFieldProps,
   Typography,
 } from '@mui/material'
-import React, { useState } from 'react'
+import * as React from 'react'
+import { ForwardedRef, useState } from 'react'
+import { IMaskInput } from 'react-imask'
 
-import { NumeroMask } from '../Mask/NumeroMask'
+const StyledIconButton = styled(IconButton)(({ theme }) => ({
+  color: theme.palette.grey[500],
+  '&:disabled': {
+    color: theme.palette.grey[200],
+  },
+  '&:hover': {
+    color: theme.palette.primary.main,
+  },
+  '&:focus': {
+    color: theme.palette.primary.main,
+  },
+  transition: theme.transitions.create('color'),
+  p: 0.6,
+}))
 
-interface NumberInputProps extends Omit<OutlinedInputProps, 'onChange'> {
-  value?: number
+interface CustomProps {
+  onChange: (event: { target: { name: string; value: string } }) => void
+  name: string
+  scale?: number
+}
+
+/**
+ * Control para validar datos numéricos.
+ */
+const NumericFormatCustom = React.forwardRef<HTMLInputElement, CustomProps>(
+  function NumericFormatCustom(props, ref) {
+    const { scale, onChange, ...rest } = props
+    return (
+      <IMaskInput
+        {...rest}
+        inputRef={ref}
+        scale={scale ?? 2}
+        normalizeZeros={true}
+        padFractionalZeros={true}
+        thousandsSeparator={' '}
+        radix={'.'}
+        mapToRadix={[',']}
+        mask={Number}
+        unmask={true}
+        onAccept={(value) => {
+          return onChange({
+            target: {
+              name: props.name,
+              value,
+            },
+          })
+        }}
+      />
+    )
+  },
+)
+
+type NumberInputProps = Omit<TextFieldProps, 'onChange'> & {
+  value?: number | null
   min?: number
   max?: number
   step?: number
   decimalScale?: number
   unit?: string
-  singularUnit?: string
   helperText?: string
   textAlign?:
     | '-moz-initial'
@@ -39,7 +87,7 @@ interface NumberInputProps extends Omit<OutlinedInputProps, 'onChange'> {
     | 'right'
     | 'start'
   hideActionButtons?: boolean
-  onChange?: (value?: number) => void
+  onChange: (value: number | null) => void
 }
 
 /**
@@ -58,258 +106,235 @@ interface NumberInputProps extends Omit<OutlinedInputProps, 'onChange'> {
  * @param props
  * @constructor
  */
-const NumberSpinnerField: React.FC<NumberInputProps> = ({
-  value,
-  min = 0,
-  max = Infinity,
-  step = 1,
-  decimalScale = 0,
-  unit,
-  singularUnit: singleUnit,
-  helperText,
-  textAlign = 'center',
-  hideActionButtons = false,
-  onChange,
-  ...props
-}) => {
-  const [stateValue, setStateValue] = useState(value?.toString())
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
-  // Allow decimal if any of props is decimal
-  // num can be Infinity: num%1 || 0
-  // num%1 can give numbers like 0 and 0.1: hence length-2
-  // decimalScale cannot be negative: floor to 0 with Max
-  const propDecimalScale = Math.max(
-    ...[min, max, step].map((num) => (num % 1 || 0).toString().length - 2),
-    0,
-  )
-  const allowDecimal = decimalScale > 0 || propDecimalScale > 0
-  // Update decimalScale to allow decimal
-  decimalScale = decimalScale > 0 ? decimalScale : propDecimalScale
-  // Regex to match value with
-  const numberRegex = generateNumberRegex(min, max, allowDecimal)
+const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
+  function NumberSpinnerField(props, ref: ForwardedRef<HTMLDivElement>) {
+    // const t = useTranslations('NumberInput')
+    const {
+      disabled = false,
+      hideActionButtons = false,
+      max = Infinity,
+      min = -Infinity,
+      onChange,
+      size = 'small',
+      slotProps,
+      step = 1,
+      value: valueProp,
+      textAlign = 'center',
+      unit,
+      helperText,
+      decimalScale = 2,
+      ...rest
+    } = props
 
-  const formatValue = (val: any) => clampNumber(val, min, max, decimalScale)
-  const getKeyDownChar = (e: React.KeyboardEvent): string | undefined => {
-    /* Returns the event's key if it's a character. */
+    const isControlled = valueProp !== undefined && onChange !== undefined
 
-    if (e.ctrlKey || e.shiftKey || e.altKey) return
-    if (e.key === 'ArrowUp') {
-      updateValue(step)()
-      return
-    } else if (e.key === 'ArrowDown') {
-      updateValue(-step)()
+    // We use an internal state when the component is uncontrolled
+    const [fallbackValue, setFallbackValue] = React.useState<number | null | undefined>(
+      valueProp,
+    )
+    // const [stateValue, setStateValue] = useState<number | null>(null)
+    const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+    const stateValue = isControlled ? valueProp : fallbackValue
+    const setStateValue = isControlled ? onChange : setFallbackValue
+
+    /**
+     * Cuando se presiona una tecla
+     * @param e
+     */
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const char = getKeyDownChar(e)
+      if (!char)
+        // No character
+        return
+      const target = e.target as HTMLInputElement
+      if (target.selectionStart == null || target.selectionEnd == null)
+        // No selection
+        return
+    }
+
+    /**
+     * Incrementa el valor
+     */
+    const increment = () => {
+      const newValue =
+        (stateValue != null && !Number.isNaN(stateValue) ? stateValue : min - step) + step
+      if (newValue > max) {
+        return
+      }
+      setStateValue(newValue)
+    }
+
+    /**
+     * Decrementa el valor
+     */
+    const decrement = () => {
+      // If we decrement when the input is empty, we consider the previous value to be 0
+      const newValue =
+        (stateValue != null && !Number.isNaN(stateValue) ? stateValue : 0) - step
+
+      if (newValue < min) {
+        return
+      }
+      setStateValue(newValue)
+    }
+
+    /**
+     * Cuando se presiona una tecla
+     * @param e
+     */
+    const getKeyDownChar = (e: React.KeyboardEvent): string | undefined => {
+      /* Returns the event's key if it's a character. */
+      if (e.key === 'ArrowUp') {
+        increment()
+        return
+      } else if (e.key === 'ArrowDown') {
+        decrement()
+        return
+      }
+      const char = e.key
+      if (char.length > 1)
+        // Not character
+        return
+      const charCode = char.charCodeAt(0)
+      if (charCode < 32 || (charCode > 126 && charCode < 160) || charCode > 255)
+        // Not printable character
+        return
+      return char
+    }
+
+    /**
+     * Cuando se pierde el foco, pendiente de implementar
+     * @param e
+     */
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      console.log('blue', e.target.value)
+      if (e.target?.value) {
+        const text = e.target?.value.replaceAll(' ', '')
+        if (Number(text) < min) {
+          console.log('entrando min')
+          setErrorMessage('Valor mínimo es ' + min)
+          onChange(null)
+          return
+        }
+        if (Number(text) > max) {
+          console.log('entrando min')
+          setErrorMessage('Valor máximo es ' + max)
+          onChange(null)
+          return
+        }
+        // if (onBlur) onBlur(parseFloat(text ?? '0') ?? null)
+      }
       return
     }
-    const char = e.key
-    if (char.length > 1)
-      // Not character
-      return
-    const charCode = char.charCodeAt(0)
-    if (charCode < 32 || (charCode > 126 && charCode < 160) || charCode > 255)
-      // Not printable character
-      return
-    return char
-  }
 
-  const internalValue =
-    formatValue(stateValue).toString() === stateValue && value !== undefined
-      ? formatValue(value).toString()
-      : stateValue
+    /**
+     * Actualizacion de datos y envio fuera del componente
+     * @param value
+     */
+    const updateChange = (value: string) => {
+      setStateValue(Number(value))
+      const formattedValue = clampNumber(value, min, max, decimalScale)
+      // console.log(formattedValue, value.toString())
 
-  /**
-   * Actualizacion de datos y envio fuera del componente
-   * @param value
-   */
-  const updateChange = (value: string) => {
-    setStateValue(value)
-    setErrorMessage(undefined)
-    const formattedValue = formatValue(value)
-    if (formattedValue?.toString() === value?.toString()) onChange?.(formattedValue)
-    else onChange?.(undefined)
-  }
+      if (formattedValue?.toString() === value?.toString()) {
+        setErrorMessage(undefined)
+        onChange(formattedValue)
+      } else {
+        if (Number(value) < min) {
+          setErrorMessage(`Valor mínimo es ${min}`)
+        }
 
-  /**
-   * Actualizacion del valor
-   * @param diff
-   */
-  const updateValue = (diff: number) => () =>
-    updateChange(formatValue(formatValue(internalValue) + diff).toString())
-
-  /**
-   * Cuando se cambia el valor del input
-   * @param e
-   */
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    updateChange(e.target.value)
-
-  /**
-   * Cuando se pega el contenido externo
-   * @param e
-   */
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const text = e.clipboardData?.getData('Text').replaceAll(' ', '')
-    console.log('paste', text, max, min, text?.trim())
-    if (!text?.trim().match(numberRegex)) {
-      setErrorMessage('Entrada inválida')
-      e.preventDefault()
-    } else if (Number(text?.trim()) < min) {
-      setErrorMessage('Valor mínimo es ' + min)
-      e.preventDefault()
-    } else if (Number(text?.trim()) > max) {
-      console.log('a')
-      setErrorMessage('Valor máximo es ' + max)
-      e.preventDefault()
+        if (Number(value) > max) {
+          setErrorMessage('Valor maximo es ' + max)
+        }
+        // const va = Number(value)
+        // console.log(va)
+        onChange(null)
+        setStateValue(null)
+        // onChange(null)
+      }
     }
-  }
 
-  // /**
-  //  * Cuando se pierde el foco
-  //  * @param e
-  //  */
-  // const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-  //   console.log('blue', e.target.value)
-  //   updateChange(formatValue(e.target.value).toString())
-  // }
-
-  /**
-   * Cuando se presiona una tecla
-   * @param e
-   */
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const char = getKeyDownChar(e)
-    if (!char)
-      // No character
-      return
-    const target = e.target as HTMLInputElement
-    if (target.selectionStart == null || target.selectionEnd == null)
-      // No selection
-      return
-    const resultingStr =
-      target.value.substring(0, target.selectionStart).replaceAll(' ', '') +
-      char.replaceAll(' ', '') +
-      target.value.substring(target.selectionEnd).replaceAll(' ', '')
-    if (!resultingStr.match(numberRegex)) {
-      setErrorMessage('Entrada inválida')
-      e.preventDefault()
-    } else if (Number(resultingStr) < min) {
-      setErrorMessage('Valor minimo es ' + min)
-      e.preventDefault()
-    } else if (Number(resultingStr) > max) {
-      setErrorMessage('Valor maximo es ' + max)
-      e.preventDefault()
+    /**
+     * Evento on change del componente
+     * @param e
+     */
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      updateChange(e.target.value)
     }
-  }
 
-  props ??= {}
-  props.inputProps ??= {}
-  props.inputProps.style ??= {}
-  props.inputProps.style.textAlign ??= textAlign
-  props.inputProps.style.fontSize ??= 16
-  props.inputProps.style.height ??= 20
-  props.inputProps.scale ??= decimalScale
-  props.inputProps.min ??= min
-  props.placeholder ??= Math.min(max, Math.max(min, 0)).toFixed(decimalScale).toString()
-  const formControlProps = getFormControlProps(props)
-
-  hideActionButtons = hideActionButtons || props.readOnly || false
-
-  singleUnit ??= unit
-  unit ??= singleUnit
-
-  return (
-    <Box>
-      <FormControl
-        {...formControlProps}
-        variant="outlined"
+    return (
+      <TextField
+        {...rest}
+        ref={ref}
+        value={stateValue?.toString() || null} // We can't ever pass null to value because it breaks the shrink state of the label, so we pass empty string instead
+        disabled={disabled}
+        size={size}
+        autoComplete={'off'}
+        onKeyDown={handleKeyDown}
+        onChange={handleChange}
+        helperText={errorMessage || helperText}
         error={props.error || Number(stateValue) < min || Number(stateValue) > max}
-      >
-        <InputLabel shrink htmlFor="number-input">
-          {props.label}
-        </InputLabel>
-        <OutlinedInput
-          notched
-          error={props.error || Number(stateValue) < min || Number(stateValue) > max}
-          {...props}
-          value={internalValue?.toString() || ''}
-          id="number-input"
-          onChange={handleChange}
-          // onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
-          autoComplete={'off'}
-          inputComponent={NumeroMask as any}
-          startAdornment={
-            !hideActionButtons ? (
+        placeholder={props.placeholder || min.toString()}
+        slotProps={{
+          ...slotProps,
+          input: {
+            inputComponent: NumericFormatCustom as any,
+            inputProps: {
+              scale: decimalScale,
+              // max: max !== Infinity ? max : undefined,
+              // min: min !== -Infinity ? min : undefined,
+              style: {
+                textAlign: textAlign,
+                height: 20,
+                fontSize: 15.5,
+              },
+            },
+            startAdornment: !hideActionButtons && (
               <InputAdornment position="start" sx={{ mr: 0.7 }}>
-                <IconButton
+                <StyledIconButton
                   aria-label="decrease value"
-                  onClick={updateValue(-step)}
+                  onClick={decrement}
                   edge="start"
-                  disabled={props.disabled || formatValue(internalValue) <= min}
-                  sx={{
-                    color: (theme) => props.color || theme.palette.grey[500],
-                    '&:disabled': {
-                      color: (theme) => props.color || theme.palette.grey[300],
-                    },
-                    '&:hover': {
-                      color: (theme) => props.color || theme.palette.primary.main,
-                    },
-                    '&:focus': {
-                      color: (theme) => props.color || theme.palette.primary.main,
-                    },
-                    transition: (theme) => theme.transitions.create('color'),
-                    p: 0.6,
-                  }}
+                  disabled={disabled || (stateValue ?? 0) - step < min}
                 >
                   <RemoveCircle />
-                </IconButton>
+                </StyledIconButton>
               </InputAdornment>
-            ) : undefined
-          }
-          endAdornment={
-            (unit || !hideActionButtons) && (
-              <InputAdornment position="end" sx={{ ml: 0.7 }}>
+            ),
+            endAdornment: (unit || !hideActionButtons) && (
+              <InputAdornment position="start" sx={{ mr: 0.7 }}>
                 {unit && (
-                  <Typography fontSize={'small'} sx={{ lineHeight: 0 }}>
-                    {formatValue(internalValue) === 1 ? singleUnit : unit}
+                  <Typography
+                    component={'span'}
+                    fontSize={'small'}
+                    sx={{ lineHeight: 0, mt: 0.3 }}
+                  >
+                    {unit}
                   </Typography>
                 )}
                 {!hideActionButtons && (
-                  <IconButton
-                    aria-label="increase value"
-                    onClick={updateValue(step)}
+                  <StyledIconButton
+                    aria-label="decrease value"
+                    onClick={increment}
                     edge="end"
-                    disabled={props.disabled || formatValue(internalValue) >= max}
-                    color={undefined}
-                    sx={{
-                      color: (theme) => props.color || theme.palette.grey[500],
-                      '&:disabled': {
-                        color: (theme) => props.color || theme.palette.grey[300],
-                      },
-                      '&:hover': {
-                        color: (theme) => props.color || theme.palette.primary.main,
-                      },
-                      '&:focus': {
-                        color: (theme) => props.color || theme.palette.primary.main,
-                      },
-                      transition: (theme) => theme.transitions.create('color'),
-                      p: 0.6,
-                    }}
+                    disabled={disabled || (stateValue ?? 0) + step > max}
                   >
                     <AddCircleOutlined />
-                  </IconButton>
+                  </StyledIconButton>
                 )}
               </InputAdornment>
-            )
-          }
-        />
-        {(helperText || errorMessage) && (
-          <FormHelperText>{helperText || errorMessage}</FormHelperText>
-        )}
-      </FormControl>
-    </Box>
-  )
-}
+            ),
+            ...slotProps?.input,
+          },
+          htmlInput: {
+            ...slotProps?.htmlInput,
+          },
+        }}
+      />
+    )
+  },
+)
 
 export default NumberSpinnerField
 
@@ -325,44 +350,8 @@ const clampNumber = (
   min: number = -Infinity,
   max: number = Infinity,
   decimalScale: number = 0,
-): number => {
+): number | null => {
   let v = typeof val === 'number' ? val : Number(val)
   v = Math.min(max, Math.max(min, isNaN(v) ? 0 : v))
   return Number(v.toFixed(decimalScale))
-}
-
-/**
- * Generacion de expresion regular para validacion de datos numericos
- * @param min
- * @param max
- * @param allowDecimal
- */
-const generateNumberRegex = (min: number, max: number, allowDecimal: boolean): RegExp => {
-  const floatRegexStr = '(\\.[0-9]*)?'
-  const negativeIntRegexStr = '-[0-9]*'
-  const positiveIntRegexStr = '[0-9]+'
-  const positiveOrNegativeIntRegexStr = '-?[0-9]*'
-
-  let regexStr = '^'
-  if (max < 0) regexStr += negativeIntRegexStr
-  else if (min > 0) regexStr += positiveIntRegexStr
-  else regexStr += positiveOrNegativeIntRegexStr
-  if (allowDecimal) regexStr += floatRegexStr
-  regexStr += '$'
-  return new RegExp(regexStr)
-}
-
-/**
- * Generacion de propiedades para el componente de formulario
- * @param props
- */
-const getFormControlProps = (props: any) => {
-  return {
-    color: props.color,
-    disabled: props.disabled,
-    error: props.error,
-    fullWidth: props.fullWidth,
-    required: props.required,
-    variant: props.variant,
-  }
 }
