@@ -88,6 +88,7 @@ type NumberInputProps = Omit<TextFieldProps, 'onChange'> & {
     | 'start'
   hideActionButtons?: boolean
   onChange: (value: number | null) => void
+  spinnerTabIndex?: boolean
 }
 
 /**
@@ -123,6 +124,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
       unit,
       helperText,
       decimalScale = 2,
+      spinnerTabIndex = true,
       ...rest
     } = props
 
@@ -156,8 +158,11 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
      * Incrementa el valor
      */
     const increment = () => {
-      const newValue =
-        (stateValue != null && !Number.isNaN(stateValue) ? stateValue : min - step) + step
+      const newValue = Number(
+        (
+          (stateValue != null && !Number.isNaN(stateValue) ? stateValue : 0) + step
+        ).toFixed(decimalScale),
+      )
       if (newValue > max) {
         return
       }
@@ -169,8 +174,11 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
      */
     const decrement = () => {
       // If we decrement when the input is empty, we consider the previous value to be 0
-      const newValue =
-        (stateValue != null && !Number.isNaN(stateValue) ? stateValue : 0) - step
+      const newValue = Number(
+        (
+          (stateValue != null && !Number.isNaN(stateValue) ? stateValue : 0) - step
+        ).toFixed(decimalScale),
+      )
 
       if (newValue < min) {
         return
@@ -297,6 +305,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
                   onClick={decrement}
                   edge="start"
                   disabled={disabled || (stateValue ?? 0) - step < min}
+                  tabIndex={spinnerTabIndex ? undefined : -1}
                 >
                   <RemoveCircle />
                 </StyledIconButton>
@@ -319,6 +328,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
                     onClick={increment}
                     edge="end"
                     disabled={disabled || (stateValue ?? 0) + step > max}
+                    tabIndex={spinnerTabIndex ? undefined : -1}
                   >
                     <AddCircleOutlined />
                   </StyledIconButton>
