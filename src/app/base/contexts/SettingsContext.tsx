@@ -16,7 +16,7 @@ type SettingsProviderProps = {
   settings?: MatxLayoutSettingsProps
 }
 
-const SettingsContext: React.Context<SettingContextProps> = createContext({
+export const SettingsContext = createContext({
   settings: MatxLayoutSettings,
   updateSettings: () => {},
 })
@@ -45,5 +45,3 @@ export const SettingsProvider: FC<SettingsProviderProps> = ({
     </SettingsContext.Provider>
   )
 }
-
-export default SettingsContext
