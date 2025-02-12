@@ -23,6 +23,7 @@ interface SimpleDatePickerProps {
  * @param error
  * @param helperText
  * @param others
+ * @author Gonzalo
  * @constructor
  */
 const SimpleDateTimePickerField: React.FC<SimpleDatePickerProps> = ({
