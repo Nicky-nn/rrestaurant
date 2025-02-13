@@ -1,5 +1,5 @@
 import { merge } from 'lodash'
-import React, { createContext, FC, ReactElement, useState } from 'react'
+import React, { createContext, ReactElement, useState } from 'react'
 
 import {
   MatxLayoutSettings,
@@ -18,13 +18,10 @@ type SettingsProviderProps = {
 
 export const SettingsContext = createContext({
   settings: MatxLayoutSettings,
-  updateSettings: () => {},
+  updateSettings: (update: MatxLayoutSettingsProps | any) => {},
 })
 
-export const SettingsProvider: FC<SettingsProviderProps> = ({
-  settings,
-  children,
-}: SettingsProviderProps) => {
+export const SettingsProvider = ({ settings, children }: SettingsProviderProps) => {
   const [currentSettings, setCurrentSettings] = useState<MatxLayoutSettingsProps>(
     settings || MatxLayoutSettings,
   )
