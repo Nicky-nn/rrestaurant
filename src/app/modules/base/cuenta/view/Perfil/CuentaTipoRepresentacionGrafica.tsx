@@ -3,6 +3,7 @@ import {
   Button,
   FormControl,
   FormControlLabel,
+  FormHelperText,
   FormLabel,
   Grid,
   Radio,
@@ -84,7 +85,15 @@ const CuentaTipoRepresentacionGrafica: FunctionComponent<Props> = (props) => {
                   control={<Radio />}
                   label="Pdf Formato Rollo"
                 />
+                <FormControlLabel
+                  value="rolloResumen"
+                  control={<Radio />}
+                  label="Pdf Formato Rollo Resumido"
+                />
               </RadioGroup>
+              <FormHelperText>
+                Pdf Formato Rollo Resumido solo esta disponible para Compra-Venta
+              </FormHelperText>
             </FormControl>
           </Grid>
           <Grid item xs={12}>
