@@ -2,21 +2,38 @@ import { jwtDecode } from 'jwt-decode'
 import React, { createContext, ReactNode, useEffect, useReducer } from 'react'
 
 import { swalException } from '../../utils/swal'
+import { apiLicenciaProducto } from '../api/apiLicenciaProducto'
 import { apiValidarUsuario } from '../api/validarUsuario.api'
 import MatxLoading from '../components/Template/MatxLoading/MatxLoading'
+import { LicenciaProductoProps } from '../interfaces/licenciaProducto'
 import { loginModel, PerfilProps, UserProps } from '../models/loginModel'
 import { AccessToken } from '../models/paramsModel'
 import { perfilModel } from '../models/perfilModel'
+
+type LicenciaProps = {
+  activo: boolean
+  licencia: LicenciaProductoProps
+}
 
 type InitialStateProps = {
   isAuthenticated: boolean
   isInitialised: boolean
   user: PerfilProps
+  lw: LicenciaProps // Licencia de whatsapp
+  li: LicenciaProps // licencia de impresion
 }
 const initialState: InitialStateProps = {
   isAuthenticated: false,
   isInitialised: false,
   user: {} as PerfilProps,
+  lw: {
+    activo: false,
+    licencia: {} as LicenciaProductoProps,
+  },
+  li: {
+    activo: false,
+    licencia: {} as LicenciaProductoProps,
+  },
 }
 
 const isValidToken = (accessToken: string) => {
@@ -42,22 +59,26 @@ const setSession = (accessToken: string | null) => {
 const reducer = (state: any, action: any) => {
   switch (action.type) {
     case 'INIT': {
-      const { isAuthenticated, user } = action.payload
+      const { isAuthenticated, user, lw, li } = action.payload
 
       return {
         ...state,
         isAuthenticated,
         isInitialised: true,
         user,
+        lw,
+        li,
       }
     }
     case 'LOGIN': {
-      const { user } = action.payload
+      const { user, lw, li } = action.payload
 
       return {
         ...state,
         isAuthenticated: true,
         user,
+        lw,
+        li,
       }
     }
     case 'LOGOUT': {
@@ -65,15 +86,19 @@ const reducer = (state: any, action: any) => {
         ...state,
         isAuthenticated: false,
         user: {},
+        lw: {},
+        li: {},
       }
     }
     case 'REGISTER': {
-      const { user } = action.payload
+      const { user, lw, li } = action.payload
 
       return {
         ...state,
         isAuthenticated: true,
         user,
+        lw,
+        li,
       }
     }
     default: {
@@ -95,6 +120,11 @@ export interface AuthProviderProps {
   children: ReactNode
 }
 
+/**
+ * @description Proveedor de autenticación
+ * @param children
+ * @constructor
+ */
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [state, dispatch] = useReducer(reducer, initialState)
 
@@ -107,12 +137,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (shop: string, email: string, password: string) => {
     const user: UserProps = await loginModel(shop, email, password)
     const validarUsuario = await apiValidarUsuario(user.token)
+    const { lw, li } = await apiLicenciaProducto(user.token)
     if (validarUsuario) {
       setSession(user.token)
       dispatch({
         type: 'LOGIN',
         payload: {
           user: user.perfil,
+          lw,
+          li,
         },
       })
     } else {
@@ -130,11 +163,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 username,
                 password,
             })
-    
+
             const {accessToken, user} = response.data
-    
+
             setSession(accessToken)
-    
+
             dispatch({
                 type: 'REGISTER',
                 payload: {
@@ -153,11 +186,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
    * @description refresca el usuario
    */
   const refreshUser = async () => {
+    const accessToken = window.localStorage.getItem(AccessToken)
     const perfil: PerfilProps = await perfilModel()
+    const { lw, li } = await apiLicenciaProducto(accessToken || '')
     dispatch({
       type: 'LOGIN',
       payload: {
         user: perfil,
+        lw,
+        li,
       },
     })
   }
@@ -169,14 +206,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (accessToken && isValidToken(accessToken)) {
           setSession(accessToken)
           const user = await perfilModel()
-
           const validarUsuario = await apiValidarUsuario(accessToken)
+          const { lw, li } = await apiLicenciaProducto(accessToken)
           if (validarUsuario) {
             dispatch({
               type: 'INIT',
               payload: {
                 isAuthenticated: true,
                 user,
+                lw,
+                li,
               },
             })
           } else {
@@ -185,6 +224,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               payload: {
                 isAuthenticated: false,
                 user: {},
+                lw,
+                li,
               },
             })
             throw new Error(
@@ -197,6 +238,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             payload: {
               isAuthenticated: false,
               user: {},
+              lw: {},
+              li: {},
             },
           })
         }
@@ -207,6 +250,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           payload: {
             isAuthenticated: false,
             user: {},
+            lw: {},
+            li: {},
           },
         })
       }

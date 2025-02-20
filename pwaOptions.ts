@@ -11,7 +11,6 @@ const pwaOptions = (env: any): Partial<VitePWAOptions> => ({
     globIgnores: [
       'node_modules/**/*',
       'dist-zip/**/*',
-      '.gitkeep',
       'sw.js',
       'workbox-*.js',
       '**/*.png', // the code to ignore caching the icon file

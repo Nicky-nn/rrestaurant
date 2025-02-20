@@ -1,12 +1,12 @@
 import { merge } from 'lodash'
-import React, { createContext, ReactElement, useState } from 'react'
+import React, { Context, createContext, ReactElement, useState } from 'react'
 
 import {
   MatxLayoutSettings,
   MatxLayoutSettingsProps,
 } from '../components/Template/MatxLayout/settings'
 
-interface SettingContextProps {
+type SettingContextProps = {
   settings: MatxLayoutSettingsProps
   updateSettings: any
 }
@@ -16,7 +16,7 @@ type SettingsProviderProps = {
   settings?: MatxLayoutSettingsProps
 }
 
-export const SettingsContext = createContext({
+export const SettingsContext: Context<SettingContextProps> = createContext({
   settings: MatxLayoutSettings,
   updateSettings: (update: MatxLayoutSettingsProps | any) => {},
 })

@@ -3,9 +3,9 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
-import { LoadingButton } from '@mui/lab'
 import {
   Box,
+  Button,
   Card,
   Checkbox,
   FormControl,
@@ -322,7 +322,7 @@ const JwtLogin = () => {
                     </FlexBox>
                   </Grid>
                   <Grid size={12}>
-                    <LoadingButton
+                    <Button
                       type="submit"
                       color="primary"
                       disabled={blockButton}
@@ -333,7 +333,7 @@ const JwtLogin = () => {
                       sx={{ my: 2 }}
                     >
                       Iniciar Sesión
-                    </LoadingButton>
+                    </Button>
                   </Grid>
                 </Grid>
                 {message && <Paragraph sx={{ color: 'red' }}>{message}</Paragraph>}
