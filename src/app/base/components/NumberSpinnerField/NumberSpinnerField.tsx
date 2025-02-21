@@ -63,7 +63,7 @@ const NumericFormatCustom = React.forwardRef<HTMLInputElement, CustomProps>(
   },
 )
 
-type NumberInputProps = Omit<TextFieldProps, 'onChange'> & {
+type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
   value?: number | null
   min?: number
   max?: number
@@ -87,7 +87,8 @@ type NumberInputProps = Omit<TextFieldProps, 'onChange'> & {
     | 'right'
     | 'start'
   hideActionButtons?: boolean
-  onChange: (value: number | null) => void
+  onChange?: (value: number | null) => void
+  onBlur?: (value: number | null) => void
   spinnerTabIndex?: boolean
 }
 
@@ -116,6 +117,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
       max = Infinity,
       min = -Infinity,
       onChange,
+      onBlur,
       size = 'small',
       slotProps,
       step = 1,
@@ -163,10 +165,13 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
           (stateValue != null && !Number.isNaN(stateValue) ? stateValue : 0) + step
         ).toFixed(decimalScale),
       )
+      console.log(newValue)
+
       if (newValue > max) {
         return
       }
       setStateValue(newValue)
+      if (onBlur) onBlur(newValue)
     }
 
     /**
@@ -184,6 +189,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
         return
       }
       setStateValue(newValue)
+      if (onBlur) onBlur(newValue)
     }
 
     /**
@@ -215,22 +221,17 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
      * @param e
      */
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-      console.log('blue', e.target.value)
       if (e.target?.value) {
         const text = e.target?.value.replaceAll(' ', '')
         if (Number(text) < min) {
-          console.log('entrando min')
           setErrorMessage('Valor mínimo es ' + min)
-          onChange(null)
           return
         }
         if (Number(text) > max) {
-          console.log('entrando min')
           setErrorMessage('Valor máximo es ' + max)
-          onChange(null)
           return
         }
-        // if (onBlur) onBlur(parseFloat(text ?? '0') ?? null)
+        if (onBlur) onBlur(Number(text))
       }
       return
     }
@@ -246,7 +247,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
 
       if (formattedValue?.toString() === value?.toString()) {
         setErrorMessage(undefined)
-        onChange(formattedValue)
+        if (onChange) onChange(formattedValue)
       } else {
         if (Number(value) < min) {
           setErrorMessage(`Valor mínimo es ${min}`)
@@ -257,7 +258,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
         }
         // const va = Number(value)
         // console.log(va)
-        onChange(null)
+        if (onChange) onChange(null)
         setStateValue(null)
         // onChange(null)
       }
@@ -281,6 +282,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
         autoComplete={'off'}
         onKeyDown={handleKeyDown}
         onChange={handleChange}
+        onBlur={handleBlur}
         helperText={errorMessage || helperText}
         error={props.error || Number(stateValue) < min || Number(stateValue) > max}
         placeholder={props.placeholder || min.toString()}
