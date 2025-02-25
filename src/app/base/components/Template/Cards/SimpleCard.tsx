@@ -45,7 +45,7 @@ const SimpleCard: FC<SimpleCardProps> = (props: SimpleCardProps) => {
       {title && (
         <CardHeader
           avatar={title && childIcon && childIcon}
-          title={title && <H4>{title.toUpperCase()}</H4>}
+          title={title && <H4>{title}</H4>}
           subheader={subtitle && subtitle}
         />
       )}
