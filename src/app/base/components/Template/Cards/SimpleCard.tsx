@@ -11,13 +11,13 @@ const CardRoot = styled(Card)(({ theme }) => ({
     paddingLeft: 1,
     paddingRight: 1,
     paddingTop: 1,
-    paddingBottom: 25,
+    paddingBottom: 11,
   },
   '& > .MuiCardContent-root': {
     paddingLeft: 1.5,
     paddingRight: 1,
     paddingTop: 1,
-    paddingBottom: 10,
+    paddingBottom: 5,
   },
   '& > .MuiCardHeader-avatar': {
     marginRight: '8px',
