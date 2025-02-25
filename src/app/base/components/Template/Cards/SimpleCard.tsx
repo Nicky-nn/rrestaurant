@@ -5,19 +5,15 @@ import { H4 } from '../Typography'
 
 const CardRoot = styled(Card)(({ theme }) => ({
   height: '100%',
-  padding: '15px 15px',
+  padding: '12px',
   overflow: 'inherit', // Cambio realizado para mostrar los hidden selects
-  '& > .MuiCardHeader-root': {
-    paddingLeft: 1,
-    paddingRight: 1,
-    paddingTop: 1,
-    paddingBottom: 11,
+  '&>.MuiCardHeader-root': {
+    padding: 0,
+    paddingBottom: 10,
   },
-  '& > .MuiCardContent-root': {
-    paddingLeft: 1.5,
-    paddingRight: 1,
-    paddingTop: 1,
-    paddingBottom: 5,
+  '&>.MuiCardContent-root': {
+    padding: 0,
+    paddingLeft: 0.5,
   },
   '& > .MuiCardHeader-avatar': {
     marginRight: '8px',
