@@ -7,12 +7,14 @@ const CardRoot = styled(Card)(({ theme }) => ({
   height: '100%',
   padding: '12px',
   overflow: 'inherit', // Cambio realizado para mostrar los hidden selects
-  '&>.MuiCardHeader-root': {
+  '& > .MuiCardHeader-root': {
     padding: 0,
     paddingBottom: 10,
   },
-  '&>.MuiCardContent-root': {
-    padding: 0,
+  '& > .MuiCardContent-root': {
+    paddingTop: 0,
+    paddingBottom: '0 !important',
+    paddingRight: 0,
     paddingLeft: 0.5,
   },
   '& > .MuiCardHeader-avatar': {
