@@ -165,8 +165,6 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
           (stateValue != null && !Number.isNaN(stateValue) ? stateValue : 0) + step
         ).toFixed(decimalScale),
       )
-      console.log(newValue)
-
       if (newValue > max) {
         return
       }
