@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material'
 import * as React from 'react'
-import { ForwardedRef, useState } from 'react'
+import { ForwardedRef, useEffect, useRef, useState } from 'react'
 import { IMaskInput } from 'react-imask'
 
 const StyledIconButton = styled(IconButton)(({ theme }) => ({
@@ -88,8 +88,8 @@ type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
     | 'start'
   hideActionButtons?: boolean
   onChange?: (value: number | null) => void
-  onBlur?: (value: number | null) => void
   spinnerTabIndex?: boolean
+  mostrarMensajeError?: boolean
 }
 
 /**
@@ -102,6 +102,7 @@ type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
  * @param unit Unidad a mostrar, default '', Ejemplo: 'BOB, Kg'
  * @param singleUnit Unidad a mostrar cuando solo hay un valor, default '', Ejemplo: 'BOB'
  * @param helperText Texto de ayuda, default ''
+ * @param mostrarMensajeError Muestra los mensajes de error, maximo y minimo, default true
  * @param textAlign
  * @param hideActionButtons
  * @param onChange
@@ -117,7 +118,6 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
       max = Infinity,
       min = -Infinity,
       onChange,
-      onBlur,
       size = 'small',
       slotProps,
       step = 1,
@@ -127,19 +127,13 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
       helperText,
       decimalScale = 2,
       spinnerTabIndex = true,
+      mostrarMensajeError = true,
       ...rest
     } = props
 
-    const isControlled = valueProp !== undefined && onChange !== undefined
-
-    // We use an internal state when the component is uncontrolled
-    const [fallbackValue, setFallbackValue] = React.useState<number | null | undefined>(
-      valueProp,
-    )
-    // const [stateValue, setStateValue] = useState<number | null>(null)
+    const intervalRef = useRef(null) // Referencia para almacenar el intervalo
+    const [stateValue, setStateValue] = useState<number | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
-    const stateValue = isControlled ? valueProp : fallbackValue
-    const setStateValue = isControlled ? onChange : setFallbackValue
 
     /**
      * Cuando se presiona una tecla
@@ -148,38 +142,42 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       const char = getKeyDownChar(e)
       if (!char)
-        // No character
+        // Ningun caracter
         return
       const target = e.target as HTMLInputElement
       if (target.selectionStart == null || target.selectionEnd == null)
-        // No selection
+        // Ninguna seleccion
         return
+      return char
     }
 
     /**
      * Incrementa el valor
      */
-    const increment = () => {
+    const increment = (forceChange = false) => {
       const newValue = Number(
         (
-          (stateValue != null && !Number.isNaN(stateValue) ? stateValue : 0) + step
+          (stateValue != null && !Number.isNaN(stateValue) ? Number(stateValue) : 0) +
+          step
         ).toFixed(decimalScale),
       )
       if (newValue > max) {
         return
       }
       setStateValue(newValue)
-      if (onBlur) onBlur(newValue)
+      if (forceChange) {
+        if (onChange) onChange(newValue)
+      }
     }
 
     /**
      * Decrementa el valor
      */
-    const decrement = () => {
-      // If we decrement when the input is empty, we consider the previous value to be 0
+    const decrement = (forceChange = false) => {
       const newValue = Number(
         (
-          (stateValue != null && !Number.isNaN(stateValue) ? stateValue : 0) - step
+          (stateValue != null && !Number.isNaN(stateValue) ? Number(stateValue) : 0) -
+          step
         ).toFixed(decimalScale),
       )
 
@@ -187,7 +185,9 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
         return
       }
       setStateValue(newValue)
-      if (onBlur) onBlur(newValue)
+      if (forceChange) {
+        if (onChange) onChange(newValue)
+      }
     }
 
     /**
@@ -195,43 +195,33 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
      * @param e
      */
     const getKeyDownChar = (e: React.KeyboardEvent): string | undefined => {
-      /* Returns the event's key if it's a character. */
       if (e.key === 'ArrowUp') {
+        if (intervalRef.current !== null) return
         increment()
         return
       } else if (e.key === 'ArrowDown') {
+        if (intervalRef.current !== null) return
         decrement()
         return
       }
-      const char = e.key
-      if (char.length > 1)
-        // Not character
-        return
-      const charCode = char.charCodeAt(0)
-      if (charCode < 32 || (charCode > 126 && charCode < 160) || charCode > 255)
-        // Not printable character
-        return
-      return char
     }
 
-    /**
-     * Cuando se pierde el foco, pendiente de implementar
-     * @param e
-     */
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-      if (e.target?.value) {
-        const text = e.target?.value.replaceAll(' ', '')
-        if (Number(text) < min) {
-          setErrorMessage('Valor mínimo es ' + min)
-          return
+    const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        // Limpiar el intervalo cuando se suelta la tecla
+        if (intervalRef.current !== null) {
+          clearInterval(intervalRef.current)
+          intervalRef.current = null
         }
-        if (Number(text) > max) {
-          setErrorMessage('Valor máximo es ' + max)
-          return
-        }
-        if (onBlur) onBlur(Number(text))
       }
-      return
+      // Estado final de cambio afuera
+      if (onChange) {
+        if (!stateValue) {
+          onChange(null)
+        } else {
+          onChange(Number(stateValue))
+        }
+      }
     }
 
     /**
@@ -239,26 +229,18 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
      * @param value
      */
     const updateChange = (value: string) => {
-      setStateValue(Number(value))
-      const formattedValue = clampNumber(value, min, max, decimalScale)
+      const formattedValue = clampNumber(value)
       // console.log(formattedValue, value.toString())
-
-      if (formattedValue?.toString() === value?.toString()) {
-        setErrorMessage(undefined)
-        if (onChange) onChange(formattedValue)
+      setStateValue(formattedValue)
+      // console.log(formattedValue, min, max)
+      if (Number(formattedValue) < min) {
+        if (mostrarMensajeError) setErrorMessage(`Valor mínimo es ${min}`)
       } else {
-        if (Number(value) < min) {
-          setErrorMessage(`Valor mínimo es ${min}`)
+        if (Number(formattedValue) > max) {
+          if (mostrarMensajeError) setErrorMessage('Valor maximo es ' + max)
+        } else {
+          setErrorMessage(undefined)
         }
-
-        if (Number(value) > max) {
-          setErrorMessage('Valor maximo es ' + max)
-        }
-        // const va = Number(value)
-        // console.log(va)
-        if (onChange) onChange(null)
-        setStateValue(null)
-        // onChange(null)
       }
     }
 
@@ -270,6 +252,12 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
       updateChange(e.target.value)
     }
 
+    /******************************************************************************/
+    /******************************************************************************/
+    useEffect(() => {
+      setStateValue(valueProp || null)
+    }, [])
+
     return (
       <TextField
         {...rest}
@@ -280,7 +268,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
         autoComplete={'off'}
         onKeyDown={handleKeyDown}
         onChange={handleChange}
-        onBlur={handleBlur}
+        onKeyUp={handleKeyUp}
         helperText={errorMessage || helperText}
         error={props.error || Number(stateValue) < min || Number(stateValue) > max}
         placeholder={props.placeholder || min.toString()}
@@ -290,8 +278,6 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
             inputComponent: NumericFormatCustom as any,
             inputProps: {
               scale: decimalScale,
-              // max: max !== Infinity ? max : undefined,
-              // min: min !== -Infinity ? min : undefined,
               style: {
                 textAlign: textAlign,
                 height: 20,
@@ -302,7 +288,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
               <InputAdornment position="start" sx={{ mr: 0.7 }}>
                 <StyledIconButton
                   aria-label="decrementar valor"
-                  onClick={decrement}
+                  onClick={() => decrement(true)}
                   edge="start"
                   disabled={disabled || (stateValue ?? 0) - step < min}
                   tabIndex={spinnerTabIndex ? undefined : -1}
@@ -325,7 +311,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
                 {!hideActionButtons && (
                   <StyledIconButton
                     aria-label="incrementar valor"
-                    onClick={increment}
+                    onClick={() => increment(true)}
                     edge="end"
                     disabled={disabled || (stateValue ?? 0) + step > max}
                     tabIndex={spinnerTabIndex ? undefined : -1}
@@ -351,17 +337,8 @@ export default NumberSpinnerField
 /**
  * Conversion y verificación de un valor a numérico
  * @param val
- * @param min
- * @param max
- * @param decimalScale
  */
-const clampNumber = (
-  val: any,
-  min: number = -Infinity,
-  max: number = Infinity,
-  decimalScale: number = 0,
-): number | null => {
-  let v = typeof val === 'number' ? val : Number(val)
-  v = Math.min(max, Math.max(min, isNaN(v) ? 0 : v))
-  return Number(v.toFixed(decimalScale))
+const clampNumber = (val: any): number | null => {
+  if (val === undefined) return null
+  return val
 }
