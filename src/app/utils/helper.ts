@@ -21,7 +21,7 @@ export const openInNewTab = (url: string): void => {
 }
 
 export const handleSelect = (event: any) => {
-  event.target.select()
+  if (event.target?.select) event.target.select()
 }
 
 /**
