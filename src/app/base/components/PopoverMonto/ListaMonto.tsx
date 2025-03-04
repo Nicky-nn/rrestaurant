@@ -16,6 +16,7 @@ const StyleListItemButton = styled(ListItemButton)(({ theme }) => ({
 interface OwnProps {
   id: string
   monto: number
+  montoText?: number // En caso se requiera enmascarar el monto, si no se envia se mostrara el monto
   onChange: (value: number) => void
   min?: number
   max?: number
@@ -32,7 +33,17 @@ type Props = OwnProps
  * @constructor
  */
 const ListaMonto: FunctionComponent<Props> = (props) => {
-  const { id, onChange, monto, min, max, step, editar = true, sxMontoProps } = props
+  const {
+    id,
+    onChange,
+    monto,
+    montoText = monto,
+    min,
+    max,
+    step,
+    editar = true,
+    sxMontoProps,
+  } = props
   const [anchorMonto, setAnchorMonto] = useState<any | null>(null)
 
   const [inputMonto, setInputMonto] = useState<number | undefined | null>(null)
@@ -54,7 +65,7 @@ const ListaMonto: FunctionComponent<Props> = (props) => {
           }
         }}
       >
-        <ParseMontoMoneda monto={monto} sx={sxMontoProps} />
+        <ParseMontoMoneda monto={montoText} sx={sxMontoProps} />
       </StyleListItemButton>
 
       <Popover
