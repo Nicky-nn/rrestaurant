@@ -41,7 +41,6 @@ function App() {
               confirmationButtonProps: {
                 color: 'primary',
                 variant: 'contained',
-                autoFocus: true,
                 size: 'small',
                 sx: { mr: 1.5 },
                 'aria-label': 'confirm',
