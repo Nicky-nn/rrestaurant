@@ -17,6 +17,7 @@ interface OwnProps {
   id: string
   monto: number
   montoText?: number // En caso se requiera enmascarar el monto, si no se envia se mostrara el monto
+  sigla?: string
   onChange: (value: number) => void
   min?: number
   max?: number
@@ -38,6 +39,7 @@ const ListaMonto: FunctionComponent<Props> = (props) => {
     onChange,
     monto,
     montoText = monto,
+    sigla,
     min,
     max,
     step,
@@ -65,7 +67,7 @@ const ListaMonto: FunctionComponent<Props> = (props) => {
           }
         }}
       >
-        <ParseMontoMoneda monto={montoText} sx={sxMontoProps} />
+        <ParseMontoMoneda monto={montoText} sigla={sigla} sx={sxMontoProps} />
       </StyleListItemButton>
 
       <Popover
