@@ -1,3 +1,5 @@
+import 'dayjs/locale/es.js'
+
 import { DatePicker, DatePickerProps, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { PickerValidDate } from '@mui/x-date-pickers/models'

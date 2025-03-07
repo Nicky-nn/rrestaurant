@@ -1,3 +1,5 @@
+import 'dayjs/locale/es.js'
+
 import {
   DateTimePicker,
   DateTimePickerProps,
