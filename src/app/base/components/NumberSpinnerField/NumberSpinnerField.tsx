@@ -290,7 +290,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
                   aria-label="decrementar valor"
                   onClick={() => decrement(true)}
                   edge="start"
-                  disabled={disabled || (stateValue ?? 0) - step < min}
+                  disabled={disabled || (Number(stateValue) || 0) - step < min}
                   tabIndex={spinnerTabIndex ? undefined : -1}
                 >
                   <RemoveCircle />
@@ -313,7 +313,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
                     aria-label="incrementar valor"
                     onClick={() => increment(true)}
                     edge="end"
-                    disabled={disabled || (stateValue ?? 0) + step > max}
+                    disabled={disabled || (Number(stateValue) || 0) + step > max}
                     tabIndex={spinnerTabIndex ? undefined : -1}
                   >
                     <AddCircleOutlined />
