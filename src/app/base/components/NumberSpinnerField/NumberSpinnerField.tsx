@@ -23,7 +23,7 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
     color: theme.palette.primary.main,
   },
   transition: theme.transitions.create('color'),
-  p: 0.6,
+  padding: 5,
 }))
 
 interface CustomProps {
