@@ -256,7 +256,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
     /******************************************************************************/
     useEffect(() => {
       setStateValue(valueProp || null)
-    }, [])
+    }, [valueProp])
 
     return (
       <TextField
