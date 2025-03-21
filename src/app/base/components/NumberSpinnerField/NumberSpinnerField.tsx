@@ -255,7 +255,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
     /******************************************************************************/
     /******************************************************************************/
     useEffect(() => {
-      setStateValue(valueProp || null)
+      setStateValue(valueProp ?? null)
     }, [valueProp])
 
     return (
@@ -281,7 +281,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
               style: {
                 textAlign: textAlign,
                 height: 20,
-                fontSize: 15.5,
+                fontSize: 15,
               },
             },
             startAdornment: !hideActionButtons && (
