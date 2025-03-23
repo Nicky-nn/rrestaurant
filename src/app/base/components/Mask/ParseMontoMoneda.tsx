@@ -40,7 +40,7 @@ const ParseMontoMoneda: FunctionComponent<Props> = (props) => {
       {sigla && (
         <Typography
           fontSize={'smaller'}
-          sx={{ ml: 0.7 }}
+          sx={{ ml: 0.4 }}
           display={'inline'}
           {...siglaProps}
         >
