@@ -113,7 +113,7 @@ button {
 .responsive-table table th,
 .responsive-table table td {
     padding: 0.625em;
-    vertical-align: top;
+    vertical-align: baseline;
     text-align: left;
 }
 
@@ -215,9 +215,11 @@ button {
 .inputMontoPagar.rc-input-number input {
     color: #0e2a47 !important;
 }
+
 .rc-input-number.rc-input-error {
     border: 1px solid #FF3D57
 }
+
 /************** PLUGIN RC-INPUT *****************/
 
 /***************** SWEET-ALERT*********************/
@@ -307,9 +309,11 @@ button {
 .MuiTableCell-root.MuiTableCell-head {
     border-right: 1px solid rgba(224, 224, 200, 0.3);
 }
+
 .MuiTableCell-root.MuiTableCell-body {
     border-right: 1px solid rgba(224, 224, 224, 0.4);
 }
+
 /**** FIN MATERIAL-DATA-TABLE *****/
 
 .react-datepicker-popper {
@@ -319,6 +323,7 @@ button {
 /*Estilo para mui dateTimePicker, scroll peque*/
 .MuiList-root.MuiMultiSectionDigitalClockSection-root {
     scrollbar-width: thin;
+
     ::-webkit-scrollbar {
         width: 0.5em;
     }
