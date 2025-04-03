@@ -1,4 +1,4 @@
-import { Box, Hidden, styled, Switch, Theme, useTheme } from '@mui/material'
+import { Box, styled, Switch, Theme, useTheme } from '@mui/material'
 import React from 'react'
 
 import { sidenavCompactWidth, sideNavWidth } from '../../../../../utils/constant'
@@ -92,14 +92,14 @@ const Layout1Sidenav = () => {
     <SidebarNavRoot bgimgurl={bgImgURL} primarybg={primaryRGB} width={getSidenavWidth()}>
       <NavListBox>
         <Brand>
-          <Hidden smDown>
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             <Switch
               onChange={handleSidenavToggle}
               checked={leftSidebar.mode !== 'full'}
               color="secondary"
               size="small"
             />
-          </Hidden>
+          </Box>
         </Brand>
         <Sidenav />
       </NavListBox>

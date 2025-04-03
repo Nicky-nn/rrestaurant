@@ -23,7 +23,7 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
     color: theme.palette.primary.main,
   },
   transition: theme.transitions.create('color'),
-  padding: 5,
+  padding: 4.5,
 }))
 
 interface CustomProps {
@@ -63,7 +63,7 @@ const NumericFormatCustom = React.forwardRef<HTMLInputElement, CustomProps>(
   },
 )
 
-type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
+export type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
   value?: number | null
   min?: number
   max?: number

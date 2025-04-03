@@ -18,6 +18,7 @@ type Props = OwnProps
  * Parseamos un monto con su sigla moneda
  * @param props
  * @constructor
+ * @deprecated, usar el componente MontoMonedaTexto
  */
 const ParseMontoMoneda: FunctionComponent<Props> = (props) => {
   const {

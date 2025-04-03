@@ -292,6 +292,7 @@ export const Span: any = ({
   return (
     <StyledBox
       // textTransformStyle={textTransform || 'none'}
+      component={'span'}
       ellipsis={ellipsis}
       className={clsx({
         [className || '']: true,

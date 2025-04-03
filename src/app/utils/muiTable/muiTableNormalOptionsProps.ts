@@ -125,6 +125,6 @@ export const MuiTableNormalOptionsProps: MRT_TableOptions<any> = {
   mrtTheme: (theme) => ({
     ...MuiTableMrtTheme(theme),
   }),
-  enableRowVirtualization: true,
-  rowVirtualizerOptions: { overscan: 10 }, //optionally customize the row virtualizer
+  // enableRowVirtualization: true,
+  // rowVirtualizerOptions: { overscan: 10 }, //optionally customize the row virtualizer
 }

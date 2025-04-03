@@ -1,20 +1,25 @@
-import { Breadcrumbs, Hidden, Icon, styled, useTheme } from '@mui/material'
-import { FC } from 'react'
+import Home from '@mui/icons-material/Home'
+import NavigateNext from '@mui/icons-material/NavigateNext'
+import { styled } from '@mui/material'
+import Breadcrumbs from '@mui/material/Breadcrumbs'
+import { Fragment } from 'react'
 import { NavLink } from 'react-router-dom'
 
-const BreadcrumbRoot = styled('div')(() => ({
+// STYLED COMPONENTS
+const BreadcrumbRoot = styled('div')({
   display: 'flex',
   flexWrap: 'wrap',
   alignItems: 'center',
-  marginBottom: '10px !important',
-}))
+  marginBottom: '0.3rem',
+})
 
-const BreadcrumbName = styled('h4')(() => ({
+const BreadcrumbName = styled('h4')(({ theme }) => ({
   margin: 0,
   fontSize: '16px',
   paddingBottom: '1px',
   verticalAlign: 'middle',
   textTransform: 'capitalize',
+  [theme.breakpoints.down('xs')]: { display: 'none' },
 }))
 
 const SubName = styled('span')(({ theme }) => ({
@@ -27,55 +32,47 @@ const Separator = styled('h4')(({ theme }) => ({
   marginLeft: 8,
   paddingBottom: '3px',
   color: theme.palette.text.primary,
+  [theme.breakpoints.down('xs')]: { display: 'none' },
 }))
 
-const StyledIcon = styled(Icon)(() => ({
+const StyledIcon = styled(Home)({
   marginLeft: 8,
   marginBottom: '4px',
   verticalAlign: 'middle',
-}))
+})
 
-const Breadcrumb: FC<any> = ({ routeSegments }: any) => {
-  const theme = useTheme()
-  const hint = theme.palette.text.secondary
-
+export default function Breadcrumb({ routeSegments }: any) {
   return (
-    <div className="breadcrumb">
-      <BreadcrumbRoot>
-        {routeSegments ? (
-          <Hidden xsDown>
-            <BreadcrumbName>
-              {routeSegments[routeSegments.length - 1]['name']}
-            </BreadcrumbName>
-            <Separator>|</Separator>
-          </Hidden>
-        ) : null}
-        <Breadcrumbs
-          separator={<Icon sx={{ color: hint }}>navigate_next</Icon>}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            position: 'relative',
-          }}
-        >
-          <NavLink to="/">
-            <StyledIcon color="primary">home</StyledIcon>
-          </NavLink>
-          {routeSegments
-            ? routeSegments.map((route: any, index: any) => {
-                return index !== routeSegments.length - 1 ? (
-                  <NavLink key={index} to={route.path}>
-                    <SubName>{route.name}</SubName>
-                  </NavLink>
-                ) : (
-                  <SubName key={index}>{route.name}</SubName>
-                )
-              })
-            : null}
-        </Breadcrumbs>
-      </BreadcrumbRoot>
-    </div>
+    <BreadcrumbRoot>
+      {routeSegments ? (
+        <Fragment>
+          <BreadcrumbName>
+            {routeSegments[routeSegments.length - 1]['name']}
+          </BreadcrumbName>
+          <Separator>|</Separator>
+        </Fragment>
+      ) : null}
+
+      <Breadcrumbs
+        separator={<NavigateNext sx={{ color: 'text.hint' }} />}
+        sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}
+      >
+        <NavLink to="/">
+          <StyledIcon color="primary" />
+        </NavLink>
+
+        {routeSegments
+          ? routeSegments.map((route: any, index: any) => {
+              return index !== routeSegments.length - 1 ? (
+                <NavLink key={index} to={route.path}>
+                  <SubName>{route.name}</SubName>
+                </NavLink>
+              ) : (
+                <SubName key={index}>{route.name}</SubName>
+              )
+            })
+          : null}
+      </Breadcrumbs>
+    </BreadcrumbRoot>
   )
 }
-
-export default Breadcrumb

@@ -11,7 +11,6 @@ import {
   Avatar,
   Box,
   Chip,
-  Hidden,
   IconButton,
   MenuItem,
   Popover,
@@ -235,12 +234,12 @@ const Layout1Topbar: FC<any> = () => {
           <MatxMenu
             menuButton={
               <UserMenu>
-                <Hidden xsDown>
+                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
                   <Span>
-                    Hola <strong>{user.nombres}</strong>
+                    Hola <strong>{user.nombres} </strong>
                   </Span>
-                </Hidden>
-                <Avatar src={user.avatar} sx={{ cursor: 'pointer' }} />
+                </Box>
+                <Avatar src={user.avatar} sx={{ cursor: 'pointer', ml: 1 }} />
               </UserMenu>
             }
           >

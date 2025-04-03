@@ -28,6 +28,7 @@ type Props = OwnProps
  * anchorEl es obligatorio
  * @param props
  * @constructor
+ * @deprecated, usar el componente MontoMonedaTexto
  */
 const PopoverMonto: FunctionComponent<Props> = (props) => {
   const {

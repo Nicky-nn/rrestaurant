@@ -1,6 +1,6 @@
 import { themes } from '../MatxTheme/initThemes'
 import { CreateMatxThemesProps, ThemeTypeColorsProps } from '../MatxTheme/themeColors'
-import layout1Settings, { LayoutSettingsProps } from './Layout1/Layout1Settings'
+import { LayoutSettingsProps } from './Layout1/Layout1Settings'
 
 export interface MatxLayoutSettingsProps {
   activeLayout: 'layout1' | 'layout2' // layout1, layout2
