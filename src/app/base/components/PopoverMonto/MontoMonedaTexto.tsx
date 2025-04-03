@@ -44,7 +44,7 @@ interface OwnProps {
     NumberInputProps,
     'onChange, min, max, step, unit, decimalScale, helperText'
   > // Propiedades de NumberInput, se aplica cuando editar=true
-  onChange: (value?: number) => void
+  onChange?: (value?: number) => void
   min?: number // Min de incremento, default 0
   max?: number // Max de incremento, default Infinity
   step?: number // Step de incremento, default 1
@@ -192,7 +192,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
                 fullWidth
                 onClick={() => {
                   if (inputMonto || inputMonto === 0) {
-                    onChange(inputMonto)
+                    if (onChange) onChange(inputMonto)
                     setAnchorMonto(null)
                   }
                 }}

@@ -275,13 +275,15 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
         slotProps={{
           ...slotProps,
           input: {
+            sx: {
+              fontSize: '1.16em',
+            },
             inputComponent: NumericFormatCustom as any,
             inputProps: {
               scale: decimalScale,
               style: {
                 textAlign: textAlign,
                 height: 20,
-                fontSize: 15,
               },
             },
             startAdornment: !hideActionButtons && (
@@ -302,7 +304,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
                 {unit && (
                   <Typography
                     component={'span'}
-                    fontSize={'small'}
+                    fontSize={'smaller'}
                     sx={{ lineHeight: 0, mt: 0.3 }}
                   >
                     {unit}
