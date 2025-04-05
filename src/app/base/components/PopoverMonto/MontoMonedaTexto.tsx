@@ -31,7 +31,7 @@ const StyleListItemButton = styled(ListItemButton)(({ theme }) => ({
 }))
 
 interface OwnProps {
-  id: string
+  id?: string
   label?: React.ReactElement | string // Text antecedido al monto
   monto: number // monto a pasar
   sigla?: string // sigla de la moneda
@@ -88,8 +88,12 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
   const [inputMonto, setInputMonto] = useState<number | undefined | null>(null)
   const [anchorMonto, setAnchorMonto] = useState<any | null>(null)
 
+  const nid = id
+    ? id
+    : `${Math.floor(Math.random() * 99999999).toString()}-${Math.floor(Math.random() * 99999)}`
+
   const open = Boolean(anchorMonto)
-  const idPopover = open ? `popover-monto-moneda-${id}` : undefined
+  const idPopover = open ? `po-monto-moneda-${nid}` : undefined
 
   useEffect(() => {
     setInputMonto(monto)
@@ -115,7 +119,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
 
   return (
     <>
-      <Box id={id} {...boxProps}>
+      <Box id={nid} {...boxProps}>
         {label && label}
         {editar && !lista && (
           <Link
@@ -186,7 +190,6 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
             <Grid size={12} sx={{ textAlign: 'center' }}>
               <Button
                 size={'small'}
-                aria-hidden={false}
                 startIcon={<CheckCircle />}
                 variant={'contained'}
                 fullWidth
