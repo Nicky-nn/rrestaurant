@@ -2,73 +2,16 @@
 
 import { gql, GraphQLClient } from 'graphql-request'
 
-import { TipoRepresentacionGrafica } from '../interfaces/base'
+import { PerfilFragment } from '../interfaces/session'
 import { MyGraphQlError } from '../services/GraphqlError'
 import { PerfilProps } from './loginModel'
 import { AccessToken } from './paramsModel'
 
 const query = gql`
-  {
+  ${PerfilFragment}
+  query PERFIL {
     perfil {
-      miEmpresa {
-        tienda
-        razonSocial
-        codigoModalidad
-        codigoAmbiente
-        fechaValidezToken
-        email
-        emailFake
-      }
-      usuario
-      razonSocial
-      nombres
-      apellidos
-      avatar
-      cargo
-      ci
-      correo
-      rol
-      sigla
-      dominio
-      tipo
-      vigente
-      tipoRepresentacionGrafica
-      sucursal {
-        codigo
-        direccion
-        telefono
-        departamento {
-          codigo
-          codigoPais
-          sigla
-          departamento
-        }
-        direccion
-      }
-      puntoVenta {
-        codigo
-        descripcion
-        nombre
-        tipoPuntoVenta {
-          codigoClasificador
-          descripcion
-        }
-      }
-      actividadEconomica {
-        codigoCaeb
-        descripcion
-        tipoActividad
-      }
-      moneda {
-        codigo
-        descripcion
-        sigla
-      }
-      monedaTienda {
-        codigo
-        descripcion
-        sigla
-      }
+      ...PerfilField
     }
   }
 `

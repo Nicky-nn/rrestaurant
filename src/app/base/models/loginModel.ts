@@ -6,6 +6,7 @@ import { PuntoVentaProps } from '../../interfaces/puntoVenta'
 import { SinActividadesProps } from '../../interfaces/sin.interface'
 import { SucursalProps } from '../../interfaces/sucursal'
 import { MonedaParamsProps, TipoRepresentacionGrafica } from '../interfaces/base'
+import { PerfilFragment } from '../interfaces/session'
 import { MyGraphQlError } from '../services/GraphqlError'
 
 export interface PerfilProps {
@@ -18,25 +19,27 @@ export interface PerfilProps {
   rol: string
   sigla: string
   dominio: string[]
-  usuario: string
   tipo: 'SA' | 'ADMIN' | 'GUEST' | 'USER'
-  vigente: string
-  tipoRepresentacionGrafica: TipoRepresentacionGrafica
+  vigente: string // SI, NO
+  actividadEconomica: SinActividadesProps
   sucursal: SucursalProps
   puntoVenta: PuntoVentaProps
-  actividadEconomica: SinActividadesProps
   moneda: MonedaParamsProps
   monedaTienda: MonedaParamsProps
+  modificarMontos: boolean
   razonSocial: string
   miEmpresa: {
-    razonSocial: string
+    tienda: string
     codigoModalidad: number
     codigoAmbiente: number
+    razonSocial: string
     fechaValidezToken: string
-    tienda: string
     email: string
     emailFake: string
   }
+  tipoRepresentacionGrafica: TipoRepresentacionGrafica
+  usuario: string
+  integracionSiat: boolean
 }
 
 export interface UserProps {
@@ -46,70 +49,13 @@ export interface UserProps {
 }
 
 const mutation = gql`
+  ${PerfilFragment}
   mutation Login($shop: String!, $email: String!, $password: String!) {
     login(shop: $shop, email: $email, password: $password) {
       token
       refreshToken
       perfil {
-        miEmpresa {
-          tienda
-          razonSocial
-          codigoModalidad
-          codigoAmbiente
-          fechaValidezToken
-          email
-          emailFake
-        }
-        usuario
-        razonSocial
-        nombres
-        apellidos
-        avatar
-        cargo
-        ci
-        correo
-        rol
-        sigla
-        dominio
-        tipo
-        vigente
-        tipoRepresentacionGrafica
-        sucursal {
-          codigo
-          direccion
-          telefono
-          departamento {
-            codigo
-            codigoPais
-            sigla
-            departamento
-          }
-          direccion
-        }
-        puntoVenta {
-          codigo
-          descripcion
-          nombre
-          tipoPuntoVenta {
-            codigoClasificador
-            descripcion
-          }
-        }
-        actividadEconomica {
-          codigoCaeb
-          descripcion
-          tipoActividad
-        }
-        moneda {
-          codigo
-          descripcion
-          sigla
-        }
-        monedaTienda {
-          codigo
-          descripcion
-          sigla
-        }
+        ...PerfilField
       }
     }
   }
