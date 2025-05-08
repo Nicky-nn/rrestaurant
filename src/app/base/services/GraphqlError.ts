@@ -22,10 +22,10 @@ const validateGraphQlError = (e: Error): any => {
       type: parsed.response?.errors[0]?.extensions?.code || 'BAD_REQUEST',
       path: parsed.response?.errors[0]?.path.join('<br />') || '',
     }
-  } catch (e: any) {
+  } catch (erno: any) {
     return {
       status: 400,
-      message: 'Error no definido',
+      message: e?.message || 'Error no definido',
       originalMessage: e.message,
       stacktrace: `<pre></pre>`,
       type: 'BAD_REQUEST',

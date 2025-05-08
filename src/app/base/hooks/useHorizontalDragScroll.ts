@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+
 /****
-EJEMPLO DE USO
-const { ref, handlers, style } = useHorizontalDragScroll()
-//
-<Box sx={{ ...style }} ref={ref} {...handlers}>
-  {categorias?.map((item, index) => (
-    <Button key={index}>{item.descripcion}</ItemButton>
-  ))}
-</Box>
+ EJEMPLO DE USO
+ const { ref, handlers, style } = useHorizontalDragScroll()
+ //
+ <Box sx={{ ...style }} ref={ref} {...handlers}>
+ {categorias?.map((item, index) => (
+ <Button key={index}>{item.descripcion}</ItemButton>
+ ))}
+ </Box>
  ****/
 
 interface HorizontalDragScrollOptions {
@@ -23,6 +24,8 @@ interface HorizontalDragScrollOptions {
   onDragStart?: () => void // Cuando se inicia el drag o click izquierdo
   onDragEnd?: () => void // Cuando Finaliza el drag o click izquierdo
   disableOnMobile?: boolean // Deshabilitar toda la logica en dispositivos móviles
+  enableWheelDrag?: boolean // Habilitacion scroll con mouse
+  wheelResistance?: number // Resistencia al scroll con mouse
 }
 
 /**
@@ -42,6 +45,7 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
   const lastX = useRef(0)
   const animationFrame = useRef<number>(0)
   const inertiaAnimation = useRef<number>(0)
+  const wheelTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // Configuración por defecto
   const {
@@ -54,6 +58,8 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
     onDragStart,
     onDragEnd,
     disableOnMobile = true, // Valor por defecto true para deshabilitar en móviles
+    wheelResistance = 1,
+    enableWheelDrag = true,
   } = options || {}
 
   // Calcula los límites de desplazamiento
@@ -89,6 +95,7 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
 
       cancelAnimationFrame(animationFrame.current)
       cancelAnimationFrame(inertiaAnimation.current)
+      clearTimeout(wheelTimeout.current)
 
       containerRef.current.style.cursor = 'grabbing'
       containerRef.current.style.userSelect = 'none'
@@ -155,7 +162,7 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
 
     const container = containerRef.current
     const currentScroll = container.scrollLeft
-    const newScroll = applyBounds(currentScroll - velocity.current * 10)
+    const newScroll = applyBounds(currentScroll - velocity.current * 10) // 16
 
     container.scrollLeft = newScroll
     setScrollLeft(newScroll)
@@ -181,6 +188,55 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
     onDragEnd?.()
   }, [inertiaEnabled, applySnap, inertiaAnimationStep, onDragEnd, isMobileDevice])
 
+  // Maneja el scroll con rueda del mouse
+  // Si isMobileDevice, si es telefono se desactiva todo
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      if (!enableWheelDrag || !containerRef.current || isMobileDevice || isDragging)
+        return
+
+      // Solo manejar scroll horizontal
+      if (Math.abs(e.deltaX) === 0 && Math.abs(e.deltaY) > 0) {
+        e.preventDefault()
+
+        const container = containerRef.current
+        const currentScroll = container.scrollLeft
+        // Usamos deltaY para el scroll horizontal con rueda
+        const newScroll = applyBounds(currentScroll + e.deltaY * wheelResistance)
+
+        container.scrollLeft = newScroll
+        setScrollLeft(newScroll)
+
+        // Calcular velocidad para inercia
+        const now = performance.now()
+        if (lastTime.current > 0) {
+          const deltaTime = now - lastTime.current
+          velocity.current = -e.deltaY / deltaTime
+        }
+        lastTime.current = now
+
+        // Resetear el temporizador de snap
+        clearTimeout(wheelTimeout.current)
+        container.style.scrollBehavior = 'auto'
+
+        // Aplicar snap después de que termine el scroll
+        wheelTimeout.current = setTimeout(() => {
+          if (!isDragging) {
+            applySnap()
+          }
+        }, 150)
+      }
+    },
+    [
+      enableWheelDrag,
+      isMobileDevice,
+      isDragging,
+      applyBounds,
+      wheelResistance,
+      applySnap,
+    ],
+  )
+
   // Configura el event listener de scroll
   const handleScroll = useCallback(() => {
     if (containerRef.current) {
@@ -195,16 +251,31 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
 
   // Configura los event listeners
   useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
     if (isDragging && !isMobileDevice) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
-
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove)
-        document.removeEventListener('mouseup', handleMouseUp)
-      }
     }
-  }, [isDragging, isMobileDevice, handleMouseMove, handleMouseUp])
+
+    if (enableWheelDrag && !isMobileDevice) {
+      container.addEventListener('wheel', handleWheel, { passive: false })
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      container.removeEventListener('wheel', handleWheel)
+    }
+  }, [
+    isDragging,
+    isMobileDevice,
+    handleMouseMove,
+    handleMouseUp,
+    enableWheelDrag,
+    handleWheel,
+  ])
 
   // Detectar si es un dispositivo móvil
   useEffect(() => {
@@ -234,6 +305,7 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
     return () => {
       cancelAnimationFrame(animationFrame.current)
       cancelAnimationFrame(inertiaAnimation.current)
+      clearTimeout(wheelTimeout.current)
     }
   }, [])
 
