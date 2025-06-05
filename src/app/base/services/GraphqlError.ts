@@ -4,7 +4,7 @@ const validateGraphQlError = (e: Error): any => {
     if (!parsed.response || parsed.response?.status === 404) {
       return {
         status: 404,
-        message: 'Error conexión con el servidor',
+        message: e.message,
         originalMessage: 'Error conexión con el servidor',
         stacktrace: `<pre></pre>`,
         type: 'BAD_REQUEST',

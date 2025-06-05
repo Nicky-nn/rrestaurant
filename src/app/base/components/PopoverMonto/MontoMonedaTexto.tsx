@@ -27,6 +27,7 @@ const StyleListItemButton = styled(ListItemButton)(({ theme }) => ({
   '&:hover': {
     backgroundColor: theme.palette.action.hover,
     textDecoration: 'underline',
+    textUnderlineOffset: 2,
   },
 }))
 
@@ -128,7 +129,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
               setInputMonto(monto)
               setAnchorMonto(event.currentTarget)
             }}
-            color={error ? 'error' : linkProps?.color || 'textPrimary'}
+            color={error ? 'error' : linkProps?.color || 'primary'}
             {...linkProps}
           >
             {TypMonto}
@@ -144,6 +145,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
             sx={(theme) => ({
               fontWeight: 400,
               textDecoration: 'underline',
+              textUnderlineOffset: 2,
               color: error ? theme.palette.error.main : theme.palette.text.primary,
             })}
           >
