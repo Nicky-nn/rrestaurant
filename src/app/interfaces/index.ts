@@ -91,6 +91,7 @@ export interface PageInputProps {
   page: number
   reverse: boolean
   query?: string
+  extraQuery?: string
 }
 
 export interface PlantillaDetalleExtra {
