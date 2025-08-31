@@ -9,6 +9,11 @@ interface OwnProps {}
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const CuentaSucursal: FunctionComponent<Props> = (props) => {
   const { user } = useAuth()
   return (

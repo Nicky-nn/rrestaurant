@@ -34,6 +34,7 @@ interface CustomProps {
 
 /**
  * Control para validar datos numéricos.
+ * @author isi-template
  */
 const NumericFormatCustom = React.forwardRef<HTMLInputElement, CustomProps>(
   function NumericFormatCustom(props, ref) {
@@ -94,6 +95,7 @@ export type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
 
 /**
  * Control para datos numericos
+ * @author isi-template
  * @param value
  * @param min Valor minimo aceptado, default 0
  * @param max Valor maximo aceptado, default Infinity

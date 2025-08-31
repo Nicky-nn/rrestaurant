@@ -12,6 +12,11 @@ const gqlQuery = gql`
   }
 `
 
+/**
+ * @description Cambiamos el password del usuario
+ * @author isi-template
+ * @param input
+ */
 export const apiUsuarioCambiarPassword = async (
   input: UsuarioCambiarPasswordInputProps,
 ): Promise<Boolean> => {

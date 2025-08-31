@@ -22,6 +22,10 @@ const StyledLoading = styled('div')(() => ({
   },
 }))
 
+/**
+ * @author isi-template
+ * @constructor
+ */
 const MatxLoading = () => {
   return (
     <StyledLoading>

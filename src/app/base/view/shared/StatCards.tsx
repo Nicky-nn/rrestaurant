@@ -39,7 +39,11 @@ const Heading = styled('h6')(({ theme }) => ({
 const StatCards = () => {
   return (
     <Grid container spacing={3} sx={{ mb: '24px' }}>
-      <Grid item xs={12} md={6}>
+      <Grid
+        size={{
+          xs: 12,
+          md: 6
+        }}>
         <StyledCard elevation={6}>
           <ContentBox>
             <Icon className="icon">group</Icon>
@@ -55,7 +59,11 @@ const StatCards = () => {
           </Tooltip>
         </StyledCard>
       </Grid>
-      <Grid item xs={12} md={6}>
+      <Grid
+        size={{
+          xs: 12,
+          md: 6
+        }}>
         <StyledCard elevation={6}>
           <ContentBox>
             <Icon className="icon">attach_money</Icon>
@@ -71,7 +79,11 @@ const StatCards = () => {
           </Tooltip>
         </StyledCard>
       </Grid>
-      <Grid item xs={12} md={6}>
+      <Grid
+        size={{
+          xs: 12,
+          md: 6
+        }}>
         <StyledCard elevation={6}>
           <ContentBox>
             <Icon className="icon">store</Icon>
@@ -87,7 +99,11 @@ const StatCards = () => {
           </Tooltip>
         </StyledCard>
       </Grid>
-      <Grid item xs={12} md={6}>
+      <Grid
+        size={{
+          xs: 12,
+          md: 6
+        }}>
         <StyledCard elevation={6}>
           <ContentBox>
             <Icon className="icon">shopping_cart</Icon>
@@ -104,7 +120,7 @@ const StatCards = () => {
         </StyledCard>
       </Grid>
     </Grid>
-  )
+  );
 }
 
 export default StatCards

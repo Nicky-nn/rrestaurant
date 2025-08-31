@@ -14,6 +14,10 @@ const Toggle = styled('div')(() => ({
   },
 }))
 
+/**
+ * @author isi-template
+ * @constructor
+ */
 const SecondarySidebarToggle = () => {
   const { settings, updateSettings }: any = useSettings()
 

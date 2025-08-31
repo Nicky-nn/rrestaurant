@@ -97,6 +97,7 @@ import {
 
 /**
  * @description propiedades de la tabla muy básica según especificaciones de MUI
+ * @author isi-template
  * cambio v2 = muiTableHeadCellFilterTextFieldProps -> muiFilterTextFieldProps
  * renderTopToolbarCustomActions = MuiRenderTopToolbarCustomActions = nos permite añadir el btn de refresh manualmente
  * renderRowActions = MuiRenderRowActions = nos permite añadir acciones de fila

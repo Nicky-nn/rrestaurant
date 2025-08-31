@@ -81,6 +81,7 @@ const getSpacingValue = (spacing: number, theme: any): number => {
 
 /**
  * Componente de contenedor virtualizado
+ * @author isi-template
  * @param data
  * @param itemHeight
  * @param gridConfig

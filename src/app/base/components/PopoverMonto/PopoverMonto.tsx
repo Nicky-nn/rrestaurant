@@ -1,5 +1,4 @@
-import { Button, Popover, PopoverProps } from '@mui/material'
-import Grid from '@mui/material/Grid2'
+import { Button, Grid, Popover, PopoverProps } from '@mui/material'
 import React, { FunctionComponent, useEffect, useState } from 'react'
 
 import NumberSpinnerField from '../NumberSpinnerField/NumberSpinnerField'

@@ -3,6 +3,7 @@ import { EntidadInputProps } from '../interfaces'
 
 /**
  * @description Obtenemos la entidad de la sucursal y punto de venta
+ * @author isi-template
  * @param user
  */
 export const getEntidadInput = (user: PerfilProps): EntidadInputProps => ({

@@ -1,3 +1,7 @@
+/**
+ * @author isi-template
+ * @param e
+ */
 export const swalExceptionMsg = (e: Error) => {
   return `
 <p style="text-align: center">${e.message}</p>

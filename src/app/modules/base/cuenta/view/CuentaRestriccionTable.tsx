@@ -27,6 +27,7 @@ type Props = OwnProps
 /**
  * @description Formulario para cambiar de sucursal y punto de venta activo, una vez realizado el click
  * el sistema se reinicia, cargando el nuevo perfilProps
+ * @author isi-template
  * @param props
  * @constructor
  */

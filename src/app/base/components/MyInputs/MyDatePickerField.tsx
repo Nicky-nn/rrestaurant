@@ -1,7 +1,7 @@
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale/es'
-import React, { Component, FunctionComponent } from 'react'
-import DatePicker, { DatePickerProps, registerLocale } from 'react-datepicker'
+import React, { FunctionComponent } from 'react'
+import DatePicker, { registerLocale } from 'react-datepicker'
 
 registerLocale('es', es)
 
@@ -21,6 +21,7 @@ type Props = OwnProps
 
 /**
  * Wrapper para date picker enfocado a rangos de fechas, requiere react-datepicker y date-fns
+ * @author isi-template
  * @param props
  * @constructor
  */

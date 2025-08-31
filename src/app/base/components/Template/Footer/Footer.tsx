@@ -35,6 +35,10 @@ const FooterContent = styled('div')(() => ({
 const nombreComercial = import.meta.env.ISI_NOMBRE_COMERCIAL || 'ISI.INVOICE'
 const urlEmpresa = import.meta.env.ISI_URL || 'https://integrate.com.bo'
 
+/**
+ * @author isi-template
+ * @constructor
+ */
 const Footer: FC<any> = () => {
   const theme = useTheme()
   const { settings } = useSettings()
@@ -51,7 +55,7 @@ const Footer: FC<any> = () => {
               <a href={urlEmpresa} target="_blank" rel="noreferrer">
                 © {nombreComercial}
               </a>
-              {' 2025 '} - v2025.002
+              {' 2025 '} - v2025.3
             </Paragraph>
           </FooterContent>
         </AppFooter>

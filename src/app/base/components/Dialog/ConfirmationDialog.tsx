@@ -19,6 +19,15 @@ type Props = DialogProps & {
   onConfirm: (event: any, setLoading: any) => void
 }
 
+/**
+ * @author isi-template
+ * @param title
+ * @param description
+ * @param onCancel
+ * @param onConfirm
+ * @param props
+ * @constructor
+ */
 const ConfirmationDialog: FC<Props> = ({
   title,
   description,

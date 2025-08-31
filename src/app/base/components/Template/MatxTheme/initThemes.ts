@@ -6,6 +6,10 @@ import { CreateMatxThemesProps, themeColors } from './themeColors'
 import themeOptions from './themeOptions'
 
 interface CreateThemeProps extends CreateMatxThemesProps, Theme {}
+
+/**
+ * @author isi-template
+ */
 const createMatxThemes = (): CreateMatxThemesProps => {
   let themes: CreateThemeProps = {} as CreateThemeProps
   forEach(themeColors, (value, key) => {

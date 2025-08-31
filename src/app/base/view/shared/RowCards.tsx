@@ -52,7 +52,11 @@ const RowCards: any = () => {
     <Fragment key={id}>
       <Card sx={{ py: 1, px: 2 }} className="project-card">
         <Grid container alignItems="center">
-          <Grid item md={5} xs={7}>
+          <Grid
+            size={{
+              md: 5,
+              xs: 7
+            }}>
             <Box display="flex" alignItems="center">
               <Checkbox />
               <Hidden smDown>
@@ -70,14 +74,18 @@ const RowCards: any = () => {
             </Box>
           </Grid>
 
-          <Grid item md={3} xs={4}>
+          <Grid
+            size={{
+              md: 3,
+              xs: 4
+            }}>
             <Box color={textMuted}>
               {format(new Date().getTime(), 'MM/dd/yyyy hh:mma')}
             </Box>
           </Grid>
 
           <Hidden smDown>
-            <Grid item xs={3}>
+            <Grid size={3}>
               <Box display="flex" position="relative" marginLeft="-0.875rem !important">
                 <StyledAvatar src="/assets/images/face-4.jpg" />
                 <StyledAvatar src="/assets/images/face-4.jpg" />
@@ -87,7 +95,7 @@ const RowCards: any = () => {
             </Grid>
           </Hidden>
 
-          <Grid item xs={1}>
+          <Grid size={1}>
             <Box display="flex" justifyContent="flex-end">
               <IconButton>
                 <MoreVert />
@@ -98,7 +106,7 @@ const RowCards: any = () => {
       </Card>
       <Box py={1} />
     </Fragment>
-  ))
+  ));
 }
 
 export default RowCards

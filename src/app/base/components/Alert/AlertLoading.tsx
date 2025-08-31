@@ -1,4 +1,4 @@
-import { Alert, Box, LinearProgress, Skeleton } from '@mui/material'
+import { Box, LinearProgress, Skeleton } from '@mui/material'
 import React, { FunctionComponent, useEffect } from 'react'
 
 import { Small } from '../Template/Typography'
@@ -12,6 +12,7 @@ type Props = OwnProps
 
 /**
  * @description Loading para randerización de componentes
+ * @author isi-template
  * @param props
  * @constructor
  */

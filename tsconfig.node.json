@@ -1,11 +1,16 @@
 {
   "compilerOptions": {
     "composite": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "noEmit": true,
     "jsxImportSource": "@emotion/react"
   },
   "include": [
-    "vite.config.mts", "./pwaOptions.ts"
+    "vite.config.mts",
+    "pwaOptions.ts"
   ]
 }

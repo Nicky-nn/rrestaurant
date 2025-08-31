@@ -10,6 +10,7 @@ import {
   Checkbox,
   FormControl,
   FormHelperText,
+  Grid,
   IconButton,
   InputAdornment,
   InputLabel,
@@ -18,7 +19,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import Grid from '@mui/material/Grid2'
 import { useEffect, useRef, useState } from 'react'
 import { Controller, SubmitHandler, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
@@ -92,7 +92,8 @@ interface LoginProps {
 }
 
 /**
- * @description Interfaz principal para el inicio de sesión del usuario, compatible con mui v2.x
+ * @description Interfaz principal para el inicio de sesión del usuario, compatible con mui v7.x
+ * @author isi-template
  * @constructor
  */
 const JwtLogin = () => {
@@ -115,7 +116,7 @@ const JwtLogin = () => {
       password: '',
       remember: true,
     },
-    resolver: yupResolver<any>(validationSchema),
+    resolver: yupResolver(validationSchema as any),
   })
 
   /**

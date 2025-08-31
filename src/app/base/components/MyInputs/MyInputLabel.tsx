@@ -4,6 +4,7 @@ interface Props extends InputLabelProps {}
 
 /**
  * @description redifiniendo estilo para el componente InputLabel
+ * @author isi-template
  */
 export const MyInputLabel = styled((props: Props) => {
   const { ...other } = props

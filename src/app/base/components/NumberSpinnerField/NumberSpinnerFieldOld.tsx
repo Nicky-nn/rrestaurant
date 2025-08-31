@@ -1,4 +1,4 @@
-import { AddCircle, AddCircleOutlined, RemoveCircle } from '@mui/icons-material'
+import { AddCircleOutlined, RemoveCircle } from '@mui/icons-material'
 import {
   Box,
   FormControl,
@@ -44,6 +44,7 @@ interface NumberInputProps extends Omit<OutlinedInputProps, 'onChange'> {
 
 /**
  * Control para datos numericos
+ * @author isi-template
  * @param value
  * @param min Valor minimo aceptado, default 0
  * @param max Valor maximo aceptado, default Infinity

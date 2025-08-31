@@ -24,6 +24,10 @@ const NotFoundRoot = styled(FlexBox)(() => ({
   height: '100vh !important',
 }))
 
+/**
+ * @author isi-template
+ * @constructor
+ */
 const NotFound = () => {
   const navigate = useNavigate()
 

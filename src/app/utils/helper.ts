@@ -5,6 +5,10 @@
 import { ColumnFiltersState } from '@tanstack/react-table'
 import { customAlphabet } from 'nanoid'
 
+/**
+ * @author isi-template
+ * @param args
+ */
 export const logg = (...args: any) => {
   if (import.meta.env.MODE !== 'production') {
     console.log(...args)
@@ -13,6 +17,7 @@ export const logg = (...args: any) => {
 
 /**
  * Abrimos url en una nueva pestaña
+ * @author isi-template
  * @param url
  */
 export const openInNewTab = (url: string): void => {
@@ -26,6 +31,7 @@ export const handleSelect = (event: any) => {
 
 /**
  * Devuelve el producto cartesiano de un array de items
+ * @author isi-template
  * @param arr
  */
 export const cartesianProduct = (arr: [[]]) => {
@@ -47,6 +53,7 @@ export const cartesianProduct = (arr: [[]]) => {
 
 /**
  * @description true = vacio, false = no vacio
+ * @author isi-template
  * @param value
  */
 export const isEmptyValue = (value: any): boolean => {
@@ -68,6 +75,7 @@ export const isEmptyValue = (value: any): boolean => {
 
 /**
  * GENERAMOS CADENA ALEATORIA STRING SOLO ALFABETICO
+ * @author isi-template
  * @param lng
  */
 export const genRandomString = (lng = 5): string => {
@@ -77,6 +85,7 @@ export const genRandomString = (lng = 5): string => {
 
 /**
  * Verificamos el tipo de dato, parceamos y enviamos el dato correcto
+ * @author isi-template
  * @param val
  * @param replace
  */
@@ -103,6 +112,10 @@ export const handleFocus = (event: any) => {
   }
 }
 
+/**
+ * @author isi-template
+ * @param str
+ */
 function isNumeric(str: any) {
   if (typeof str != 'string') return false // we only process strings!
   return (
@@ -113,6 +126,7 @@ function isNumeric(str: any) {
 
 /**
  * Parseamos un array en formato query para envio de parametro query, a la api
+ * @author isi-template
  * @param data
  * @param extraQuery = query extra
  */
@@ -136,7 +150,8 @@ export const genApiQuery = (
 }
 
 /**
- * @description Verifica si una string es un email valdiso
+ * @description Verifica si una string es un email válido
+ * @author isi-template
  * @param mail
  */
 export const validateEmail = (mail: string): boolean => {
@@ -147,6 +162,7 @@ export const validateEmail = (mail: string): boolean => {
 
 /**
  * @description Limpiamos los saltos vacios en una cadena
+ * @author isi-template
  * @param str
  */
 export const clearAllLineBreak = (str: string) => {
@@ -155,6 +171,7 @@ export const clearAllLineBreak = (str: string) => {
 
 /**
  * @description Si el texto sobrepasa la cantidad de caracteres, reemplza por ...
+ * @author isi-template
  * @param text
  * @param nro
  */

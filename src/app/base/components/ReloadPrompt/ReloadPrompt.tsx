@@ -4,6 +4,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 
 /**
  * Componente que muestra un mensaje de actualización disponible
+ * @author isi-template
  * @constructor
  * const updateSW = registerSW({
  *   onNeedRefresh() {

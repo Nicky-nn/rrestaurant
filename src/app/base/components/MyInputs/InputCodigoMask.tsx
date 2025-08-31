@@ -8,6 +8,7 @@ interface CustomProps {
 
 /**
  * @description Realiza un enmascaramiento para registro de un codigo
+ * @author isi-template
  */
 export const InputCodigoMask = forwardRef<HTMLElement, CustomProps>(
   function InputCodigoMask(props, ref: any) {

@@ -13,6 +13,11 @@ interface OwnProps {}
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const CuentaSincronizacion: FunctionComponent<Props> = (props) => {
   const fetchSincronizarCatalogos = async () => {
     await swalAsyncConfirmDialog({
@@ -49,19 +54,37 @@ const CuentaSincronizacion: FunctionComponent<Props> = (props) => {
     <>
       <SimpleCard title={'SINCRONIZACIÓN DE DATOS'} childIcon={<Person />}>
         <Grid container spacing={2}>
-          <Grid item lg={12} md={12} xs={12}>
+          <Grid
+            size={{
+              lg: 12,
+              md: 12,
+              xs: 12,
+            }}
+          >
             <H4>Sincronización de CÓDIGO ÚNICO DE FACTURACION DIARIA (CUFD)</H4>
             <ol>
               <li>Nos permite poder emitir documentos fiscales durante el día</li>
             </ol>
           </Grid>
-          <Grid item lg={12} md={12} xs={12}>
+          <Grid
+            size={{
+              lg: 12,
+              md: 12,
+              xs: 12,
+            }}
+          >
             <Button variant={'contained'} size={'small'} onClick={fetchSincronizarCufd}>
               EJECUTAR SERVICIO CUFD
             </Button>
           </Grid>
 
-          <Grid item lg={12} md={12} xs={12}>
+          <Grid
+            size={{
+              lg: 12,
+              md: 12,
+              xs: 12,
+            }}
+          >
             <H4>Sincronización de CATÁLOGOS</H4>
             <ol>
               <li>Sincroniza todos los catalogos y clasificadores del sin.</li>
@@ -76,7 +99,13 @@ const CuentaSincronizacion: FunctionComponent<Props> = (props) => {
               </li>
             </ol>
           </Grid>
-          <Grid item lg={12} md={12} xs={12}>
+          <Grid
+            size={{
+              lg: 12,
+              md: 12,
+              xs: 12,
+            }}
+          >
             <Button
               variant={'contained'}
               size={'small'}

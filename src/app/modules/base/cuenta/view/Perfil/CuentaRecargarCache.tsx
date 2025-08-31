@@ -12,6 +12,11 @@ interface OwnProps {}
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const CuentaRecargarCache: FunctionComponent<Props> = (props) => {
   const handleVaciarCache = async () => {
     await swalAsyncConfirmDialog({
@@ -31,7 +36,13 @@ const CuentaRecargarCache: FunctionComponent<Props> = (props) => {
     <>
       <SimpleCard title={'RECARGAR CACHE'} childIcon={<Person />}>
         <Grid container spacing={2}>
-          <Grid item lg={12} md={12} xs={12}>
+          <Grid
+            size={{
+              lg: 12,
+              md: 12,
+              xs: 12,
+            }}
+          >
             <H4>Ventajas de realizar este proceso</H4>
             <ol>
               <li>Eliminar datos temporales que consumen espacio en memoria</li>
@@ -39,7 +50,13 @@ const CuentaRecargarCache: FunctionComponent<Props> = (props) => {
               <li>Ejecutar la acción no hará que pierda la sesión</li>
             </ol>
           </Grid>
-          <Grid item lg={12} md={12} xs={12}>
+          <Grid
+            size={{
+              lg: 12,
+              md: 12,
+              xs: 12,
+            }}
+          >
             <Button variant={'contained'} onClick={handleVaciarCache}>
               EJECUTAR SERVICIO
             </Button>

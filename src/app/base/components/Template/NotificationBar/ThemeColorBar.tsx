@@ -78,6 +78,11 @@ const StyledScrollBar = styled(Scrollbar)(() => ({
   paddingRight: '16px',
 }))
 
+/**
+ * @author isi-template
+ * @param container
+ * @constructor
+ */
 const ThemeColorBar: FC<any> = ({ container }: any) => {
   const [open, setOpen] = useState(false)
   const [tabIndex, setTabIndex] = useState(0)

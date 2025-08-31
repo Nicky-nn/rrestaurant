@@ -2,6 +2,11 @@ import { FC } from 'react'
 
 import useSettings from '../../../hooks/useSettings'
 
+/**
+ * @author isi-template
+ * @param className
+ * @constructor
+ */
 const MatxLogo: FC<any> = ({ className }: { className: string }) => {
   const { settings } = useSettings()
   const theme = settings.themes[settings.activeTheme]

@@ -26,6 +26,11 @@ const StyledSpan: any = styled(Span)(({ theme, mode }: StyledSpanProps) => ({
 const logoMini = import.meta.env.ISI_LOGO_MINI || '/assets/images/logo_mini.png'
 const nombreComercial = import.meta.env.ISI_NOMBRE_COMERCIAL || 'ISI.INVOICE'
 
+/**
+ * @author isi-template
+ * @param children
+ * @constructor
+ */
 const Brand = ({ children }: { children: JSX.Element | JSX.Element[] }) => {
   const { settings } = useSettings()
   const leftSidebar = settings.layout1Settings.leftSidebar

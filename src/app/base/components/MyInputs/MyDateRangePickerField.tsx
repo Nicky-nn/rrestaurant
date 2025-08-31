@@ -28,6 +28,7 @@ type Props = OwnProps
 
 /**
  * Wrapper para date picker enfocado a rangos de fechas, requiere react-datepicker y date-fns
+ * @author isi-template
  * @param props
  * @constructor
  */

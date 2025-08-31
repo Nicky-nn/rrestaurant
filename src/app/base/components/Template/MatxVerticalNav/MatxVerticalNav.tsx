@@ -78,6 +78,11 @@ const BadgeValue = styled('div')(() => ({
   borderRadius: '300px',
 }))
 
+/**
+ * @author isi-template
+ * @param items
+ * @constructor
+ */
 const MatxVerticalNav: FC<any> = ({ items }: any) => {
   const { settings } = useSettings()
   const { mode } = settings.layout1Settings.leftSidebar

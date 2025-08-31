@@ -16,8 +16,7 @@ import {
 import { get } from 'lodash'
 import React, { Fragment } from 'react'
 
-import { themeColors, ThemeTypeColorsProps } from '../MatxTheme/themeColors'
-import { themeShadows } from '../MatxTheme/themeColors'
+import { themeColors, themeShadows, ThemeTypeColorsProps } from '../MatxTheme/themeColors'
 import BadgeSelected from './BadgeSelected'
 import { mainSidebarThemes, topbarThemes } from './customizerOptions'
 
@@ -56,6 +55,13 @@ const IMG = styled('img')(() => ({
   display: 'block',
 }))
 
+/**
+ * @author isi-template
+ * @param settings
+ * @param handleChange
+ * @param handleControlChange
+ * @constructor
+ */
 const Layout1Customizer = ({ settings, handleChange, handleControlChange }: any) => {
   return (
     <Fragment>
@@ -79,7 +85,6 @@ const Layout1Customizer = ({ settings, handleChange, handleControlChange }: any)
             ))}
         </ToolbarContainer>
       </Box>
-
       <Box mb="32px" mx="12px">
         <ThemeName>Sidebar theme</ThemeName>
         <ToolbarContainer>
@@ -96,7 +101,6 @@ const Layout1Customizer = ({ settings, handleChange, handleControlChange }: any)
           ))}
         </ToolbarContainer>
       </Box>
-
       <Box mb="18px" mx="12px">
         <FormControl component="fieldset">
           <FormLabel component="legend">Sidebar mode</FormLabel>
@@ -112,13 +116,12 @@ const Layout1Customizer = ({ settings, handleChange, handleControlChange }: any)
           </RadioGroup>
         </FormControl>
       </Box>
-
       <Box mb="32px" mx="12px">
         <ThemeName sx={{ mb: 4 }}>Sidebar background image</ThemeName>
         <div>
           <Grid container spacing={3}>
             {sidebarBG.map((bg, i) => (
-              <Grid item xs={4} key={i}>
+              <Grid key={i} size={4}>
                 <BadgeSelected
                   color="primary"
                   badgeContent={<Icon>done</Icon>}
@@ -142,7 +145,6 @@ const Layout1Customizer = ({ settings, handleChange, handleControlChange }: any)
           </Grid>
         </div>
       </Box>
-
       {/* <div className="mb-8 mx-3">
         <div className="text-muted">Sidebar background opacity</div>
         <Slider
@@ -158,7 +160,6 @@ const Layout1Customizer = ({ settings, handleChange, handleControlChange }: any)
           aria-labelledby="sidebar-bgOpacity"
         />
       </div> */}
-
       <Box mb="24px" mx="12px">
         <FormControl component="fieldset">
           <FormLabel component="legend">Topbar</FormLabel>

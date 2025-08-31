@@ -31,6 +31,7 @@ interface apiUsuarioActualizarRestriccionProps {
 
 /**
  * Modifica el token de acceso actualizando los datos de punto de venta y sucursal activo
+ * @author isi-template
  * @param codigoSucursal
  * @param codigoPuntoVenta
  */

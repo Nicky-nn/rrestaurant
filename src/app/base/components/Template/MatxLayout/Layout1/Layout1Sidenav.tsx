@@ -56,6 +56,10 @@ const NavListBox = styled(Box)(() => ({
   flexDirection: 'column',
 }))
 
+/**
+ * @author isi-template
+ * @constructor
+ */
 const Layout1Sidenav = () => {
   const theme = useTheme()
   const { settings, updateSettings } = useSettings()

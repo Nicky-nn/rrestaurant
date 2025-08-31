@@ -1,5 +1,5 @@
 import { Theme, ThemeProvider } from '@mui/material'
-import { FC, ReactNode } from 'react'
+import { ReactNode } from 'react'
 
 type SecondarySidenavThemeProps = {
   theme: Theme

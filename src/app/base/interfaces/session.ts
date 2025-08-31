@@ -4,6 +4,7 @@ import { gql } from 'graphql-request'
 
 /**
  * GraphQL fragment for the Perfil type.
+ * @author isi-template
  */
 export const PerfilFragment = gql`
   fragment PerfilField on Perfil {

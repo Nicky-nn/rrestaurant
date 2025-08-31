@@ -11,6 +11,7 @@ interface CustomProps {
 /**
  * @description Parsea un Input normal en un input de tipo numerico segun las especificaciones
  * scale es la cantidad de decimales que debe aceptar, por default es 2
+ * @author isi-template
  */
 export const NumeroMask = forwardRef<HTMLElement, CustomProps>(function TextMaskCustom(
   props,

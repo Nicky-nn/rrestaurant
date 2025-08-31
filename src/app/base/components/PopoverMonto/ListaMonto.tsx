@@ -1,6 +1,13 @@
 import { CheckCircle } from '@mui/icons-material'
-import { Button, ListItemButton, Popover, styled, SxProps, Theme } from '@mui/material'
-import Grid from '@mui/material/Grid2'
+import {
+  Button,
+  Grid,
+  ListItemButton,
+  Popover,
+  styled,
+  SxProps,
+  Theme,
+} from '@mui/material'
 import React, { FunctionComponent, useEffect, useState } from 'react'
 
 import ParseMontoMoneda from '../Mask/ParseMontoMoneda'

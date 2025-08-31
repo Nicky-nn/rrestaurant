@@ -9,6 +9,9 @@ interface ComponentsProps extends Components<Omit<Theme, 'components'>> {
   MuiExpansionPanel: any
 }
 
+/**
+ * @author isi-template
+ */
 export const components: ComponentsProps = {
   // MuiTable: {
   //   styleOverrides: {

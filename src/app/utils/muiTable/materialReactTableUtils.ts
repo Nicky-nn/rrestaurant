@@ -6,6 +6,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
 /**
  * @description Espacio de para las acciones de fila
+ * @author isi-template
  * @deprecated
  */
 export const muiTableApiEstado = ['ANULADO', 'VALIDADA', 'ELABORADO', 'PENDIENTE']
@@ -18,6 +19,7 @@ export type DcdoProps<TData extends MRT_RowData, TValue = unknown> = Partial<{
 
 /**
  * @description Espacio de para las acciones de fila
+ * @author isi-template
  */
 export const MuiDisplayColumnDefOptions: DcdoProps<any> = {
   'mrt-row-actions': {
@@ -32,6 +34,7 @@ export const MuiDisplayColumnDefOptions: DcdoProps<any> = {
 
 /**
  * @description Custom columns
+ * @author isi-template
  * @param size
  * @constructor
  */
@@ -48,6 +51,7 @@ export const MuiDisplayColumnDefOptionsV2 = (size: number = 50): DcdoProps<any> 
 
 /**
  * @description Input para búsquedas
+ * @author isi-template
  */
 export const MuiSearchTextFieldProps: TextFieldProps = {
   variant: 'outlined',
@@ -56,12 +60,18 @@ export const MuiSearchTextFieldProps: TextFieldProps = {
   size: 'small',
 }
 
+/**
+ * @author isi-template
+ * @param isError
+ * @constructor
+ */
 export const MuiToolbarAlertBannerProps = (isError: boolean): AlertProps | undefined =>
   isError ? { color: 'error', children: 'Error en cargar los datos' } : undefined
 
 /**
  * @description Ancho de los inputs y propiedades segun mui
  * muiFilterTextFieldProps
+ * @author isi-template
  */
 export const MuiFilterTextFieldProps: TextFieldProps = {
   sx: { m: '0.5rem 0', width: '95%' },
@@ -71,6 +81,7 @@ export const MuiFilterTextFieldProps: TextFieldProps = {
 
 /**
  * @description propiedades de la tabla segun especificaciones de MUI
+ * @author isi-template
  */
 export const MuiTableProps: TableProps = {
   sx: {
@@ -84,6 +95,7 @@ export const MuiTableProps: TableProps = {
 }
 /**
  * @description propiedades de la tabla segun especificaciones de MUI
+ * @author isi-template
  */
 export const MuiTableCompactProps: TableProps = {
   sx: {
@@ -98,6 +110,7 @@ export const MuiTableCompactProps: TableProps = {
 
 /**
  * Custom thema para la tabla
+ * @author isi-template
  * @param theme
  * @constructor
  */
@@ -109,6 +122,7 @@ export const MuiTableMrtTheme = (theme: Theme) => ({
 
 /**
  * @description propiedades de la tabla paginación
+ * @author isi-template
  */
 export const MuiTablePaginationProps: any = {
   color: 'secondary',
@@ -119,6 +133,7 @@ export const MuiTablePaginationProps: any = {
 
 /**
  * @description propiedades de la tabla segun especificaciones de MUI
+ * @author isi-template
  */
 export const MuiTablePaperProps: PaperProps = {
   elevation: 1, //Cambiamos la elevacion de sombras
@@ -185,6 +200,7 @@ export const MuiTablePaperProps: PaperProps = {
 
 /**
  * @description propiedades de la tabla muy básica según especificaciones de MUI
+ * @author isi-template
  * cambio v2 = muiTableHeadCellFilterTextFieldProps -> muiFilterTextFieldProps
  * renderTopToolbarCustomActions = MuiRenderTopToolbarCustomActions = nos permite añadir el btn de refresh manualmente
  * renderRowActions = MuiRenderRowActions = nos permite añadir acciones de fila

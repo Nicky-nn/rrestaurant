@@ -69,12 +69,26 @@ const JwtRegister = () => {
     <JWTRegister>
       <Card className="card">
         <Grid container>
-          <Grid item lg={5} md={5} sm={5} xs={12}>
+          <Grid
+            size={{
+              lg: 5,
+              md: 5,
+              sm: 5,
+              xs: 12,
+            }}
+          >
             <ContentBox>
               <IMG src="/assets/images/illustrations/posting_photo.svg" alt="" />
             </ContentBox>
           </Grid>
-          <Grid item lg={7} md={7} sm={7} xs={12}>
+          <Grid
+            size={{
+              lg: 7,
+              md: 7,
+              sm: 7,
+              xs: 12,
+            }}
+          >
             <Box p={4} height="100%">
               <form onSubmit={handleFormSubmit}>
                 <FormControlLabel

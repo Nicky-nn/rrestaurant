@@ -1,11 +1,14 @@
-import { VitePWAOptions } from 'vite-plugin-pwa'
+import type { VitePWAOptions } from 'vite-plugin-pwa'
 
 /**
  * Configuración para service worker según la instancia
+ * @author isi-template
  */
 const pwaOptions = (env: any): Partial<VitePWAOptions> => ({
+  mode: `${env.APP_ENV}` === 'local' ? 'development' : 'production',
   registerType: `${env.APP_ENV}` === 'local' ? 'autoUpdate' : 'prompt',
   includeAssets: [`${env.ISI_FAVICON}`],
+  minify: false,
   workbox: {
     globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,webp}'],
     globIgnores: [
@@ -42,13 +45,7 @@ const pwaOptions = (env: any): Partial<VitePWAOptions> => ({
         src: `${env.ISI_ASSETS_URL}/512.png`, // <== don't add slash, for testing
         sizes: '512x512',
         type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: `${env.ISI_ASSETS_URL}/512.png`,
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'maskable',
+        purpose: 'any maskable',
       },
     ],
   },

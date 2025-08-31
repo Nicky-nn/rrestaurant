@@ -4,6 +4,11 @@ interface OwnProps {}
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const CuentaTokenDelegado: FunctionComponent<Props> = (props) => {
   return <>Función no disponible</>
 }

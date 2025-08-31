@@ -10,13 +10,24 @@ interface OwnProps {}
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const CuentaPerfil: FunctionComponent<Props> = (props) => {
   const { user } = useAuth()
   return (
     <>
       <SimpleCard title={'PERFIL DE USUARIO'} childIcon={<Person />}>
         <Grid container spacing={2}>
-          <Grid item lg={6} md={6} xs={12}>
+          <Grid
+            size={{
+              lg: 6,
+              md: 6,
+              xs: 12,
+            }}
+          >
             <FormControl fullWidth>
               <TextField
                 label="Nombres"
@@ -26,7 +37,13 @@ const CuentaPerfil: FunctionComponent<Props> = (props) => {
               />
             </FormControl>
           </Grid>
-          <Grid item lg={6} md={6} xs={12}>
+          <Grid
+            size={{
+              lg: 6,
+              md: 6,
+              xs: 12,
+            }}
+          >
             <FormControl fullWidth>
               <TextField
                 label="Apellidos"
@@ -36,7 +53,13 @@ const CuentaPerfil: FunctionComponent<Props> = (props) => {
               />
             </FormControl>
           </Grid>
-          <Grid item lg={6} md={6} xs={12}>
+          <Grid
+            size={{
+              lg: 6,
+              md: 6,
+              xs: 12,
+            }}
+          >
             <FormControl fullWidth>
               <TextField
                 label="Cargo"
@@ -46,7 +69,13 @@ const CuentaPerfil: FunctionComponent<Props> = (props) => {
               />
             </FormControl>
           </Grid>
-          <Grid item lg={6} md={6} xs={12}>
+          <Grid
+            size={{
+              lg: 6,
+              md: 6,
+              xs: 12,
+            }}
+          >
             <FormControl fullWidth>
               <TextField
                 label="Rol Operaciones"
@@ -56,7 +85,13 @@ const CuentaPerfil: FunctionComponent<Props> = (props) => {
               />
             </FormControl>
           </Grid>
-          <Grid item lg={12} md={12} xs={12}>
+          <Grid
+            size={{
+              lg: 12,
+              md: 12,
+              xs: 12,
+            }}
+          >
             <H4>Restricción de accesos</H4>
             {user.dominio.map((item) => (
               <Chip key={item} label={item} variant="outlined" />

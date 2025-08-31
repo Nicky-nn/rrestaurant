@@ -41,6 +41,11 @@ const StyledIcon = styled(Home)({
   verticalAlign: 'middle',
 })
 
+/**
+ * @author isi-template
+ * @param routeSegments
+ * @constructor
+ */
 export default function Breadcrumb({ routeSegments }: any) {
   return (
     <BreadcrumbRoot>

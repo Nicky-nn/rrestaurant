@@ -6,7 +6,9 @@ import { cuentaRouteMap } from './CuentaRoutesMap'
 
 const AppCuenta = Loadable(lazy(() => import('./view/Cuenta')))
 const AppConfiguracion = Loadable(lazy(() => import('./view/Configuracion')))
-
+/**
+ * @author isi-template
+ */
 const cuentaRoutes = [
   {
     path: cuentaRouteMap.cuenta,

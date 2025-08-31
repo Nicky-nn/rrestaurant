@@ -23,6 +23,15 @@ interface H1Props extends StyledBoxProps {
   textTransform?: any
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @param className
+ * @param ellipsis
+ * @param textTransform
+ * @param props
+ * @constructor
+ */
 export const H1: FC<H1Props> = ({
   children,
   className,
@@ -54,6 +63,15 @@ interface H2Props extends StyledBoxProps {
   textTransform?: any
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @param className
+ * @param ellipsis
+ * @param textTransform
+ * @param props
+ * @constructor
+ */
 export const H2: FC<H2Props> = ({
   children,
   className,
@@ -85,6 +103,15 @@ type H3Props = {
   textTransform?: any
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @param className
+ * @param ellipsis
+ * @param textTransform
+ * @param props
+ * @constructor
+ */
 export const H3 = ({
   children,
   className,
@@ -115,6 +142,15 @@ type H4Props = {
   ellipsis?: any
   textTransform?: any
 }
+/**
+ * @author isi-template
+ * @param children
+ * @param className
+ * @param ellipsis
+ * @param textTransform
+ * @param props
+ * @constructor
+ */
 export const H4 = ({
   children,
   className,
@@ -147,6 +183,15 @@ interface H5Props extends StyledBoxProps {
   textTransform?: any
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @param className
+ * @param ellipsis
+ * @param textTransform
+ * @param props
+ * @constructor
+ */
 export const H5: FC<H5Props> = ({
   children,
   className,
@@ -179,6 +224,15 @@ interface H6Props extends StyledBoxProps {
   textTransform?: any
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @param className
+ * @param ellipsis
+ * @param textTransform
+ * @param props
+ * @constructor
+ */
 export const H6: FC<any> = ({
   children,
   className,
@@ -211,6 +265,15 @@ interface ParagraphProps extends StyledBoxProps {
   textTransform?: any
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @param className
+ * @param ellipsis
+ * @param textTransform
+ * @param props
+ * @constructor
+ */
 export const Paragraph: FC<any> = ({
   children,
   className,
@@ -241,6 +304,15 @@ interface SmallProps extends StyledBoxProps {
   textTransform?: any
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @param className
+ * @param ellipsis
+ * @param textTransform
+ * @param props
+ * @constructor
+ */
 export const Small: FC<any> = ({
   children,
   className,
@@ -267,6 +339,7 @@ export const Small: FC<any> = ({
 
 /**
  * @description Contenido Heading
+ * @author isi-template
  */
 export const Heading = styled('h6')(({ theme }) => ({
   margin: 0,
@@ -282,6 +355,15 @@ interface SpanProps extends StyledBoxProps {
   textTransform?: any
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @param className
+ * @param ellipsis
+ * @param textTransform
+ * @param props
+ * @constructor
+ */
 export const Span: any = ({
   children,
   className,
@@ -311,6 +393,15 @@ interface TinyProps extends StyledBoxProps {
   textTransform?: any
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @param className
+ * @param ellipsis
+ * @param textTransform
+ * @param props
+ * @constructor
+ */
 export const Tiny = ({
   children,
   className,

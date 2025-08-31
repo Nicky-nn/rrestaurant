@@ -36,6 +36,7 @@ const gqlQuery = gql`
 
 /**
  * @description Datos de restricción del usuario activo
+ * @author isi-template
  */
 export const apiUsuarioRestriccion = async (): Promise<UsuarioRestriccionProps> => {
   try {

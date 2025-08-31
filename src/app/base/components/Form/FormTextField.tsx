@@ -5,6 +5,11 @@ interface OwnProps extends StandardTextFieldProps {}
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const FormTextField: FunctionComponent<Props> = (props) => {
   return (
     <TextField variant={'outlined'} size={'small'} fullWidth {...props}>

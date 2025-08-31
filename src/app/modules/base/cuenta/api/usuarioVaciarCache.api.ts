@@ -13,6 +13,7 @@ const gqlQuery = gql`
 
 /**
  * Elimina redis de la memoria ram, esto en el servidor
+ * @author isi-template
  */
 export const apiUsuarioVaciarCache = async (): Promise<Boolean> => {
   try {

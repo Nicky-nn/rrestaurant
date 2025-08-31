@@ -2,6 +2,7 @@ import { localNamePrinter } from '../base/interfaces/licenciaProducto'
 
 /**
  * Decodifica los parametros de la licencia para impresion
+ * @author isi-template
  * @param params
  */
 export const decodePrintParams = (params: string | null): { host: string } => {
@@ -16,6 +17,7 @@ export const decodePrintParams = (params: string | null): { host: string } => {
 
 /**
  * Decodifica los parametros de la licencia para whatsapp
+ * @author isi-template
  * @param params
  */
 export const decodeWhatsappParams = (params: string | null): { ok: boolean } => {
@@ -30,6 +32,7 @@ export const decodeWhatsappParams = (params: string | null): { ok: boolean } => 
 
 /**
  * Obtenemos el nombre de la impresora de localStorage
+ * @author isi-template
  */
 export const getNamePrinter = (): string | null => {
   try {
@@ -41,6 +44,7 @@ export const getNamePrinter = (): string | null => {
 
 /**
  * Guardamos el nombre de la impresora en localStorage
+ * @author isi-template
  * @param name
  */
 export const setNamePrinter = (name: string) => {
@@ -49,6 +53,7 @@ export const setNamePrinter = (name: string) => {
 
 /**
  * Eliminamos el nombre de la impresora en localStorage
+ * @author isi-template
  */
 export const deleteNamePrinter = () => {
   localStorage.removeItem(localNamePrinter)

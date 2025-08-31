@@ -9,7 +9,12 @@ interface OwnProps extends IconButtonProps {
 }
 
 type Props = OwnProps
-
+/**
+ * @author isi-template
+ * @param row
+ * @param others
+ * @constructor
+ */
 const AuditIconButton: FunctionComponent<Props> = ({ row, ...others }: Props) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
 

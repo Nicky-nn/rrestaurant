@@ -9,6 +9,9 @@ import { MonedaParamsProps, TipoRepresentacionGrafica } from '../interfaces/base
 import { PerfilFragment } from '../interfaces/session'
 import { MyGraphQlError } from '../services/GraphqlError'
 
+/**
+ * @author isi-template
+ */
 export interface PerfilProps {
   nombres: string
   apellidos: string
@@ -42,6 +45,9 @@ export interface PerfilProps {
   integracionSiat: boolean
 }
 
+/**
+ * @author isi-template
+ */
 export interface UserProps {
   token: string
   refreshToken: string
@@ -62,6 +68,7 @@ const mutation = gql`
 `
 /**
  * @description Login del usuario
+ * @author isi-template
  * @param shop
  * @param email
  * @param password

@@ -1,5 +1,6 @@
 /**
  * Tipado de los datos parametricos que contengan valores de codigoClasificador y descripcion
+ * @author isi-template
  */
 export interface ClasificadorProps {
   codigoClasificador: number
@@ -9,6 +10,7 @@ export interface ClasificadorProps {
 /**
  * Estados globales de los registros
  * Se recomiendo crear su propio apiestado para cada uno de los módulos
+ * @author isi-template
  */
 export const apiEstado = {
   elaborado: 'ELABORADO',
@@ -27,20 +29,25 @@ export const apiEstado = {
 
 /**
  * Acciones para el formulario, se usa para reutilización de formulacios
+ * @author isi-template
  */
-export type ActionFormProps = 'REGISTER' | 'UPDATE' | 'DELETE'
+export type ActionFormProps = 'REGISTER' | 'UPDATE' | 'DELETE' | 'CONSULT' | 'CANCEL'
 
 /**
  * Tipado de acciones para la implementación de formularios
+ * @author isi-template
  */
 export const actionForm: Record<ActionFormProps, ActionFormProps> = {
   REGISTER: 'REGISTER',
   UPDATE: 'UPDATE',
   DELETE: 'DELETE',
+  CONSULT: 'CONSULT',
+  CANCEL: 'CANCEL',
 }
 
 /**
  * Auditoria de los registros
+ * @author isi-template
  */
 export interface AuditoriaProps {
   usucre: string
@@ -51,6 +58,7 @@ export interface AuditoriaProps {
 
 /**
  * Información de paginación usada en las apis
+ * @author isi-template
  */
 export interface PageInfoProps {
   hasNextPage: boolean
@@ -63,6 +71,7 @@ export interface PageInfoProps {
 
 /**
  * Información de paginación por defecto
+ * @author isi-template
  */
 export const PAGE_INFO_DEFAULT: PageInfoProps = {
   hasNextPage: false,
@@ -75,6 +84,7 @@ export const PAGE_INFO_DEFAULT: PageInfoProps = {
 
 /**
  * Argumentos de paginación para las apis
+ * @author isi-template
  */
 export interface PageProps {
   limit: number
@@ -85,6 +95,7 @@ export interface PageProps {
 
 /**
  * Tipado para las paginaciones
+ * @author isi-template
  */
 export interface PageInputProps {
   limit: number
@@ -94,6 +105,9 @@ export interface PageInputProps {
   extraQuery?: string
 }
 
+/**
+ * @author isi-template
+ */
 export interface PlantillaDetalleExtra {
   _id: string // identificador primario
   type: string // HEADER | FOOTER
@@ -102,6 +116,9 @@ export interface PlantillaDetalleExtra {
   content: string
 }
 
+/**
+ * @author isi-template
+ */
 export const PAGE_DEFAULT: PageInputProps = {
   limit: 10,
   page: 0,
@@ -111,6 +128,7 @@ export const PAGE_DEFAULT: PageInputProps = {
 
 /**
  * Tipado de entidad para la implementación de formularios
+ * @author isi-template
  */
 export interface EntidadInputProps {
   codigoSucursal: number

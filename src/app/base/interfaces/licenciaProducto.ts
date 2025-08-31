@@ -1,3 +1,6 @@
+/**
+ * @author isi-template
+ */
 export interface LicenciaProductoProps {
   _id: string
   codigoActivacion: string
@@ -11,4 +14,7 @@ export interface LicenciaProductoProps {
   state: 'ACTIVADO' | 'ANULADO'
 }
 
+/**
+ * @author isi-template
+ */
 export const localNamePrinter = 'printer'

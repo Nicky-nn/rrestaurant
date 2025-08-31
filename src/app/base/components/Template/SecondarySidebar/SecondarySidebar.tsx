@@ -3,6 +3,10 @@ import SecondarySidenavTheme from '../MatxTheme/SecondarySidenavTheme/SecondaryS
 import SecondarySidebarContent from './SecondarySidebarContent'
 import SecondarySidebarToggle from './SecondarySidebarToggle'
 
+/**
+ * @author isi-template
+ * @constructor
+ */
 const SecondarySidebar = () => {
   const { settings } = useSettings()
   // @ts-ignore

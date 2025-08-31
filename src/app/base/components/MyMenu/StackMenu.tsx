@@ -13,6 +13,7 @@ type Props = StackProps & OwnProps
 
 /**
  * @description menu horizontal que se adapta a la pantalla, responsivo, para los hijos StackMenuItem
+ * @author isi-template
  * @param props
  * @constructor
  */

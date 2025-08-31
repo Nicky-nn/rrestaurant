@@ -19,6 +19,7 @@ type Props = OwnProps
  * @param props
  * @constructor
  * @deprecated, usar el componente MontoMonedaTexto
+ * @author isi-template
  */
 const ParseMontoMoneda: FunctionComponent<Props> = (props) => {
   const {

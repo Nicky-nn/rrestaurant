@@ -1,5 +1,6 @@
 /**
  * @description Parsea un string o number a un valor numérico, en caso de ocurrir un error devuelve null
+ * @author isi-template
  * @param value
  */
 export const pFloat = (value: any): number | null => {

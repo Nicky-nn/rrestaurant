@@ -2,7 +2,11 @@
   "compilerOptions": {
     "target": "ESNext",
     "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": false,
@@ -10,7 +14,10 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "bundler",  // Si en package.json no usa module, cambiar a node
+    "moduleResolution": "bundler",
+    // Si en package.json no usa module, cambiar a node
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -19,7 +26,10 @@
       "vite-plugin-pwa/client"
     ]
   },
-  "include": ["src", "types"],
+  "include": [
+    "src",
+    "types"
+  ],
   "references": [
     {
       "path": "./tsconfig.node.json"

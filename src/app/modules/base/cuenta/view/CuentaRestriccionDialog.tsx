@@ -12,6 +12,11 @@ interface OwnProps {
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const CuentaRestriccionDialog: FunctionComponent<Props> = (props) => {
   const { onClose, open, ...other } = props
   const handleCancel = () => {

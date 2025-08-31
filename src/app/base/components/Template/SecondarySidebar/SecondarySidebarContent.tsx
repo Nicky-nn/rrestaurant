@@ -40,6 +40,10 @@ const SidebarRoot = styled('div')(({ theme, width }: SidebarRootProps): any => (
   },
 }))
 
+/**
+ * @author isi-template
+ * @constructor
+ */
 const SecondarySidebarContent = () => {
   const theme = useTheme()
   // const textColor = palette.primary.contrastText

@@ -13,6 +13,7 @@ type Props = OwnProps
 
 /**
  * Parseamos un monto con su sigla moneda
+ * @author isi-template
  * @param props
  * @constructor
  * @deprecated use ParseMontoMoneda que reemplaza este componente

@@ -18,6 +18,7 @@ const query = gql`
 
 /**
  * @description Obtenemos los datos de perfil, la información generada es exactamente igual al del login
+ * @author isi-template
  */
 export const perfilModel = async (): Promise<PerfilProps> => {
   try {

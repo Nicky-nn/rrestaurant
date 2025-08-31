@@ -4,6 +4,7 @@ interface Props extends ContainerProps {}
 
 /**
  * @description SimpleContainer modificado a container
+ * @author isi-template
  */
 const SimpleContainer = styled((props: Props) => {
   const { ...other } = props

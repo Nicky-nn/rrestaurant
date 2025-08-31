@@ -24,6 +24,7 @@ type Props = OwnProps
 
 /**
  * Componente que nos ayuda a la configuración de la impresoras
+ * @author isi-template
  * @param props
  * @constructor
  */

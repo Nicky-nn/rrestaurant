@@ -7,6 +7,11 @@ interface OwnProps {
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const SimpleRowMenu: FunctionComponent<Props> = (props) => {
   return (
     <Stack

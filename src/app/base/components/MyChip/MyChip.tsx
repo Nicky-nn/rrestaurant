@@ -11,6 +11,7 @@ type Props = OwnProps
 /**
  * @description Chip personalizado para spam con estilos
  * <Shop fontSize={'small'} sx={{ verticalAlign: 'bottom' }} />
+ * @author isi-template
  * @param props
  * @constructor
  */

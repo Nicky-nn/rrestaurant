@@ -7,6 +7,7 @@ type Props = OwnProps
 
 /**
  * Input field que se usa para consulta de datos en modo disabled
+ * @author isi-template
  */
 export const FormTextConsulta = styled((props: Props) => {
   const { ...others } = props
@@ -14,7 +15,9 @@ export const FormTextConsulta = styled((props: Props) => {
     <TextField
       variant={'outlined'}
       size={'small'}
-      InputLabelProps={{ shrink: true }}
+      slotProps={{
+        inputLabel: { shrink: true },
+      }}
       fullWidth
       disabled
       margin="none"

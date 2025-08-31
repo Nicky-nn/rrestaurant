@@ -8,6 +8,7 @@ interface CustomProps {
 
 /**
  * @description Realiza un enmascarmiento para registro de una tarjeta
+ * @author isi-template
  */
 export const TarjetaMask = forwardRef<HTMLElement, CustomProps>(function TextMaskCustom(
   props,

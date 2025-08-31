@@ -1,6 +1,10 @@
 import { differenceInSeconds } from 'date-fns'
 import { round } from 'lodash'
 
+/**
+ * @author isi-template
+ * @param hex
+ */
 export const convertHexToRGB = (hex: string) => {
   // check if it's a rgba
   if (hex.match('rgba')) {
@@ -19,6 +23,12 @@ export const convertHexToRGB = (hex: string) => {
   }
 }
 
+/**
+ * @author isi-template
+ * @param func
+ * @param wait
+ * @param immediate
+ */
 export function debounce(func: any, wait: number, immediate: any) {
   let timeout: any
   return function (this: any) {
@@ -33,6 +43,9 @@ export function debounce(func: any, wait: number, immediate: any) {
   }
 }
 
+/**
+ * @author isi-template
+ */
 export function isMobile() {
   if (window) {
     return window.matchMedia(`(max-width: 767px)`).matches
@@ -40,6 +53,9 @@ export function isMobile() {
   return false
 }
 
+/**
+ * @author isi-template
+ */
 export function isMdScreen() {
   if (window) {
     return window.matchMedia(`(max-width: 1199px)`).matches
@@ -47,6 +63,10 @@ export function isMdScreen() {
   return false
 }
 
+/**
+ * @author isi-template
+ * @param elm
+ */
 function currentYPosition(elm: any) {
   if (!window && !elm) {
     return
@@ -62,6 +82,10 @@ function currentYPosition(elm: any) {
   return 0
 }
 
+/**
+ * @author isi-template
+ * @param elm
+ */
 function elmYPosition(elm: any) {
   let y = elm.offsetTop
   let node = elm
@@ -72,6 +96,11 @@ function elmYPosition(elm: any) {
   return y
 }
 
+/**
+ * @author isi-template
+ * @param scrollableElement
+ * @param elmID
+ */
 export function scrollTo(scrollableElement: any, elmID: any) {
   var elm = document.getElementById(elmID)
 
@@ -124,6 +153,10 @@ export function scrollTo(scrollableElement: any, elmID: any) {
   return false
 }
 
+/**
+ * @author isi-template
+ * @param date
+ */
 export function getTimeDifference(date: any) {
   let difference = differenceInSeconds(new Date(), date)
 
@@ -142,12 +175,19 @@ export function getTimeDifference(date: any) {
   }
 }
 
+/**
+ * @author isi-template
+ */
 export function generateRandomId() {
   let tempId = Math.random().toString()
   let uid = tempId.substr(2, tempId.length - 1)
   return uid
 }
 
+/**
+ * @author isi-template
+ * @param prop
+ */
 export function getQueryParam(prop: any) {
   let params: any = {}
   let search = decodeURIComponent(
@@ -161,6 +201,10 @@ export function getQueryParam(prop: any) {
   return prop && prop in params ? params[prop] : params
 }
 
+/**
+ * @author isi-template
+ * @param classes
+ */
 export function classList(classes: any) {
   return Object.entries(classes)
     .filter((entry) => entry[1])
@@ -168,6 +212,10 @@ export function classList(classes: any) {
     .join(' ')
 }
 
+/**
+ * @author isi-template
+ * @param array
+ */
 export const flat = (array: any) => {
   let result: Array<any> = []
   array.forEach(function (a: any) {
@@ -181,6 +229,7 @@ export const flat = (array: any) => {
 
 /**
  * Redondeamos un valor numerico a n decimales
+ * @author isi-template
  * @param val
  * @param places
  */

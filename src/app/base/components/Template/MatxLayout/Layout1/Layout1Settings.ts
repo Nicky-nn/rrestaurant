@@ -1,5 +1,8 @@
 import { ThemeTypeColorsProps } from '../../MatxTheme/themeColors'
 
+/**
+ * @author isi-template
+ */
 export interface LayoutSettingsProps {
   leftSidebar: {
     show: boolean
@@ -17,6 +20,7 @@ export interface LayoutSettingsProps {
 /**
  * @description propiedades del layout 1
  * las funcionalidades de este layout se pasaron a settings.ts
+ * @author isi-template
  */
 const Layout1Settings: LayoutSettingsProps = {
   leftSidebar: {

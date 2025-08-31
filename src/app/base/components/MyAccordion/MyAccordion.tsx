@@ -10,6 +10,7 @@ import {
 
 /**
  * Extencion del componente Accordion con estilos propios
+ * @author isi-template
  */
 export const MyAccordion = styled((props: AccordionProps) => (
   <Accordion disableGutters square {...props}>
@@ -24,6 +25,7 @@ export const MyAccordion = styled((props: AccordionProps) => (
 
 /**
  * Extension del componoente AccordionSumary con estilos
+ * @author isi-template
  */
 export const MyAccordionSummary = styled((props: AccordionSummaryProps) => (
   <AccordionSummary
@@ -41,6 +43,7 @@ export const MyAccordionSummary = styled((props: AccordionSummaryProps) => (
 
 /**
  * Extension del componente AccordionDetails con estilos
+ * @author isi-template
  */
 export const MyAccordionDetails = styled(AccordionDetails)(({ theme }) => ({
   padding: theme.spacing(2),

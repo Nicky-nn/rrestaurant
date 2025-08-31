@@ -3,6 +3,7 @@ import {
   Box,
   BoxProps,
   Button,
+  Grid,
   Link,
   LinkProps,
   ListItemButton,
@@ -11,12 +12,12 @@ import {
   Typography,
   TypographyProps,
 } from '@mui/material'
-import Grid from '@mui/material/Grid2'
 import React, { FunctionComponent, useEffect, useState } from 'react'
 
+import { handleFocus } from '../../../utils/helper'
 import { numberWithCommasPlaces } from '../MyInputs/NumberInput'
 import NumberSpinnerField, {
-  NumberInputProps,
+  type NumberInputProps,
 } from '../NumberSpinnerField/NumberSpinnerField'
 
 const StyleListItemButton = styled(ListItemButton)(({ theme }) => ({
@@ -180,6 +181,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
                 min={min}
                 max={max}
                 step={step}
+                onClick={handleFocus}
                 onChange={setInputMonto}
                 spinnerTabIndex={false}
                 unit={unit}

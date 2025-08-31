@@ -7,6 +7,11 @@ interface SidenavThemeProp {
   children: JSX.Element
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @constructor
+ */
 const SidenavTheme: FC<SidenavThemeProp> = ({ children }: SidenavThemeProp) => {
   const theme = useTheme()
   const { settings } = useSettings()

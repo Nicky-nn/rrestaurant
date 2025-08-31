@@ -29,6 +29,7 @@ type Props = OwnProps
 
 /**
  * Data Table que nos permite seleccionar la plantilla creada desde adm
+ * @author isi-template
  * @param props
  * @constructor
  */

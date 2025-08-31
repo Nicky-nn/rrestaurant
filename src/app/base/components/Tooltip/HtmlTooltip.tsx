@@ -1,5 +1,8 @@
 import { styled, Tooltip, tooltipClasses, TooltipProps } from '@mui/material'
 
+/**
+ * @author isi-template
+ */
 export const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
   <Tooltip {...props} classes={{ popper: className }} />
 ))(({ theme }) => ({

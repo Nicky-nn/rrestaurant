@@ -2,6 +2,7 @@ import { ActionFormProps } from './index'
 
 /**
  * Tipado para objectos departamentos
+ * @author isi-template
  */
 export interface DepartamentoProps {
   codigo: number
@@ -12,6 +13,7 @@ export interface DepartamentoProps {
 
 /**
  * Tipado para objectos sucursales
+ * @author isi-template
  */
 export interface SucursalProps {
   _id: string
@@ -29,6 +31,7 @@ export interface SucursalProps {
 
 /**
  * Tipado para los argumentos o inputs de las sucursales
+ * @author isi-template
  */
 export interface SucursalInputProps {
   codigo: number
@@ -41,6 +44,7 @@ export interface SucursalInputProps {
 
 /**
  * Tipado para los argumentos o inputs  de las sucursales para las apis
+ * @author isi-template
  */
 export interface SucursalInputApiProps {
   codigo: number

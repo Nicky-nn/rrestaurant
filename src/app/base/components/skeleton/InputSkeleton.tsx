@@ -9,6 +9,7 @@ type Props = OwnProps
 
 /**
  * Skeleton para campos de formulario
+ * @author isi-template
  * @param props
  * @constructor
  */

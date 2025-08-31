@@ -7,7 +7,13 @@ import { appRoutes } from '../app/routes/routes'
 import { isEmptyValue, logg } from '../app/utils/helper'
 import { flat } from '../app/utils/utils'
 
-// Verificamos si el usuario tiene acceso a cierto rol
+/**
+ * Verificamos si el usuario tiene acceso a cierto rol
+ * @author isi-template
+ * @param pathname
+ * @param user
+ * @param routes
+ */
 const userHasPermission = (pathname: any, user: PerfilProps, routes: any) => {
   try {
     if (isEmptyValue(user)) {

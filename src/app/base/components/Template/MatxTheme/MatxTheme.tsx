@@ -9,6 +9,7 @@ type MatxThemeProps = {
 
 /**
  * Inicio y creación de la plantilla matx
+ * @author isi-template
  * @param children
  * @constructor
  */

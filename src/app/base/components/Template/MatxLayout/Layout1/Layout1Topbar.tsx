@@ -98,6 +98,7 @@ const IconBox = styled('div')(({ theme }) => ({
 
 /**
  * @description Layout top principal
+ * @author isi-template
  * @constructor
  */
 const Layout1Topbar: FC<any> = () => {

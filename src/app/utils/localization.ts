@@ -1,3 +1,7 @@
+/**
+ * @author isi-template
+ * @deprecated
+ */
 export const localization = {
   actions: 'Acciones',
   cancel: 'Cancelar',

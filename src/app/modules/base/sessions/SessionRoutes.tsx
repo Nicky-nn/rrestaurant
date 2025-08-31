@@ -10,6 +10,7 @@ const JwtRegister = Loadable(lazy(() => import('./register/JwtRegister')))
 
 /**
  * Estructura de rutas para la sesión
+ * @author isi-template
  */
 export const sessionRoutesMap = {
   signup: {
@@ -32,6 +33,7 @@ export const sessionRoutesMap = {
 
 /**
  * Estructura de rutas para cargar la sesión
+ * @author isi-template
  */
 const sessionRoutes = [
   {

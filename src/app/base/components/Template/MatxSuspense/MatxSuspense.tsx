@@ -6,6 +6,11 @@ type MatxSuspenseProps = {
   children: ReactNode
 }
 
+/**
+ * @author isi-template
+ * @param children
+ * @constructor
+ */
 const MatxSuspense: FC<MatxSuspenseProps> = ({ children }: MatxSuspenseProps) => {
   return <Suspense fallback={<MatxLoading />}>{children}</Suspense>
 }

@@ -17,6 +17,7 @@ type Props = OwnProps
 
 /**
  * Módulo para cambiar la contraseña del usuario
+ * @author isi-template
  * @param props
  * @constructor
  */
@@ -58,10 +59,16 @@ const CuentaPassword: FunctionComponent<Props> = (props) => {
     <>
       <SimpleCard title={'CAMBIAR CONTRASEÑA'} childIcon={<Key />}>
         <Grid container spacing={2}>
-          <Grid item lg={6} md={6} xs={12}>
+          <Grid
+            size={{
+              lg: 6,
+              md: 6,
+              xs: 12,
+            }}
+          >
             <form onSubmit={handleSubmit(onSubmit, onError)}>
               <Grid container spacing={2} rowSpacing={3}>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Controller
                     control={control}
                     render={({ field }) => (
@@ -82,7 +89,7 @@ const CuentaPassword: FunctionComponent<Props> = (props) => {
                     name={'password'}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Controller
                     render={({ field }) => (
                       <FormControl fullWidth>
@@ -103,7 +110,7 @@ const CuentaPassword: FunctionComponent<Props> = (props) => {
                     control={control}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Controller
                     render={({ field }) => (
                       <FormControl fullWidth>
@@ -125,7 +132,7 @@ const CuentaPassword: FunctionComponent<Props> = (props) => {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Button variant={'contained'} type={'submit'}>
                     Guardar Cambios
                   </Button>
@@ -133,7 +140,13 @@ const CuentaPassword: FunctionComponent<Props> = (props) => {
               </Grid>
             </form>
           </Grid>
-          <Grid item lg={6} md={6} xs={12}></Grid>
+          <Grid
+            size={{
+              lg: 6,
+              md: 6,
+              xs: 12,
+            }}
+          ></Grid>
         </Grid>
       </SimpleCard>
     </>

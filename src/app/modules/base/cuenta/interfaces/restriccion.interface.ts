@@ -1,3 +1,6 @@
+/**
+ * @author isi-template
+ */
 export interface UsuarioPuntoVentaRestriccionProps {
   codigo: number
   tipoPuntoVenta: {
@@ -8,6 +11,9 @@ export interface UsuarioPuntoVentaRestriccionProps {
   descripcion: string
 }
 
+/**
+ * @author isi-template
+ */
 export interface UsuarioSucursalRestriccionProps {
   codigo: number
   telefono: string
@@ -22,6 +28,9 @@ export interface UsuarioSucursalRestriccionProps {
   puntosVenta: Array<UsuarioPuntoVentaRestriccionProps>
 }
 
+/**
+ * @author isi-template
+ */
 export interface UsuarioRestriccionProps {
   sucursales: Array<UsuarioSucursalRestriccionProps>
 }

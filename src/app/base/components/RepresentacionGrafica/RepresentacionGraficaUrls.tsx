@@ -21,6 +21,11 @@ interface OwnProps {
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const RepresentacionGraficaUrls: FunctionComponent<Props> = (props) => {
   const {
     representacionGrafica: { pdf, xml, sin, rollo },
@@ -29,7 +34,13 @@ const RepresentacionGraficaUrls: FunctionComponent<Props> = (props) => {
     <>
       <Container>
         <Grid container spacing={2} sx={{ mt: 0.5, mb: 1 }}>
-          <Grid item xs={4} md={3} lg={3}>
+          <Grid
+            size={{
+              xs: 4,
+              md: 3,
+              lg: 3,
+            }}
+          >
             <Card sx={{ height: '100%' }}>
               <CardActionArea onClick={() => openInNewTab(pdf)}>
                 <CardContent sx={{ lineHeight: 0.5, padding: 1 }}>
@@ -47,7 +58,13 @@ const RepresentacionGraficaUrls: FunctionComponent<Props> = (props) => {
               </CardActionArea>
             </Card>
           </Grid>
-          <Grid item xs={4} md={3} lg={3}>
+          <Grid
+            size={{
+              xs: 4,
+              md: 3,
+              lg: 3,
+            }}
+          >
             <Card sx={{ height: '100%', padding: 0 }}>
               <CardActionArea onClick={() => openInNewTab(rollo)}>
                 <CardContent sx={{ lineHeight: 0.5, padding: 1 }}>
@@ -65,7 +82,13 @@ const RepresentacionGraficaUrls: FunctionComponent<Props> = (props) => {
               </CardActionArea>
             </Card>
           </Grid>
-          <Grid item xs={4} md={3} lg={3}>
+          <Grid
+            size={{
+              xs: 4,
+              md: 3,
+              lg: 3,
+            }}
+          >
             <Card sx={{ height: '100%' }}>
               <CardActionArea onClick={() => openInNewTab(xml)}>
                 <CardContent sx={{ lineHeight: 0.5, padding: 1 }}>
@@ -83,7 +106,13 @@ const RepresentacionGraficaUrls: FunctionComponent<Props> = (props) => {
               </CardActionArea>
             </Card>
           </Grid>
-          <Grid item xs={4} md={3} lg={3}>
+          <Grid
+            size={{
+              xs: 4,
+              md: 3,
+              lg: 3,
+            }}
+          >
             <Card sx={{ height: '100%', padding: 0 }}>
               <CardActionArea onClick={() => openInNewTab(sin)}>
                 <CardContent sx={{ lineHeight: 0.5, padding: 1 }}>

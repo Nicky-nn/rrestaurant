@@ -2,6 +2,7 @@ import { Box, styled } from '@mui/material'
 
 /**
  * SimpleBox con background y borde
+ * @author isi-template
  */
 export const SimpleBox = styled(Box)(({ theme }) => ({
   padding: '10px 10px 10px 10px',
@@ -13,6 +14,7 @@ export const SimpleBox = styled(Box)(({ theme }) => ({
 
 /**
  * SimpleBox sin background y borde, usado para contenedores generales
+ * @author isi-template
  */
 export const SimpleContainerBox = styled(Box)(({ theme }) => ({
   [theme.breakpoints.down('md')]: {

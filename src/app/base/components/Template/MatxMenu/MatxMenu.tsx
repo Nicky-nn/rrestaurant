@@ -11,6 +11,11 @@ const MenuButton = styled(Box)(({ theme }) => ({
   },
 }))
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const MatxMenu: FC<any> = (props: any) => {
   const [anchorEl, setAnchorEl] = React.useState(null)
   const children = React.Children.toArray(props.children)

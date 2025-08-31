@@ -8,6 +8,11 @@ type SelectProps = Props & {
   label?: string
 }
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const SimpleSelect: FunctionComponent<SelectProps> = (props: SelectProps) => {
   return <Select {...props} styles={reactSelectStyle(false)} menuPosition={'fixed'} />
 }

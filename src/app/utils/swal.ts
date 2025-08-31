@@ -29,6 +29,7 @@ export const swalErrorMsg = (
 
 /**
  * Custom error para excepciones
+ * @author isi-template
  * @param e
  */
 export const swalException = (e: Error | any) => {
@@ -48,6 +49,7 @@ export const swalException = (e: Error | any) => {
 
 /**
  * @description Dialog de confirmación devuelve un Promise en then
+ * @author isi-template
  * @param title
  * @param text
  */
@@ -85,6 +87,7 @@ await swalAsyncConfirmDialog({
 */
 /**
  * @description Confirmación para datos asincronos, usado para api rest, debe usar preConfirm(), y then
+ * @author isi-template
  * @param title
  * @param text
  * @param preConfirm, función que retorna los datos del fetch, return api.save()
@@ -119,6 +122,7 @@ export const swalAsyncConfirmDialog = async ({
 }
 /**
  * Creamos una carga de loading
+ * @author isi-template
  */
 export const swalLoading = (): void => {
   Swal.fire({
@@ -133,6 +137,7 @@ export const swalLoading = (): void => {
 }
 /**
  * Cerramos algun dialog abierto
+ * @author isi-template
  */
 export const swalClose = () => {
   Swal.close()

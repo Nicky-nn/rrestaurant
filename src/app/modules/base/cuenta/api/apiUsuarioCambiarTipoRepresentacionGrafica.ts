@@ -19,6 +19,7 @@ interface Props {
 
 /**
  * @description cambiamos el tipo de representación gráfica
+ * @author isi-template
  * @param props
  */
 export const apiUsuarioCambiarTipoRepresentacionGrafica = async (

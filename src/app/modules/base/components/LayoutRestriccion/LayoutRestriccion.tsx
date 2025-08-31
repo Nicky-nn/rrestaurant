@@ -53,6 +53,7 @@ const RestriccionTopBarContainer = styled(Paper)(({ theme }) => ({
 
 /**
  * Segunda barra superior que muestra la información de restricción del usuario
+ * @author isi-template
  * @constructor
  */
 const LayoutRestriccion: FC<any> = () => {

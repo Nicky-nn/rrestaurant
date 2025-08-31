@@ -95,6 +95,10 @@ const StyledScrollBar = styled(Scrollbar)(() => ({
   paddingRight: '16px',
 }))
 
+/**
+ * @author isi-template
+ * @constructor
+ */
 const MatxCustomizer = () => {
   const [open, setOpen] = useState(false)
   const [tabIndex, setTabIndex] = useState(0)

@@ -80,6 +80,11 @@ const Heading = styled('span')(({ theme }) => ({
   color: theme.palette.text.secondary,
 }))
 
+/**
+ * @author isi-template
+ * @param container
+ * @constructor
+ */
 const NotificationBar: FC<any> = ({ container }: any) => {
   const { settings } = useSettings()
   const theme = useTheme()

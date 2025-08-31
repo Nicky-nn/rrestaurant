@@ -1,6 +1,7 @@
 /**
  * Convierte un numero en su equivalente con comas decimales 2
  * se usa generalmente en validadores como yup
+ * @author isi-template
  * @param x
  * @param param1
  * @returns
@@ -18,6 +19,7 @@ export const numberWithCommas = (x: number | undefined, { userTyping, input }: a
 
 /**
  * @description Convierte un numero en su equivalente con comas decimales
+ * @author isi-template
  * @param value
  * @param maximumFractionDigits
  */

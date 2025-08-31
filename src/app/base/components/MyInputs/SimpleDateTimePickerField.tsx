@@ -17,6 +17,7 @@ interface SimpleDatePickerProps {
 
 /**
  * @description Genera el simple date Picker
+ * @author isi-template
  * @param value
  * @param onChange
  * @param label
@@ -50,8 +51,6 @@ const SimpleDateTimePickerField: React.FC<SimpleDatePickerProps> = ({
             size: 'small',
             error,
             helperText,
-          },
-          field: {
             sx: {
               '& .MuiClock-pmButton': {
                 display: 'none',

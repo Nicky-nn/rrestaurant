@@ -23,6 +23,11 @@ interface OwnProps {}
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const CuentaTipoRepresentacionGrafica: FunctionComponent<Props> = (props) => {
   const auth = useAuth()
   const { user } = auth
@@ -61,12 +66,12 @@ const CuentaTipoRepresentacionGrafica: FunctionComponent<Props> = (props) => {
         childIcon={<PictureAsPdfOutlined />}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant={'body2'} gutterBottom>
               Cambia la forma en que se visualiza la factura al momento de emisión
             </Typography>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControl>
               <FormLabel id="tipo">Seleccione:</FormLabel>
               <RadioGroup
@@ -90,13 +95,19 @@ const CuentaTipoRepresentacionGrafica: FunctionComponent<Props> = (props) => {
                   control={<Radio />}
                   label="Pdf Formato Rollo Resumido"
                 />
+                <FormControlLabel
+                  value="rolloReducido"
+                  control={<Radio />}
+                  label="Pdf Formato Rollo Resumido"
+                />
               </RadioGroup>
               <FormHelperText>
-                Pdf Formato Rollo Resumido solo esta disponible para Compra-Venta
+                Pdf Formato Rollo Resumido, Reducido solo esta disponible para facturación
+                Compra-Venta
               </FormHelperText>
             </FormControl>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Button variant={'contained'} onClick={handleGuardarCambios}>
               Guardar Cambios
             </Button>

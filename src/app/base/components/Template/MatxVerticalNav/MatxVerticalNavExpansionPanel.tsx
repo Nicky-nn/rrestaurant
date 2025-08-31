@@ -79,6 +79,13 @@ type MatxVerticalNavExpansionPanelProps = {
   mode: any
 }
 
+/**
+ * @author isi-template
+ * @param item
+ * @param children
+ * @param mode
+ * @constructor
+ */
 const MatxVerticalNavExpansionPanel: FC<any> = ({
   item,
   children,

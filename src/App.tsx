@@ -11,6 +11,10 @@ import { AuthProvider } from './app/base/contexts/JWTAuthContext'
 import { SettingsProvider } from './app/base/contexts/SettingsContext'
 import { appRoutes } from './app/routes/routes'
 
+/**
+ * @author isi-template
+ * @constructor
+ */
 function App() {
   const content = useRoutes(appRoutes)
   const link = document.querySelector('link[rel="icon"]')

@@ -36,6 +36,7 @@ export interface SimpleCardProps extends CardProps {
 
 /**
  * SimpleCard para box con titulo y contenido
+ * @author isi-template
  * @param props
  * @constructor
  */

@@ -2,6 +2,9 @@ import { themes } from '../MatxTheme/initThemes'
 import { CreateMatxThemesProps, ThemeTypeColorsProps } from '../MatxTheme/themeColors'
 import { LayoutSettingsProps } from './Layout1/Layout1Settings'
 
+/**
+ * @author isi-template
+ */
 export interface MatxLayoutSettingsProps {
   activeLayout: 'layout1' | 'layout2' // layout1, layout2
   activeTheme: ThemeTypeColorsProps // View all valid theme colors inside MatxTheme/themeColors.js
@@ -28,6 +31,9 @@ const activeThemeDark = `${activeTheme}Dark` as ThemeTypeColorsProps
 
 // UPDATE BELOW CODE
 // DOC http://demos.ui-lib.com/matx-react-doc/layout.html
+/**
+ * @author isi-template
+ */
 export const MatxLayoutSettings: MatxLayoutSettingsProps = {
   activeLayout: 'layout1', // layout1, layout2
   activeTheme, // View all valid theme colors inside MatxTheme/themeColors.js

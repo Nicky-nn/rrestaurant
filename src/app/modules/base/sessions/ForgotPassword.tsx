@@ -38,7 +38,7 @@ const ForgotPassword = () => {
     <ForgotPasswordRoot>
       <Card className="card">
         <Grid container>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <JustifyBox p={4}>
               <img width="300" src="/assets/images/illustrations/dreamer.svg" alt="" />
             </JustifyBox>
@@ -75,7 +75,7 @@ const ForgotPassword = () => {
         </Grid>
       </Card>
     </ForgotPasswordRoot>
-  )
+  );
 }
 
 export default ForgotPassword

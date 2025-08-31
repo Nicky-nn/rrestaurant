@@ -11,6 +11,7 @@ export interface StorageShopProps {
 
 /**
  * @description Parsea y se obtiene los datos del shop
+ * @author isi-template
  */
 const getStorageShop = (): StorageShopProps[] => {
   try {
@@ -22,6 +23,7 @@ const getStorageShop = (): StorageShopProps[] => {
 
 /**
  * @description Retornamos el listado de shop del storage
+ * @author isi-template
  */
 export const storageComercioListado = (): StorageShopProps[] => {
   try {
@@ -34,6 +36,7 @@ export const storageComercioListado = (): StorageShopProps[] => {
 
 /**
  * @description eliminamos un determinado comercio
+ * @author isi-template
  * @param urlComercio
  */
 export const storageComercioEliminar = (urlComercio: string): void => {
@@ -48,6 +51,7 @@ export const storageComercioEliminar = (urlComercio: string): void => {
 
 /**
  * @description Registramos o actualizamos los datos de un nuevo comercio
+ * @author isi-template
  * @param urlComercio
  */
 export const storageComercioActualizar = (urlComercio: string): void => {

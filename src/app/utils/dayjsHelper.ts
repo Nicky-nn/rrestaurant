@@ -5,7 +5,9 @@ import customParseFormat from 'dayjs/plugin/customParseFormat'
 
 /**
  * Convierte una fecha a formato DMY HH:MM:SS
+ * @author isi-template
  * Usa la libreria dayjs
+ * @author rquenta
  * @param date
  */
 export const dateToDMYHHMMSS = (date: Date): string | null => {
@@ -15,7 +17,47 @@ export const dateToDMYHHMMSS = (date: Date): string | null => {
 }
 
 /**
+ * Convierte una fecha dayjs a formato D/M/Y HH:MM:SS
+ * @author isi-template
+ * Usa la libreria dayjs
+ * @author rquenta
+ * @param date
+ */
+export const dayjsToDMYHHMMSS = (date: Dayjs | null): string | null => {
+  if (!date) return null
+  if (dayjs(date).isValid()) return dayjs(date).format('DD/MM/YYYY HH:mm:ss').toString()
+  return null
+}
+
+/**
+ * Convierte una fecha a formato DMY HH:MM
+ * Usa la libreria dayjs
+ * @author rquenta
+ * @author isi-template
+ * @param date
+ */
+export const dateToDMYHHMM = (date: Date): string | null => {
+  dayjs.extend(customParseFormat)
+  if (dayjs(date).isValid()) return dayjs(date).format('DD/MM/YYYY HH:mm').toString()
+  return null
+}
+
+/**
+ * Convierte una fecha dayjs a formato D/M/Y HH:MM
+ * @author rquenta
+ * @author isi-template
+ * @param date
+ */
+export const dayjsToDMYHHMM = (date: Dayjs | null): string | null => {
+  if (!date) return null
+  if (dayjs(date).isValid()) return dayjs(date).format('DD/MM/YYYY HH:mm').toString()
+  return null
+}
+
+/**
  * Convierte una fecha string a dayjs
+ * @author rquenta
+ * @author isi-template
  * @param date
  */
 export const dateDMYHHMMSSToDate = (date: string | null): Dayjs | null => {
@@ -30,6 +72,8 @@ export const dateDMYHHMMSSToDate = (date: string | null): Dayjs | null => {
 }
 /**
  * Convierte una fecha string a dayjs
+ * @author rquenta
+ * @author isi-template
  * @param date
  */
 export const dateDMYToDate = (date: string | null): Dayjs | null => {

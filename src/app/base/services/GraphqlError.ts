@@ -36,6 +36,7 @@ const validateGraphQlError = (e: Error): any => {
 
 /**
  * @description Custom del error de servidor, para mostrar errores de graphql
+ * @author isi-template
  */
 export class MyGraphQlError extends Error {
   constructor(e: Error) {

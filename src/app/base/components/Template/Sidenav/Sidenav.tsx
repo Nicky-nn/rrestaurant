@@ -29,6 +29,11 @@ const SideNavMobile = styled('div')(({ theme }) => ({
 type SidenavProps = {
   children: JSX.Element
 }
+/**
+ * @author isi-template
+ * @param children
+ * @constructor
+ */
 const Sidenav: FC<any> = ({ children }: SidenavProps) => {
   const { settings, updateSettings }: any = useSettings()
 

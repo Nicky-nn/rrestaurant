@@ -2,6 +2,7 @@ import { SinTipoDocumentoIdentidadProps } from '../../interfaces/sin.interface'
 
 /**
  * Interface para cliente operacion
+ * @author isi-template
  */
 export interface ClienteOperacionProps {
   apellidos: string
@@ -24,6 +25,7 @@ export interface ClienteOperacionProps {
 
 /**
  * Datos de entrada para ingreso de cliente operacion api input
+ * @author isi-template
  */
 export interface ClienteOperacionApiInputProps {
   codigoCliente: string

@@ -11,6 +11,9 @@ const MenuButton = styled(Box)(({ theme }) => ({
   },
 }))
 
+/**
+ * @author isi-template
+ */
 export const SimpleMenuItem = styled(MenuItem)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -48,6 +51,11 @@ interface SimpleMenuProps {
   horizontalPosition?: number | 'right' | 'left' | 'center'
 }
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const SimpleMenu: FC<SimpleMenuProps> = (props: SimpleMenuProps) => {
   const [anchorEl, setAnchorEl] = useState(null)
   const children = Children.toArray(props.children)

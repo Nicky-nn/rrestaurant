@@ -50,7 +50,11 @@ const StatCards2 = () => {
 
   return (
     <Grid container spacing={3} sx={{ mb: 3 }}>
-      <Grid item xs={12} md={6}>
+      <Grid
+        size={{
+          xs: 12,
+          md: 6
+        }}>
         <Card elevation={3} sx={{ p: 2 }}>
           <ContentBox>
             <FabIcon size="medium" sx={{ background: 'rgba(9, 182, 109, 0.15)' }}>
@@ -67,7 +71,11 @@ const StatCards2 = () => {
           </ContentBox>
         </Card>
       </Grid>
-      <Grid item xs={12} md={6}>
+      <Grid
+        size={{
+          xs: 12,
+          md: 6
+        }}>
         <Card elevation={3} sx={{ p: 2 }}>
           <ContentBox>
             <FabIcon size="medium" sx={{ background: bgError, overflow: 'hidden' }}>
@@ -85,7 +93,7 @@ const StatCards2 = () => {
         </Card>
       </Grid>
     </Grid>
-  )
+  );
 }
 
 export default StatCards2

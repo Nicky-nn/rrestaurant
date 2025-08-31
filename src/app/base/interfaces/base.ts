@@ -10,7 +10,7 @@ export interface MonedaParamsProps {
   tipoCambio?: number
 }
 
-export type TipoRepresentacionGrafica = 'pdf' | 'rollo' | 'rolloResumen'
+export type TipoRepresentacionGrafica = 'pdf' | 'rollo' | 'rolloResumen' | 'rolloReducido'
 
 export type KeyValueProp<T> = {
   key: T

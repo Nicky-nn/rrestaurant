@@ -1,5 +1,8 @@
 import { ThemeTypeColorsProps } from '../MatxTheme/themeColors'
 
+/**
+ * @author isi-template
+ */
 export const mainThemes = [
   'purple1',
   'purple2',

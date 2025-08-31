@@ -23,6 +23,11 @@ interface OwnProps {}
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ * @param props
+ * @constructor
+ */
 const Cuenta: FunctionComponent<Props> = (props) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
 
@@ -40,7 +45,12 @@ const Cuenta: FunctionComponent<Props> = (props) => {
           <Breadcrumb routeSegments={[{ name: 'Opciones de sistema' }]} />
         </div>
         <Grid container spacing={2} columnSpacing={5}>
-          <Grid item sm={4} xs={12}>
+          <Grid
+            size={{
+              sm: 4,
+              xs: 12,
+            }}
+          >
             <SimpleCard>
               <Box sx={{ width: '100%', bgcolor: 'background.paper' }}>
                 <List component="nav" aria-label="main mailbox folders">
@@ -107,7 +117,12 @@ const Cuenta: FunctionComponent<Props> = (props) => {
               </Box>
             </SimpleCard>
           </Grid>
-          <Grid item sm={7} xs={12}>
+          <Grid
+            size={{
+              sm: 7,
+              xs: 12,
+            }}
+          >
             {selectedIndex === 0 && <CuentaPerfil />}
             {selectedIndex === 1 && <CuentaPassword />}
             {selectedIndex === 2 && <CuentaSucursal />}

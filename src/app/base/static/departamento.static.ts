@@ -7,6 +7,7 @@ interface DepartamentoProps {
 
 /**
  * @description Lista de departamento por PAIS
+ * @author isi-template
  */
 export const DEPARTAMENTOS: DepartamentoProps[] = [
   {

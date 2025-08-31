@@ -3,7 +3,7 @@ import { GroupBase } from 'react-select'
 import AsyncSelect, { AsyncProps } from 'react-select/async'
 
 import { MyInputLabel } from '../MyInputs/MyInputLabel'
-import { reactSelectStyle } from '../MySelect/ReactSelect'
+import { selectStyles } from '../MySelect/ReactSelect'
 
 /*
 EJEMPLO que reemplaza
@@ -58,6 +58,7 @@ type SelectProps<
 /**
  * Componente para realizar el select para formularios
  * ref no es funcional en la funcion
+ * @author isi-template
  * @param props
  * @constructor
  */
@@ -87,31 +88,8 @@ const FormAsyncSelect = <
         })}
         cacheOptions={false}
         defaultOptions={true}
-        //@ts-ignore
         styles={{
-          ...reactSelectStyle(error || false),
-          menuPortal: (base) => ({
-            ...base,
-            zIndex: 9999,
-          }),
-          menu: (provided) => ({ ...provided, zIndex: 9999 }),
-          placeholder: (base) => ({
-            ...base,
-            color: !error ? '#a4a4a4' : t.palette.error.main,
-          }),
-          control: (baseStyles, state) => {
-            return {
-              ...baseStyles,
-              boxShadow: state.isFocused
-                ? `0 0 0px 1px ${error ? t.palette.error.main : t.palette.primary.main}`
-                : 'none',
-              borderColor: !error ? 'rgb(52, 49, 76, 0.3)' : '#FF3D57',
-              ':hover': {
-                ...baseStyles[':hover'],
-                borderColor: !error ? 'rgba(52, 49, 76, 1)' : t.palette.error.main,
-              },
-            }
-          },
+          ...selectStyles(error || false, t),
         }}
         {...others}
       />

@@ -6,6 +6,9 @@ interface OwnProps {
 
 type Props = OwnProps
 
+/**
+ * @author isi-template
+ */
 export const SimpleItem = styled('div')(({ theme }: Props) => ({
   ...theme.typography.body2,
   padding: theme.spacing(1),

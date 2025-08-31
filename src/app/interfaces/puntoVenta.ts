@@ -2,6 +2,9 @@ import { ActionFormProps } from './index'
 import { SinCufdProps, SinCuisProps, SinTipoPuntoVentaProps } from './sin.interface'
 import { SucursalProps } from './sucursal'
 
+/**
+ * @author isi-template
+ */
 export interface PuntoVentaProps {
   _id: string
   codigo: number
@@ -20,6 +23,9 @@ export interface PuntoVentaProps {
   updatedAt: string
 }
 
+/**
+ * @author isi-template
+ */
 export interface PuntoVentaInputProps {
   codigo?: number
   sucursal: SucursalProps | null
@@ -29,6 +35,9 @@ export interface PuntoVentaInputProps {
   action: ActionFormProps
 }
 
+/**
+ * @author isi-template
+ */
 export interface PuntoVentaInputApiProps {
   codigoSucursal?: number
   codigoTipoPuntoVenta: number
