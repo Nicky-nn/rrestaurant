@@ -6,9 +6,9 @@ import {
   Checkbox,
   Fab,
   Grid,
-  Hidden,
   Icon,
   IconButton,
+  Paper,
   styled,
   useTheme,
 } from '@mui/material'
@@ -55,11 +55,12 @@ const RowCards: any = () => {
           <Grid
             size={{
               md: 5,
-              xs: 7
-            }}>
+              xs: 7,
+            }}
+          >
             <Box display="flex" alignItems="center">
               <Checkbox />
-              <Hidden smDown>
+              <Paper sx={{ display: { xs: 'none', sm: 'block' } }}>
                 {id % 2 === 1 ? (
                   <StarOutline size="small">
                     <Start>star_outline</Start>
@@ -69,7 +70,7 @@ const RowCards: any = () => {
                     <Icon>date_range</Icon>
                   </DateRange>
                 )}
-              </Hidden>
+              </Paper>
               <ProjectName>Project {id}</ProjectName>
             </Box>
           </Grid>
@@ -77,14 +78,15 @@ const RowCards: any = () => {
           <Grid
             size={{
               md: 3,
-              xs: 4
-            }}>
+              xs: 4,
+            }}
+          >
             <Box color={textMuted}>
               {format(new Date().getTime(), 'MM/dd/yyyy hh:mma')}
             </Box>
           </Grid>
 
-          <Hidden smDown>
+          <Paper sx={{ display: { xs: 'none', sm: 'block' } }}>
             <Grid size={3}>
               <Box display="flex" position="relative" marginLeft="-0.875rem !important">
                 <StyledAvatar src="/assets/images/face-4.jpg" />
@@ -93,7 +95,7 @@ const RowCards: any = () => {
                 <StyledAvatar sx={{ fontSize: '14px' }}>+3</StyledAvatar>
               </Box>
             </Grid>
-          </Hidden>
+          </Paper>
 
           <Grid size={1}>
             <Box display="flex" justifyContent="flex-end">
@@ -106,7 +108,7 @@ const RowCards: any = () => {
       </Card>
       <Box py={1} />
     </Fragment>
-  ));
+  ))
 }
 
 export default RowCards

@@ -9,7 +9,7 @@ interface StyledBoxProps extends BoxProps {
 }
 
 const StyledBox = styled(Box)<StyledBoxProps>(
-  ({ theme, textTransformStyle, ellipsis }: any) => ({
+  ({ textTransformStyle, ellipsis }: any) => ({
     textTransform: textTransformStyle || 'none',
     whiteSpace: ellipsis ? 'nowrap' : 'normal',
     overflow: ellipsis ? 'hidden' : '',

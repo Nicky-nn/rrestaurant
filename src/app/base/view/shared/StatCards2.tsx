@@ -1,7 +1,7 @@
 import { Card, Fab, Grid, Icon, lighten, styled, useTheme } from '@mui/material'
 import { FC } from 'react'
 
-const ContentBox: any = styled('div')(({ theme }: any): any => ({
+const ContentBox: any = styled('div')((): any => ({
   display: 'flex',
   flexWrap: 'wra,p',
   alignItems: 'center',
@@ -53,8 +53,9 @@ const StatCards2 = () => {
       <Grid
         size={{
           xs: 12,
-          md: 6
-        }}>
+          md: 6,
+        }}
+      >
         <Card elevation={3} sx={{ p: 2 }}>
           <ContentBox>
             <FabIcon size="medium" sx={{ background: 'rgba(9, 182, 109, 0.15)' }}>
@@ -74,8 +75,9 @@ const StatCards2 = () => {
       <Grid
         size={{
           xs: 12,
-          md: 6
-        }}>
+          md: 6,
+        }}
+      >
         <Card elevation={3} sx={{ p: 2 }}>
           <ContentBox>
             <FabIcon size="medium" sx={{ background: bgError, overflow: 'hidden' }}>
@@ -93,7 +95,7 @@ const StatCards2 = () => {
         </Card>
       </Grid>
     </Grid>
-  );
+  )
 }
 
 export default StatCards2

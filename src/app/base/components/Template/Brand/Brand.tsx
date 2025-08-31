@@ -4,7 +4,7 @@ import { JSX } from 'react'
 import useSettings from '../../../hooks/useSettings'
 import { Span } from '../Typography'
 
-const BrandRoot = styled(Box)(({ theme }) => ({
+const BrandRoot = styled(Box)(() => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -16,7 +16,7 @@ interface StyledSpanProps {
   mode: any
   child: JSX.Element | JSX.Element[]
 }
-const StyledSpan: any = styled(Span)(({ theme, mode }: StyledSpanProps) => ({
+const StyledSpan: any = styled(Span)(({ mode }: StyledSpanProps) => ({
   fontSize: 18,
   marginLeft: '.5rem',
   display: mode === 'compact' ? 'none' : 'block',
