@@ -32,7 +32,7 @@ const Span: FC<any> = styled('span')(({ textcolor }: any) => ({
   marginLeft: '4px',
 }))
 
-const IconBox = styled('div')(({ theme }) => ({
+const IconBox = styled('div')(() => ({
   width: 16,
   height: 16,
   overflow: 'hidden',

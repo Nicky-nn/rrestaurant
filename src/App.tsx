@@ -48,12 +48,14 @@ function App() {
                 size: 'small',
                 sx: { mr: 1.5 },
                 'aria-label': 'confirm',
+                autoFocus: false,
               },
               cancellationButtonProps: {
                 color: 'error',
                 variant: 'text',
                 size: 'small',
                 'aria-label': 'close',
+                autoFocus: false,
               },
               buttonOrder: ['cancel', 'confirm'],
             }}
