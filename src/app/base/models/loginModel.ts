@@ -40,6 +40,7 @@ export interface PerfilProps {
     email: string
     emailFake: string
     denominacion: string
+    nit: string
   }
   tipoRepresentacionGrafica: TipoRepresentacionGrafica
   usuario: string
