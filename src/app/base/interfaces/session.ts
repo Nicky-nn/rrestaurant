@@ -65,6 +65,7 @@ export const PerfilFragment = gql`
       fechaValidezToken
       email
       emailFake
+      denominacion
     }
     tipoRepresentacionGrafica
     usuario

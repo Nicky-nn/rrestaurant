@@ -39,6 +39,7 @@ export interface PerfilProps {
     fechaValidezToken: string
     email: string
     emailFake: string
+    denominacion: string
   }
   tipoRepresentacionGrafica: TipoRepresentacionGrafica
   usuario: string
