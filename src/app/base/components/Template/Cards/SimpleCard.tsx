@@ -9,18 +9,25 @@ const CardRoot = styled(Card)(({ theme }) => ({
   overflow: 'inherit', // Cambio realizado para mostrar los hidden selects
   '& > .MuiCardHeader-root': {
     padding: 0,
-    paddingBottom: 10,
+    paddingBottom: 20,
+    '.MuiCardHeader-avatar': {
+      marginRight: '8px',
+      color: theme.palette.primary.main,
+      marginTop: '-3px',
+    },
+    '.MuiTypography-root.MuiCardHeader-subheader': {
+      // textDecoration: `underline`,
+      // textDecorationThickness: 0.001,
+      // textUnderlineOffset: '2px',
+      // fontWeight: 500,
+      marginTop: -2,
+    },
   },
   '& > .MuiCardContent-root': {
     paddingTop: 0,
     paddingBottom: '0 !important',
     paddingRight: 0,
     paddingLeft: 0.5,
-  },
-  '& > .MuiCardHeader-avatar': {
-    marginRight: '8px',
-    color: theme.palette.primary.light,
-    marginTop: '-2px',
   },
   '& > .MuiAvatar-root': {
     backgroundColor: theme.palette.primary.light,
@@ -36,7 +43,6 @@ export interface SimpleCardProps extends CardProps {
 
 /**
  * SimpleCard para box con titulo y contenido
- * @author isi-template
  * @param props
  * @constructor
  */
@@ -49,7 +55,7 @@ const SimpleCard: FC<SimpleCardProps> = (props: SimpleCardProps) => {
         <CardHeader
           avatar={title && childIcon && childIcon}
           title={title && <H4>{title}</H4>}
-          subheader={subtitle && subtitle}
+          subheader={subtitle && <span style={{ fontSize: '0.9em' }}>{subtitle}</span>}
         />
       )}
 
