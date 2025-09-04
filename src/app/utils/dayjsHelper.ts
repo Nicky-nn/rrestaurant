@@ -43,6 +43,18 @@ export const dateToDMYHHMM = (date: Date): string | null => {
 }
 
 /**
+ * Convierte una fecha dayjs a formato D/M/Y
+ * @author rquenta
+ * @author isi-template
+ * @param date
+ */
+export const dayjsToDMY = (date: Dayjs | null): string | null => {
+  if (!date) return null
+  if (dayjs(date).isValid()) return dayjs(date).format('DD/MM/YYYY').toString()
+  return null
+}
+
+/**
  * Convierte una fecha dayjs a formato D/M/Y HH:MM
  * @author rquenta
  * @author isi-template

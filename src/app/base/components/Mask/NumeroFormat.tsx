@@ -20,7 +20,6 @@ interface CustomProps {
  * @description Parsea un Input normal en un input de tipo numerico segun las especificaciones
  * scale es la cantidad de decimales que debe aceptar, por default es 2
  * @documentation https://s-yadav.github.io/react-number-format/docs/props
- * @author isi-template
  */
 export const NumeroFormat = forwardRef<NumericFormatProps, CustomProps>(
   function NumericFormatCustom(props, ref: any) {
@@ -38,7 +37,7 @@ export const NumeroFormat = forwardRef<NumericFormatProps, CustomProps>(
           })
         }}
         thousandSeparator={' '}
-        decimalScale={decimalScale || 2}
+        decimalScale={decimalScale || (decimalScale === 0 ? 0 : 2)}
         fixedDecimalScale={false}
         valueIsNumericString={true}
         allowNegative={allowNegative || false}
