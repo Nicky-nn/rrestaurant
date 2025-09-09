@@ -35,6 +35,7 @@ export const PerfilFragment = gql`
         departamento
       }
       municipio
+      integracionSiat
     }
     puntoVenta {
       codigo

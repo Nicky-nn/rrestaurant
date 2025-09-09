@@ -22,6 +22,7 @@ export interface SucursalProps {
   direccion: string
   municipio: string
   telefono: string
+  integracionSiat: boolean
   state: string
   usucre: string
   usumod: string
@@ -39,6 +40,7 @@ export interface SucursalInputProps {
   telefono: string
   departamento: DepartamentoProps | null
   municipio: string
+  integracionSiat?: boolean
   action: ActionFormProps
 }
 
