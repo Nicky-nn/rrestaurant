@@ -62,6 +62,7 @@ type Props = OwnProps
 /**
  * Creamos un monto con su sigla moneda y ademas que el monto sea editable
  * @param props
+ * @author isi-template
  * @constructor
  */
 const MontoMonedaTexto: FunctionComponent<Props> = (props) => {

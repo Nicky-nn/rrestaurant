@@ -26,6 +26,7 @@ type Props = OwnProps
  * cuando se emita onClose se debe actualizar el estado setAnclaNumber(null)
  * anchorEl es obligatorio
  * @param props
+ * @author isi-template
  * @constructor
  * @deprecated, usar el componente MontoMonedaTexto
  */

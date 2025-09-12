@@ -38,6 +38,7 @@ type Props = OwnProps
 /**
  * Detalle Extra para cada uno de los items del carrito de compras
  * @param props
+ * @author isi-template
  * @constructor
  * @deprecated, usar el componente MontoMonedaTexto
  */
