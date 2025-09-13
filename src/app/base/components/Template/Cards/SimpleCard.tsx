@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardProps, styled } from '@mui/material'
 import { FC, ReactNode } from 'react'
 
-import { H4 } from '../Typography'
+import { H4, Span } from '../Typography'
 
 const CardRoot = styled(Card)(({ theme }) => ({
   height: '100%',
@@ -34,28 +34,36 @@ const CardRoot = styled(Card)(({ theme }) => ({
   },
 }))
 
-export interface SimpleCardProps extends CardProps {
-  title?: string
-  subtitle?: string
+export interface SimpleCardProps extends Omit<CardProps, 'title'> {
+  title?: string | ReactNode
+  subtitle?: string | ReactNode
   childIcon?: ReactNode
-  children: ReactNode
+  children?: ReactNode
 }
 
 /**
  * SimpleCard para box con titulo y contenido
  * @param props
+ * @author isi-template
  * @constructor
  */
 const SimpleCard: FC<SimpleCardProps> = (props: SimpleCardProps) => {
   const { children, title, subtitle, childIcon, ...others } = props
+  const titleRoot = typeof title === 'string' ? <H4>{title}</H4> : title
+  const subHeader =
+    typeof subtitle === 'string' ? (
+      <Span sx={{ fontSize: '0.85rem' }}>{subtitle}</Span>
+    ) : (
+      subtitle
+    )
 
   return (
     <CardRoot variant={'outlined'} {...others}>
       {title && (
         <CardHeader
           avatar={title && childIcon && childIcon}
-          title={title && <H4>{title}</H4>}
-          subheader={subtitle && <span style={{ fontSize: '0.9em' }}>{subtitle}</span>}
+          title={titleRoot}
+          subheader={subHeader}
         />
       )}
 
