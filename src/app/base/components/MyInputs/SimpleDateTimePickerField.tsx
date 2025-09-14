@@ -1,13 +1,14 @@
 import 'dayjs/locale/es'
 
-import { DateTimePicker } from '@mui/x-date-pickers'
+import { DateTimePicker, DateTimePickerProps } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { esES } from '@mui/x-date-pickers/locales'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import dayjs from 'dayjs'
 import React from 'react'
 
-interface SimpleDatePickerProps {
+interface SimpleDatePickerProps
+  extends Omit<DateTimePickerProps, 'value' | 'onChange' | 'label'> {
   value: Date | null
   onChange: (date: Date | null) => void
   label?: string
