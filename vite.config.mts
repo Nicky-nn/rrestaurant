@@ -20,7 +20,7 @@ export default ({ mode }) => {
       VitePWA(pwaOptions(env) as any),
       zipPack({
         outDir: `dist-zip`,
-        outFileName: `${process.env.ISI_BASE_URL || 'dist'}.zip`,
+        outFileName: `${env.ISI_BASE_URL || 'dist-error'}.zip`,
       }),
     ],
     envPrefix: 'ISI_',
