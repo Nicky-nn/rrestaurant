@@ -31,6 +31,8 @@ interface HorizontalDragScrollOptions {
 /**
  * Hook para implementar el desplazamiento horizontal arrastrando
  * usamos useCallback para evitar multiples renderizados al mover el scroll
+ * @author isi-template
+ * @version 2025.3
  * @param options
  */
 export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) => {

@@ -2,6 +2,7 @@ import axios from 'axios'
 
 /**
  * @description Verificamos si el cliente que esta intentando acceder al servidor es un humano
+ * @author isi-template
  * @param token
  */
 export const apiCheckHuman = async (token: string): Promise<boolean> => {

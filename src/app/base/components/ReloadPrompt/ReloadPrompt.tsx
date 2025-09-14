@@ -28,7 +28,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 const ReloadPrompt: FC<any> = () => {
   const [open, setOpen] = useState(false)
   const {
-    needRefresh: [needRefresh, setNeedRefresh],
+    needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW()
 
@@ -36,14 +36,14 @@ const ReloadPrompt: FC<any> = () => {
     if (needRefresh) {
       setOpen(true)
     }
-  }, [needRefresh, updateServiceWorker])
+  }, [needRefresh])
 
   return (
     <>
       <Snackbar
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         open={open}
-        message="Nueva versión disponible, haga clic en el botón actualizar para recargar el sistema."
+        message="Nuevo contenido disponible, haga clic en el botón actualizar para recargar el sistema."
         action={
           <Fragment>
             <Button

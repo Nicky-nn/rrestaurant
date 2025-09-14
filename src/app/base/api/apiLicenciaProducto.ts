@@ -31,6 +31,7 @@ interface ApiLicenciaProducto {
 
 /**
  * Listamos las licencias de productos
+ * @author isi-template
  * @param token
  */
 export const apiLicenciaProducto = async (

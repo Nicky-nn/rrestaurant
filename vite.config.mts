@@ -13,12 +13,11 @@ import pwaOptions from './pwaOptions'
  * */
 export default ({ mode }) => {
   // Mapeamos los valores de .env a process.env
-  process.env = Object.assign(process.env, loadEnv(mode, process.cwd(), ''))
-
+  const env = loadEnv(mode, process.cwd(), '')
   return defineConfig({
     plugins: [
       react(), // splitVendorChunkPlugin(),
-      VitePWA(pwaOptions(process.env) as any),
+      VitePWA(pwaOptions(env) as any),
       zipPack({
         outDir: `dist-zip`,
         outFileName: `${process.env.ISI_BASE_URL || 'dist'}.zip`,
@@ -26,16 +25,34 @@ export default ({ mode }) => {
     ],
     envPrefix: 'ISI_',
     build: {
-      sourcemap: true, // chunkSizeWarningLimit: 550, // No resuelve el problema de los fragmentos grandes
-      // rollupOptions: {
-      //   output: {
-      //     manualChunks(id) {
-      //       if (id.includes('node_modules')) {
-      //         return id.toString().split('node_modules/')[1].split('/')[0].toString()
-      //       }
-      //     },
-      //   },
-      // },
+      sourcemap: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            // Separa todas las dependencias de node_modules en un chunk 'vendor'
+            if (id.includes('node_modules')) {
+              // Agrupamos MUI y su motor de estilos (Emotion) en un solo chunk por que cambia con poco frecuencia.
+              if (
+                id.includes('@mui/material') ||
+                id.includes('@mui/icons-material') ||
+                id.includes('@emotion/react') ||
+                id.includes('@emotion/styled')
+              ) {
+                return 'vendor-mui'
+              }
+              // Agrupamos el core de React y el router en otro chunk.
+              if (
+                id.includes('react') ||
+                id.includes('react-dom') ||
+                id.includes('react-router-dom')
+              ) {
+                return 'vendor-react'
+              }
+              return 'vendor' // Chunk para el resto de dependencias
+            }
+          },
+        },
+      },
     },
   })
 }

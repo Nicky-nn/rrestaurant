@@ -14,7 +14,7 @@ import { flat } from '../app/utils/utils'
  * @param user
  * @param routes
  */
-const userHasPermission = (pathname: any, user: PerfilProps, routes: any) => {
+const userHasPermission = (pathname: string, user: PerfilProps, routes: any) => {
   try {
     if (isEmptyValue(user)) {
       return false
@@ -32,30 +32,30 @@ type Props = {
   children: ReactElement | ReactElement[]
 }
 
+/**
+ * Verificación de rutas de sesión
+ * @author isi-template
+ * @param children
+ * @constructor
+ */
 const AuthGuard: FC<Props> = ({ children }: Props) => {
   const { pathname } = useLocation()
   try {
     const { isAuthenticated, user } = useAuth()
     const routes = flat(appRoutes)
-
     // tiene permisos?
     const hasPermission = userHasPermission(pathname, user, routes)
     // IF YOU NEED ROLE BASED AUTHENTICATION,
     // UNCOMMENT ABOVE TWO LINES, getUserRoleAuthStatus METHOD AND user VARIABLE
     // AND COMMENT OUT BELOW LINE
     const authenticated = isAuthenticated && hasPermission
-    logg('app,auth,authguard', pathname, authenticated)
-
-    return (
-      <>
-        {isAuthenticated ? (
-          children
-        ) : (
-          <Navigate replace to="/session/signin" state={{ from: pathname }} />
-        )}
-      </>
-    )
+    logg(pathname, authenticated)
+    if (!authenticated) {
+      return <Navigate replace to="/session/signin" state={{ from: pathname }} />
+    }
+    return children
   } catch (e) {
+    logg('error')
     return <Navigate replace to="/session/signin" state={{ from: pathname }} />
   }
 }

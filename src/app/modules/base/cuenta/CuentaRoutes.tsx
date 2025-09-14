@@ -13,7 +13,7 @@ const cuentaRoutes = [
   {
     path: cuentaRouteMap.cuenta,
     element: <AppCuenta />,
-    auth: authRoles.admin,
+    auth: authRoles.guest,
   },
   {
     path: cuentaRouteMap.configuracion,

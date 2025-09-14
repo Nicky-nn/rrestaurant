@@ -7,23 +7,14 @@ import type { VitePWAOptions } from 'vite-plugin-pwa'
 const pwaOptions = (env: any): Partial<VitePWAOptions> => ({
   mode: `${env.APP_ENV}` === 'local' ? 'development' : 'production',
   registerType: `${env.APP_ENV}` === 'local' ? 'autoUpdate' : 'prompt',
-  includeAssets: [`${env.ISI_FAVICON}`],
-  minify: false,
   workbox: {
-    globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,webp}'],
-    globIgnores: [
-      'node_modules/**/*',
-      'dist-zip/**/*',
-      'sw.js',
-      'workbox-*.js',
-      '**/*.png', // the code to ignore caching the icon file
-      '**/*.ico', // the code to ignore caching the icon file
-    ],
+    globPatterns: ['**/*.{js,css,html,ico,png,jpeg,svg,webp}'],
   },
+  includeAssets: [env.ISI_FAVICON, env.ISI_FONDO, env.ISI_LOGO_FULL, env.ISI_LOGO_MINI],
   manifest: {
     name: `${env.ISI_TITLE || 'isi.invoice'}`,
     short_name: `${env.ISI_SIGLA || 'ISI'}`,
-    theme_color: '#ffffff',
+    theme_color: env.ISI_THEME_COLOR,
     display: 'minimal-ui',
     icons: [
       {

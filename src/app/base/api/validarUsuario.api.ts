@@ -10,6 +10,7 @@ const apiQuery = gql`
 
 /**
  * @description Verifica si un usuario cuenta con permisos para acceder al sistema. El código que se envia es el codigoDocumento sector
+ * @author isi-template
  * @param token
  */
 export const apiValidarUsuario = async (token: string): Promise<boolean> => {

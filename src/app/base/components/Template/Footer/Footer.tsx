@@ -54,8 +54,8 @@ const Footer: FC<any> = () => {
             <Paragraph sx={{ m: 0 }}>
               <a href={urlEmpresa} target="_blank" rel="noreferrer">
                 © {nombreComercial}
-              </a>
-              {' 2025 '} - v2025.3
+              </a>{' '}
+              - {import.meta.env.ISI_VERSION || '--'}
             </Paragraph>
           </FooterContent>
         </AppFooter>

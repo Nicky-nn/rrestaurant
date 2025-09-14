@@ -13,6 +13,7 @@ const localHeaders =
 
 /**
  * Listamos las impresoras disponibles
+ * @author isi-template
  * @param host
  */
 export const apiListarImpresoras = async (host: string): Promise<{ name: string }[]> => {
@@ -32,6 +33,7 @@ export const apiListarImpresoras = async (host: string): Promise<{ name: string 
 
 /**
  * Imprime un archivo gestionado por url en la impresora
+ * @author isi-template
  * @param host
  * @param urlFile
  * @param namePrinter

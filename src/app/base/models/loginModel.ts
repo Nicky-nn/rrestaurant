@@ -24,7 +24,7 @@ export interface PerfilProps {
   dominio: string[]
   tipo: 'SA' | 'ADMIN' | 'GUEST' | 'USER'
   vigente: string // SI, NO
-  actividadEconomica: SinActividadesProps
+  actividadEconomica: SinActividadesProps // deprecado, ya no usar
   sucursal: SucursalProps
   puntoVenta: PuntoVentaProps
   moneda: MonedaParamsProps
