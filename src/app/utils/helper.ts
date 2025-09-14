@@ -2,7 +2,7 @@
  * @description console.log condicional al estado .env
  * @param args
  */
-import { ColumnFiltersState } from '@tanstack/react-table'
+import { MRT_ColumnFiltersState } from 'material-react-table'
 import { customAlphabet } from 'nanoid'
 
 /**
@@ -131,7 +131,7 @@ function isNumeric(str: any) {
  * @param extraQuery = query extra
  */
 export const genApiQuery = (
-  data: ColumnFiltersState,
+  data: MRT_ColumnFiltersState,
   extraQuery: string[] = [],
 ): string => {
   if (data.length === 0) return extraQuery.join('&')
