@@ -132,7 +132,7 @@ Migración de las rutas de home
   ]
   ```
 
-  modificar `\src\app\routes\routes.tsx` y reemplazar `dashboardRoutes` por `homeRoutes`
+  modificar `\src\app\routes\routes.tsx` y reemplazar `dashboardRoutes` por `carritoRoutes`
 
   Cambiar `{ path: '/', element: <Navigate to="dashboard/default" /> }` por `{ path: '/', element: <Navigate to={homeRoutesMap.home.path} /> },`
 

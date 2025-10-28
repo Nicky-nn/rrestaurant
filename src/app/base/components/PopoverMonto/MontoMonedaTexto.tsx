@@ -21,14 +21,16 @@ import NumberSpinnerField, {
 } from '../NumberSpinnerField/NumberSpinnerField'
 
 const StyleListItemButton = styled(ListItemButton)(({ theme }) => ({
-  paddingRight: theme.spacing(1),
-  paddingLeft: theme.spacing(1),
+  paddingRight: theme.spacing(0.6),
+  paddingLeft: theme.spacing(0.6),
   display: 'block',
-  textAlign: 'right',
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover,
+  '& .MuiTypography-root': {
     textDecoration: 'underline',
     textUnderlineOffset: 2,
+  },
+  '& .MuiTypography-root:hover': {
+    // textDecorationColor: theme.palette.primary.main,
+    textDecorationThickness: 1,
   },
 }))
 
@@ -55,6 +57,8 @@ interface OwnProps {
   error?: boolean // Si hay un error
   helperText?: string // Texto de ayuda
   lista?: boolean // Si el componente es de tipo lista, require que editar sea true
+  // Si se requiere forma de lista btn, default false, solo aplica cuando es editable
+  listItemButton?: boolean
 }
 
 type Props = OwnProps
@@ -132,6 +136,11 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
               setAnchorMonto(event.currentTarget)
             }}
             color={error ? 'error' : linkProps?.color || 'primary'}
+            sx={{
+              textUnderlineOffset: 2,
+              pr: 0.5,
+              pl: 0.5,
+            }}
             {...linkProps}
           >
             {TypMonto}
@@ -146,9 +155,8 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
             }}
             sx={(theme) => ({
               fontWeight: 400,
-              textDecoration: 'underline',
-              textUnderlineOffset: 2,
-              color: error ? theme.palette.error.main : theme.palette.text.primary,
+              color: error ? theme.palette.error.main : theme.palette.primary.main,
+              textAlign: montoProps?.textAlign || 'center',
             })}
           >
             {TypMonto}
