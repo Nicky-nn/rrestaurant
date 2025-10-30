@@ -3,6 +3,7 @@ import { AuditoriaProps } from './index.ts'
 
 /**
  * @description Agrupador de articulo, es el valor que se usará para modificaciones de precios, descuentos globales
+ * @author isi-template
  */
 export interface GrupoArticuloOperacionProps {
   codigoGrupoArticulo: string
@@ -11,6 +12,7 @@ export interface GrupoArticuloOperacionProps {
 
 /**
  * @description propiedades del articulo
+ * @author isi-template
  */
 export interface GrupoArticuloProps extends AuditoriaProps {
   codigoGrupoArticulo: string

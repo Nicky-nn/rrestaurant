@@ -72,8 +72,6 @@ interface OwnProps {
   indexActivo: number | null
   // Evento cuando se cambia el tipo de cambio
   onChangeTipoCambio?: (tipoCambio: number) => void
-  // Evento cuando se actualiza el articulo
-  onUpdateArticulo?: (index: number, field: ArticuloOperacionInputProps) => void
   // Evento cambio de cantidad, si se envía el componente se convierte en modificable
   onChangeCantidad?: (resp?: {
     index: number

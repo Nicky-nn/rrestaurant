@@ -18,10 +18,15 @@ import { TipoArticuloOperacionProps } from './tipoArticulo.ts'
 
 /**
  * Datos operacionales del articulo
+ * @author isi-template
  */
 export interface ArticuloOperacionProps {
-  id: string | null // id unico solo atribuile a front-end
+  // id unico generado solo por front-end
+  id: string | null
+  // numero de item
   nroItem: number
+  // id del articulo
+  articuloId: string
   tipoArticulo: TipoArticuloOperacionProps | null
   claseArticulo: ClaseArticuloProps | null
   grupoArticulo: GrupoArticuloOperacionProps | null
@@ -38,7 +43,9 @@ export interface ArticuloOperacionProps {
   nota: string
   verificarStock: boolean
 }
-
+/**
+ * @author isi-template
+ */
 export interface ArticuloComplementoProps {
   id: string
   codigoArticulo: string
@@ -47,6 +54,7 @@ export interface ArticuloComplementoProps {
 
 /**
  * @description Tabla principal del articulo
+ * @author isi-template
  */
 export interface ArticuloProps extends AuditoriaProps {
   _id: string
@@ -79,6 +87,9 @@ export interface ArticuloProps extends AuditoriaProps {
   state?: string
 }
 
+/**
+ * @author isi-template
+ */
 export interface ArticuloResumenProps {
   _id: string
   activo: boolean

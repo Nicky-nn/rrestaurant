@@ -2,6 +2,7 @@ import { SucursalProps } from './sucursal.ts'
 
 /**
  * @description Propiedades de almacen
+ * @author isi-template
  */
 export interface AlmacenBaseProps {
   codigoAlmacen: string // Codigo almacen
@@ -15,8 +16,14 @@ export interface AlmacenBaseProps {
   updatedAt?: Date
 }
 
+/**
+ * @author isi-template
+ */
 export interface AlmacenProps extends AlmacenBaseProps {}
 
+/**
+ * @author isi-template
+ */
 export interface AlmacenInputProps {
   codigoAlmacen: string
   nombre: string
@@ -25,13 +32,17 @@ export interface AlmacenInputProps {
   codigoSucursal: SucursalProps | null
   state?: string
 }
-
+/**
+ * @author isi-template
+ */
 export interface AlmacenOutputProps {
   nombre: string
   ubicacion: string
   codigoSucursal: number
 }
-
+/**
+ * @author isi-template
+ */
 export const ALMACEN_INITIAL_VALUES: AlmacenInputProps = {
   codigoAlmacen: '',
   nombre: '',

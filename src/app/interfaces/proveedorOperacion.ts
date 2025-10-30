@@ -2,6 +2,7 @@ import { AuditoriaProps } from './index.ts'
 
 /**
  * @description Se usa en las tablas relacionadas
+ * @author isi-template
  */
 export interface ProveedorOperacionProps {
   codigo: string
@@ -16,6 +17,7 @@ export interface ProveedorOperacionProps {
 
 /**
  * @description Tabla de proveedor
+ * @author isi-template
  */
 export interface ProveedorProps extends ProveedorOperacionProps, AuditoriaProps {
   state?: string

@@ -3,6 +3,7 @@ import { SinTipoDocumentoSectorProps } from './sin.interface.ts'
 
 /**
  * @description Modelo de Periodo
+ * @author isi-template
  */
 export interface KardexPeriodoProps extends AuditoriaProps {
   codigo: number

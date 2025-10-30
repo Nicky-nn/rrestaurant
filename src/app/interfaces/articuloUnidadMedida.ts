@@ -2,6 +2,7 @@ import { SinUnidadMedidaProps } from './sin.interface.ts'
 
 /**
  * @description Relacion del articulo con la unidad de medida
+ * @author isi-template
  */
 export interface ArticuloUnidadMedidaProps {
   codigoUnidadMedida: string // Código que identifica a la unidad de medida, se replica con sin unidad medida
@@ -16,6 +17,9 @@ export interface ArticuloUnidadMedidaProps {
   usucre?: string
   usumod?: string
 }
+/**
+ * @author isi-template
+ */
 export interface UnidadMedidaProps {
   codigoUnidadMedida: string
   nombreUnidadMedida: string
@@ -25,7 +29,9 @@ export interface UnidadMedidaProps {
   }
   state: string
 }
-
+/**
+ * @author isi-template
+ */
 export interface UnidadMedidaInputProps {
   codigoSinUnidadMedida: string | null
   codigoUnidadMedida: string
@@ -33,7 +39,9 @@ export interface UnidadMedidaInputProps {
   sinUnidadMedida: SinUnidadMedidaProps | null
   unidadMedida: SinUnidadMedidaProps | null
 }
-
+/**
+ * @author isi-template
+ */
 export const UNIDAD_MEDIDA_INITIAL_VALUES: UnidadMedidaInputProps = {
   codigoSinUnidadMedida: null,
   codigoUnidadMedida: '',

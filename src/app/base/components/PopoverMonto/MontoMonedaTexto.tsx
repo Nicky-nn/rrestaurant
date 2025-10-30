@@ -21,8 +21,8 @@ import NumberSpinnerField, {
 } from '../NumberSpinnerField/NumberSpinnerField'
 
 const StyleListItemButton = styled(ListItemButton)(({ theme }) => ({
-  paddingRight: theme.spacing(0.6),
-  paddingLeft: theme.spacing(0.6),
+  paddingRight: theme.spacing(0.5),
+  paddingLeft: theme.spacing(0.5),
   display: 'block',
   '& .MuiTypography-root': {
     textDecoration: 'underline',
@@ -163,7 +163,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
           </StyleListItemButton>
         )}
 
-        {!editar && TypMonto}
+        {!editar && <Box sx={{ pl: 0.5, pr: 0.5 }}>{TypMonto}</Box>}
       </Box>
       {editar && (
         <Popover

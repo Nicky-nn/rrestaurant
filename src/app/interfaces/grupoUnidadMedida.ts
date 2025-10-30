@@ -4,6 +4,7 @@ import { AuditoriaProps } from './index.ts'
 /**
  * @description Definición de unidades de medida por cantidad
  * Las operaciones se basan segun la unidad de medida minima cuya cantidad base = 1
+ * @author isi-template
  */
 export interface GrupoUnidadMedidaDefinicionProp {
   unidadMedida: ArticuloUnidadMedidaProps // Código que identifica a la unidad de medida, se replica con sin unidad medida
@@ -13,6 +14,7 @@ export interface GrupoUnidadMedidaDefinicionProp {
 /**
  * @description Propiedades que debe tener un grupo de unidad de medida
  * Si realiza una operación de articulo, ya no podrá modificar su grupo de UM.
+ * @author isi-template
  */
 export interface GrupoUnidadMedidaProps extends AuditoriaProps {
   _id: string

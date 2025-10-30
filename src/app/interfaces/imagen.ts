@@ -3,6 +3,7 @@ type ImageType = 'thumbnail' | 'square' | 'medium'
 /**
  * @description Urls de las variantes de imagenes
  * Asociada al alrticulo
+ * @author isi-template
  */
 export interface ImagenCloudProps {
   id: string // id unico

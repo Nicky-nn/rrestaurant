@@ -3,12 +3,15 @@ import { ArticuloPrecioOperacionApiInputProps } from './articuloPrecio.ts'
 import { ArticuloUnidadMedidaProps } from './articuloUnidadMedida.ts'
 import { ClaseArticuloProps } from './claseArticulo.ts'
 import { GestionArticuloProps } from './gestionArticulo.ts'
-import { GrupoArticuloProps } from './grupoArticulo.ts'
+import { GrupoArticuloOperacionProps } from './grupoArticulo.ts'
 import { LoteProps } from './lote.ts'
 import { MonedaProps } from './monedaPrecio.ts'
 import { SinProductoServicioProps } from './sin.interface.ts'
 import { TipoArticuloOperacionProps } from './tipoArticulo.ts'
 
+/**
+ * @author isi-template
+ */
 export interface ArticuloOperacionInputProps {
   id: string
   nroItem: number | null
@@ -17,12 +20,13 @@ export interface ArticuloOperacionInputProps {
   nombreArticulo: string
   tipoArticulo: TipoArticuloOperacionProps | null
   claseArticulo: ClaseArticuloProps | null
-  grupoArticulo?: GrupoArticuloProps | null
+  grupoArticulo?: GrupoArticuloOperacionProps | null
   gestionArticulo: GestionArticuloProps | null
   almacen: AlmacenProps | null
   lote: LoteProps | null
   sinProductoServicio: SinProductoServicioProps | null
   articuloUnidadMedida: ArticuloUnidadMedidaProps | null
+  // Cantidad solo para front-end
   cantidadOriginal: number
   cantidad: number
   descuento: number
@@ -34,7 +38,9 @@ export interface ArticuloOperacionInputProps {
   nota: string | null
   verificarStock: boolean
 }
-
+/**
+ * @author isi-template
+ */
 export interface ArticuloOperacionApiInputProps {
   articuloPrecio: ArticuloPrecioOperacionApiInputProps
   codigoAlmacen: string
@@ -43,7 +49,9 @@ export interface ArticuloOperacionApiInputProps {
   detalleExtra: string | null
   nota: string | null
 }
-
+/**
+ * @author isi-template
+ */
 export const ARTICULO_OPERACION_DEFAULT: ArticuloOperacionInputProps = {
   id: '',
   nroItem: null,

@@ -16,6 +16,7 @@ import { transformarArticuloPrecioService } from './transformarArticuloPrecioSer
  * @param articulo
  * @param monedaVenta
  * @param options solo cuando existe el inventario asociado
+ * @author isi-template
  */
 export const articuloToArticuloOperacionInputService = (
   articulo: ArticuloProps,

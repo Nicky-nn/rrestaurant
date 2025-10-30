@@ -13,6 +13,7 @@ import { TipoArticuloOperacionProps } from './tipoArticulo.ts'
 /**
  * Forma de realizacion de descuentos
  * prioridad fechaInicial, fechaFinal, cantidad y finalmente porcentaje
+ * @author isi-template
  */
 export interface ArticuloDescuentoProps {
   fechaInicial: Date | null // Fecha Inicial de vigencia
@@ -23,7 +24,9 @@ export interface ArticuloDescuentoProps {
     porcentaje: number
   }[] // Cantidad de productos para aplicar el descuento
 }
-
+/**
+ * @author isi-template
+ */
 export interface PrecioInputProps {
   precioBase: number | null // Precio base multiplicador por el factor de ajuste
   precio: number | null
@@ -33,6 +36,7 @@ export interface PrecioInputProps {
 
 /**
  * Propiedades de los articulos precios para todas la operaciones excepto articulo y articuloPrecioInventario
+ * @author isi-template
  */
 export interface ArticuloPrecioOperacionProps {
   articuloUnidadMedida: ArticuloUnidadMedidaProps
@@ -46,6 +50,7 @@ export interface ArticuloPrecioOperacionProps {
 
 /**
  * Propiedades de los articulos precios operacion para consume api
+ * @author isi-template
  */
 export interface ArticuloPrecioOperacionApiInputProps {
   cantidad: number
@@ -57,6 +62,7 @@ export interface ArticuloPrecioOperacionApiInputProps {
 
 /**
  * Datos del articulo / precio completo para la gestion de articulos
+ * @author isi-template
  */
 export interface ArticuloPrecioProps {
   articuloUnidadMedida: ArticuloUnidadMedidaProps
@@ -72,7 +78,9 @@ export interface ArticuloPrecioProps {
   umInventario: boolean // si es para unidad de medida para inventarios
   umCompra: boolean // si es para unidad de medida para compras
 }
-
+/**
+ * @author isi-template
+ */
 export interface ArticuloPrecioInputProps {
   articulo: ArticuloPrecioBaseProp | null
   articuloUnidadMedida: ArticuloUnidadMedidaProps | null
@@ -87,7 +95,9 @@ export interface ArticuloPrecioInputProps {
   umInventario: boolean // si es para unidad de medida para inventarios
   umCompra: boolean // si es para unidad de medida para compras
 }
-
+/**
+ * @author isi-template
+ */
 export const ARTICULO_PRECIO_DEFAULT: ArticuloPrecioInputProps = {
   articulo: null,
   articuloUnidadMedida: null,
@@ -105,6 +115,7 @@ export const ARTICULO_PRECIO_DEFAULT: ArticuloPrecioInputProps = {
 
 /**
  * @description datos de entrada para operaciones de precios de articulos independientes
+ * @author isi-template
  */
 export interface ArticuloPrecioApiInputProps {
   codigoArticulo: string
@@ -123,6 +134,7 @@ export interface ArticuloPrecioApiInputProps {
 
 /**
  * @description datos de entrada para operaciones de precios de articulos independientes
+ * @author isi-template
  */
 export interface ArticuloPrecioBaseProp {
   _id: string

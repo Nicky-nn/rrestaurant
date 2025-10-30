@@ -6,6 +6,7 @@ import { MonedaParamsProps } from '../interfaces/base.ts'
  * Realizamos la transformacion de articuloPrecio segun la moneda del user o alguna referencia moneda
  * @param articuloPrecio
  * @param moneda
+ * @author isi-template
  */
 export const transformarArticuloPrecioService = (
   articuloPrecio: ArticuloPrecioProps,

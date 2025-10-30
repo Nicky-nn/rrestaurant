@@ -1,6 +1,7 @@
 /**
  * Homologación de la moneda
  * Codigo debe ser igual al codigo del sin
+ * @author isi-template
  */
 export interface MonedaProps {
   _id: string
@@ -18,6 +19,7 @@ export interface MonedaProps {
 
 /**
  * en operacion no ingresa precio 1, precio 2
+ * @author isi-template
  */
 export interface MonedaPrecioOperacionProps {
   moneda: MonedaProps
@@ -28,6 +30,7 @@ export interface MonedaPrecioOperacionProps {
 
 /**
  * Relacion entre moneda y precio
+ * @author isi-template
  */
 export interface MonedaPrecioProps {
   moneda: MonedaProps
@@ -37,7 +40,9 @@ export interface MonedaPrecioProps {
   precioComparacion?: number | null
   manual: boolean // Si es false, no multiplica factorAjuste * precioBase
 }
-
+/**
+ * @author isi-template
+ */
 export interface MonedaPrecioApiInputProps {
   precioBase: number
   precio: number

@@ -8,6 +8,7 @@ import { SucursalProps } from './sucursal.ts'
 
 /**
  * @description Detalle de lotes en un almacen
+ * @author isi-template
  */
 export interface InventarioDetalleLoteProps {
   codigoLote: string // parametro deprecado en base de datos
@@ -20,6 +21,7 @@ export interface InventarioDetalleLoteProps {
 
 /**
  * @description Detalle de inventario (conjunto de almacenes)
+ * @author isi-template
  */
 export interface InventarioDetalleProps {
   codigoAlmacen: string // parametro deprecado en base de datos
@@ -35,6 +37,7 @@ export interface InventarioDetalleProps {
 /**
  * @description Inventario de articulos por sucursal
  * Cada inventario que se vaya creando se relacionará con la tabla articulos
+ * @author isi-template
  */
 export interface InventarioProps extends AuditoriaProps {
   codigoArticulo: string
