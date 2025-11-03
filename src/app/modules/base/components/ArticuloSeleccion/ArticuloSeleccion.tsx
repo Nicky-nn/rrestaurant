@@ -161,7 +161,7 @@ const ArticuloSeleccion = forwardRef<SelectInstance<ArticuloProps>, Props>(
           seleccionMultiple={seleccionMultiple}
           extraQuery={extraQuery}
           onClose={(resp) => {
-            if (resp) {
+            if (resp && resp.length > 0) {
               const errors: string[] = []
               for (const item of resp) {
                 if (bloquearCodigosArticulo.includes(item.codigoArticulo)) {
