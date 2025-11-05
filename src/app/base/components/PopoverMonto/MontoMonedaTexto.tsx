@@ -147,6 +147,8 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
               textUnderlineOffset: 2,
               userSelect: 'text',
               p: 0,
+              pl: 0.5,
+              pr: 0.5,
               textDecorationThickness: 1,
               '&:hover': {
                 textDecoration: 'underline',
