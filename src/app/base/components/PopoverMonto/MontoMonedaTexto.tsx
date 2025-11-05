@@ -3,9 +3,8 @@ import {
   Box,
   BoxProps,
   Button,
+  ButtonProps,
   Grid,
-  Link,
-  LinkProps,
   ListItemButton,
   Popover,
   styled,
@@ -35,15 +34,21 @@ const StyleListItemButton = styled(ListItemButton)(({ theme }) => ({
 }))
 
 interface OwnProps {
+  // Id del componente
   id?: string
-  label?: React.ReactElement | string // Text antecedido al monto
-  monto: number // monto a pasar
-  sigla?: string // sigla de la moneda
-  decimales?: number // numero de decimales, default 2
+  // Text antecedido al monto
+  label?: React.ReactElement | string
+  // monto a pasar
+  monto: number
+  // sigla de la moneda
+  sigla?: string
+  // numero de decimales, default 2
+  decimales?: number
   boxProps?: BoxProps
   siglaProps?: TypographyProps
   montoProps?: TypographyProps
-  linkProps?: LinkProps // Propiedades de Link, se aplica cuando editar=true
+  // Propiedades de Link button, se aplica cuando editar=true antes era LinkProps
+  buttonProps?: ButtonProps
   numberProps?: Omit<
     NumberInputProps,
     'onChange, min, max, step, unit, decimalScale, helperText'
@@ -79,7 +84,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
     boxProps = {},
     siglaProps = {},
     montoProps = { sx: { fontWeight: 500 } },
-    linkProps = {},
+    buttonProps = {},
     numberProps = {},
     onChange,
     min = 0,
@@ -129,22 +134,29 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
       <Box id={nid} {...boxProps}>
         {label && label}
         {editar && !lista && (
-          <Link
-            href={'#'}
+          <Button
+            variant={buttonProps?.variant || 'text'}
+            size={buttonProps?.size || 'small'}
             onClick={(event) => {
               setInputMonto(monto)
               setAnchorMonto(event.currentTarget)
             }}
-            color={error ? 'error' : linkProps?.color || 'primary'}
+            color={error ? 'error' : buttonProps?.color || 'primary'}
             sx={{
+              textDecoration: 'underline',
               textUnderlineOffset: 2,
-              pr: 0.5,
-              pl: 0.5,
+              userSelect: 'text',
+              p: 0,
+              textDecorationThickness: 1,
+              '&:hover': {
+                textDecoration: 'underline',
+                textDecorationThickness: 1.1,
+              },
             }}
-            {...linkProps}
+            {...buttonProps}
           >
             {TypMonto}
-          </Link>
+          </Button>
         )}
 
         {editar && lista && (
