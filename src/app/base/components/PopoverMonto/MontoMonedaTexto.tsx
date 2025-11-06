@@ -131,9 +131,9 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
 
   return (
     <>
-      <Box id={nid} {...boxProps}>
-        {label && label}
-        {editar && !lista && (
+      {editar && !lista && (
+        <Box id={nid} {...boxProps}>
+          {label && label}
           <Button
             variant={buttonProps?.variant || 'text'}
             size={buttonProps?.size || 'small'}
@@ -159,9 +159,12 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
           >
             {TypMonto}
           </Button>
-        )}
+        </Box>
+      )}
 
-        {editar && lista && (
+      {editar && lista && (
+        <Box id={nid} {...boxProps}>
+          {label && label}
           <StyleListItemButton
             onClick={(event) => {
               setInputMonto(monto)
@@ -175,10 +178,16 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
           >
             {TypMonto}
           </StyleListItemButton>
-        )}
+        </Box>
+      )}
 
-        {!editar && <Box sx={{ pl: 0.5, pr: 0.5 }}>{TypMonto}</Box>}
-      </Box>
+      {!editar && (
+        <Box id={nid} sx={{ pr: 0.5, pl: 0.5 }} {...boxProps}>
+          {label && label}
+          {TypMonto}
+        </Box>
+      )}
+
       {editar && (
         <Popover
           id={idPopover}
