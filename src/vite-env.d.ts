@@ -16,7 +16,7 @@ interface ImportMetaEnv {
   readonly ISI_SIGLA: string
   readonly ISI_THEME_COLOR: string
   readonly ISI_VERSION: string
-  readonly ISI_MODULO: string
+  readonly ISI_DOMINIO: string //// Se cambio ISI_MODULO por ISI_DOMINIO
   // more env variables...
 }
 

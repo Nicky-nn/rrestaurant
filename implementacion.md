@@ -21,7 +21,7 @@
 
 4. Descomprimimos en el directorio raíz el archivo compreso, `nuevoProyecto.zip`
 
-5. Modificamos el archivo `.env`, cambiamos `ISI_DOCUMENTO_SECTOR, ISI_API_URL` por los valores según el documento sector
+5. Modificamos el archivo `.env`, cambiamos `ISI_DOCUMENTO_SECTOR, ISI_API_URL` y añadimos `ISI_DOMINIO` por los valores según el documento sector
 
    ```bash
    APP_ENV=local
@@ -30,6 +30,7 @@
    #ISI_API_URL=https://api.isipass.com.bo/api
    #ISI_API_URL=https://sandbox.isipass.net/api
    ISI_API_URL=http://localhost:3000/api
+   ISI_DOMINIO=FACT_COMPRA_VENTA
    
    ISI_DOCUMENTO_SECTOR=0
    ISI_CAPTCHA_KEY=0x4AAAAAAAIR3qJWMFMaFVXX
