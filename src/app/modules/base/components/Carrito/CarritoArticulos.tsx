@@ -541,4 +541,4 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
   )
 }
 
-export default CarritoArticulos
+export default memo(CarritoArticulos)
