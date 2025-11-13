@@ -2,8 +2,8 @@ import { Box, Typography } from '@mui/material'
 import { FC, ReactNode, useEffect, useState } from 'react'
 import { useMisRolesPermisoDominio } from '../../hooks/useMisRolesPermisoDominio'
 import { buildPermissionFromEnv, hasPermission } from '../../../utils/menuPermissionFilter'
-import { navigations } from '../../../../navigations'
 import { useLocation } from 'react-router-dom'
+import { navigations } from '../../../navigations'
 
 
 

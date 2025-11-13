@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { navigations } from '../navigations'
 import { useBreadcrumb } from '../contexts/BreadcrumbContext'
+import { navigations } from '../../navigations'
 
 /**
  * Hook que detecta automáticamente el menú raíz de cualquier página

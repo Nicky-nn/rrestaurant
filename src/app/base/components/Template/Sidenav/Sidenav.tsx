@@ -51,6 +51,8 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
 
   // Si es administrador, usar todas las navegaciones sin filtrar
   // Si no, filtrar por permisos
+  console.log('Permisos del usuario en Sidenav:', permisos)
+
   const filteredNavigations = isAdmin
     ? navigations
     : useFilteredNavigations({
@@ -58,6 +60,7 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
       navigations,
       debug: false,
     })
+  console.log('Navegaciones filtradas:', filteredNavigations)
 
   const updateSidebarMode = (sidebarSettings: any) => {
     let activeLayoutSettingsName = settings.activeLayout + 'Settings'

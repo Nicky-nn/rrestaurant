@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
+import { NavigationProps } from '../../navigations'
+import { buildPermissionFromEnv, hasPermission } from '../../utils/menuPermissionFilter'
 
-import type { NavigationProps } from '../navigations'
-import { buildPermissionFromEnv, hasPermission } from '../utils/menuPermissionFilter'
 
 /**
  * Opciones de configuración para el filtrado de navegaciones

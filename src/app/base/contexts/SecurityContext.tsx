@@ -79,7 +79,7 @@ export const SecurityProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const parts = [...hierarchyParts, actionNormalized].filter(Boolean)
 
     // Obtener el dominio del env
-    const dominio = normalizeString(import.meta.env.ISI_DOMINIO || '')
+    const dominio = normalizeString(import.meta.env.ISI_MODULO || '')
 
     // Construir permiso completo: DOMINIO:PARTE1:PARTE2:...:ACCION
     const fullPermission = [dominio, ...parts].filter(Boolean).join(':')
@@ -104,7 +104,7 @@ export const SecurityProvider: FC<{ children: ReactNode }> = ({ children }) => {
     if (loading || !staticPermission) return false
 
     // Obtener el dominio del env
-    const dominio = normalizeString(import.meta.env.ISI_DOMINIO || '')
+    const dominio = normalizeString(import.meta.env.ISI_MODULO || '')
 
     // Normalizar el permiso estático
     const normalizedStaticPermission = normalizeString(staticPermission)

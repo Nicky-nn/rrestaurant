@@ -22,7 +22,7 @@ Rama: `feature/control-usuarios`
 ### Fuentes de datos
 
 - Backend GraphQL: query `misRolesPermisoPorDominio(dominio: String!)`.
-- Variable de entorno `import.meta.env.ISI_DOMINIO` para el dominio.
+- Variable de entorno `import.meta.env.ISI_MODULO` para el dominio.
 
 ## Archivos nuevos/modificados
 
@@ -40,7 +40,6 @@ Rama: `feature/control-usuarios`
   - Componente que detecta automáticamente la jerarquía de navegación (breadcrumb) según la URL actual.
 - NUEVO  `src/app/base/context/BreadcrumbContext.tsx`
   - Contexto que engloba los breadcrumbs, es decir, el “almacén central” donde se guarda y comparte la información que detecta tu hook useBreadcrumbDetector.
-
 - MODIFICADO: `src/app/base/components/Template/MatxLayout/MatxLayout.tsx`
   - Se envuelve el `Layout` con `<RouteGuard>...</RouteGuard>`.
 - MODIFICADO: `src/app/base/components/Template/Sidenav/Sidenav.tsx`
@@ -68,7 +67,7 @@ Rama: `feature/control-usuarios`
 
 Se utiliza el formato: `DOMINIO:SECCION:ACCION`.
 
-- `DOMINIO` proviene de `ISI_DOMINIO` (p. ej., `REST`, `POS`, `ADMIN`).
+- `DOMINIO` proviene de `ISI_MODULO` (p. ej., `REST`, `POS`, `ADMIN`).
 - `SECCION` y `ACCION` provienen de `name` del grupo y del item en `useNavigations()`.
 - Las partes se normalizan: mayúsculas, sin acentos, espacios/guiones/puntos a `_` y solo caracteres `[A-Z0-9_:]`.
 - Ejemplo: `Ventas y Pedidos > Registrar Pedido` en dominio `REST` → `REST:VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO`.
@@ -79,7 +78,7 @@ Se utiliza el formato: `DOMINIO:SECCION:ACCION`.
 - `@tanstack/react-query` para el hook de permisos.
 - `graphql-request` para la llamada al backend.
 - Variables de entorno definidas:
-  - `ISI_DOMINIO`: dominio activo para construir claves de permiso.
+  - `ISI_MODULO`: dominio activo para construir claves de permiso.
 
 ## Activación del modo debug
 
@@ -197,6 +196,17 @@ const SecureBox = withSecurity({ action: 'anular' })(
   </Box>,
 )
 ```
+### Opción 4: Con useSecurity
+```tsx
+
+    const { hasActionPermission } = useSecurity()
+    const hasAnularPermission = hasActionPermission('ANULAR')
+    {hasAnularPermission ? (
+            <Grid item xs={12}>
+               <Button>ANULAR</Button>
+            </Grid>
+     )}
+```
 
 ## ⚙️ Funcionamiento Automático
 
@@ -222,7 +232,7 @@ El sistema detecta automáticamente:
    - `'Ventas y Pedidos'` → `'VENTAS_Y_PEDIDOS'`
    - `'Registrar Pedido'` → `'REGISTRAR_PEDIDO'`
    - `'anular'` → `'ANULAR'`
-3. Agrega dominio del environment (`ISI_DOMINIO`)
+3. Agrega dominio del environment (`ISI_MODULO`)
 4. Construye: `REST:VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:ANULAR`
 5. Verifica contra permisos del usuario
 
@@ -505,7 +515,7 @@ export const EjemploConKeepInDom: React.FC = () => {
 - - 'anular' → 'ANULAR'
 -
 - 3.  Construye el permiso completo usando el dominio del environment:
-- - Dominio (de ISI_DOMINIO): 'REST'
+- - Dominio (de ISI_MODULO): 'REST'
 - - Resultado: 'REST:VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:ANULAR'
 -
 - 4.  Compara con los permisos del usuario obtenidos de la API:
