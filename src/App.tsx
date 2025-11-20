@@ -10,6 +10,8 @@ import MatxTheme from './app/base/components/Template/MatxTheme/MatxTheme'
 import { AuthProvider } from './app/base/contexts/JWTAuthContext'
 import { SettingsProvider } from './app/base/contexts/SettingsContext'
 import { appRoutes } from './app/routes/routes'
+import { BreadcrumbProvider } from './app/base/contexts/BreadcrumbContext'
+import { SecurityProvider } from './app/base/contexts/SecurityContext'
 
 /**
  * @author isi-template
@@ -30,41 +32,46 @@ function App() {
   return (
     <SettingsProvider>
       <AuthProvider>
-        <MatxTheme>
-          <ConfirmProvider
-            defaultOptions={{
-              title: 'Confirmación',
-              content: '¿Confirma que desea realizar la acción?',
-              allowClose: false,
-              confirmationText: 'Confirmar',
-              cancellationText: 'Cancelar',
-              dialogProps: {
-                fullWidth: true,
-                maxWidth: 'xs',
-              },
-              confirmationButtonProps: {
-                color: 'primary',
-                variant: 'contained',
-                size: 'small',
-                sx: { mr: 1.5 },
-                'aria-label': 'confirm',
-                autoFocus: false,
-              },
-              cancellationButtonProps: {
-                color: 'error',
-                variant: 'text',
-                size: 'small',
-                'aria-label': 'close',
-                autoFocus: false,
-              },
-              buttonOrder: ['cancel', 'confirm'],
-            }}
-          >
-            <CssBaseline />
-            {content}
-            <ReloadPrompt />
-          </ConfirmProvider>
-        </MatxTheme>
+        <BreadcrumbProvider>
+          <SecurityProvider>
+            <MatxTheme>
+              <ConfirmProvider
+                defaultOptions={{
+                  title: 'Confirmación',
+                  content: '¿Confirma que desea realizar la acción?',
+                  allowClose: false,
+                  confirmationText: 'Confirmar',
+                  cancellationText: 'Cancelar',
+                  dialogProps: {
+                    fullWidth: true,
+                    maxWidth: 'xs',
+                  },
+                  confirmationButtonProps: {
+                    color: 'primary',
+                    variant: 'contained',
+                    size: 'small',
+                    sx: { mr: 1.5 },
+                    'aria-label': 'confirm',
+                    autoFocus: false,
+                  },
+                  cancellationButtonProps: {
+                    color: 'error',
+                    variant: 'text',
+                    size: 'small',
+                    'aria-label': 'close',
+                    autoFocus: false,
+                  },
+                  buttonOrder: ['cancel', 'confirm'],
+                }}
+              >
+                <CssBaseline />
+                {content}
+                <ReloadPrompt />
+              </ConfirmProvider>
+            </MatxTheme>
+          </SecurityProvider>
+        </BreadcrumbProvider>
+
       </AuthProvider>
     </SettingsProvider>
   )
