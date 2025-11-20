@@ -112,8 +112,8 @@ const JwtLogin = () => {
   const form = useForm<LoginProps>({
     defaultValues: {
       shop: null,
-      email: '',
-      password: '',
+      email: 'nico@gmail.com',
+      password: '129258',
       remember: true,
     },
     resolver: yupResolver(validationSchema as any),
