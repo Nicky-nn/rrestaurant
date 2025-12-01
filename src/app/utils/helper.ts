@@ -1,6 +1,7 @@
 /**
  * @description console.log condicional al estado .env
  * @param args
+ * @author isi-template
  */
 import { MRT_ColumnFiltersState } from 'material-react-table'
 import { customAlphabet } from 'nanoid'
