@@ -228,7 +228,7 @@ const Layout1Topbar: FC<any> = () => {
         </Box>
         <Box display="flex" alignItems="center">
           <UxModoMenu
-            value={user?.uxModo ?? 'LIGHT'}
+            value={user.uxModo}
             onChange={(modo) => {
               cuentaCambioModo(modo);
               refreshUser();

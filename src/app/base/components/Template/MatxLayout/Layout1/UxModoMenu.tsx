@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     IconButton,
     Menu,
@@ -16,6 +16,13 @@ export default function UxModoMenu({
     onChange: (modo: 'LIGHT' | 'DARK' | 'SYSTEM') => void;
 }) {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [modoActual, setModoActual] = useState<'LIGHT' | 'DARK' | 'SYSTEM'>(value ?? 'LIGHT');
+
+    useEffect(() => {
+        // Si el valor del padre cambia, actualizamos nuestro estado interno
+        setModoActual(value ?? 'LIGHT');
+    }, [value]);
+
     const open = Boolean(anchorEl);
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -27,21 +34,15 @@ export default function UxModoMenu({
     };
 
     const handleSelect = (modo: 'LIGHT' | 'DARK' | 'SYSTEM') => {
+        setModoActual(modo); // actualizar estado interno
+        onChange(modo); // notificar al padre
+        handleClose();
 
-        const modoActual = value ?? 'LIGHT';
-
-        onChange(modo); // actualiza el valor en el componente padre
-        handleClose(); // cierra el menú
-
-
-        // Primero eliminamos cualquier estilo anterior
+        // Eliminar cualquier estilo previo
         const darkModeStyle = document.getElementById('dark-mode-toggle');
-        if (darkModeStyle) {
-            darkModeStyle.remove();
-        }
+        if (darkModeStyle) darkModeStyle.remove();
 
         if (modo === 'DARK') {
-            // Activar modo nocturno
             const drkMo = document.createElement('style');
             drkMo.id = 'dark-mode-toggle';
             drkMo.innerText = `
@@ -55,30 +56,25 @@ html:not(#a) :is(canvas, option, object) :is(i, img, image, embed, video),
 html:not(#a) video:fullscreen{filter:unset!important}`;
             document.head.appendChild(drkMo);
         } else if (modo === 'SYSTEM') {
-            // Usar el modo del sistema operativo
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             if (prefersDark) {
-                // Aplicar mismo estilo de modo oscuro si el sistema está en oscuro
                 const drkMo = document.createElement('style');
                 drkMo.id = 'dark-mode-toggle';
                 drkMo.innerText = `
-html, body {  background-color: #f8f9fa !important; color: #212529 !important;          }
-html * {  text-shadow: 0 0 .05px #6c757d;   }
-button, input, select, textarea {  background-color: #e9ecef !important;  
-  color: #212529 !important;  border-color: #ced4da !important;  box-shadow: none !important;}
-img, video, canvas, object {  filter: none !important;}
-html :fullscreen, html :fullscreen * {  filter: unset !important;}
-`;
+html, body { background-color: #f8f9fa !important; color: #212529 !important; }
+html * { text-shadow: 0 0 .05px #6c757d; }
+button, input, select, textarea { background-color: #e9ecef !important; color: #212529 !important; border-color: #ced4da !important; box-shadow: none !important;}
+img, video, canvas, object { filter: none !important;}
+html :fullscreen, html :fullscreen * { filter: unset !important;}`;
                 document.head.appendChild(drkMo);
             }
         }
     };
 
-
     const icon =
-        value === 'DARK'
+        modoActual === 'DARK'
             ? <DarkMode />
-            : value === 'LIGHT'
+            : modoActual === 'LIGHT'
                 ? <LightMode />
                 : <SettingsBrightness />;
 
