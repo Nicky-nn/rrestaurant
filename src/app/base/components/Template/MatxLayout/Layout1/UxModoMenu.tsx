@@ -17,7 +17,6 @@ export default function UxModoMenu({
 }) {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
-    const [isDarkMode, setIsDarkMode] = useState(false)
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -28,10 +27,12 @@ export default function UxModoMenu({
     };
 
     const handleSelect = (modo: 'LIGHT' | 'DARK' | 'SYSTEM') => {
+
+        const modoActual = value ?? 'LIGHT';
+
         onChange(modo); // actualiza el valor en el componente padre
         handleClose(); // cierra el menú
 
-        setIsDarkMode(modo === 'DARK');
 
         // Primero eliminamos cualquier estilo anterior
         const darkModeStyle = document.getElementById('dark-mode-toggle');
@@ -56,7 +57,6 @@ html:not(#a) video:fullscreen{filter:unset!important}`;
         } else if (modo === 'SYSTEM') {
             // Usar el modo del sistema operativo
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            setIsDarkMode(prefersDark);
             if (prefersDark) {
                 // Aplicar mismo estilo de modo oscuro si el sistema está en oscuro
                 const drkMo = document.createElement('style');
