@@ -45,6 +45,7 @@ export interface PerfilProps {
   tipoRepresentacionGrafica: TipoRepresentacionGrafica
   usuario: string
   integracionSiat: boolean
+  uxModo: 'LIGHT' | 'DARK' | 'SYSTEM' | null
 }
 
 /**
