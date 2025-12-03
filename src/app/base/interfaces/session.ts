@@ -72,5 +72,6 @@ export const PerfilFragment = gql`
     tipoRepresentacionGrafica
     usuario
     integracionSiat
+    uxModo
   }
 `
