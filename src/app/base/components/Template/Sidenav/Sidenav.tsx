@@ -1,19 +1,18 @@
 import { styled } from '@mui/material'
 import { FC, Fragment, JSX } from 'react'
-import Scrollbar from 'react-perfect-scrollbar'
 
 import { navigations } from '../../../../navigations'
 import useSettings from '../../../hooks/useSettings'
 import MatxVerticalNav from '../MatxVerticalNav/MatxVerticalNav'
 import useAuth from '../../../hooks/useAuth'
-import { useMisRolesPermisoDominio } from '../../../hooks/useMisRolesPermisoDominio'
-import { useFilteredNavigations } from '../../../hooks/useFilteredNavigations'
+import StyledScrollBar from '../../Container/StyledScrollBar'
 
-const StyledScrollBar: FC<any> = styled(Scrollbar)(() => ({
+const StyledScrollBarSidenav = styled(StyledScrollBar)(() => ({
   paddingLeft: '1rem',
   paddingRight: '1rem',
   position: 'relative',
 }))
+
 
 const SideNavMobile = styled('div')(({ theme }) => ({
   position: 'fixed',
@@ -40,7 +39,6 @@ type SidenavProps = {
 const Sidenav: FC<any> = ({ children }: SidenavProps) => {
   const { user } = useAuth()
   const { settings, updateSettings }: any = useSettings()
-  const { permisos } = useMisRolesPermisoDominio()
 
   // Verificar si el usuario es administrador
   const isAdmin =
@@ -49,20 +47,12 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
       user.rol.toLowerCase().includes(adminRole),
     )
 
-  // Si es administrador, usar todas las navegaciones sin filtrar
-  // Si no, filtrar por permisos
-  const filteredNavigations = isAdmin
-    ? navigations
-    : useFilteredNavigations({
-      userPermissions: permisos,
-      navigations,
-      debug: false,
-    })
-  console.log('Navegaciones filtradas:', filteredNavigations)
+
 
   const updateSidebarMode = (sidebarSettings: any) => {
     let activeLayoutSettingsName = settings.activeLayout + 'Settings'
     let activeLayoutSettings = settings[activeLayoutSettingsName]
+
 
     updateSettings({
       ...settings,
@@ -78,11 +68,10 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
 
   return (
     <Fragment>
-      <StyledScrollBar options={{ suppressScrollX: true }}>
+      <StyledScrollBarSidenav >
         {children}
-        <MatxVerticalNav items={filteredNavigations} />
-      </StyledScrollBar>
-
+        <MatxVerticalNav items={navigations} />
+      </StyledScrollBarSidenav>
       <SideNavMobile onClick={() => updateSidebarMode({ mode: 'close' })} />
     </Fragment>
   )

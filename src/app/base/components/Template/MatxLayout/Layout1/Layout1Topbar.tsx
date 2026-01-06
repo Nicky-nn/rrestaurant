@@ -32,6 +32,8 @@ import MatxMenu from '../../MatxMenu/MatxMenu'
 import { themeShadows } from '../../MatxTheme/themeColors'
 import NotificationBar from '../../NotificationBar/NotificationBar'
 import { Span } from '../../Typography'
+import UxModoMenu from './UxModoMenu'
+import { cuentaCambioModo } from '../../../../api/apiCambioModo'
 
 const StyledIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.text.primary,
@@ -104,7 +106,7 @@ const IconBox = styled('div')(({ theme }) => ({
 const Layout1Topbar: FC<any> = () => {
   const theme = useTheme()
   const { settings, updateSettings }: any = useSettings()
-  const { logout, user }: any = useAuth()
+  const { logout, user, refreshUser }: any = useAuth()
   const isMdScreen = useMediaQuery(theme.breakpoints.down('md'))
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
 
@@ -225,6 +227,13 @@ const Layout1Topbar: FC<any> = () => {
           </StyledIconButton>
         </Box>
         <Box display="flex" alignItems="center">
+          <UxModoMenu
+            value={user.uxModo}
+            onChange={(modo) => {
+              cuentaCambioModo(modo);
+              refreshUser();
+            }}
+          />
           <NotificationProvider>
             <NotificationBar />
           </NotificationProvider>
