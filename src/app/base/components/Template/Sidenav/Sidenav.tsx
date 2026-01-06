@@ -40,14 +40,6 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
   const { user } = useAuth()
   const { settings, updateSettings }: any = useSettings()
 
-  // Verificar si el usuario es administrador
-  const isAdmin =
-    user.rol &&
-    ['administrador', 'admin', 'adm'].some((adminRole) =>
-      user.rol.toLowerCase().includes(adminRole),
-    )
-
-
 
   const updateSidebarMode = (sidebarSettings: any) => {
     let activeLayoutSettingsName = settings.activeLayout + 'Settings'

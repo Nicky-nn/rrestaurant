@@ -14,3 +14,4 @@ export default function UxModoGlobalApplier() {
 
     return null; // Este componente no renderiza nada
 }
+

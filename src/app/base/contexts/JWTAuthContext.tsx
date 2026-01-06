@@ -111,7 +111,7 @@ const AuthContext = createContext({
   ...initialState,
   method: 'JWT',
   login: () => Promise.resolve(),
-  logout: () => {},
+  logout: () => { },
   register: () => Promise.resolve(),
   refreshUser: () => Promise.resolve(),
 })
@@ -200,7 +200,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       try {
         const accessToken = window.localStorage.getItem(AccessToken)
         if (accessToken && isValidToken(accessToken)) {
