@@ -1,6 +1,5 @@
 import { styled } from '@mui/material'
 import { FC, Fragment, JSX } from 'react'
-import Scrollbar from 'react-perfect-scrollbar'
 
 import { navigations } from '../../../../navigations'
 import useSettings from '../../../hooks/useSettings'
@@ -8,12 +7,14 @@ import MatxVerticalNav from '../MatxVerticalNav/MatxVerticalNav'
 import { useMisRolesPermisoDominio } from '../../../hooks/useMisRolesPermisoDominio'
 import { useFilteredNavigations } from '../../../hooks/useFilteredNavigations'
 import useAuth from '../../../hooks/useAuth'
+import StyledScrollBar from '../../Container/StyledScrollBar'
 
-const StyledScrollBar: FC<any> = styled(Scrollbar)(() => ({
+const StyledScrollBarSidenav = styled(StyledScrollBar)(() => ({
   paddingLeft: '1rem',
   paddingRight: '1rem',
   position: 'relative',
 }))
+
 
 const SideNavMobile = styled('div')(({ theme }) => ({
   position: 'fixed',
@@ -51,8 +52,6 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
 
   // Si es administrador, usar todas las navegaciones sin filtrar
   // Si no, filtrar por permisos
-  console.log('Permisos del usuario en Sidenav:', permisos)
-
   const filteredNavigations = isAdmin
     ? navigations
     : useFilteredNavigations({
@@ -60,7 +59,6 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
       navigations,
       debug: false,
     })
-  console.log('Navegaciones filtradas:', filteredNavigations)
 
   const updateSidebarMode = (sidebarSettings: any) => {
     let activeLayoutSettingsName = settings.activeLayout + 'Settings'
@@ -81,11 +79,10 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
 
   return (
     <Fragment>
-      <StyledScrollBar options={{ suppressScrollX: true }}>
+      <StyledScrollBarSidenav >
         {children}
         <MatxVerticalNav items={filteredNavigations} />
-      </StyledScrollBar>
-
+      </StyledScrollBarSidenav>
       <SideNavMobile onClick={() => updateSidebarMode({ mode: 'close' })} />
     </Fragment>
   )

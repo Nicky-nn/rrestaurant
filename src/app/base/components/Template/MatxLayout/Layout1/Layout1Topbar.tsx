@@ -230,7 +230,7 @@ const Layout1Topbar: FC<any> = () => {
           <UxModoMenu
             value={user.uxModo}
             onChange={(modo) => {
-              cuentaCambioModo(modo);
+              //cuentaCambioModo(modo);
               refreshUser();
             }}
           />
