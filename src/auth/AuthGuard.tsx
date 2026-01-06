@@ -19,6 +19,7 @@ const userHasPermission = (pathname: string, user: PerfilProps, routes: any) => 
     if (isEmptyValue(user)) {
       return false
     }
+    console.log(pathname, user, routes)
     const matched = routes.find((r: any) => r.path === pathname)
     return matched && matched.auth && matched.auth.length
       ? matched.auth.includes(user.tipo)
@@ -45,6 +46,7 @@ const AuthGuard: FC<Props> = ({ children }: Props) => {
     const routes = useMemo(() => flat(appRoutes), [])
     // tiene permisos?
     const hasPermission = userHasPermission(pathname, user, routes)
+    console.log('hp', hasPermission)
     // IF YOU NEED ROLE BASED AUTHENTICATION,
     // UNCOMMENT ABOVE TWO LINES, getUserRoleAuthStatus METHOD AND user VARIABLE
     // AND COMMENT OUT BELOW LINE
