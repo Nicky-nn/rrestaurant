@@ -12,6 +12,7 @@ import { SettingsProvider } from './app/base/contexts/SettingsContext'
 import { appRoutes } from './app/routes/routes'
 import { BreadcrumbProvider } from './app/base/contexts/BreadcrumbContext'
 import { SecurityProvider } from './app/base/contexts/SecurityContext'
+import UxModoGlobalApplier from './app/base/components/UxModoGlobalApplier'
 
 /**
  * @author isi-template
@@ -32,6 +33,7 @@ function App() {
   return (
     <SettingsProvider>
       <AuthProvider>
+        <UxModoGlobalApplier />
         <BreadcrumbProvider>
           <SecurityProvider>
             <MatxTheme>
