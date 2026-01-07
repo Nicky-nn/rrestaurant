@@ -14,12 +14,12 @@ import {
   useTheme,
 } from '@mui/material'
 import { FC, Fragment, useState } from 'react'
-import Scrollbar from 'react-perfect-scrollbar'
 
 import useSettings from '../../../hooks/useSettings'
 import BadgeSelected from '../MatxCustomizer/BadgeSelected'
 import { themeShadows } from '../MatxTheme/themeColors'
 import { H5 } from '../Typography'
+import StyledScrollBar from '../../Container/StyledScrollBar'
 
 const MaxCustomaizer = styled('div')(({ theme }) => ({
   height: '100vh',
@@ -73,9 +73,10 @@ const IMG = styled('img')(() => ({
   width: '100%',
 }))
 
-const StyledScrollBar = styled(Scrollbar)(() => ({
-  paddingLeft: '16px',
-  paddingRight: '16px',
+const StyledScrollBarSidenav = styled(StyledScrollBar)(() => ({
+  paddingLeft: '1rem',
+  paddingRight: '1rem',
+  position: 'relative',
 }))
 
 /**
@@ -130,7 +131,7 @@ const ThemeColorBar: FC<any> = ({ container }: any) => {
                 <Icon className="icon">close</Icon>
               </IconButton>
             </Controller>
-            <StyledScrollBar options={{ suppressScrollX: true }}>
+            <StyledScrollBarSidenav>
               {tabIndex === 0 && (
                 <Box sx={{ mb: 4, mx: 3 }}>
                   <Box sx={{ color: secondary }}>Layouts</Box>
@@ -168,7 +169,7 @@ const ThemeColorBar: FC<any> = ({ container }: any) => {
                   </Box>
                 </Box>
               )}
-            </StyledScrollBar>
+            </StyledScrollBarSidenav>
           </MaxCustomaizer>
         </Drawer>
       </ThemeProvider>
