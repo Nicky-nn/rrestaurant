@@ -14,12 +14,12 @@ import {
   useTheme,
 } from '@mui/material'
 import React, { Fragment, useState } from 'react'
-import Scrollbar from 'react-perfect-scrollbar'
 
 import useSettings from '../../../hooks/useSettings'
 import { themeShadows } from '../MatxTheme/themeColors'
 import { H5, Span } from '../Typography'
 import BadgeSelected from './BadgeSelected'
+import StyledScrollBar from '../../Container/StyledScrollBar'
 
 const Label = styled(Span)(({ theme }) => ({
   color: theme.palette.secondary.main,
@@ -90,9 +90,10 @@ const IMG = styled('img')(() => ({
   width: '100%',
 }))
 
-const StyledScrollBar = styled(Scrollbar)(() => ({
-  paddingLeft: '16px',
-  paddingRight: '16px',
+const StyledScrollBarSidenav = styled(StyledScrollBar)(() => ({
+  paddingLeft: '1rem',
+  paddingRight: '1rem',
+  position: 'relative',
 }))
 
 /**
@@ -144,7 +145,7 @@ const MatxCustomizer = () => {
                 <Icon className="icon">close</Icon>
               </IconButton>
             </Controller>
-            <StyledScrollBar options={{ suppressScrollX: true }}>
+            <StyledScrollBarSidenav >
               {tabIndex === 0 && (
                 <Box sx={{ mb: 4, mx: 3 }}>
                   <Box sx={{ color: secondary }}>Layouts</Box>
@@ -197,7 +198,7 @@ const MatxCustomizer = () => {
                   </div>
                 </div>
               )}
-            </StyledScrollBar>
+            </StyledScrollBarSidenav>
           </MaxCustomaizer>
         </Drawer>
       </ThemeProvider>
