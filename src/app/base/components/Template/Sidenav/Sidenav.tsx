@@ -15,7 +15,6 @@ const StyledScrollBarSidenav = styled(StyledScrollBar)(() => ({
   position: 'relative',
 }))
 
-
 const SideNavMobile = styled('div')(({ theme }) => ({
   position: 'fixed',
   top: 0,
