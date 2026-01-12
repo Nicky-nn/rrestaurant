@@ -2,19 +2,18 @@ import { styled } from '@mui/material'
 import { FC, Fragment, JSX } from 'react'
 
 import { navigations } from '../../../../navigations'
-import useSettings from '../../../hooks/useSettings'
-import MatxVerticalNav from '../MatxVerticalNav/MatxVerticalNav'
-import { useMisRolesPermisoDominio } from '../../../hooks/useMisRolesPermisoDominio'
-import { useFilteredNavigations } from '../../../hooks/useFilteredNavigations'
 import useAuth from '../../../hooks/useAuth'
+import { useFilteredNavigations } from '../../../hooks/useFilteredNavigations'
+import { useMisRolesPermisoDominio } from '../../../hooks/useMisRolesPermisoDominio'
+import useSettings from '../../../hooks/useSettings'
 import StyledScrollBar from '../../Container/StyledScrollBar'
+import MatxVerticalNav from '../MatxVerticalNav/MatxVerticalNav'
 
 const StyledScrollBarSidenav = styled(StyledScrollBar)(() => ({
   paddingLeft: '1rem',
   paddingRight: '1rem',
   position: 'relative',
 }))
-
 
 const SideNavMobile = styled('div')(({ theme }) => ({
   position: 'fixed',
@@ -55,15 +54,14 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
   const filteredNavigations = isAdmin
     ? navigations
     : useFilteredNavigations({
-      userPermissions: permisos,
-      navigations,
-      debug: false,
-    })
+        userPermissions: permisos,
+        navigations,
+        debug: false,
+      })
 
   const updateSidebarMode = (sidebarSettings: any) => {
     let activeLayoutSettingsName = settings.activeLayout + 'Settings'
     let activeLayoutSettings = settings[activeLayoutSettingsName]
-
 
     updateSettings({
       ...settings,
@@ -79,7 +77,7 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
 
   return (
     <Fragment>
-      <StyledScrollBarSidenav >
+      <StyledScrollBarSidenav>
         {children}
         <MatxVerticalNav items={filteredNavigations} />
       </StyledScrollBarSidenav>

@@ -1,9 +1,9 @@
 import React, { createContext, FC, ReactNode, useContext, useMemo } from 'react'
 
+import { normalizeString } from '../../utils/menuPermissionFilter.ts'
+import useAuth from '../hooks/useAuth.ts'
+import { useMisRolesPermisoDominio } from '../hooks/useMisRolesPermisoDominio.ts'
 import { useBreadcrumb } from './BreadcrumbContext'
-import { normalizeString } from '../../utils/menuPermissionFilter'
-import { useMisRolesPermisoDominio } from '../hooks/useMisRolesPermisoDominio'
-import useAuth from '../hooks/useAuth'
 
 interface SecurityContextProps {
   /**
@@ -67,27 +67,24 @@ export const SecurityProvider: FC<{ children: ReactNode }> = ({ children }) => {
       return false
     }
 
-    // Construir el permiso completo
-    // fullHierarchy ya tiene la jerarquía completa del menú
-    // Ejemplo: ['Ventas y Pedidos', 'Registrar Pedido']
-    // Construimos: REST:VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:ANULAR
+    // Eliminar duplicados consecutivos (ej: ['Productos', 'Productos', 'Modificar'] -> ['Productos', 'Modificar'])
+    const uniqueHierarchy = fullHierarchy.filter(
+      (item, index, arr) => index === 0 || item !== arr[index - 1],
+    )
 
-    const hierarchyParts = fullHierarchy.map(normalizeString)
+    // Normalizar y construir permiso
+    const hierarchyParts = uniqueHierarchy.map(normalizeString)
     const actionNormalized = normalizeString(action)
 
     // Unir jerarquía + acción
     const parts = [...hierarchyParts, actionNormalized].filter(Boolean)
 
     // Obtener el dominio del env
-    const dominio = normalizeString(import.meta.env.ISI_MODULO || '')
+    const dominio = normalizeString(import.meta.env.ISI_DOMINIO || '')
 
     // Construir permiso completo: DOMINIO:PARTE1:PARTE2:...:ACCION
     const fullPermission = [dominio, ...parts].filter(Boolean).join(':')
     const hasPermission = userPermissions.has(fullPermission)
-
-    // console.log(
-    //   `Permiso: ${fullPermission} - ${hasPermission ? 'PERMITIDO' : 'DENEGADO'}`,
-    // )
 
     return hasPermission
   }
@@ -104,7 +101,7 @@ export const SecurityProvider: FC<{ children: ReactNode }> = ({ children }) => {
     if (loading || !staticPermission) return false
 
     // Obtener el dominio del env
-    const dominio = normalizeString(import.meta.env.ISI_MODULO || '')
+    const dominio = normalizeString(import.meta.env.ISI_DOMINIO || '')
 
     // Normalizar el permiso estático
     const normalizedStaticPermission = normalizeString(staticPermission)

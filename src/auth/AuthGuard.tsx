@@ -46,12 +46,12 @@ const AuthGuard: FC<Props> = ({ children }: Props) => {
     const routes = useMemo(() => flat(appRoutes), [])
     // tiene permisos?
     const hasPermission = userHasPermission(pathname, user, routes)
-    console.log('hp', hasPermission)
+    // console.log('hp', hasPermission)
     // IF YOU NEED ROLE BASED AUTHENTICATION,
     // UNCOMMENT ABOVE TWO LINES, getUserRoleAuthStatus METHOD AND user VARIABLE
     // AND COMMENT OUT BELOW LINE
     const authenticated = isAuthenticated && hasPermission
-    console.log(pathname, authenticated)
+    // console.log(pathname, authenticated)
 
     if (!authenticated) {
       return <Navigate replace to="/session/signin" state={{ from: pathname }} />
