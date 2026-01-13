@@ -8,7 +8,9 @@ import {
   buildPermissionFromUrl,
   hasPermission,
   matchRoute,
+  normalizeString,
 } from '../../../utils/menuPermissionFilter.ts'
+import { useBreadcrumb } from '../../contexts/BreadcrumbContext.tsx'
 import useAuth from '../../hooks/useAuth.ts'
 import { useMisRolesPermisoDominio } from '../../hooks/useMisRolesPermisoDominio.ts'
 
@@ -33,6 +35,7 @@ export const RouteGuard: FC<RouteGuardProps> = ({
   const { permisos, loading } = useMisRolesPermisoDominio()
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
   const { user } = useAuth()
+  const { fullHierarchy } = useBreadcrumb()
 
   // Verificar si el usuario es administrador
   const isAdmin = useMemo(() => {
@@ -73,7 +76,42 @@ export const RouteGuard: FC<RouteGuardProps> = ({
       return
     }
 
-    // Buscar el permiso necesario para la ruta actual
+    // PRIORIDAD 1: Si hay breadcrumbs (jerarquía completa), usar esa jerarquía
+    if (fullHierarchy && fullHierarchy.length > 0) {
+      // Eliminar duplicados consecutivos
+      const uniqueHierarchy = fullHierarchy.filter(
+        (item, index, arr) => index === 0 || item !== arr[index - 1],
+      )
+
+      // Normalizar y construir permiso desde la jerarquía
+      const hierarchyParts = uniqueHierarchy.map(normalizeString)
+      const dominio = normalizeString(import.meta.env.ISI_DOMINIO || '')
+
+      // Construir permiso completo: DOMINIO:PARTE1:PARTE2:...:ULTIMA_PARTE
+      const parts = [dominio, ...hierarchyParts].filter(Boolean)
+      const requiredPermission = parts.join(':')
+
+      if (isDebug) {
+        console.log('📍 Breadcrumbs detectados:', fullHierarchy)
+        console.log('🔐 Permiso construido desde breadcrumbs:', requiredPermission)
+      }
+
+      // Verificar si el usuario tiene el permiso
+      const access = hasPermission(permisos, requiredPermission)
+      setHasAccess(access)
+
+      if (!access) {
+        console.warn(
+          `❌ Acceso denegado a ${location.pathname}. Permiso requerido (desde breadcrumbs): ${requiredPermission}`,
+        )
+      } else if (isDebug) {
+        console.log('✅ Acceso permitido mediante breadcrumbs')
+      }
+
+      return
+    }
+
+    // PRIORIDAD 2: Si NO hay breadcrumbs, buscar en los menús de navegación
     let requiredPermission: string | null = null
     let routeFound = false
 
@@ -95,9 +133,10 @@ export const RouteGuard: FC<RouteGuardProps> = ({
             if (isMatch) {
               requiredPermission = buildPermissionFromEnv(item.name, child.name)
               routeFound = true
-              // console.log(`.  Ruta encontrada: ${currentPath} matchea con ${childPath}`)
-              // console.log(`   Permiso requerido: ${requiredPermission}`)
-              // console.log(`   Permisos usuario: ${permisos}`)
+              if (isDebug) {
+                console.log(`📍 Ruta encontrada en menús: ${currentPath} → ${childPath}`)
+                console.log(`🔐 Permiso desde menú: ${requiredPermission}`)
+              }
               return true
             }
           }
@@ -106,35 +145,44 @@ export const RouteGuard: FC<RouteGuardProps> = ({
         else if (item.path) {
           const itemPath = normalizePath(item.path)
           const isMatch = matchRoute(currentPath, itemPath)
-          // console.log(
-          //   `🔍 Comparando: "${currentPath}" con "${itemPath}" -> ${isMatch ? 'MATCH' : 'NO'}`,
-          // )
           if (isMatch) {
             requiredPermission = buildPermissionFromEnv(parentName || '', item.name)
             routeFound = true
-            // console.log(` Ruta encontrada: ${currentPath} matchea con ${itemPath}`)
-            // console.log(`   Permiso requerido: ${requiredPermission}`)
-            // console.log(`   Permisos usuario: ${permisos}`)
+            if (isDebug) {
+              console.log(`📍 Ruta encontrada en menús: ${currentPath} → ${itemPath}`)
+              console.log(`🔐 Permiso desde menú: ${requiredPermission}`)
+            }
             return true
           }
         }
       }
       return false
     }
-
+    // Agregado para rutas ocultas
+    // findPermissionForRoute(hideNavigations)
     findPermissionForRoute(navigations)
 
-    // Si la ruta NO está en los menús, construir permiso desde la URL
+    // PRIORIDAD 3: Si la ruta NO está en los menús, construir permiso desde la URL
     if (!routeFound || !requiredPermission) {
       // Construir permiso directamente desde la URL
       requiredPermission = buildPermissionFromUrl(currentPath)
-      // console.log(`Ruta no en menú. Permiso construido desde URL: ${requiredPermission}`)
-      // console.log(`   Permisos usuario: ${permisos}`)
+      if (isDebug) {
+        console.log(`📍 Ruta no encontrada en menús`)
+        console.log(`🔐 Permiso construido desde URL: ${requiredPermission}`)
+      }
 
       // Verificar si el usuario tiene el permiso construido desde URL
       const access = hasPermission(permisos, requiredPermission)
-      // console.log(`   ¿Tiene acceso? ${access ? 'SÍ' : 'NO'}`)
       setHasAccess(access)
+
+      if (!access) {
+        console.warn(
+          `❌ Acceso denegado a ${location.pathname}. Permiso requerido (desde URL): ${requiredPermission}`,
+        )
+      } else if (isDebug) {
+        console.log('✅ Acceso permitido mediante URL')
+      }
+
       return
     }
 
@@ -144,10 +192,12 @@ export const RouteGuard: FC<RouteGuardProps> = ({
 
     if (!access) {
       console.warn(
-        `Acceso denegado a ${location.pathname}. Permiso requerido: ${requiredPermission}`,
+        `❌ Acceso denegado a ${location.pathname}. Permiso requerido (desde menú): ${requiredPermission}`,
       )
+    } else if (isDebug) {
+      console.log('✅ Acceso permitido mediante menú')
     }
-  }, [location.pathname, permisos, loading, navigations, isDebug, isAdmin])
+  }, [location.pathname, permisos, loading, navigations, isDebug, isAdmin, fullHierarchy])
 
   if (isDebug) {
     console.log('Ruta actual:', location.pathname)

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
+
 import { NavigationProps } from '../../navigations'
 import { buildPermissionFromEnv, hasPermission } from '../../utils/menuPermissionFilter'
-
 
 /**
  * Opciones de configuración para el filtrado de navegaciones
@@ -57,7 +57,8 @@ export const useFilteredNavigations = ({
 
       if (debug) {
         console.log(
-          `${hasAccess ? 'SI:' : 'NO:'} [${permissionKey}] ${parentName ? `${parentName} > ` : ''
+          `${hasAccess ? 'SI:' : 'NO:'} [${permissionKey}] ${
+            parentName ? `${parentName} > ` : ''
           }${itemName}`,
         )
       }
@@ -108,6 +109,7 @@ export const useFilteredNavigations = ({
                 name: child.name,
                 iconText: child.iconText || '',
                 path: child.path || '',
+                icon: '',
               })),
             })
           }
