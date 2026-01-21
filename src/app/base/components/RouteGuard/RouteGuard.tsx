@@ -85,7 +85,7 @@ export const RouteGuard: FC<RouteGuardProps> = ({
 
       // Normalizar y construir permiso desde la jerarquía
       const hierarchyParts = uniqueHierarchy.map(normalizeString)
-      const dominio = normalizeString(import.meta.env.ISI_DOMINIO || '')
+      const dominio = normalizeString(import.meta.env.ISI_MODULO || '')
 
       // Construir permiso completo: DOMINIO:PARTE1:PARTE2:...:ULTIMA_PARTE
       const parts = [dominio, ...hierarchyParts].filter(Boolean)
