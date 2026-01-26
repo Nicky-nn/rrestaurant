@@ -6,7 +6,6 @@ import { useEffect } from 'react'
 export const applyDarkMode = () => {
   const existingStyle = document.getElementById('dark-mode-toggle')
   if (existingStyle) existingStyle.remove()
-
   const drkMo = document.createElement('style')
   drkMo.id = 'dark-mode-toggle'
   drkMo.innerText = `
@@ -28,11 +27,11 @@ html :is(
   iframe:not(:fullscreen)
 ),
 html body>* [style*="url("]:not([style*="cursor:"]):not([type="text"]) {
-  filter: invert(0.87)
+  filter: invert(0.88)
           hue-rotate(180deg)
-          brightness(0.88)
-          contrast(0.92)
-          saturate(0.9)
+          brightness(0.95)
+          contrast(1.05)
+          saturate(0.98)
           !important;
 }
 
