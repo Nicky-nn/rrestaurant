@@ -19,17 +19,21 @@ import {
 } from 'material-react-table'
 import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
 
-import { apiArticuloInventarioListado } from '../../../../base/api/apiArticuloInventarioListado.ts'
-import MuiRenderTopToolbarCustomActions from '../../../../base/components/MuiTable/MuiRenderTopToolbarCustomActions.tsx'
-import { EntidadInputProps, PAGE_DEFAULT, PageProps } from '../../../../interfaces'
-import { ArticuloProps } from '../../../../interfaces/articulo.ts'
-import { genApiQuery } from '../../../../utils/helper.ts'
+import { apiArticuloInventarioListado } from '../../../../../base/api/apiArticuloInventarioListado.ts'
+import MuiRenderTopToolbarCustomActions from '../../../../../base/components/MuiTable/MuiRenderTopToolbarCustomActions.tsx'
+import {
+  EntidadInputProps,
+  PAGE_DEFAULT,
+  PageInputProps,
+} from '../../../../../interfaces'
+import { ArticuloProps } from '../../../../../interfaces/articulo.ts'
+import { genApiQuery } from '../../../../../utils/helper.ts'
 import {
   MuiTablePaginationProps,
   MuiToolbarAlertBannerProps,
-} from '../../../../utils/muiTable/materialReactTableUtils.ts'
-import { MuiTableAdvancedOptionsProps } from '../../../../utils/muiTable/muiTableAdvancedOptionsProps.ts'
-import { notDanger } from '../../../../utils/notification.ts'
+} from '../../../../../utils/muiTable/materialReactTableUtils.ts'
+import { MuiTableAdvancedOptionsProps } from '../../../../../utils/muiTable/muiTableAdvancedOptionsProps.ts'
+import { notDanger } from '../../../../../utils/notification.ts'
 import { ArticuloSeleccionListadoColumns } from './ArticuloSeleccionListadoColumns.tsx'
 
 interface OwnProps extends DialogProps {
@@ -91,7 +95,7 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
     queryFn: async () => {
       if (open) {
         const query = genApiQuery(columnFilters, [...extraQuery])
-        const fetchPagination: PageProps = {
+        const fetchPagination: PageInputProps = {
           ...PAGE_DEFAULT,
           page: pagination.pageIndex + 1,
           limit: pagination.pageSize,
@@ -107,7 +111,6 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
           },
         )
         setRowCount(pageInfo.totalDocs)
-        console.log(docs[0])
         return docs || []
       }
       return []
@@ -210,7 +213,6 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
       sx={{ '& .MuiDialog-paper': { maxHeight: '85vh' } }}
       maxWidth="xl"
       fullWidth
-      disableRestoreFocus
       open={open}
       onClose={() => onClose([])}
       {...other}

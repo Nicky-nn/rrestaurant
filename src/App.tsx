@@ -44,6 +44,9 @@ function App() {
               dialogProps: {
                 fullWidth: true,
                 maxWidth: 'xs',
+                disableRestoreFocus: true,
+                disableEnforceFocus: true,
+                'aria-hidden': false,
               },
               dialogActionsProps: {
                 sx: { justifyContent: 'center' },

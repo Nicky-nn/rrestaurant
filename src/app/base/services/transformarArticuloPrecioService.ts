@@ -24,7 +24,7 @@ export const transformarArticuloPrecioService = (
   if (moneda.codigo === articuloPrecio.monedaAdicional3?.moneda.codigo) {
     return articuloPrecio.monedaAdicional3
   }
-  console.log(
+  console.info(
     `No se encontró la moneda ${moneda.sigla} para transformación, generado valores por estaticos`,
   )
   return {

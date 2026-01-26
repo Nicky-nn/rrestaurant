@@ -1,10 +1,9 @@
 // noinspection GraphQLUnresolvedReference
 
 import { gql, GraphQLClient } from 'graphql-request'
-
-import { AlmacenProps } from '../../interfaces/almacen.ts'
 import { almacenFragment } from '../fragments/almacenFragment.ts'
 import { facturaSucursalFragment } from '../fragments/sucursalFragment.ts'
+import { AlmacenProps } from '../../interfaces/almacen.ts'
 import { AccessToken } from '../models/paramsModel.ts'
 import { MyGraphQlError } from '../services/GraphqlError.ts'
 

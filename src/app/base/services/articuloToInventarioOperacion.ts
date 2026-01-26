@@ -1,5 +1,6 @@
 import { AlmacenInventarioProps } from '../../interfaces/almacen.ts'
 import { ArticuloProps } from '../../interfaces/articulo.ts'
+import { apiGestionArticulo } from '../../interfaces/gestionArticulo.ts'
 import { InventarioOperacionProps } from '../../interfaces/InventarioOperacion.ts'
 import { LoteInventarioProps } from '../../interfaces/lote.ts'
 import { genRound } from '../../utils/utils.ts'
@@ -7,6 +8,7 @@ import { genRound } from '../../utils/utils.ts'
 /**
  * Decodificamos el inventario, segun los datos de operacion para entrada, salida.
  * Devuelve NULL si: articulo, almacen, articuloPrecio son nulos
+ * @author isi-template
  * @param articulo
  * @param options
  */
@@ -24,19 +26,9 @@ export const articuloToInventarioOperacion = (
 
   if (!codigoUnidadMedida || !codigoAlmacen) return null
 
-  const articuloPrecioBase = articulo.articuloPrecioBase
-  let articuloPrecio = null
-  if (articuloPrecioBase.articuloUnidadMedida.codigoUnidadMedida === codigoUnidadMedida) {
-    articuloPrecio = articuloPrecioBase
-  } else {
-    const ap = articulo.articuloPrecio.find(
-      (aa) => aa.articuloUnidadMedida.codigoUnidadMedida === codigoUnidadMedida,
-    )
-    if (ap) {
-      articuloPrecio = ap
-    }
-  }
-
+  const articuloPrecio = [articulo.articuloPrecioBase, ...articulo.articuloPrecio].find(
+    (ap) => ap.articuloUnidadMedida.codigoUnidadMedida === codigoUnidadMedida,
+  )
   if (!articuloPrecio) return null
 
   const alm = articulo.inventario[0].detalle.find(
@@ -56,7 +48,7 @@ export const articuloToInventarioOperacion = (
   }
 
   let lote: LoteInventarioProps | null = null
-  if (articulo.gestionArticulo === 'LOTE') {
+  if (articulo.gestionArticulo === apiGestionArticulo.LOTE) {
     if (codigoLote) {
       // Priorizamos la busca de lote dentro del almacen
       const lot = alm.lotes.find((i) => i.lote.codigoLote === codigoLote)
@@ -102,7 +94,7 @@ export const articuloToInventarioOperacion = (
     nombreArticulo: articulo.nombreArticulo,
     sucursal: articulo.inventario[0].sucursal,
     articuloPrecio,
-    articuloPrecioBase,
+    articuloPrecioBase: articulo.articuloPrecioBase,
     almacen,
     lote,
     totalStock: genRound(articulo.inventario[0].totalStock / articuloPrecio.cantidadBase),

@@ -3,8 +3,8 @@ import { blue, green, orange, yellow } from '@mui/material/colors'
 import { MRT_ColumnDef } from 'material-react-table'
 import React from 'react'
 
-import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto.tsx'
-import { ArticuloProps } from '../../../../interfaces/articulo.ts'
+import MontoMonedaTexto from '../../../../../base/components/PopoverMonto/MontoMonedaTexto.tsx'
+import { ArticuloProps } from '../../../../../interfaces/articulo.ts'
 
 /**
  * Columnas para el listado de articulos

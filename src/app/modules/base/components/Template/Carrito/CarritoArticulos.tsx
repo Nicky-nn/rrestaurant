@@ -22,11 +22,11 @@ import {
 import { amber, grey } from '@mui/material/colors'
 import React, { FC, FunctionComponent, memo } from 'react'
 
-import { IconButtonTextAreaPopover } from '../../../../base/components/MyInputs/IconButtonTextAreaPopover.tsx'
-import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto'
-import { ArticuloOperacionInputProps } from '../../../../interfaces/articuloOperacion.ts'
-import { apiGestionArticulo } from '../../../../interfaces/gestionArticulo.ts'
-import { MonedaProps } from '../../../../interfaces/monedaPrecio.ts'
+import { IconButtonTextAreaPopover } from '../../../../../base/components/MyInputs/IconButtonTextAreaPopover.tsx'
+import MontoMonedaTexto from '../../../../../base/components/PopoverMonto/MontoMonedaTexto.tsx'
+import { ArticuloOperacionInputProps } from '../../../../../interfaces/articuloOperacion.ts'
+import { apiGestionArticulo } from '../../../../../interfaces/gestionArticulo.ts'
+import { MonedaProps } from '../../../../../interfaces/monedaPrecio.ts'
 
 // Estilos para las celdas de la tabla
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -56,6 +56,7 @@ const StyleListItemButton = styled(ListItemButton)(({ theme }) => ({
 }))
 
 interface OwnProps {
+  id?: string
   // Titulo de la tarjeta
   titulo?: string
   // Máximo alto de la tabla
@@ -100,35 +101,62 @@ interface OwnProps {
   onClickArticulo?: (resp?: { index: number; item: ArticuloOperacionInputProps }) => void
   // Evento cuando se elmina el articulo
   onDeleteArticulo?: (resp?: { index: number; item: ArticuloOperacionInputProps }) => void
-  // Si se muestra la columna de mostrar opciones, default true
-  mostrarOpciones?: boolean
-  // Si se muestra la columna Acciones, option delete
-  mostrarOptionDelete?: boolean
-  // Si se muestra la columna Acciones, option detalle extra
-  mostrarOptionDetalleExtra?: boolean
-  // mostrar Precio default true
-  mostrarColumnaPrecio?: boolean
-  // Muestra la columna del descuento default true
-  mostrarColumnaDescuento?: boolean
-  // Muestra la columna de cantidad default true
-  mostrarColumnaCantidad?: boolean
-  // Muestra la columna de unidad de medida default false, si es false se muestra con el nombre del articulo
-  mostrarColumnaUnidadMedida?: boolean
-  // Muestra pequeña descripcion debajo del nombre del articulo default true
-  mostrarUnidadMedidaEnArticulo?: boolean
-  // Si se despliega la columna de almacen y lote
-  mostrarAlmacenLote?: boolean
-  // Props para el renderizado de la columna almacen/lote
+  // Propiedades de columna opciones
+  opcionesProps?: {
+    // Nombre de columna
+    label?: string
+    // Si se muestra la columna de mostrar opciones, default false
+    ocultar?: boolean
+    // Si se muestra la columna Acciones, option delete
+    mostrarOptionDelete?: boolean
+    // Si se muestra la columna Acciones, option detalle extra
+    mostrarOptionDetalleExtra?: boolean
+  }
+  // Propiedades de columna Articulo
+  articuloProps?: {
+    label?: string // Nombre de la columna
+    // Muestra pequeña descripcion debajo del nombre del articulo default false
+    ocultarUnidadMedidaText?: boolean
+    // default false
+    ocultar?: boolean
+  }
+  // Propiedades columna precio
+  precioProps?: {
+    label?: string // Nombre de la columna
+    // mostrar Precio default false
+    ocultar?: boolean
+  }
+  // Propiedades de la columna descuento
+  descProps?: {
+    label?: string // Nombre de la columna
+    // Muestra la columna del descuento default true
+    ocultar?: boolean
+  }
+  // Propiedades de la columna descuento
+  cantidadProps?: {
+    label?: string // Nombre de la columna
+    // Muestra la columna de cantidad default false
+    ocultar?: boolean
+  }
+  // Propiedades de la columna AlmacenLote
   almacenLoteProps?: {
+    label?: string // Nombre de la columna
     ocultarTextoAlmacen?: boolean
     ocultarTextoLote?: boolean
+    // default false
+    ocultar?: boolean
+  }
+  unidadMedidaProps?: {
+    label?: string
+    // default false
+    ocultar?: boolean
   }
 }
 
 type Props = OwnProps
 
 // Definimos las props para la fila
-interface RowProps {
+export interface RowCarritoArticulosProps {
   index: number
   item: ArticuloOperacionInputProps
   moneda: MonedaProps | null
@@ -157,8 +185,6 @@ interface RowProps {
   }) => void
   onClickArticulo?: (resp?: { index: number; item: ArticuloOperacionInputProps }) => void
   onDeleteArticulo?: (resp?: { index: number; item: ArticuloOperacionInputProps }) => void
-  mostrarAlmacenLote?: boolean
-  mostrarOpciones?: boolean
 }
 /**
  * Carrito de Articulos configurable segun necesidad, solo aplicable a sistemas basados en inventarios.
@@ -174,15 +200,16 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
     monedaPrimaria,
     tipoCambio,
     onChangeTipoCambio,
-    mostrarOpciones = true,
-    mostrarAlmacenLote = true,
     maxHeight = '100%',
-    mostrarColumnaPrecio = true,
-    mostrarColumnaDescuento = true,
-    mostrarColumnaCantidad = true,
-    mostrarColumnaUnidadMedida = false,
-    mostrarUnidadMedidaEnArticulo = true,
+    precioProps = {},
+    descProps = {},
     almacenLoteProps = {},
+    cantidadProps = {},
+    unidadMedidaProps = {
+      ocultar: true,
+    },
+    opcionesProps = {},
+    articuloProps = {},
   } = props
 
   /***************************************************************************/
@@ -216,7 +243,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
   /*************************************************************************/
   /*************************************************************************/
   // Renderizado de las filas
-  const ArticuloRow: FC<RowProps> = memo((props) => {
+  const ArticuloRow: FC<RowCarritoArticulosProps> = memo((props) => {
     const {
       item,
       index,
@@ -227,8 +254,6 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
       onChangeDescuento,
       onClickArticulo,
       onDeleteArticulo,
-      mostrarAlmacenLote = true,
-      mostrarOpciones = true,
       onChangeDetalleExtra,
     } = props
 
@@ -265,7 +290,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
           {itemArticulo.detalleExtra || ''}
         </Typography>
 
-        {mostrarUnidadMedidaEnArticulo && (
+        {!articuloProps?.ocultarUnidadMedidaText && (
           <Typography
             fontSize={10.5}
             sx={{ color: grey[700] }}
@@ -279,7 +304,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
 
     return (
       <StyledTableRow>
-        {mostrarColumnaCantidad && (
+        {!cantidadProps?.ocultar && (
           <StyledTableCell
             align={'right'}
             sx={{ backgroundColor: indexActivo === index ? amber['A100'] : 'none' }}
@@ -306,7 +331,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
           </StyledTableCell>
         )}
 
-        {mostrarColumnaUnidadMedida && (
+        {!unidadMedidaProps?.ocultar && (
           <StyledTableCell>
             <Typography
               fontSize={11}
@@ -339,7 +364,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
             </Box>
           )}
         </StyledTableCell>
-        {mostrarAlmacenLote && (
+        {!almacenLoteProps?.ocultar && (
           <StyledTableCell sx={{ p: 0, m: 0 }}>
             <Box>
               {!almacenLoteProps?.ocultarTextoAlmacen && (
@@ -432,7 +457,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
             </Box>
           </StyledTableCell>
         )}
-        {mostrarColumnaPrecio && (
+        {!precioProps?.ocultar && (
           <StyledTableCell align={'right'}>
             <MontoMonedaTexto
               id={`precio-${item.id}`}
@@ -455,7 +480,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
           </StyledTableCell>
         )}
 
-        {mostrarColumnaDescuento && (
+        {!descProps?.ocultar && (
           <StyledTableCell align={'right'}>
             <MontoMonedaTexto
               id={`descuento-${item.id}`}
@@ -479,7 +504,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
           </StyledTableCell>
         )}
 
-        {mostrarOpciones && (
+        {!opcionesProps?.ocultar && (
           <StyledTableCell>
             <ButtonGroup variant="text" aria-label="Op. articulo" sx={{ p: 0, m: 0 }}>
               {onDeleteArticulo && (
@@ -564,36 +589,43 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
         >
           <TableHead>
             <StyledTableRow>
-              {mostrarColumnaCantidad && (
+              {!cantidadProps?.ocultar && (
                 <StyledTableCell align={'right'} width={100}>
-                  Cantidad
+                  {cantidadProps?.label ?? 'Cantidad'}
                 </StyledTableCell>
               )}
 
-              {mostrarColumnaUnidadMedida && (
+              {!unidadMedidaProps?.ocultar && (
                 <StyledTableCell align={'left'} width={120}>
-                  Unidad Medida
+                  {unidadMedidaProps?.label ?? 'Unidad Medida'}
+                </StyledTableCell>
+              )}
+              {!articuloProps?.ocultar && (
+                <StyledTableCell align="left" sx={{ minWidth: 245 }}>
+                  {articuloProps?.label ?? 'Articulo'}
+                </StyledTableCell>
+              )}
+              {!almacenLoteProps.ocultar && (
+                <StyledTableCell width={150}>
+                  {almacenLoteProps?.label ?? 'Almacen / Lote'}
+                </StyledTableCell>
+              )}
+              {!precioProps.ocultar && (
+                <StyledTableCell align="right" width={120}>
+                  {precioProps?.label ?? 'Precio'}
+                </StyledTableCell>
+              )}
+              {!descProps?.ocultar && (
+                <StyledTableCell align="right" width={90}>
+                  {descProps?.label ?? 'Desc.'}
                 </StyledTableCell>
               )}
 
-              <StyledTableCell align="left" sx={{ minWidth: 245 }}>
-                Articulo
-              </StyledTableCell>
-              {mostrarAlmacenLote && (
-                <StyledTableCell width={150}>Almacen / Lote</StyledTableCell>
-              )}
-              {mostrarColumnaPrecio && (
-                <StyledTableCell align="center" width={120}>
-                  Precio
+              {!opcionesProps?.ocultar && (
+                <StyledTableCell width={60}>
+                  {opcionesProps?.label ?? 'Opciones'}
                 </StyledTableCell>
               )}
-              {mostrarColumnaDescuento && (
-                <StyledTableCell align="center" width={90}>
-                  Desc.
-                </StyledTableCell>
-              )}
-
-              {mostrarOpciones && <StyledTableCell width={60}>Opciones</StyledTableCell>}
             </StyledTableRow>
           </TableHead>
           <TableBody>
