@@ -136,13 +136,15 @@ export const genApiQuery = (
   extraQuery: string[] = [],
 ): string => {
   if (data.length === 0) return extraQuery.join('&')
-  const query: Array<string> = []
-  data.forEach((item) => {
-    if (isNumeric(item.value)) {
-      query.push(`${item.id}=${item.value}`)
-    } else {
-      query.push(`${item.id}=/${item.value}/i`)
+  const query = data.map((item) => {
+    if (typeof item.value === 'boolean') {
+      return `${item.id}=${item.value}`
     }
+    if (typeof item.value === 'number') {
+      return `${item.id}=${item.value}`
+    }
+    // Valor default string
+    return `${item.id}=/${item.value}/i`
   })
   if (extraQuery.length > 0) {
     return query.join('&') + '&' + extraQuery.join('&')

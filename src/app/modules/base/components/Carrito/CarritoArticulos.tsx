@@ -36,7 +36,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     padding: '7px 5px',
   },
   [`&.${tableCellClasses.body}`]: {
-    padding: '0px',
+    padding: '2px 0px 2px 0px',
   },
 }))
 
@@ -100,14 +100,29 @@ interface OwnProps {
   onClickArticulo?: (resp?: { index: number; item: ArticuloOperacionInputProps }) => void
   // Evento cuando se elmina el articulo
   onDeleteArticulo?: (resp?: { index: number; item: ArticuloOperacionInputProps }) => void
-  // Si se despliega la columna de almacen y lote
-  mostrarAlmacenLote?: boolean
   // Si se muestra la columna de mostrar opciones, default true
   mostrarOpciones?: boolean
   // Si se muestra la columna Acciones, option delete
   mostrarOptionDelete?: boolean
   // Si se muestra la columna Acciones, option detalle extra
   mostrarOptionDetalleExtra?: boolean
+  // mostrar Precio default true
+  mostrarColumnaPrecio?: boolean
+  // Muestra la columna del descuento default true
+  mostrarColumnaDescuento?: boolean
+  // Muestra la columna de cantidad default true
+  mostrarColumnaCantidad?: boolean
+  // Muestra la columna de unidad de medida default false, si es false se muestra con el nombre del articulo
+  mostrarColumnaUnidadMedida?: boolean
+  // Muestra pequeña descripcion debajo del nombre del articulo default true
+  mostrarUnidadMedidaEnArticulo?: boolean
+  // Si se despliega la columna de almacen y lote
+  mostrarAlmacenLote?: boolean
+  // Props para el renderizado de la columna almacen/lote
+  almacenLoteProps?: {
+    ocultarTextoAlmacen?: boolean
+    ocultarTextoLote?: boolean
+  }
 }
 
 type Props = OwnProps
@@ -162,6 +177,12 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
     mostrarOpciones = true,
     mostrarAlmacenLote = true,
     maxHeight = '100%',
+    mostrarColumnaPrecio = true,
+    mostrarColumnaDescuento = true,
+    mostrarColumnaCantidad = true,
+    mostrarColumnaUnidadMedida = false,
+    mostrarUnidadMedidaEnArticulo = true,
+    almacenLoteProps = {},
   } = props
 
   /***************************************************************************/
@@ -176,7 +197,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
     </Divider>
   )
 
-  if (articulos.length === 0) {
+  if (!articulos || articulos.length === 0) {
     return (
       <Box>
         {Title && Title}
@@ -243,19 +264,62 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
         >
           {itemArticulo.detalleExtra || ''}
         </Typography>
-        <Typography fontSize={10.5} sx={{ color: grey[600] }}>
-          {itemArticulo.articuloUnidadMedida?.nombreUnidadMedida}
-        </Typography>
+
+        {mostrarUnidadMedidaEnArticulo && (
+          <Typography
+            fontSize={10.5}
+            sx={{ color: grey[700] }}
+            title={`${itemArticulo.articuloUnidadMedida?.codigoUnidadMedida || ''} - ${itemArticulo.articuloUnidadMedida?.nombreUnidadMedida || ''}`}
+          >
+            {itemArticulo.articuloUnidadMedida?.nombreUnidadMedida}
+          </Typography>
+        )}
       </Box>
     )
 
     return (
       <StyledTableRow>
-        <StyledTableCell
-          sx={{
-            backgroundColor: indexActivo === index ? amber['A100'] : 'none',
-          }}
-        >
+        {mostrarColumnaCantidad && (
+          <StyledTableCell
+            align={'right'}
+            sx={{ backgroundColor: indexActivo === index ? amber['A100'] : 'none' }}
+          >
+            <MontoMonedaTexto
+              id={`cantidad-${item.id}`}
+              monto={item.cantidad}
+              min={0.1}
+              step={1}
+              editar={Boolean(onChangeCantidad)}
+              lista={true}
+              onChange={(cantidad) => {
+                if (cantidad && onChangeCantidad)
+                  onChangeCantidad({ index, item, cantidad })
+              }}
+              montoProps={{
+                textAlign: 'right',
+                sx: {
+                  fontWeight: 500,
+                  fontSize: '0.90rem',
+                },
+              }}
+            />
+          </StyledTableCell>
+        )}
+
+        {mostrarColumnaUnidadMedida && (
+          <StyledTableCell>
+            <Typography
+              fontSize={11}
+              sx={{ color: grey[800], ml: 0.5, maxWidth: 120 }}
+              title={` Cod. ${item.articuloUnidadMedida?.codigoUnidadMedida} - ${item.articuloUnidadMedida?.nombreUnidadMedida}`}
+              noWrap
+            >
+              {item.articuloUnidadMedida?.nombreUnidadMedida}
+            </Typography>
+          </StyledTableCell>
+        )}
+
+        <StyledTableCell>
           {onClickArticulo ? (
             <StyleListItemButton
               sx={{
@@ -278,154 +342,142 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
         {mostrarAlmacenLote && (
           <StyledTableCell sx={{ p: 0, m: 0 }}>
             <Box>
-              <Box sx={{ display: 'flex', width: 149, pl: 0.5, pr: 0.5 }}>
-                <Typography
-                  fontSize={'smaller'}
-                  sx={{ fontWeight: 500, mr: 0.5 }}
-                  color={'secondary'}
-                  display={'inline'}
-                  title={'Almacen'}
-                >
-                  ALM.
-                </Typography>
-                {item.almacen ? (
-                  <Tooltip
-                    title={`${item.almacen.codigoAlmacen || ''} - ${item.almacen.nombre || ''}`}
-                    disableInteractive
-                    placement={'top'}
-                    arrow
+              {!almacenLoteProps?.ocultarTextoAlmacen && (
+                <Box sx={{ display: 'flex', width: 149, pl: 0.5, pr: 0.5 }}>
+                  <Typography
+                    fontSize={'smaller'}
+                    sx={{ fontWeight: 500, mr: 0.5 }}
+                    color={'success.main'}
+                    display={'inline'}
+                    title={'Almacen'}
                   >
-                    <Typography fontSize={'smaller'} noWrap>
-                      {item.almacen.nombre.toUpperCase()}
-                    </Typography>
-                  </Tooltip>
-                ) : (
-                  <Tooltip
-                    title={`Almacen Requerido`}
-                    disableInteractive
-                    placement={'top'}
-                    arrow
+                    ALM.
+                  </Typography>
+                  {item.almacen ? (
+                    <Tooltip
+                      title={`${item.almacen.codigoAlmacen || ''} - ${item.almacen.nombre || ''}`}
+                      disableInteractive
+                      placement={'top'}
+                      arrow
+                    >
+                      <Typography fontSize={'smaller'} noWrap>
+                        {item.almacen.nombre.toUpperCase()}
+                      </Typography>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip
+                      title={`Almacen Requerido`}
+                      disableInteractive
+                      placement={'top'}
+                      arrow
+                    >
+                      <Typography fontSize={'smaller'} noWrap color={'error'}>
+                        <strong>REQUERIDO</strong>
+                      </Typography>
+                    </Tooltip>
+                  )}
+                </Box>
+              )}
+              {!almacenLoteProps?.ocultarTextoLote && (
+                <Box sx={{ display: 'flex', width: 149, pl: 0.5, gap: 0.5 }}>
+                  <Typography
+                    fontSize={'smaller'}
+                    sx={{ fontWeight: 500 }}
+                    color={'success.main'}
+                    title={'Lote'}
                   >
-                    <Typography fontSize={'smaller'} noWrap color={'error'}>
-                      <strong>REQUERIDO</strong>
-                    </Typography>
-                  </Tooltip>
-                )}
-              </Box>
-              <Box sx={{ display: 'flex', width: 149, pl: 0.5, gap: 0.5 }}>
-                <Typography
-                  fontSize={'smaller'}
-                  sx={{ fontWeight: 500 }}
-                  color={'secondary'}
-                  title={'Lote'}
-                >
-                  LOTE
-                </Typography>
-                {item.lote && (
-                  <Tooltip
-                    title={`${item.lote.codigoLote || ''} - ${item.lote.descripcion || ''}, Ven.: ${item.lote.fechaVencimiento || ''}`}
-                    disableInteractive
-                    placement={'top'}
-                    arrow
-                  >
-                    <Typography fontSize={'smaller'} noWrap>
-                      {item.lote.codigoLote.toUpperCase()}
-                    </Typography>
-                  </Tooltip>
-                )}
-                {!item.lote && (
-                  <>
-                    {item.gestionArticulo === apiGestionArticulo.LOTE ? (
-                      <Tooltip
-                        title={`Lote requerido`}
-                        disableInteractive
-                        placement={'top'}
-                        arrow
-                      >
-                        <Typography fontSize={'smaller'} noWrap color={'error'}>
-                          <strong>REQUERIDO</strong>
-                        </Typography>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip
-                        title={`No requerido`}
-                        disableInteractive
-                        placement={'top'}
-                        arrow
-                      >
-                        <Typography fontSize={'smaller'} noWrap>
-                          --
-                        </Typography>
-                      </Tooltip>
-                    )}
-                  </>
-                )}
-              </Box>
+                    LOTE
+                  </Typography>
+                  {item.lote && (
+                    <Tooltip
+                      title={`${item.lote.codigoLote || ''} - ${item.lote.descripcion || ''}, Ven.: ${item.lote.fechaVencimiento || ''}`}
+                      disableInteractive
+                      placement={'top'}
+                      arrow
+                    >
+                      <Typography fontSize={'smaller'} noWrap>
+                        {item.lote.codigoLote.toUpperCase()}
+                      </Typography>
+                    </Tooltip>
+                  )}
+                  {!item.lote && (
+                    <>
+                      {item.gestionArticulo === apiGestionArticulo.LOTE ? (
+                        <Tooltip
+                          title={`Lote requerido`}
+                          disableInteractive
+                          placement={'top'}
+                          arrow
+                        >
+                          <Typography fontSize={'smaller'} noWrap color={'error'}>
+                            <strong>REQUERIDO</strong>
+                          </Typography>
+                        </Tooltip>
+                      ) : (
+                        <Tooltip
+                          title={`No requerido`}
+                          disableInteractive
+                          placement={'top'}
+                          arrow
+                        >
+                          <Typography fontSize={'smaller'} noWrap>
+                            --
+                          </Typography>
+                        </Tooltip>
+                      )}
+                    </>
+                  )}
+                </Box>
+              )}
             </Box>
           </StyledTableCell>
         )}
-        <StyledTableCell align={'right'}>
-          <MontoMonedaTexto
-            id={`cantidad-${item.id}`}
-            monto={item.cantidad}
-            min={0.1}
-            step={1}
-            editar={Boolean(onChangeCantidad)}
-            lista={true}
-            onChange={(cantidad) => {
-              if (cantidad && onChangeCantidad)
-                onChangeCantidad({ index, item, cantidad })
-            }}
-            montoProps={{
-              textAlign: 'right',
-              sx: {
-                fontWeight: 500,
-                fontSize: '0.86rem',
-              },
-            }}
-          />
-        </StyledTableCell>
-        <StyledTableCell align={'right'}>
-          <MontoMonedaTexto
-            id={`precio-${item.id}`}
-            monto={item.precio}
-            min={0}
-            step={1}
-            editar={Boolean(onChangePrecio)}
-            lista={true}
-            sigla={moneda?.sigla}
-            onChange={(precio) => {
-              if (precio && onChangePrecio) onChangePrecio({ index, item, precio })
-            }}
-            montoProps={{
-              textAlign: 'right',
-              sx: {
-                fontWeight: 500,
-              },
-            }}
-          />
-        </StyledTableCell>
-        <StyledTableCell align={'right'}>
-          <MontoMonedaTexto
-            id={`descuento-${item.id}`}
-            monto={item.descuento}
-            min={0}
-            step={1}
-            editar={Boolean(onChangeDescuento)}
-            sigla={moneda?.sigla}
-            lista
-            onChange={(descuento) => {
-              if (descuento && onChangeDescuento)
-                onChangeDescuento({ index, item, descuento })
-            }}
-            montoProps={{
-              textAlign: 'right',
-              sx: {
-                fontWeight: 500,
-              },
-            }}
-          />
-        </StyledTableCell>
+        {mostrarColumnaPrecio && (
+          <StyledTableCell align={'right'}>
+            <MontoMonedaTexto
+              id={`precio-${item.id}`}
+              monto={item.precio}
+              min={0}
+              step={1}
+              editar={Boolean(onChangePrecio)}
+              lista={true}
+              sigla={moneda?.sigla}
+              onChange={(precio) => {
+                if (precio && onChangePrecio) onChangePrecio({ index, item, precio })
+              }}
+              montoProps={{
+                textAlign: 'right',
+                sx: {
+                  fontWeight: 500,
+                },
+              }}
+            />
+          </StyledTableCell>
+        )}
+
+        {mostrarColumnaDescuento && (
+          <StyledTableCell align={'right'}>
+            <MontoMonedaTexto
+              id={`descuento-${item.id}`}
+              monto={item.descuento}
+              min={0}
+              step={1}
+              editar={Boolean(onChangeDescuento)}
+              sigla={moneda?.sigla}
+              lista
+              onChange={(descuento) => {
+                if (descuento && onChangeDescuento)
+                  onChangeDescuento({ index, item, descuento })
+              }}
+              montoProps={{
+                textAlign: 'right',
+                sx: {
+                  fontWeight: 500,
+                },
+              }}
+            />
+          </StyledTableCell>
+        )}
 
         {mostrarOpciones && (
           <StyledTableCell>
@@ -512,21 +564,35 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
         >
           <TableHead>
             <StyledTableRow>
+              {mostrarColumnaCantidad && (
+                <StyledTableCell align={'right'} width={100}>
+                  Cantidad
+                </StyledTableCell>
+              )}
+
+              {mostrarColumnaUnidadMedida && (
+                <StyledTableCell align={'left'} width={120}>
+                  Unidad Medida
+                </StyledTableCell>
+              )}
+
               <StyledTableCell align="left" sx={{ minWidth: 245 }}>
                 Articulo
               </StyledTableCell>
               {mostrarAlmacenLote && (
                 <StyledTableCell width={150}>Almacen / Lote</StyledTableCell>
               )}
-              <StyledTableCell align={'right'} width={100}>
-                Cantidad
-              </StyledTableCell>
-              <StyledTableCell align="center" width={120}>
-                Precio
-              </StyledTableCell>
-              <StyledTableCell align="center" width={90}>
-                Desc.
-              </StyledTableCell>
+              {mostrarColumnaPrecio && (
+                <StyledTableCell align="center" width={120}>
+                  Precio
+                </StyledTableCell>
+              )}
+              {mostrarColumnaDescuento && (
+                <StyledTableCell align="center" width={90}>
+                  Desc.
+                </StyledTableCell>
+              )}
+
               {mostrarOpciones && <StyledTableCell width={60}>Opciones</StyledTableCell>}
             </StyledTableRow>
           </TableHead>

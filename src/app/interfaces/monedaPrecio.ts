@@ -1,3 +1,5 @@
+import { SinTipoMonedaProps } from './sin.interface.ts'
+
 /**
  * Homologación de la moneda
  * Codigo debe ser igual al codigo del sin
@@ -15,6 +17,42 @@ export interface MonedaProps {
   usumod?: string
   createdAt?: string
   updatedAt?: string
+  state?: string
+}
+
+/**
+ * Entrada de datos de la moneda
+ * @author isi-template
+ */
+export interface MonedaInputProps {
+  sinMoneda: SinTipoMonedaProps | null // codigo del sin
+  sigla: string
+  descripcion: string
+  tipoCambio: number
+  tipoCambioCompra?: number
+}
+
+/**
+ * Default de la moneda
+ * @author isi-template
+ */
+export const MONEDA_DEFAULT = {
+  sinMoneda: null,
+  sigla: '',
+  descripcion: '',
+  tipoCambio: 0,
+  tipoCambioCompra: 0,
+}
+
+/**
+ * @author isi-template 2025.3
+ */
+export interface MonedaApiInputProps {
+  codigoSinMoneda: number
+  sigla: string
+  descripcion: string
+  tipoCambio: number
+  tipoCambioCompra?: number | null
 }
 
 /**

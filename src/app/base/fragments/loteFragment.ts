@@ -13,6 +13,7 @@ export const loteFragment = gql`
     atributo2
     atributo3
     codigoLote
+    codigoArticulo
     descripcion
     fechaAdmision
     fechaFabricacion

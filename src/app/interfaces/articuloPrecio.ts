@@ -30,6 +30,7 @@ export interface ArticuloDescuentoProps {
 export interface PrecioInputProps {
   precioBase: number | null // Precio base multiplicador por el factor de ajuste
   precio: number | null
+  delivery?: number | null // nuevo agregado delivery
   precioComparacion?: number | null
   manual: boolean // Si es false, no multiplica factorAjuste * precioBase
 }
@@ -43,9 +44,11 @@ export interface ArticuloPrecioOperacionProps {
   cantidad: number | null
   cantidadBase: number | null
   descuento: number | null
+  descuentoAdicional: number | null
   factorAjuste: number
   impuesto: number
   monedaPrecio: MonedaPrecioOperacionProps // ya no es nesesario para front-end
+  otrosCostos: number | null
 }
 
 /**

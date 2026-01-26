@@ -5,6 +5,7 @@ import { SinUnidadMedidaProps } from './sin.interface.ts'
  * @author isi-template
  */
 export interface ArticuloUnidadMedidaProps {
+  _id: string // codigo interno
   codigoUnidadMedida: string // Código que identifica a la unidad de medida, se replica con sin unidad medida
   nombreUnidadMedida: string // descripcion de la unidad de medida
   sinUnidadMedida: SinUnidadMedidaProps // datos de la unidad de medida según la entidad tributaria BOB

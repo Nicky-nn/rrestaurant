@@ -31,7 +31,15 @@ export const apiEstado = {
  * Acciones para el formulario, se usa para reutilización de formulacios
  * @author isi-template
  */
-export type ActionFormProps = 'REGISTER' | 'UPDATE' | 'DELETE' | 'CONSULT' | 'CANCEL'
+export type ActionFormProps =
+  | 'REGISTER'
+  | 'UPDATE'
+  | 'DELETE'
+  | 'CONSULT'
+  | 'CANCEL'
+  | 'FINISH'
+  | 'COMPLETE'
+  | 'RECEPTION'
 
 /**
  * Tipado de acciones para la implementación de formularios
@@ -43,6 +51,9 @@ export const actionForm: Record<ActionFormProps, ActionFormProps> = {
   DELETE: 'DELETE',
   CONSULT: 'CONSULT',
   CANCEL: 'CANCEL',
+  FINISH: 'FINISH',
+  COMPLETE: 'COMPLETE',
+  RECEPTION: 'RECEPTION',
 }
 
 /**

@@ -8,6 +8,7 @@ import { gql } from 'graphql-request'
  */
 export const almacenFragment = gql`
   fragment almacenFields on Almacen {
+    _id
     codigoAlmacen
     createdAt
     nombre

@@ -1,3 +1,4 @@
+import { genRandomString } from '../utils/helper.ts'
 import { AlmacenProps } from './almacen.ts'
 import { ArticuloPrecioOperacionApiInputProps } from './articuloPrecio.ts'
 import { ArticuloUnidadMedidaProps } from './articuloUnidadMedida.ts'
@@ -52,8 +53,8 @@ export interface ArticuloOperacionApiInputProps {
 /**
  * @author isi-template
  */
-export const ARTICULO_OPERACION_DEFAULT: ArticuloOperacionInputProps = {
-  id: '',
+export const ARTICULO_OPERACION_DEFAULTS: ArticuloOperacionInputProps = {
+  id: genRandomString(10).toUpperCase(),
   nroItem: null,
   articuloId: '',
   codigoArticulo: '',

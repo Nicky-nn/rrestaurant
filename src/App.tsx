@@ -1,5 +1,6 @@
 import './App.css'
 
+import { CheckCircleTwoTone } from '@mui/icons-material'
 import { CssBaseline } from '@mui/material'
 import { ConfirmProvider } from 'material-ui-confirm'
 import { useEffect } from 'react'
@@ -7,10 +8,10 @@ import { useRoutes } from 'react-router-dom'
 
 import ReloadPrompt from './app/base/components/ReloadPrompt/ReloadPrompt'
 import MatxTheme from './app/base/components/Template/MatxTheme/MatxTheme'
+import UxModoGlobalApplier from './app/base/components/UxModoGlobalApplier'
 import { AuthProvider } from './app/base/contexts/JWTAuthContext'
 import { SettingsProvider } from './app/base/contexts/SettingsContext'
 import { appRoutes } from './app/routes/routes'
-import UxModoGlobalApplier from './app/base/components/UxModoGlobalApplier'
 
 /**
  * @author isi-template
@@ -44,18 +45,21 @@ function App() {
                 fullWidth: true,
                 maxWidth: 'xs',
               },
+              dialogActionsProps: {
+                sx: { justifyContent: 'center' },
+              },
               confirmationButtonProps: {
                 color: 'primary',
                 variant: 'contained',
-                size: 'small',
-                sx: { mr: 1.5 },
+                size: 'medium',
+                startIcon: <CheckCircleTwoTone />,
                 'aria-label': 'confirm',
                 autoFocus: false,
               },
               cancellationButtonProps: {
                 color: 'error',
                 variant: 'text',
-                size: 'small',
+                size: 'medium',
                 'aria-label': 'close',
                 autoFocus: false,
               },
@@ -67,7 +71,6 @@ function App() {
             <ReloadPrompt />
           </ConfirmProvider>
         </MatxTheme>
-
       </AuthProvider>
     </SettingsProvider>
   )

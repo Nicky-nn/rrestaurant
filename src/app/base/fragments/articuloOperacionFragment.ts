@@ -19,6 +19,7 @@ export const articuloOperacionFragment = gql`
     }
     claseArticulo
     codigoArticulo
+    articuloId
     codigoGrupo
     complementos {
       ...articuloOperacionComplementoFields

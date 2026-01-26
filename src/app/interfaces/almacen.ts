@@ -5,6 +5,7 @@ import { SucursalProps } from './sucursal.ts'
  * @author isi-template
  */
 export interface AlmacenBaseProps {
+  _id: string
   codigoAlmacen: string // Codigo almacen
   nombre: string // Nombre de compras Ej. Almacen Principal S10
   ubicacion: string // Ubicación fisica del almacen
@@ -49,4 +50,19 @@ export const ALMACEN_INITIAL_VALUES: AlmacenInputProps = {
   ubicacion: '',
   sucursal: null,
   codigoSucursal: null,
+}
+
+/**
+ * @description Propiedades de almacen para inventario
+ * @author isi-template
+ */
+export interface AlmacenInventarioProps {
+  _id: string
+  codigoAlmacen: string // Codigo almacen
+  nombre: string // Nombre de compras Ej. Almacen Principal S10
+  ubicacion: string // Ubicación fisica del almacen
+  stock: number
+  comprometido: number
+  solicitado: number
+  disponible: number
 }
