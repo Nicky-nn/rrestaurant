@@ -13,6 +13,7 @@
  * - Elimina acentos/diacríticos
  * - Reemplaza espacios y guiones por underscores
  * - Elimina caracteres especiales excepto : y _
+ * @author isi-template 2026.1 para rol dominio
  */
 export const normalizeString = (str: string | null | undefined): string => {
   if (!str) return ''
@@ -35,6 +36,7 @@ export const normalizeString = (str: string | null | undefined): string => {
  * @param seccion - Sección del menú (ej: "VENTAS", "CLIENTES")
  * @param accion - Acción específica (ej: "GESTION_FACTURAS", "REGISTRAR_PEDIDOS")
  * @returns Permiso en formato normalizado
+ * @author isi-template 2026.1 para rol dominio
  */
 export const buildPermissionKey = (
   dominio: string | null | undefined,
@@ -60,6 +62,7 @@ export const buildPermissionKey = (
  * @param userPermissions - Array de permisos del usuario (del backend)
  * @param permissionToCheck - Permiso a verificar
  * @returns true si el usuario tiene el permiso
+ * @author isi-template 2026.1 para rol dominio
  */
 export const hasPermission = (
   userPermissions: string[],
@@ -86,6 +89,7 @@ export const hasPermission = (
  * @param userPermissions - Array de permisos del usuario
  * @param permissionsToCheck - Array de permisos a verificar
  * @returns true si tiene al menos un permiso
+ * @author isi-template 2026.1 para rol dominio
  */
 export const hasAnyPermission = (
   userPermissions: string[],
@@ -110,6 +114,7 @@ export const hasAnyPermission = (
  * @param userPermissions - Array de permisos del usuario
  * @param permissionsToCheck - Array de permisos a verificar
  * @returns true si tiene todos los permisos
+ * @author isi-template 2026.1 para rol dominio
  */
 export const hasAllPermissions = (
   userPermissions: string[],
@@ -132,6 +137,7 @@ export const hasAllPermissions = (
  * Lee ISI_DOMINIO del import.meta.env
  *
  * @returns Dominio configurado (ej: "REST")
+ * @author isi-template 2026.1 para rol dominio
  */
 export const getDominioFromEnv = (): string => {
   // Proporciona un string vacío como fallback si la variable no existe
@@ -144,6 +150,7 @@ export const getDominioFromEnv = (): string => {
  * @param seccion - Sección del menú
  * @param accion - Acción específica
  * @returns Permiso completo en formato DOMINIO:SECCION:ACCION
+ * @author isi-template 2026.1 para rol dominio
  */
 export const buildPermissionFromEnv = (
   seccion: string | null | undefined,
@@ -163,6 +170,7 @@ export const buildPermissionFromEnv = (
  *
  * @param path - Ruta actual con o sin parámetros dinámicos
  * @returns Ruta base sin parámetros
+ * @author isi-template 2026.1 para rol dominio
  */
 export const extractBaseRoute = (path: string): string => {
   if (!path) return '/'
@@ -200,6 +208,7 @@ export const extractBaseRoute = (path: string): string => {
  * @param pathA - Primera ruta (normalmente URL actual del navegador)
  * @param pathB - Segunda ruta (normalmente ruta del menú)
  * @returns true si las rutas coinciden
+ * @author isi-template 2026.1 para rol dominio
  */
 export const matchRoute = (pathA: string, pathB: string): boolean => {
   if (!pathA || !pathB) return false
@@ -280,6 +289,7 @@ export const matchRoute = (pathA: string, pathB: string): boolean => {
  *
  * @param url - La URL actual (puede contener IDs dinámicos)
  * @returns Permiso construido desde la URL
+ * @author isi-template 2026.1 para rol dominio
  */
 export const buildPermissionFromUrl = (url: string): string => {
   if (!url) return ''

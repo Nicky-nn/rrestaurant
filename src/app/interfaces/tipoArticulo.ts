@@ -1,3 +1,5 @@
+import { KeyValueProp } from '../base/interfaces/base.ts'
+
 /**
  * @description Tipo de articulo recursivo
  * @author isi-template
@@ -33,6 +35,7 @@ export interface TipoArticuloInputProps {
   codigo: string
   descripcion: string
   grupoUnidadMedida: string
+  notas: KeyValueProp<string>[]
 }
 /**
  * @author isi-template
@@ -41,15 +44,5 @@ export const TIPO_ARTICULO_INITIAL_VALUES: TipoArticuloInputProps = {
   codigo: '',
   descripcion: '',
   grupoUnidadMedida: '',
-  /*grupoUnidadMedida: {
-    codigoGrupo: null,
-    nombreGrupo: '',
-    unidadMedidaBase: {
-      codigoUnidadMedida: '',
-      sinUnidadMedida: {
-        codigoClasificador: null,
-        descripcion: '',
-      },
-    },
-  },*/
+  notas: [],
 }

@@ -131,7 +131,7 @@ const ThemeColorBar: FC<any> = ({ container }: any) => {
                 <Icon className="icon">close</Icon>
               </IconButton>
             </Controller>
-            <StyledScrollBarSidenav>
+            <StyledScrollBarSidenav >
               {tabIndex === 0 && (
                 <Box sx={{ mb: 4, mx: 3 }}>
                   <Box sx={{ color: secondary }}>Layouts</Box>

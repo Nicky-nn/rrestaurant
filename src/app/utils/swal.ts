@@ -124,13 +124,23 @@ export const swalAsyncConfirmDialog = async ({
  * Creamos una carga de loading
  * @author isi-template
  */
-export const swalLoading = (): void => {
+export const swalLoading = (mensaje?: string): void => {
   Swal.fire({
-    timer: 30000,
-    timerProgressBar: true,
-    allowOutsideClick: false,
+    html: `<div class="nano-text">${mensaje || 'Procesando...'}</div>`,
+    width: '220px', // Ancho solicitado
+    padding: '13px 10px 10px', // Padding superior casi nulo (4px)
+    showConfirmButton: false,
+    allowOutsideClick: false, // Bloquea clic fuera
+    allowEscapeKey: false, // BLOQUEO DE TECLA ESC
+    background: '#fff',
+    backdrop: 'rgba(0,0,0,0.45)',
+    timer: 60000,
+    customClass: {
+      popup: 'isi-swal-nano',
+      htmlContainer: 'nano-html-override',
+      actions: 'nano-actions-override', // Clase para controlar el área del spinner
+    },
     didOpen: () => {
-      // @ts-ignore
       Swal.showLoading()
     },
   }).then()

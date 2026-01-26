@@ -40,6 +40,7 @@ export interface InventarioDetalleProps {
  * @author isi-template
  */
 export interface InventarioProps extends AuditoriaProps {
+  _id: string
   codigoArticulo: string
   nombreArticulo: string
   documentoSector: SinTipoDocumentoSectorProps // Hereda del articulo

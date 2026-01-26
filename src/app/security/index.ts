@@ -7,6 +7,4 @@
  * - useSecurity: Hook para acceder al contexto de seguridad
  */
 
-import { SecurityProvider, useSecurity } from '../base/contexts/SecurityContext'
-
 export { SecureComponent, withSecurity } from './withSecurity'

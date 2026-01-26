@@ -38,3 +38,12 @@ export type KeyValuePropV2<T, U> = {
   key: T
   value: U
 }
+
+/**
+ * Tipos de montos que se obtienen para extracción de precio en formulario de tablas
+ * costo = precio base
+ * precio = normal
+ * delivery = precio por delivery
+ * @author isi-template 2025.3
+ */
+export type TipoMontoProps = 'precio' | 'costo' | 'delivery'

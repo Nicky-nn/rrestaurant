@@ -1,12 +1,13 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { useBreadcrumb } from '../contexts/BreadcrumbContext'
 import { navigations } from '../../navigations'
+import { useBreadcrumb } from '../contexts/BreadcrumbContext'
 
 /**
  * Hook que detecta automáticamente el menú raíz de cualquier página
  * INCLUSO si no tiene componente <Breadcrumb />
+ * @author isi-template 2026.1 para rol dominio
  */
 export const useBreadcrumbDetector = () => {
   const location = useLocation()

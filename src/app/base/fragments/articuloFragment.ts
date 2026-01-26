@@ -94,6 +94,7 @@ export const articuloFragment = gql`
       ...impresoraFields
     }
     inventario {
+      _id
       codigoArticulo
       nombreArticulo
       tipoArticulo

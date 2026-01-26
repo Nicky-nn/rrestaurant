@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
-import { apiMisRolesPermisoPorDominio } from '../api/apiRolesPermisoDominio'
 import { getDominioFromEnv } from '../../utils/menuPermissionFilter'
+import { apiMisRolesPermisoPorDominio } from '../api/apiRolesPermisoDominio'
 
 // --- La interfaz de retorno se mantiene igual ---
 export interface UsePermissionsByDomainState {
@@ -12,6 +12,11 @@ export interface UsePermissionsByDomainState {
   refetch: () => void
 }
 
+/**
+ * Hook para obtener los permisos del usuario por dominio
+ * @param options
+ * @author isi-template 2026.1 para rol dominio
+ */
 export const useMisRolesPermisoDominio = (
   options: { domain?: string; autoLoad?: boolean } = {},
 ): UsePermissionsByDomainState => {

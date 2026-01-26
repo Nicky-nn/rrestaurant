@@ -1,330 +1,374 @@
 :root {
-    --space: -0.1rem;
-    --space-xs: calc(var(--space) / 3);
-    --space-sm: calc(var(--space) / 2);
-    --space-md: calc(var(--space) * 2);
+  --space: -0.1rem;
+  --space-xs: calc(var(--space) / 3);
+  --space-sm: calc(var(--space) / 2);
+  --space-md: calc(var(--space) * 2);
 }
 
 .App {
-    text-align: center;
+  text-align: center;
 }
 
 .breadcrumb {
-    margin-bottom: 15px !important;
+  margin-bottom: 15px !important;
 }
 
 .App-logo {
-    height: 40vmin;
-    pointer-events: none;
+  height: 40vmin;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
 }
 
 .App-header {
-    background-color: #282c34;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
 }
 
 .App-link {
-    color: #61dafb;
+  color: #61dafb;
 }
 
 @keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 button {
-    font-size: calc(10px + 2vmin);
+  font-size: calc(10px + 2vmin);
 }
 
 .grid-table {
-    border-collapse: collapse;
-    border-spacing: 0;
-    width: 100%;
-    max-width: 100%;
-    margin-bottom: 20px;
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 20px;
 }
 
 .grid-table thead tr th {
-    padding: 8px 8px 8px 15px;
-    line-height: 1.5;
-    vertical-align: bottom;
-    border-bottom: 1px solid #ddd;
-    font-weight: 700;
-    text-align: left;
+  padding: 8px 8px 8px 15px;
+  line-height: 1.5;
+  vertical-align: bottom;
+  border-bottom: 1px solid #ddd;
+  font-weight: 700;
+  text-align: left;
 }
 
 .grid-table tr td {
-    padding: 8px 8px 8px 15px;
-    line-height: 1.5;
-    border-top: 1px solid #ddd;
-    vertical-align: middle;
+  padding: 8px 8px 8px 15px;
+  line-height: 1.5;
+  border-top: 1px solid #ddd;
+  vertical-align: middle;
 }
 
 @media (max-width: 767px) {
-    .table-container {
-        overflow: auto;
-    }
+  .table-container {
+    overflow: auto;
+  }
 
-    .table-container .table {
-        min-width: 600px;
-    }
+  .table-container .table {
+    min-width: 600px;
+  }
 }
 
 /************************************* RESPONSIVE TABLE *************************/
 .responsive-table {
-    overflow-x: auto;
+  overflow-x: auto;
 }
 
 .responsive-table table {
-    border: 1px solid #ccc;
-    border-collapse: collapse;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    table-layout: fixed;
+  border: 1px solid #ccc;
+  border-collapse: collapse;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  table-layout: fixed;
 }
 
 .responsive-table table caption {
-    font-size: 1.5em;
-    margin: 0.5em 0 0.75em;
+  font-size: 1.5em;
+  margin: 0.5em 0 0.75em;
 }
 
 .responsive-table table tr {
-    border: 1px solid #E3E3E3;
-    padding: 0.35em;
+  border: 1px solid #e3e3e3;
+  padding: 0.35em;
 }
 
 .responsive-table table th,
 .responsive-table table td {
-    padding: 0.625em;
-    vertical-align: baseline;
-    text-align: left;
+  padding: 0.625em;
+  vertical-align: baseline;
+  text-align: left;
 }
 
 .responsive-table table th {
-    letter-spacing: 0.1em;
-    text-align: left;
-    /*text-transform: uppercase;*/
+  letter-spacing: 0.1em;
+  text-align: left;
+  /*text-transform: uppercase;*/
 }
 
 .responsive-table .table-dense td,
 .responsive-table .table-dense th {
-    padding: 0.300em 0.600em;
-    font-size: 0.9em;
+  padding: 0.3em 0.6em;
+  font-size: 0.9em;
 }
 
 @media screen and (max-width: 600px) {
-    .responsive-table table {
-        border: 0;
-    }
+  .responsive-table table {
+    border: 0;
+  }
 
-    .responsive-table table caption {
-        font-size: 1.2em;
-    }
+  .responsive-table table caption {
+    font-size: 1.2em;
+  }
 
-    .responsive-table table thead {
-        border: none;
-        clip: rect(0 0 0 0);
-        height: 1px;
-        margin: -1px;
-        overflow: hidden;
-        padding: 0;
-        position: absolute;
-        width: 1px;
-    }
+  .responsive-table table thead {
+    border: none;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+  }
 
-    .responsive-table table tr {
-        border-bottom: 3px solid #ddd;
-        display: block;
-        margin-bottom: 0.525em;
-    }
+  .responsive-table table tr {
+    border-bottom: 3px solid #ddd;
+    display: block;
+    margin-bottom: 0.525em;
+  }
 
-    .responsive-table table td {
-        border-bottom: 1px solid #ddd;
-        display: block;
-        text-align: right;
-        width: 100% !important;
-    }
+  .responsive-table table td {
+    border-bottom: 1px solid #ddd;
+    display: block;
+    text-align: right;
+    width: 100% !important;
+  }
 
-    .responsive-table table td::before {
-        /*
+  .responsive-table table td::before {
+    /*
             * aria-label has no advantage, it won't be read inside a table
             content: attr(aria-label);
             */
-        content: attr(data-label);
-        float: left;
-        font-weight: bold;
-        text-transform: uppercase;
-    }
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
 
-    .responsive-table table td:last-child {
-        border-bottom: 0;
-    }
+  .responsive-table table td:last-child {
+    border-bottom: 0;
+  }
 }
 
 .responsive-table.tableAuditoria {
-    padding: 8px;
+  padding: 8px;
 }
 
 .responsive-table.tableAuditoria caption {
-    padding: 0;
-    margin: 0 5px;
-    font-size: 0.88rem;
-    font-weight: bold;
+  padding: 0;
+  margin: 0 5px;
+  font-size: 0.88rem;
+  font-weight: bold;
 }
 
 .responsive-table.tableAuditoria td {
-    padding: 3px 6px;
-    border-right: 1px solid #dddddd;
+  padding: 3px 6px;
+  border-right: 1px solid #dddddd;
 }
 
 /************** PLUGIN RC-INPUT *****************/
 .rc-input-number {
-    height: 37px !important;
+  height: 37px !important;
 }
 
 .rc-input-number input {
-    font-size: 1.25em;
+  font-size: 1.25em;
 }
 
 .rc-input-number-handler {
-    height: 18px !important;
-    line-height: 15px !important;
+  height: 18px !important;
+  line-height: 15px !important;
 }
 
 .inputMontoPagar {
-    font-size: 1.2em !important;
+  font-size: 1.2em !important;
 }
 
 .inputMontoPagar.rc-input-number input {
-    color: #0e2a47 !important;
+  color: #0e2a47 !important;
 }
 
 .rc-input-number.rc-input-error {
-    border: 1px solid #FF3D57
+  border: 1px solid #ff3d57;
 }
 
 /************** PLUGIN RC-INPUT *****************/
 
 /***************** SWEET-ALERT*********************/
 .swal2-title {
-    font-size: 1.2em !important;
+  font-size: 1.2em !important;
 }
 
 .swal2-actions button {
-    border: 1px solid !important;
-    border-radius: 5px !important;
-    padding: 7px 15px !important;
-    min-width: 80px;
+  border: 1px solid !important;
+  border-radius: 5px !important;
+  padding: 7px 15px !important;
+  min-width: 80px;
 }
 
 .swal2-container .swal2-title {
-    border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .swal2-container .swal2-html-container {
-    color: #757575 !important;
-    font-size: 1.03em !important;
+  color: #757575 !important;
+  font-size: 1.03em !important;
 }
 
 .swalError {
-    padding: 0 0 0.50em !important;
+  padding: 0 0 0.5em !important;
 }
 
 .swalError .swal2-title {
-    border-bottom: 1px solid #ff5252;
-    color: #ff5252;
+  border-bottom: 1px solid #ff5252;
+  color: #ff5252;
 }
 
 .swalError .swal2-html-container {
-    color: #757575 !important;
-    font-size: 0.88em !important;
-    text-align: left;
+  color: #757575 !important;
+  font-size: 0.88em !important;
+  text-align: left;
 }
 
 .swal2-container {
-    z-index: 9999 !important;
+  z-index: 9999 !important;
 }
 
-
 .swal2-actions:not(.swal2-loading) .swal2-cancel.swal2-styled:hover {
-    background-image: linear-gradient(rgba(230, 86, 85, 0.1), rgba(230, 86, 85, 0.1));
+  background-image: linear-gradient(rgba(230, 86, 85, 0.1), rgba(230, 86, 85, 0.1));
+}
+
+/* Contenedor principal del Loading */
+.isi-swal-nano {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+/* ELIMINAR EL ESPACIO SUPERIOR DEL SPINNER */
+.isi-swal-nano .swal2-actions {
+  margin: 0 !important; /* Elimina el margen superior de 1.25em por defecto */
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Estilo fino del Spinner */
+.isi-swal-nano .swal2-loader {
+  border-width: 3px !important;
+  width: 35px !important; /* Un poco más pequeño para el nuevo ancho */
+  height: 35px !important;
+  margin: 15px auto 4px auto !important; /* Solo margen inferior hacia el texto */
+  border-top-color: #4caf50 !important;
+  opacity: 0.8;
+}
+
+/* Estilo del texto suavizado */
+.isi-swal-nano .nano-text {
+  font-size: 14px; /* Un punto menos para máxima discreción */
+  color: #8898aa; /* Gris azulado muy suave */
+  font-weight: 400;
+  /*letter-spacing: -0.1px;*/
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Reset de márgenes de SweetAlert */
+.isi-swal-nano .swal2-html-container {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /***************** SWEET-ALERT*********************/
 
 .rdt_Table input[type='checkbox'] {
-    transform: scale(1.6);
+  transform: scale(1.6);
 }
 
 .rdt_Table {
-    box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
+  box-shadow:
+    rgba(0, 0, 0, 0.02) 0px 1px 3px 0px,
+    rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
 }
 
 .rdt_Table .rdt_TableHeadRow {
-    border-top: 1px solid #dddddd;
-    border-left: 1px solid #dddddd;
-    border-right: 1px solid #dddddd;
-    border-radius: 7px 7px 0 0;
-    font-size: 1.25em;
-    padding-top: 15px;
-    padding-bottom: 10px;
+  border-top: 1px solid #dddddd;
+  border-left: 1px solid #dddddd;
+  border-right: 1px solid #dddddd;
+  border-radius: 7px 7px 0 0;
+  font-size: 1.25em;
+  padding-top: 15px;
+  padding-bottom: 10px;
 }
 
 .rdt_Table .rdt_TableBody {
-    border-bottom: 1px solid #dddddd;
-    border-left: 1px solid #dddddd;
-    border-right: 1px solid #dddddd;
+  border-bottom: 1px solid #dddddd;
+  border-left: 1px solid #dddddd;
+  border-right: 1px solid #dddddd;
 }
 
 .tox .tox-tinymce {
-    min-height: 150px !important;
+  min-height: 150px !important;
 }
 
 .asideSidebarFixed {
-    --offset: var(--space) !important;
-    align-self: start !important;
-    position: sticky;
-    z-index: 6 !important;
-    top: var(--offset);
+  --offset: var(--space) !important;
+  align-self: start !important;
+  position: sticky;
+  z-index: 6 !important;
+  top: var(--offset);
 }
 
 /**** MATERIAL-DATA-TABLE *****/
 .MuiTableCell-root.MuiTableCell-head {
-    border-right: 1px solid rgba(224, 224, 200, 0.3);
+  border-right: 1px solid rgba(224, 224, 200, 0.3);
 }
 
 .MuiTableCell-root.MuiTableCell-body {
-    border-right: 1px solid rgba(224, 224, 224, 0.4);
+  border-right: 1px solid rgba(224, 224, 224, 0.4);
 }
 
 /**** FIN MATERIAL-DATA-TABLE *****/
 
 .react-datepicker-popper {
-    z-index: 2;
+  z-index: 2;
 }
 
 /*Estilo para mui dateTimePicker, scroll peque*/
 .MuiList-root.MuiMultiSectionDigitalClockSection-root {
-    scrollbar-width: thin;
+  scrollbar-width: thin;
 
-    ::-webkit-scrollbar {
-        width: 0.5em;
-    }
+  ::-webkit-scrollbar {
+    width: 0.5em;
+  }
 }

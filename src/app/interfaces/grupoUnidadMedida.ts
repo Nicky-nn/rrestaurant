@@ -25,3 +25,39 @@ export interface GrupoUnidadMedidaProps extends AuditoriaProps {
   definicion: GrupoUnidadMedidaDefinicionProp[]
   state?: string // estado del registro
 }
+
+/**
+ * @author isi-template
+ */
+export interface GrupoUnidadMedidaDefinicionInputProps {
+  codigoUnidadMedida: string // Código que identifica a la unidad de medida, se replica con sin unidad medida
+  cantidadBase: number
+}
+
+/**
+ * @author isi-template
+ */
+export interface GrupoUnidadMedidaInputProps {
+  nombreGrupo: string
+  codigoUnidadMedidaBase: string
+  definicion: GrupoUnidadMedidaDefinicionInputProps[]
+}
+
+/**
+ * @author isi-template 2025.3
+ */
+export interface GrupoUnidadMedidaInputApiProps {
+  nombreGrupo: string
+  codigoUnidadMedidaBase: string
+  definicion: GrupoUnidadMedidaDefinicionInputProps[]
+}
+
+/**
+ * @author isi-template 2025.3
+ */
+export const GRUPO_UNIDAD_MEDIDA_INITIAL_VALUES: GrupoUnidadMedidaInputProps = {
+  //codigoGrupo: null,
+  nombreGrupo: '',
+  codigoUnidadMedidaBase: '',
+  definicion: [],
+}

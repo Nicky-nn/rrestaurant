@@ -1,6 +1,6 @@
 import React, { ComponentType, FC } from 'react'
-import { useSecurity } from '../base/contexts/SecurityContext'
 
+import { useSecurity } from '../base/contexts/SecurityContext'
 
 interface WithSecurityOptions {
   /**

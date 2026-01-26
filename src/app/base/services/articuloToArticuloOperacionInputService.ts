@@ -3,10 +3,11 @@ import { getUnixTime } from 'date-fns'
 import { AlmacenProps } from '../../interfaces/almacen.ts'
 import { ArticuloProps } from '../../interfaces/articulo.ts'
 import { ArticuloOperacionInputProps } from '../../interfaces/articuloOperacion.ts'
+import { ArticuloUnidadMedidaProps } from '../../interfaces/articuloUnidadMedida.ts'
 import { LoteProps } from '../../interfaces/lote.ts'
 import { dateDMYToDate } from '../../utils/dayjsHelper.ts'
 import { genRandomString, genReplaceEmpty } from '../../utils/helper.ts'
-import { MonedaParamsProps } from '../interfaces/base.ts'
+import { MonedaParamsProps, TipoMontoProps } from '../interfaces/base.ts'
 import { transformarArticuloPrecioService } from './transformarArticuloPrecioService.ts'
 
 /**
@@ -32,6 +33,24 @@ export const articuloToArticuloOperacionInputService = (
     codigoLote?: string // Solo cuando esta gestionado por lotes.
     // Cantidad de items por defecto, default 1
     cantidad?: number // Cantidad de items por defecto
+    // En caso se requiera sustituir el articuloUnidadMedida, default null
+    articuloUnidadMedida?: ArticuloUnidadMedidaProps
+    // En caso se requiera sustituir el detalleExtra, default ''
+    detalleExtra?: string
+    // En caso se requiera sustituir la nota, default ''
+    nota?: string
+    // En caso se requiera sustituir el nroItem, default null
+    nroItem?: number
+    // En caso se requiera agregar un descuento inicial
+    descuento?: number
+    // En caso se requiera agregar el descuento porcentual
+    descuentoP?: number
+    // En caso se requiera agregar un impuesto inicial
+    impuesto?: number
+    // Marca que se concatena con el id random generado
+    marca?: string
+    // Asocia el tipo de monto solicitado en el campo precio, costo, precio, delivery, etc... default precio
+    tipoMonto?: TipoMontoProps
   },
 ): ArticuloOperacionInputProps => {
   const {
@@ -40,12 +59,24 @@ export const articuloToArticuloOperacionInputService = (
     codigoAlmacen = null,
     autoLote = false,
     codigoLote = null,
+    detalleExtra = '',
+    nota = '',
+    nroItem = null,
+    descuento = 0,
+    descuentoP = 0,
+    impuesto = 0,
+    marca = 'AOI',
+    tipoMonto = 'precio',
   } = options || {}
 
-  const { precio, moneda } = transformarArticuloPrecioService(
+  const { precio, moneda, precioBase, delivery } = transformarArticuloPrecioService(
     articulo.articuloPrecioBase,
     monedaVenta,
   )
+  let precioFinal = precio
+  if (tipoMonto === 'delivery') precioFinal = delivery
+  if (tipoMonto === 'costo') precioFinal = precioBase
+
   // Buscamos el almacen, en caso que no contenga precio se obtiene el primer almacen del articulo
   let lote: LoteProps | null = null
   let almacen: AlmacenProps | null = null
@@ -119,10 +150,13 @@ export const articuloToArticuloOperacionInputService = (
     }
   }
 
+  const articuloUnidadMedida =
+    options?.articuloUnidadMedida ?? articulo.articuloPrecioBase.articuloUnidadMedida
+
   // Buscamos el lote
   return {
-    id: genRandomString(10).toUpperCase(),
-    nroItem: null,
+    id: `${marca}${genRandomString(10).toUpperCase()}`,
+    nroItem,
     nombreArticulo: articulo.nombreArticulo,
     codigoArticulo: articulo.codigoArticulo,
     articuloId: articulo._id,
@@ -132,16 +166,16 @@ export const articuloToArticuloOperacionInputService = (
     almacen,
     lote,
     sinProductoServicio: articulo.sinProductoServicio,
-    articuloUnidadMedida: articulo.articuloPrecioBase.articuloUnidadMedida,
+    articuloUnidadMedida,
     cantidadOriginal: cantidad, // replica cantidad, no es valor procesable
     cantidad,
-    descuento: 0,
-    descuentoP: 0,
-    impuesto: 0,
-    precio,
+    descuento,
+    descuentoP,
+    impuesto,
+    precio: precioFinal,
     moneda,
-    detalleExtra: '',
-    nota: '',
+    detalleExtra,
+    nota,
     verificarStock: articulo.verificarStock,
   }
 }

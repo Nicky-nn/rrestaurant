@@ -1,11 +1,13 @@
-import { EntidadInputProps } from './index.ts'
+import dayjs, { Dayjs } from 'dayjs'
 
 /**
  * @description Modelo de Lote
  * @author isi-template
  */
 export interface LoteBaseProps {
+  _id: string
   codigoLote: string
+  codigoArticulo: string
   descripcion: string
   atributo1: string
   atributo2: string
@@ -21,25 +23,37 @@ export interface LoteBaseProps {
 /**
  * @author isi-template
  */
+
 export interface LoteProps extends LoteBaseProps {}
 /**
  * @author isi-template
  */
 export interface LoteInputProps {
   codigoLote: string
+  codigoArticulo: string
   descripcion: string
-  entidad: EntidadInputProps
-  codigoSucursal: number
-  codigoPuntoVenta: number
-  sucursal: Sucursal
+  fechaAdmision: Date
+  fechaFabricacion: Dayjs
+  fechaVencimiento: Dayjs
   atributo1: string
   atributo2: string
-  fechaAdmision: Date
-  fechaFabricacion: Date
-  fechaVencimiento: Date
 }
+
+/**
+ * @author isi-template 2025.3
+ */
+export interface LoteApiInputProps {
+  descripcion: string
+  atributo1: string
+  atributo2: string
+  fechaAdmision: string //  DateDMYHHMMSS
+  fechaFabricacion: string // DateDMY
+  fechaVencimiento: string //DateDMY
+}
+
 /**
  * @author isi-template
+ * @deprecated reemplaza por LoteApiInputProps
  */
 export interface LoteOutputProps {
   descripcion: string
@@ -61,21 +75,29 @@ interface Sucursal {
  */
 export const LOTE_INITIAL_VALUES: LoteInputProps = {
   codigoLote: '',
+  codigoArticulo: '',
   descripcion: '',
-  entidad: {
-    codigoSucursal: 0,
-    codigoPuntoVenta: 0,
-  },
-  codigoSucursal: 0,
-  codigoPuntoVenta: 0,
-  sucursal: {
-    codigo: 0,
-    direccion: '',
-  },
-  // state: ActionFormProps
   atributo1: '',
   atributo2: '',
   fechaAdmision: new Date(),
-  fechaFabricacion: new Date(),
-  fechaVencimiento: new Date(),
+  fechaFabricacion: dayjs(),
+  fechaVencimiento: dayjs(),
+}
+
+/**
+ * @author isi-template
+ */
+export interface LoteInventarioProps {
+  _id: string
+  codigoLote: string
+  descripcion: string
+  fechaAdmision: string
+  fechaFabricacion: string
+  fechaVencimiento: string
+  atributo1: string
+  atributo2: string
+  stock: number
+  comprometido: number
+  solicitado: number
+  disponible: number
 }

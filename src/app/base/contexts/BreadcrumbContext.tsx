@@ -18,6 +18,12 @@ interface BreadcrumbContextProps {
 
 const BreadcrumbContext = createContext<BreadcrumbContextProps | undefined>(undefined)
 
+/**
+ *
+ * @param children
+ * @author isi-template 2026.1 para rol dominio
+ * @constructor
+ */
 export const BreadcrumbProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbSegment[]>([])
   const [currentPath, setCurrentPath] = useState<string>('')
@@ -42,6 +48,10 @@ export const BreadcrumbProvider: FC<{ children: ReactNode }> = ({ children }) =>
   )
 }
 
+/**
+ * Hook para acceder al contexto de breadcrumbs
+ * @author isi-template 2026.1 para rol dominio
+ */
 export const useBreadcrumb = () => {
   const context = useContext(BreadcrumbContext)
   if (!context) {

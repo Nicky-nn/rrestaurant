@@ -1,3 +1,5 @@
+// noinspection GraphQLUnresolvedReference
+
 import { gql, GraphQLClient } from 'graphql-request'
 
 import { AccessToken } from '../models/paramsModel'
@@ -12,6 +14,10 @@ export interface MisRolesPermisoDominioResponse {
   misRolesPermisoPorDominio: string[]
 }
 
+/**
+ * Obtiene los roles permiso por dominio
+ * @param dominio
+ */
 export const apiMisRolesPermisoPorDominio = async (
   dominio: string,
 ): Promise<string[]> => {
