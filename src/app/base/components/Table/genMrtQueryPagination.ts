@@ -34,13 +34,14 @@ interface MrtMappers {
  * T: Es el tipo de los parámetros extra que tu API necesite.
  */
 interface AdaptOptions<T = Record<string, any>> {
-  // Array de campos que genApiQuery necesita (ej: ['nombre', 'codigo'])
+  // Array de campos que genApiQuery necesita (ej: ['nombre=Richard', 'codigo=123'])
   filterFields?: string[]
-  // Parámetros adicionales específicos de este endpoint (ej: { active: true })
-  extraParams?: T
-  // Mapeo de reemplazo de parametros
+  // Parámetros adicionales específicos para el endpoint (ej: `{ active: true, limit, page, query }`) donde active:true es extraParams
+  extraParams?: Record<string, any>
+  // Mapeo de reemplazo de parametros page, limit, reverse, query
   mappers?: MrtMappers
-  // Mapa de tipos para el filtro inteligente
+  // Mapa de tipos para el filtro inteligente Ej:
+  // `const filterTypes: FilterTypeMap<ClientProps> = {...props}`
   filterTypes?: FilterTypeMap<T>
 }
 

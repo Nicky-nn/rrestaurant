@@ -177,7 +177,11 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
     enableRowSelection: config.enableSelection ?? false,
     enableColumnFilters: true, // Habilita la opción de filtros de columnas
     enableGlobalFilter: false, // Habilita el filtro global, default false
-    enableSorting: false, // Habilita el ordenamiento por columna
+    enableSorting: true, // Habilita el ordenamiento por columna
+    defaultColumn: {
+      // Pone en false el ordenamiento por defecto
+      enableSorting: false,
+    },
     enableColumnActions: false, // Habilita las acciones de columna, 3 puntitos
     positionToolbarAlertBanner: 'bottom',
     localization: MRT_Localization_ES,
