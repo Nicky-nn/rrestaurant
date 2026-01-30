@@ -1,6 +1,8 @@
 import React, { FC } from 'react'
 
+import { useBreadcrumbDetector } from '../../../hooks/useBreadcrumbDetector.ts'
 import useSettings from '../../../hooks/useSettings'
+import { RouteGuard } from '../../RouteGuard/RouteGuard.tsx'
 import MatxSuspense from '../MatxSuspense/MatxSuspense'
 import { MatxLayouts } from './index'
 
@@ -12,10 +14,13 @@ import { MatxLayouts } from './index'
 const MatxLayout: FC<any> = (props) => {
   const { settings } = useSettings()
   const Layout = MatxLayouts[settings.activeLayout]
+  useBreadcrumbDetector()
 
   return (
     <MatxSuspense>
-      <Layout {...props} />
+      <RouteGuard>
+        <Layout {...props} />
+      </RouteGuard>
     </MatxSuspense>
   )
 }
