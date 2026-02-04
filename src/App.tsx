@@ -1,5 +1,6 @@
 import './App.css'
 
+import { CheckCircleTwoTone } from '@mui/icons-material'
 import { CssBaseline } from '@mui/material'
 import { ConfirmProvider } from 'material-ui-confirm'
 import { useEffect } from 'react'
@@ -7,12 +8,11 @@ import { useRoutes } from 'react-router-dom'
 
 import ReloadPrompt from './app/base/components/ReloadPrompt/ReloadPrompt'
 import MatxTheme from './app/base/components/Template/MatxTheme/MatxTheme'
-import { AuthProvider } from './app/base/contexts/JWTAuthContext'
-import { SettingsProvider } from './app/base/contexts/SettingsContext'
-import { appRoutes } from './app/routes/routes'
 import { BreadcrumbProvider } from './app/base/contexts/BreadcrumbContext'
+import { AuthProvider } from './app/base/contexts/JWTAuthContext'
 import { SecurityProvider } from './app/base/contexts/SecurityContext'
-import UxModoGlobalApplier from './app/base/components/UxModoGlobalApplier'
+import SettingsProvider from './app/base/contexts/SettingsContext.tsx'
+import { appRoutes } from './app/routes/routes'
 
 /**
  * @author isi-template
@@ -33,7 +33,6 @@ function App() {
   return (
     <SettingsProvider>
       <AuthProvider>
-        <UxModoGlobalApplier />
         <BreadcrumbProvider>
           <SecurityProvider>
             <MatxTheme>
@@ -47,19 +46,36 @@ function App() {
                   dialogProps: {
                     fullWidth: true,
                     maxWidth: 'xs',
+                    disableRestoreFocus: true,
+                    disableEnforceFocus: true,
+                    'aria-hidden': false,
+                  },
+                  titleProps: {
+                    sx: {
+                      py: 1.5,
+                    },
+                  },
+                  contentProps: {
+                    dividers: true,
+                    sx: {
+                      bgcolor: 'background.paper',
+                    },
+                  },
+                  dialogActionsProps: {
+                    sx: { justifyContent: 'center' },
                   },
                   confirmationButtonProps: {
                     color: 'primary',
                     variant: 'contained',
-                    size: 'small',
-                    sx: { mr: 1.5 },
+                    size: 'medium',
+                    startIcon: <CheckCircleTwoTone />,
                     'aria-label': 'confirm',
                     autoFocus: false,
                   },
                   cancellationButtonProps: {
                     color: 'error',
                     variant: 'text',
-                    size: 'small',
+                    size: 'medium',
                     'aria-label': 'close',
                     autoFocus: false,
                   },
@@ -73,7 +89,6 @@ function App() {
             </MatxTheme>
           </SecurityProvider>
         </BreadcrumbProvider>
-
       </AuthProvider>
     </SettingsProvider>
   )
