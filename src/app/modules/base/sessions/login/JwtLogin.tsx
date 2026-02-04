@@ -18,6 +18,7 @@ import {
   styled,
   TextField,
   Typography,
+  useTheme,
 } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import { Controller, SubmitHandler, useForm } from 'react-hook-form'
@@ -26,7 +27,7 @@ import CreatableSelect from 'react-select/creatable'
 import { object, string } from 'yup'
 
 import { MyInputLabel } from '../../../../base/components/MyInputs/MyInputLabel'
-import { reactSelectStyle } from '../../../../base/components/MySelect/ReactSelect'
+import { getSelectStyles } from '../../../../base/components/MySelect/selectStyles.tsx'
 import { Paragraph } from '../../../../base/components/Template/Typography'
 import useAuth from '../../../../base/hooks/useAuth'
 import { isEmptyValue } from '../../../../utils/helper'
@@ -99,6 +100,7 @@ interface LoginProps {
 const JwtLogin = () => {
   const navigate = useNavigate()
   const ref = useRef<TurnstileInstance | null>(null)
+  const theme = useTheme()
 
   const [loading, setLoading] = useState(false)
   const { login }: any = useAuth()
@@ -186,7 +188,10 @@ const JwtLogin = () => {
                           <MyInputLabel shrink>URL Comercio</MyInputLabel>
                           <CreatableSelect<StorageShopProps>
                             {...field}
-                            styles={reactSelectStyle(Boolean(form.formState.errors.shop))}
+                            styles={getSelectStyles(
+                              theme,
+                              Boolean(form.formState.errors.shop),
+                            )}
                             menuPosition={'fixed'}
                             name={'shop'}
                             placeholder={'Sel. o ingrese URL de comercio'}
@@ -273,7 +278,7 @@ const JwtLogin = () => {
                       siteKey={import.meta.env.ISI_CAPTCHA_KEY}
                       options={{
                         action: 'submit-form',
-                        theme: 'light',
+                        theme: theme.palette.mode ?? 'light',
                         size: 'flexible',
                         language: 'es',
                       }}
@@ -337,7 +342,11 @@ const JwtLogin = () => {
                     </Button>
                   </Grid>
                 </Grid>
-                {message && <Paragraph sx={{ color: 'red' }}>{message}</Paragraph>}
+                {message && (
+                  <FormHelperText sx={{ color: 'error.main', ml: 1, mt: -1 }}>
+                    {message}
+                  </FormHelperText>
+                )}
               </form>
             </ContentBox>
           </Grid>

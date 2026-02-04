@@ -226,8 +226,8 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
     }
 
     return (
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 4 }}>
+      <Grid container spacing={2} columns={12}>
+        <Grid size={{ xs: 12, md: 5, lg: 4 }}>
           <ArticuloInventarioInformacionCard
             articulo={articulo}
             control={control}
@@ -235,7 +235,7 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
             inventario={inventario}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 8 }}>
+        <Grid size={{ xs: 12, md: 7, lg: 8 }}>
           <ArticuloInventarioFormularioCard
             control={control}
             setValue={setValue}
@@ -259,10 +259,12 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
 
   return (
     <Dialog
-      sx={{ '& .MuiDialog-paper': { maxHeight: '90vh' } }}
-      maxWidth="md"
-      open={open}
+      sx={{
+        '& .MuiDialog-paper': { maxHeight: '90vh', width: '1100px', maxWidth: '90vw' },
+      }}
+      // maxWidth="lg"
       fullWidth
+      open={open}
       onClose={() => onClose()}
       onTransitionExited={onClear}
       keepMounted={false}

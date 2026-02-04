@@ -126,6 +126,7 @@ export interface MrtFlatOptions {
 
 /**
  * Configuración principal de la tabla
+ * rowSelection y onRowSelectionChange, se debe instanciar en MrtDynamicTable
  * @author isi-template
  */
 export interface MrtTableConfig<T extends Record<string, any>> {

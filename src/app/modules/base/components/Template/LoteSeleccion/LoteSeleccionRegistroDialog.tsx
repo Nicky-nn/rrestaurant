@@ -159,8 +159,8 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
       <DialogTitle
         sx={{
           m: 0,
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
+          // bgcolor: 'background.paper',
+          // color: 'primary.contrastText',
           display: 'flex',
           alignItems: 'center',
           gap: 1.3,
@@ -176,16 +176,16 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
       </DialogTitle>
 
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ bgcolor: 'background.paper' }}>
           <Grid container spacing={2.5}>
             <Grid size={12}>
               <Box
                 sx={{
                   py: 1,
                   px: 3,
-                  bgcolor: 'grey.100',
                   border: '1px solid',
-                  borderColor: 'grey.300',
+                  borderLeft: '10px solid',
+                  borderColor: 'blue.light',
                   borderRadius: 1,
                   display: 'flex',
                   alignItems: 'center',
@@ -327,9 +327,7 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
           </Grid>
         </DialogContent>
 
-        <DialogActions
-          sx={{ p: 3, bgcolor: 'background.default', justifyContent: 'center' }}
-        >
+        <DialogActions sx={{ p: 3, justifyContent: 'center' }}>
           <Button onClick={onClose} color="error" sx={{ fontWeight: 600 }}>
             Cancelar
           </Button>

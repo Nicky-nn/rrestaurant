@@ -360,10 +360,6 @@ button {
 
 /**** FIN MATERIAL-DATA-TABLE *****/
 
-.react-datepicker-popper {
-  z-index: 2;
-}
-
 /*Estilo para mui dateTimePicker, scroll peque*/
 .MuiList-root.MuiMultiSectionDigitalClockSection-root {
   scrollbar-width: thin;

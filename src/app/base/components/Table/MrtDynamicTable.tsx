@@ -1,8 +1,9 @@
 import { Refresh } from '@mui/icons-material'
-import { alpha, Box, Divider, IconButton, Tooltip, Typography } from '@mui/material'
+import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material'
 import {
   MaterialReactTable,
   MRT_ColumnFiltersState,
+  MRT_RowSelectionState,
   MRT_SortingState,
   MRT_TableInstance,
   useMaterialReactTable,
@@ -16,6 +17,7 @@ import { MrtFlatTable } from './MrtFlatTable.tsx'
 import { MrtAuditPopoverAction } from './MrtIconButtonAuditoria.tsx'
 import { MrtRowMenu } from './MrtRowMenu.tsx'
 import { MrtPaginatedResponse, MrtQueryFnResult, MrtTableConfig } from './mrtTypes.ts'
+
 /*
 //   CASO SIN usrMrtQuery
   const queryState = useMrtQueryState()
@@ -77,6 +79,7 @@ interface Props<T extends Record<string, any>> {
     sorting?: MRT_SortingState
     columnFilters?: MRT_ColumnFiltersState
     globalFilter?: string
+    rowSelection?: MRT_RowSelectionState
   }
 
   // Setters de Estado (Opcional, para modo Servidor)
@@ -85,6 +88,7 @@ interface Props<T extends Record<string, any>> {
     onSortingChange?: (updater: any) => void
     onColumnFiltersChange?: (updater: any) => void
     onGlobalFilterChange?: (updater: any) => void
+    onRowSelectionChange?: (updater: any) => void
   }
 }
 
@@ -133,9 +137,22 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
   }, [data])
 
   // 2. DETECCIÓN DE MODO (Servidor vs Cliente)
+  // Detectamos si el componente recibe handlers de estado, paginacion, busqueda, etc
+  const hasStateHandlers =
+    !!onStateChange?.onPaginationChange ||
+    !!onStateChange?.onSortingChange ||
+    !!onStateChange?.onColumnFiltersChange ||
+    !!onStateChange?.onGlobalFilterChange
+
   // Prioridad: config.manualPagination explícito > detección automática basada en data
   const isManual = config.manualPagination ?? isServerSideData
   const isFullWidth = config.fullWidth ?? true
+
+  const {
+    state: _omittedState,
+    onRowSelectionChange: _omittedOnSelection,
+    ...cleanAdditionalOptions
+  } = config.additionalOptions || {}
 
   const table = useMaterialReactTable<T>({
     columns: config.columns,
@@ -157,13 +174,19 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
       showAlertBanner: isError,
       density: 'compact',
       ...state,
-      ...config.additionalOptions?.state,
     },
     // Eventos
-    onPaginationChange: onStateChange?.onPaginationChange,
-    onSortingChange: onStateChange?.onSortingChange,
-    onColumnFiltersChange: onStateChange?.onColumnFiltersChange,
-    onGlobalFilterChange: onStateChange?.onGlobalFilterChange,
+    ...(hasStateHandlers && {
+      onPaginationChange: onStateChange?.onPaginationChange,
+      onSortingChange: onStateChange?.onSortingChange,
+      onColumnFiltersChange: onStateChange?.onColumnFiltersChange,
+      onGlobalFilterChange: onStateChange?.onGlobalFilterChange,
+      onRowSelectionChange: onStateChange?.onRowSelectionChange,
+    }),
+
+    ...(onStateChange?.onRowSelectionChange && {
+      onRowSelectionChange: onStateChange?.onRowSelectionChange,
+    }),
 
     // Ui generales
     enableRowActions:
@@ -293,6 +316,7 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
                         onClick={() => refetch()}
                         disabled={isFetching}
                         size="small"
+                        color={'default'}
                       >
                         <Refresh
                           sx={{
@@ -346,12 +370,6 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
       size: 'small',
       placeholder: 'Filtrar...',
     },
-
-    mrtTheme: (theme) => ({
-      baseBackgroundColor: theme.palette.grey['100'],
-      draggingBorderColor: theme.palette.secondary.main,
-    }),
-
     muiPaginationProps: {
       rowsPerPageOptions: [10, 20, 50],
       showFirstButton: true,
@@ -369,20 +387,9 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
       return {
         ...customProps, // Mantenemos eventos como onClick y props base
         hover: true,
-        sx: {
-          backgroundColor: (theme) => theme.palette.background.paper,
-          transition: 'background-color 0.1s ease-in-out',
-          '&:hover': {
-            // backgroundColor: (theme) => alpha(theme.palette.common.white, 0.007),
-            backgroundColor: (theme) => alpha(theme.palette.common.black, 0.02),
-            boxShadow: 'none',
-          },
-          boxShadow: 'none',
-          ...customProps.sx,
-        },
       }
     },
-    ...config.additionalOptions,
+    ...cleanAdditionalOptions,
   })
 
   /************************************************************************************/

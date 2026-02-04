@@ -112,6 +112,7 @@ export const IconButtonTextAreaPopover: React.FC<IconButtonTextAreaPopoverProps>
             p: 1.5,
             pt: textFieldProps?.label ? 2.1 : 1.7,
             alignItems: 'center',
+            bgcolor: 'background.default',
             display: 'flex',
             flexDirection: 'column',
             gap: 2,
@@ -126,6 +127,10 @@ export const IconButtonTextAreaPopover: React.FC<IconButtonTextAreaPopoverProps>
             value={currentValue}
             onChange={(e) => setCurrentValue(e.target.value)}
             autoFocus
+            sx={{
+              bgcolor: 'background.paper',
+              ...textFieldProps?.sx,
+            }}
             {...textFieldProps}
           />
           <Stack direction="row" spacing={1} justifyContent="flex-end">

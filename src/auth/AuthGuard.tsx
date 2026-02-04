@@ -19,6 +19,7 @@ const userHasPermission = (pathname: string, user: PerfilProps, routes: any) => 
     if (isEmptyValue(user)) {
       return false
     }
+    // console.log(pathname, user)
     const matched = routes.find((r: any) => r.path === pathname)
     return matched && matched.auth && matched.auth.length
       ? matched.auth.includes(user.tipo)
@@ -50,7 +51,7 @@ const AuthGuard: FC<Props> = ({ children }: Props) => {
     // UNCOMMENT ABOVE TWO LINES, getUserRoleAuthStatus METHOD AND user VARIABLE
     // AND COMMENT OUT BELOW LINE
     const authenticated = isAuthenticated && hasPermission
-    console.log(pathname, authenticated)
+    // console.log(pathname, authenticated)
 
     if (!authenticated) {
       return <Navigate replace to="/session/signin" state={{ from: pathname }} />

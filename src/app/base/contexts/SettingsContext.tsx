@@ -1,34 +1,46 @@
 import { merge } from 'lodash'
-import React, { Context, createContext, ReactElement, useState } from 'react'
+import React, { useState } from 'react'
 
 import {
   MatxLayoutSettings,
   MatxLayoutSettingsProps,
 } from '../components/Template/MatxLayout/settings'
+import SettingsContext, { SettingsProviderProps } from './settingsContext.ts'
 
-type SettingContextProps = {
-  settings: MatxLayoutSettingsProps
-  updateSettings: any
-}
-
-type SettingsProviderProps = {
-  children: ReactElement | ReactElement[] | null
-  settings?: MatxLayoutSettingsProps
-}
-
-export const SettingsContext: Context<SettingContextProps> = createContext({
-  settings: MatxLayoutSettings,
-  updateSettings: (update: MatxLayoutSettingsProps | any) => {},
-})
-
-export const SettingsProvider = ({ settings, children }: SettingsProviderProps) => {
+const SettingsProvider = ({ settings, children }: SettingsProviderProps) => {
   const [currentSettings, setCurrentSettings] = useState<MatxLayoutSettingsProps>(
     settings || MatxLayoutSettings,
   )
 
   const handleUpdateSettings = (update = {}) => {
-    const marged = merge({}, currentSettings, update)
-    setCurrentSettings(marged)
+    const merged = merge({}, currentSettings, update)
+    setCurrentSettings(merged)
+  }
+
+  /**
+   * Aplicamos la configuracion cuando sea dark o light
+   * @param mode
+   */
+  const applyMode = (mode: 'light' | 'dark') => {
+    const isDark = mode === 'dark'
+    const activeTheme = (import.meta.env.ISI_THEME as any) || 'default'
+    handleUpdateSettings({
+      mode,
+      activeTheme: isDark ? `${activeTheme}Dark` : activeTheme,
+      layout1Settings: {
+        leftSidebar: {
+          // theme: isDark ? `${activeTheme}Dark` : `${activeTheme}`,
+          theme: `${activeTheme}Dark`,
+        },
+        topbar: {
+          theme: isDark ? `${activeTheme}Dark` : `${activeTheme}`,
+        },
+      },
+      footer: {
+        theme: isDark ? `${activeTheme}Dark` : `${activeTheme}`,
+        // theme: `${activeTheme}Dark`,
+      },
+    })
   }
 
   return (
@@ -36,9 +48,12 @@ export const SettingsProvider = ({ settings, children }: SettingsProviderProps) 
       value={{
         settings: currentSettings,
         updateSettings: handleUpdateSettings,
+        applyMode,
       }}
     >
       {children}
     </SettingsContext.Provider>
   )
 }
+
+export default SettingsProvider

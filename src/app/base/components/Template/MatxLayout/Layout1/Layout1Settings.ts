@@ -1,5 +1,3 @@
-import { ThemeTypeColorsProps } from '../../MatxTheme/themeColors'
-
 /**
  * @author isi-template
  */
@@ -7,13 +5,13 @@ export interface LayoutSettingsProps {
   leftSidebar: {
     show: boolean
     mode: 'full' | 'close' | 'compact' | 'mobile'
-    theme: ThemeTypeColorsProps // View all valid theme colors inside MatxTheme/themeColors.js
+    theme: string // View all valid theme colors inside MatxTheme/themeColors.js
     bgImgURL: string
   }
   topbar: {
     show: boolean
     fixed: boolean
-    theme: ThemeTypeColorsProps // View all valid theme colors inside MatxTheme/themeColors.js
+    theme: string // View all valid theme colors inside MatxTheme/themeColors.js
   }
 }
 

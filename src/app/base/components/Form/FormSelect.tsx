@@ -1,10 +1,11 @@
 // noinspection DuplicatedCode
 
 import { FormControl, FormControlProps, FormHelperText, useTheme } from '@mui/material'
+import { FocusEvent, memo, useCallback, useId, useMemo, useState } from 'react'
 import Select, { GroupBase, Props as DefaultProps } from 'react-select'
 
 import { MyInputLabel } from '../MyInputs/MyInputLabel'
-import { selectStyles } from '../MySelect/ReactSelect'
+import { MuiSelectSize, useMuiSelectStyles } from '../MySelect/selectStyles.tsx'
 
 /*
 EJEMPLO
@@ -20,7 +21,6 @@ EJEMPLO
       <MyInputLabel shrink>Unidad Medida</MyInputLabel>
       <Select<SinUnidadMedidaProps>
         {...field}
-        styles={reactSelectStyle(Boolean(errors.variante?.unidadMedida))}
         menuPosition={'fixed'}
         placeholder={'Seleccione la unidad de medida'}
         value={field.value}
@@ -57,6 +57,7 @@ type SelectProps<
   formHelperText?: string
   inputLabel?: string
   formControlProps?: FormControlProps
+  size?: MuiSelectSize
 }
 
 /**
@@ -65,38 +66,91 @@ type SelectProps<
  * @param props
  * @constructor
  */
-const FormSelect = <
-  Option,
+const FormSelectComponent = <
+  OptionType,
   IsMulti extends boolean = false,
-  Group extends GroupBase<Option> = GroupBase<Option>,
+  Group extends GroupBase<OptionType> = GroupBase<OptionType>,
 >(
-  props: SelectProps<Option, IsMulti, Group>,
+  props: SelectProps<OptionType, IsMulti, Group>,
 ) => {
-  const t = useTheme()
-  const { error, formHelperText, inputLabel, formControlProps, ...others } = props
+  const theme = useTheme()
+  const {
+    error,
+    formHelperText,
+    inputLabel,
+    formControlProps,
+    size = 'small',
+    onFocus,
+    onBlur,
+    ...others
+  } = props
+  const uniqueId = useId()
+  const selectInputId = props.inputId || `mui-select-input-${uniqueId}`
+  const labelId = `mui-select-label-${uniqueId}`
+
+  // Estado local para el foco
+  const [isFocused, setIsFocused] = useState(false)
+
+  // Evita que estas funciones se regeneren en cada render, lo que rompería el React.memo del hijo
+  const handleFocus = useCallback(
+    (event: FocusEvent<HTMLInputElement>) => {
+      setIsFocused(true)
+      if (onFocus) onFocus(event)
+    },
+    [onFocus],
+  )
+
+  const handleBlur = useCallback(
+    (event: FocusEvent<HTMLInputElement>) => {
+      setIsFocused(false)
+      if (onBlur) onBlur(event)
+    },
+    [onBlur],
+  )
+
+  // React-select puede ser sensible a cambios en esta prop
+  const reactSelectThemeConfig = useMemo(
+    () => (reactSelectTheme: any) => ({
+      ...reactSelectTheme,
+      colors: {
+        ...reactSelectTheme.colors,
+        primary: theme.palette.primary.main,
+      },
+    }),
+    [theme.palette.primary.main],
+  )
+
+  const customStyles = useMuiSelectStyles<OptionType, IsMulti, Group>(error, size)
+
   const fc: FormControlProps = formControlProps
     ? { fullWidth: true, ...formControlProps }
     : { fullWidth: true }
   return (
-    <FormControl error={error || false} {...fc}>
-      {inputLabel && <MyInputLabel shrink>{inputLabel}</MyInputLabel>}
+    <FormControl error={error || false} {...fc} variant="outlined" focused={isFocused}>
+      {inputLabel && (
+        <MyInputLabel
+          id={labelId} // ID del Label
+          htmlFor={selectInputId} // Vinculación estándar HTML
+          shrink
+          focused={isFocused}
+          error={error}
+        >
+          {inputLabel}
+        </MyInputLabel>
+      )}
       <Select
-        menuPosition={'fixed'}
-        theme={(theme) => ({
-          ...theme,
-          colors: {
-            ...theme.colors,
-            primary: t.palette.primary.light,
-          },
-        })}
-        styles={{
-          ...selectStyles(error || false, t),
-        }}
         {...others}
+        placeholder={'Seleccione...'}
+        inputId={selectInputId}
+        styles={customStyles}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        theme={reactSelectThemeConfig}
       />
       {formHelperText && <FormHelperText>{formHelperText}</FormHelperText>}
     </FormControl>
   )
 }
 
+const FormSelect = memo(FormSelectComponent) as typeof FormSelectComponent
 export default FormSelect

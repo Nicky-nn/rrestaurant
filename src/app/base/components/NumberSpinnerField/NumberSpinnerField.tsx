@@ -12,9 +12,9 @@ import { ForwardedRef, useEffect, useRef, useState } from 'react'
 import { IMaskInput } from 'react-imask'
 
 const StyledIconButton = styled(IconButton)(({ theme }) => ({
-  color: theme.palette.grey[400],
+  color: theme.palette.text.secondary,
   '&:disabled': {
-    color: theme.palette.grey[200],
+    color: theme.palette.text.secondary,
   },
   '&:hover': {
     color: theme.palette.primary.main,

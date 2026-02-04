@@ -1,5 +1,7 @@
 import {
+  DarkMode,
   DisplaySettings,
+  LightMode,
   Menu,
   PowerSettingsNew,
   Settings,
@@ -32,8 +34,6 @@ import MatxMenu from '../../MatxMenu/MatxMenu'
 import { themeShadows } from '../../MatxTheme/themeColors'
 import NotificationBar from '../../NotificationBar/NotificationBar'
 import { Span } from '../../Typography'
-import UxModoMenu from './UxModoMenu'
-import { cuentaCambioModo } from '../../../../api/apiCambioModo'
 
 const StyledIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.text.primary,
@@ -106,7 +106,7 @@ const IconBox = styled('div')(({ theme }) => ({
 const Layout1Topbar: FC<any> = () => {
   const theme = useTheme()
   const { settings, updateSettings }: any = useSettings()
-  const { logout, user, refreshUser }: any = useAuth()
+  const { logout, user, updateTheme }: any = useAuth()
   const isMdScreen = useMediaQuery(theme.breakpoints.down('md'))
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
 
@@ -227,13 +227,20 @@ const Layout1Topbar: FC<any> = () => {
           </StyledIconButton>
         </Box>
         <Box display="flex" alignItems="center">
-          <UxModoMenu
-            value={user.uxModo}
-            onChange={(modo) => {
-              cuentaCambioModo(modo);
-              refreshUser();
+          <IconButton
+            aria-label="Cambio modo oscuro/claro"
+            onClick={() => {
+              updateTheme(settings.mode === 'dark' ? 'light' : 'dark')
             }}
-          />
+          >
+            {settings.mode === 'dark' ? <DarkMode /> : <LightMode />}
+          </IconButton>
+          {/*<UxModoMenu*/}
+          {/*  value={user.uxModo}*/}
+          {/*  onChange={(modo) => {*/}
+          {/*    // refreshUser()*/}
+          {/*  }}*/}
+          {/*/>*/}
           <NotificationProvider>
             <NotificationBar />
           </NotificationProvider>

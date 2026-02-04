@@ -4,7 +4,6 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import {
   MuiDisplayColumnDefOptions,
   MuiFilterTextFieldProps,
-  MuiTableMrtTheme,
   MuiTablePaginationProps,
   MuiTablePaperProps,
   MuiTableProps,
@@ -123,9 +122,6 @@ export const MuiTableNormalOptionsProps: MRT_TableOptions<any> = {
   },
   muiTableProps: MuiTableProps,
   displayColumnDefOptions: MuiDisplayColumnDefOptions,
-  mrtTheme: (theme) => ({
-    ...MuiTableMrtTheme(theme),
-  }),
   // enableRowVirtualization: true,
   // rowVirtualizerOptions: { overscan: 10 }, //optionally customize the row virtualizer
 }

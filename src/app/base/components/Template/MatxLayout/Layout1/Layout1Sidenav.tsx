@@ -1,5 +1,5 @@
 import { Box, styled, Switch, Theme, useTheme } from '@mui/material'
-import React from 'react'
+import React, { useMemo } from 'react'
 
 import { sidenavCompactWidth, sideNavWidth } from '../../../../../utils/constant'
 import { convertHexToRGB } from '../../../../../utils/utils'
@@ -66,8 +66,6 @@ const Layout1Sidenav = () => {
   const leftSidebar = settings.layout1Settings.leftSidebar
   const { mode, bgImgURL } = leftSidebar
 
-  // console.log(bgImgURL)
-
   const getSidenavWidth = () => {
     switch (mode) {
       case 'compact':
@@ -76,7 +74,12 @@ const Layout1Sidenav = () => {
         return sideNavWidth
     }
   }
-  const primaryRGB = convertHexToRGB(theme.palette.primary.main)
+
+  const primaryRGB = useMemo(() => {
+    return settings.mode === 'dark'
+      ? convertHexToRGB(theme.palette.background.paper)
+      : convertHexToRGB(theme?.palette.primary.base || '#00539A')
+  }, [settings.mode])
 
   const updateSidebarMode = (sidebarSettings: any) => {
     updateSettings({
