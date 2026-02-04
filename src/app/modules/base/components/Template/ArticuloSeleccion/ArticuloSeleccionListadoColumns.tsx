@@ -1,4 +1,5 @@
 import { AllInclusive } from '@mui/icons-material'
+import { alpha } from '@mui/material'
 import { blue, green, orange, yellow } from '@mui/material/colors'
 import { MRT_ColumnDef } from 'material-react-table'
 import React from 'react'
@@ -16,8 +17,6 @@ export const ArticuloSeleccionListadoColumns: MRT_ColumnDef<ArticuloProps>[] = [
     accessorKey: 'codigoArticulo',
     header: 'Código',
     footer: 'Código',
-    enableSorting: false,
-    enableColumnActions: false,
     size: 130,
   },
   {
@@ -43,9 +42,6 @@ export const ArticuloSeleccionListadoColumns: MRT_ColumnDef<ArticuloProps>[] = [
         />
       )
     },
-    enableColumnFilter: false,
-    enableSorting: false,
-    enableColumnActions: false,
     size: 130,
   },
   {
@@ -54,7 +50,7 @@ export const ArticuloSeleccionListadoColumns: MRT_ColumnDef<ArticuloProps>[] = [
     footer: `T. Stock`,
     muiTableBodyCellProps: {
       sx: {
-        backgroundColor: blue[100],
+        backgroundColor: (theme) => alpha(theme.palette.blue.light, 0.7),
       },
       align: 'right',
     },
@@ -69,8 +65,6 @@ export const ArticuloSeleccionListadoColumns: MRT_ColumnDef<ArticuloProps>[] = [
       }
     },
     enableColumnFilter: false,
-    enableSorting: false,
-    enableColumnActions: false,
     size: 130,
   },
   {
@@ -79,7 +73,8 @@ export const ArticuloSeleccionListadoColumns: MRT_ColumnDef<ArticuloProps>[] = [
     footer: `T. Solicitado`,
     muiTableBodyCellProps: {
       sx: {
-        backgroundColor: yellow[100],
+        backgroundColor: (theme) => alpha(theme.palette.yellow.light, 0.7),
+        color: (theme) => theme.palette.yellow.contrastText,
       },
       align: 'right',
     },
@@ -94,8 +89,6 @@ export const ArticuloSeleccionListadoColumns: MRT_ColumnDef<ArticuloProps>[] = [
       }
     },
     enableColumnFilter: false,
-    enableSorting: false,
-    enableColumnActions: false,
     size: 130,
   },
   {
@@ -104,7 +97,7 @@ export const ArticuloSeleccionListadoColumns: MRT_ColumnDef<ArticuloProps>[] = [
     footer: `T. Comprometido`,
     muiTableBodyCellProps: {
       sx: {
-        backgroundColor: orange[100],
+        backgroundColor: (theme) => alpha(theme.palette.orange.light, 0.7),
       },
       align: 'right',
     },
@@ -119,8 +112,6 @@ export const ArticuloSeleccionListadoColumns: MRT_ColumnDef<ArticuloProps>[] = [
       }
     },
     enableColumnFilter: false,
-    enableSorting: false,
-    enableColumnActions: false,
     size: 130,
   },
   {
@@ -130,7 +121,7 @@ export const ArticuloSeleccionListadoColumns: MRT_ColumnDef<ArticuloProps>[] = [
     muiTableBodyCellProps: {
       align: 'right',
       sx: {
-        backgroundColor: green[100],
+        backgroundColor: (theme) => alpha(theme.palette.green.light, 0.7),
       },
     },
     Cell: ({ row: { original } }) => {
@@ -144,31 +135,25 @@ export const ArticuloSeleccionListadoColumns: MRT_ColumnDef<ArticuloProps>[] = [
       }
     },
     enableColumnFilter: false,
-    enableSorting: false,
-    enableColumnActions: false,
     size: 130,
   },
   {
     accessorKey: 'articuloPrecioBase.articuloUnidadMedida.nombreUnidadMedida',
     header: 'U.M. Principal',
     footer: 'U.M. Principal',
-    enableSorting: false,
     Cell: ({ row }) => {
       return (
         row.original.articuloPrecioBase?.articuloUnidadMedida.nombreUnidadMedida || ''
       )
     },
-    enableColumnActions: false,
   },
   {
     accessorKey: 'gestionArticulo',
     header: 'Gestionado Por',
     footer: 'Gestionado Por',
-    enableSorting: false,
     Cell: ({ row }) => {
       return row.original.gestionArticulo || ''
     },
-    enableColumnActions: false,
     size: 130,
   },
 ]

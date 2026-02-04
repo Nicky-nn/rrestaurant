@@ -38,13 +38,13 @@ const clientes = useMrtQuery({
  * Props para el hook useMrtQuery.
  * T es el tipo de dato de la fila (ej: Product, User).
  */
-export interface MrtQueryProps<T extends MRT_RowData> {
+export interface MrtQueryProps<T extends MRT_RowData, TResult = MrtQueryFnResult<T>> {
   // 1. Requerido: La llave única para el caché de React Query
   queryKey: QueryKey
 
   // 2. Requerido: La función que trae los datos.
   // Ahora usa MrtTableFetchContext para tener acceso a pagination, signal, sorting, etc.
-  queryFn: (context: MrtTableFetchContext) => Promise<MrtQueryFnResult<T>>
+  queryFn: (context: MrtTableFetchContext) => Promise<TResult>
 
   // 3. Opcional: Define si los cambios de estado disparan nuevas consultas.
   // true = Paginación/Filtros en Backend.
@@ -62,11 +62,20 @@ export interface MrtQueryProps<T extends MRT_RowData> {
   // (ej: enabled, staleTime, refetchOnWindowFocus, retry)
   // Omitimos queryKey y queryFn porque ya los definimos explícitamente arriba
   queryOptions?: Omit<
-    UseQueryOptions<MrtQueryFnResult<T>, Error, MrtQueryFnResult<T>, QueryKey>,
+    UseQueryOptions<TResult, Error, TResult, QueryKey>,
     'queryKey' | 'queryFn'
   >
 }
-export const useMrtQuery = <T extends MRT_RowData>(props: MrtQueryProps<T>) => {
+
+/**
+ * hook para generar los datos de listado para material-react-table, ojo, solo es compatible con el hook <MMrtDynamicTable>
+ * Si se quiere usar en un material-react-table simple, se debe castear {..., data: data as T[]}
+ * @param props
+ */
+export const useMrtQuery = <T extends MRT_RowData, TResult = MrtQueryFnResult<T>>(
+  props: MrtQueryProps<T, TResult>,
+) => {
+  const { isServerSide = true } = props
   // 1. Gestión del Estado UI (Hook pequeño)
   const { state, onStateChange, debouncedState } = useMrtQueryState({
     initialPagination: props.initialPagination,
@@ -76,11 +85,9 @@ export const useMrtQuery = <T extends MRT_RowData>(props: MrtQueryProps<T>) => {
   })
 
   // 2. Gestión de la Data (React Query)
-  const query = useQuery<MrtQueryFnResult<T>>({
+  const query = useQuery<TResult>({
     // Cache Key Dinámica
-    queryKey: props.isServerSide
-      ? [...props.queryKey, debouncedState]
-      : [...props.queryKey],
+    queryKey: isServerSide ? [...props.queryKey, debouncedState] : [...props.queryKey],
 
     // Función Fetch Enriquecida
     queryFn: (fnContext: QueryFunctionContext<QueryKey>) => {

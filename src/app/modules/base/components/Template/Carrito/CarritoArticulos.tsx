@@ -1,5 +1,6 @@
 import { DeleteForever, ShoppingCart } from '@mui/icons-material'
 import {
+  alpha,
   Box,
   ButtonGroup,
   Divider,
@@ -16,10 +17,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Theme,
   Tooltip,
   Typography,
 } from '@mui/material'
-import { amber, grey } from '@mui/material/colors'
+import { amber } from '@mui/material/colors'
 import React, { FC, FunctionComponent, memo } from 'react'
 
 import { IconButtonTextAreaPopover } from '../../../../../base/components/MyInputs/IconButtonTextAreaPopover.tsx'
@@ -262,12 +264,13 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
     }) => (
       <Box>
         <Typography
-          color={'primary'}
           fontSize={12}
           display={'inline'}
           className="ca-codigo-articulo"
           sx={{
             fontWeight: 500,
+            color: (theme) =>
+              theme.palette.mode === 'dark' ? 'cyan.light' : 'primary.main',
           }}
         >
           {itemArticulo.codigoArticulo},&nbsp;&nbsp;
@@ -284,7 +287,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
         </Typography>
         <Typography
           fontSize={12.2}
-          sx={{ ml: 0.5, fontStyle: 'italic', color: grey[700] }}
+          sx={{ ml: 0.5, fontStyle: 'italic', color: 'text.primary' }}
           display={'inline'}
         >
           {itemArticulo.detalleExtra || ''}
@@ -293,7 +296,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
         {!articuloProps?.ocultarUnidadMedidaText && (
           <Typography
             fontSize={10.5}
-            sx={{ color: grey[700] }}
+            sx={{ color: 'text.secondary' }}
             title={`${itemArticulo.articuloUnidadMedida?.codigoUnidadMedida || ''} - ${itemArticulo.articuloUnidadMedida?.nombreUnidadMedida || ''}`}
           >
             {itemArticulo.articuloUnidadMedida?.nombreUnidadMedida}
@@ -302,12 +305,17 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
       </Box>
     )
 
+    const bgColor = (theme: Theme) =>
+      indexActivo === index ? alpha(theme.palette.orange.light, 0.3) : 'none'
+
     return (
       <StyledTableRow>
         {!cantidadProps?.ocultar && (
           <StyledTableCell
             align={'right'}
-            sx={{ backgroundColor: indexActivo === index ? amber['A100'] : 'none' }}
+            sx={{
+              backgroundColor: bgColor,
+            }}
           >
             <MontoMonedaTexto
               id={`cantidad-${item.id}`}
@@ -332,10 +340,14 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
         )}
 
         {!unidadMedidaProps?.ocultar && (
-          <StyledTableCell>
+          <StyledTableCell
+            sx={{
+              backgroundColor: bgColor,
+            }}
+          >
             <Typography
               fontSize={11}
-              sx={{ color: grey[800], ml: 0.5, maxWidth: 120 }}
+              sx={{ color: 'text.primary', ml: 0.5, maxWidth: 120 }}
               title={` Cod. ${item.articuloUnidadMedida?.codigoUnidadMedida} - ${item.articuloUnidadMedida?.nombreUnidadMedida}`}
               noWrap
             >
@@ -344,7 +356,11 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
           </StyledTableCell>
         )}
 
-        <StyledTableCell>
+        <StyledTableCell
+          sx={{
+            backgroundColor: bgColor,
+          }}
+        >
           {onClickArticulo ? (
             <StyleListItemButton
               sx={{
@@ -365,14 +381,14 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
           )}
         </StyledTableCell>
         {!almacenLoteProps?.ocultar && (
-          <StyledTableCell sx={{ p: 0, m: 0 }}>
+          <StyledTableCell sx={{ p: 0, m: 0, backgroundColor: bgColor }}>
             <Box>
               {!almacenLoteProps?.ocultarTextoAlmacen && (
                 <Box sx={{ display: 'flex', width: 149, pl: 0.5, pr: 0.5 }}>
                   <Typography
                     fontSize={'smaller'}
                     sx={{ fontWeight: 500, mr: 0.5 }}
-                    color={'success.main'}
+                    color={'success.light'}
                     display={'inline'}
                     title={'Almacen'}
                   >
@@ -408,7 +424,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
                   <Typography
                     fontSize={'smaller'}
                     sx={{ fontWeight: 500 }}
-                    color={'success.main'}
+                    color={'success.light'}
                     title={'Lote'}
                   >
                     LOTE
@@ -458,7 +474,12 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
           </StyledTableCell>
         )}
         {!precioProps?.ocultar && (
-          <StyledTableCell align={'right'}>
+          <StyledTableCell
+            align={'right'}
+            sx={{
+              backgroundColor: bgColor,
+            }}
+          >
             <MontoMonedaTexto
               id={`precio-${item.id}`}
               monto={item.precio}
@@ -481,7 +502,12 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
         )}
 
         {!descProps?.ocultar && (
-          <StyledTableCell align={'right'}>
+          <StyledTableCell
+            align={'right'}
+            sx={{
+              backgroundColor: bgColor,
+            }}
+          >
             <MontoMonedaTexto
               id={`descuento-${item.id}`}
               monto={item.descuento}
@@ -505,7 +531,11 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
         )}
 
         {!opcionesProps?.ocultar && (
-          <StyledTableCell>
+          <StyledTableCell
+            sx={{
+              backgroundColor: bgColor,
+            }}
+          >
             <ButtonGroup variant="text" aria-label="Op. articulo" sx={{ p: 0, m: 0 }}>
               {onDeleteArticulo && (
                 <IconButton

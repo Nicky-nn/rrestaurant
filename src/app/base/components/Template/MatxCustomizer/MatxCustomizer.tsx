@@ -16,10 +16,10 @@ import {
 import React, { Fragment, useState } from 'react'
 
 import useSettings from '../../../hooks/useSettings'
+import StyledScrollBar from '../../Container/StyledScrollBar'
 import { themeShadows } from '../MatxTheme/themeColors'
 import { H5, Span } from '../Typography'
 import BadgeSelected from './BadgeSelected'
-import StyledScrollBar from '../../Container/StyledScrollBar'
 
 const Label = styled(Span)(({ theme }) => ({
   color: theme.palette.secondary.main,
@@ -145,7 +145,7 @@ const MatxCustomizer = () => {
                 <Icon className="icon">close</Icon>
               </IconButton>
             </Controller>
-            <StyledScrollBarSidenav >
+            <StyledScrollBarSidenav>
               {tabIndex === 0 && (
                 <Box sx={{ mb: 4, mx: 3 }}>
                   <Box sx={{ color: secondary }}>Layouts</Box>

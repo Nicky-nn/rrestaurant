@@ -87,18 +87,18 @@ const TextFieldReadonly = styled(TextField)(({ theme }) => ({
 
     // Estado normal y Hover (ya lo habíamos dejado estático)
     '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: theme.palette.grey[300],
+      borderColor: theme.palette.divider,
       transition: 'border-color 0.2s',
     },
     '&:hover .MuiOutlinedInput-notchedOutline': {
-      borderColor: theme.palette.grey[300], // Mantiene el gris
+      borderColor: theme.palette.divider, // Mantiene el gris
     },
 
     // ESTADO FOCO (Cuando entras con TAB o Click)
     '&.Mui-focused': {
       // Forzamos que el borde sea el nuestro y no el default
       '& .MuiOutlinedInput-notchedOutline': {
-        borderColor: theme.palette.grey[600],
+        borderColor: theme.palette.divider,
         borderWidth: '1px', // Evitamos que se engrose (MUI usa 2px por defecto)
       },
     },
@@ -107,9 +107,8 @@ const TextFieldReadonly = styled(TextField)(({ theme }) => ({
 
 // Estilo para el box de readonly
 const ReadOnlyBox = styled(Box)(({ theme }) => ({
-  // Estética de "Dato de Sistema"
   // Estética: Fondo gris muy tenue y borde sólido sutil
-  backgroundColor: theme.palette.grey[100],
+  backgroundColor: theme.palette.background.paper,
 }))
 
 /**
@@ -235,7 +234,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
   /***********************************************************************************/
 
   return (
-    <SimpleBox>
+    <SimpleBox sx={{ p: 2, pt: 3 }}>
       <Grid container rowSpacing={2.6} columnSpacing={1.5}>
         <Grid size={12}>
           {/* ALMACENES */}
@@ -304,7 +303,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             name={'articuloUnidadMedida'}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           {cantidadProps?.readOnly || cantidadProps?.ocultar ? (
             <ReadOnlyBox>
               <TextFieldReadonly
@@ -350,7 +349,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             />
           )}
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           {precioProps?.readOnly || precioProps?.ocultar ? (
             <ReadOnlyBox>
               <TextFieldReadonly
@@ -393,7 +392,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             />
           )}
         </Grid>
-        <Grid size={{ xs: 12, sm: 12, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           {descuentoProps?.readOnly || descuentoProps?.ocultar ? (
             <ReadOnlyBox>
               <TextFieldReadonly
@@ -449,7 +448,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
                   pl: { xs: 1, sm: 1.5 },
                   pr: { xs: 1, sm: 1.5 },
                   pb: { xs: 0.5, sm: 0.1 },
-                  bgcolor: 'grey.50',
+                  bgcolor: 'background.default',
                   borderColor: 'primary.light',
                   position: 'relative',
                   overflow: 'hidden',
@@ -525,7 +524,10 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
                       TOTAL
                     </Typography>
                     <MontoMonedaTexto
-                      boxProps={{ color: 'primary.main', fontSize: 'large' }}
+                      boxProps={{
+                        color: (theme) => theme.palette.blue.light,
+                        fontSize: 'large',
+                      }}
                       monto={calculos.totalNeto}
                       sigla={moneda.sigla}
                     />

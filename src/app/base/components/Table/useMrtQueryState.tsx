@@ -14,6 +14,7 @@ interface MrtStateQueryProps {
 
 /**
  * Definicion de estados para el uso de `useQuery` manual, usado en listados
+ * @author isi-template
  * @param initialPagination
  * @param initialColumnFilters
  * @param initialGlobalFilter

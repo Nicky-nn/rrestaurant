@@ -1,6 +1,7 @@
 import { AllInclusive } from '@mui/icons-material'
 import {
   Alert,
+  alpha,
   Avatar,
   CardActionArea,
   CardContent,
@@ -15,7 +16,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { blue, green, orange, yellow } from '@mui/material/colors'
+import { blue } from '@mui/material/colors'
 import React, { FunctionComponent, memo } from 'react'
 import { Control, useWatch } from 'react-hook-form'
 
@@ -88,7 +89,12 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
             <TableRow>
               <StyledTableCell sx={{ fontWeight: 500 }}>Stock</StyledTableCell>
               <StyledTableCell
-                sx={{ bgcolor: blue[100], textAlign: 'right', fontWeight: 500 }}
+                sx={{
+                  bgcolor: (theme) => alpha(theme.palette.blue.main, 0.5),
+                  // color: 'blue.contrastText',
+                  textAlign: 'right',
+                  fontWeight: 500,
+                }}
               >
                 {articulo.verificarStock && (
                   <MontoMonedaTexto
@@ -106,7 +112,11 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
             <TableRow>
               <StyledTableCell sx={{ fontWeight: 500 }}>Solicitado</StyledTableCell>
               <StyledTableCell
-                sx={{ bgcolor: orange[100], textAlign: 'right', fontWeight: 500 }}
+                sx={{
+                  bgcolor: (theme) => alpha(theme.palette.orange.main, 0.5),
+                  textAlign: 'right',
+                  fontWeight: 500,
+                }}
               >
                 {articulo.verificarStock && (
                   <MontoMonedaTexto
@@ -124,7 +134,11 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
             <TableRow>
               <StyledTableCell sx={{ fontWeight: 500 }}>Comprometido</StyledTableCell>
               <StyledTableCell
-                sx={{ bgcolor: yellow[100], textAlign: 'right', fontWeight: 500 }}
+                sx={{
+                  bgcolor: (theme) => alpha(theme.palette.yellow.main, 0.9),
+                  textAlign: 'right',
+                  fontWeight: 500,
+                }}
               >
                 {articulo.verificarStock && (
                   <MontoMonedaTexto
@@ -142,7 +156,11 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
             <TableRow>
               <StyledTableCell sx={{ fontWeight: 500 }}>Disponible</StyledTableCell>
               <StyledTableCell
-                sx={{ bgcolor: green[100], textAlign: 'right', fontWeight: 500 }}
+                sx={{
+                  bgcolor: (theme) => alpha(theme.palette.green.light, 0.9),
+                  textAlign: 'right',
+                  fontWeight: 500,
+                }}
               >
                 {articulo.verificarStock && (
                   <MontoMonedaTexto
@@ -189,7 +207,7 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
   )
 
   return (
-    <SimpleBox sx={{ p: 0, m: 0 }}>
+    <SimpleBox>
       <CardHeader
         sx={{ p: 1 }}
         avatar={

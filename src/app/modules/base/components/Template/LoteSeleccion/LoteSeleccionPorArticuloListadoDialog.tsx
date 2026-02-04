@@ -17,6 +17,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
+import { useReactTable } from '@tanstack/react-table'
 import {
   MaterialReactTable,
   type MRT_ColumnDef,
@@ -29,6 +30,9 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { apiLotePorArticuloInventarioAlmacenListado } from '../../../../../base/api/apiLotePorArticuloInventarioAlmacenListado.ts'
 import { apiLotePorArticuloListado } from '../../../../../base/api/apiLotePorArticuloListado.ts'
 import MuiRenderTopToolbarCustomActions from '../../../../../base/components/MuiTable/MuiRenderTopToolbarCustomActions.tsx'
+import { MrtDynamicTable } from '../../../../../base/components/Table/MrtDynamicTable.tsx'
+import { MrtTableConfig } from '../../../../../base/components/Table/mrtTypes.ts'
+import { useMrtQuery } from '../../../../../base/components/Table/useMrtQuery.tsx'
 import { apiEstado } from '../../../../../interfaces'
 import { LoteProps } from '../../../../../interfaces/lote.ts'
 import {
@@ -195,88 +199,55 @@ const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
     [],
   )
 
-  // 3. Instancia de la tabla
-  const table = useMaterialReactTable({
-    ...(MuiTableNormalOptionsProps as MRT_TableOptions<LoteProps>),
+  const statusColors = {
+    expired: alpha(theme.palette.error.light, 0.5), // Rojo suave
+    warning: alpha(theme.palette.warning.light, 0.5), // Naranja/Amarillo suave
+    healthy: alpha(theme.palette.success.light, 0.5), // Verde suave
+  }
+
+  const config: MrtTableConfig<LoteProps> = {
+    id: 'listado-lotes-por-seleccion',
     columns,
-    data: lotes ?? [], // Fallback a array vacío
-    getRowId: (row) => row._id,
-    muiSelectCheckboxProps: {
-      sx: {
-        '&.Mui-disabled': {
-          backgroundColor: (theme) => theme.palette.text.disabled,
-        },
-      },
-    },
-    enablePagination: true,
-    enableRowNumbers: true,
-    enableRowActions: false,
-    enableColumnActions: false,
-    enableSorting: false,
-    enableColumnPinning: false,
-    enableHiding: false,
-    enableFullScreenToggle: false,
-    enableRowSelection: true,
-    enableMultiRowSelection: false,
-    muiToolbarAlertBannerProps: MuiToolbarAlertBannerProps(isError),
-    onRowSelectionChange: setRowSelection,
-    state: {
-      isLoading,
-      showAlertBanner: isError,
-      showProgressBars: isFetching,
-      density: 'compact',
-      rowSelection,
-      showColumnFilters: true,
-    },
-    enableTopToolbar: false,
-    enableBottomToolbar: true,
-    enableTableFooter: false,
-    muiPaginationProps: {
-      ...MuiTablePaginationProps,
-    },
-    muiTableProps: {
-      sx: {
-        '& .MuiTableRow-root.MuiTableRow-head': {
-          paddingTop: 0.2,
-        },
-      },
-    },
-    positionToolbarAlertBanner: 'none',
+    manualPagination: false,
+    enableSelection: true,
+    multiSelection: false,
+    showIconRefetch: true,
     renderBottomToolbarCustomActions: () => (
       <MuiRenderTopToolbarCustomActions refetch={refetch} />
     ),
-    muiTableBodyRowProps: ({ row }) => {
-      const status = fechaStringExpirationStatus(row.original.fechaVencimiento, 30)
-
-      const statusColors = {
-        expired: alpha(theme.palette.error.main, 0.12), // Rojo suave
-        warning: alpha(theme.palette.warning.main, 0.12), // Naranja/Amarillo suave
-        healthy: alpha(theme.palette.success.main, 0.08), // Verde suave
-      }
-
-      return {
-        onClick: row.getToggleSelectedHandler(),
-        sx: {
-          cursor: 'pointer',
-          backgroundColor: statusColors[status],
-          '&:hover': {
-            backgroundColor: alpha(statusColors[status], 0.2), // Un poco más intenso en hover
+    additionalOptions: {
+      enableTopToolbar: false,
+      enableBottomToolbar: true,
+      enableTableFooter: false,
+      getRowId: (row) => row._id,
+      muiTableBodyRowProps: ({ row }) => {
+        const status = fechaStringExpirationStatus(row.original.fechaVencimiento, 30)
+        return {
+          onClick: row.getToggleSelectedHandler(),
+          sx: {
+            cursor: 'pointer',
+            backgroundColor: statusColors[status],
+            '&:hover': {
+              backgroundColor: alpha(statusColors[status], 0.2), // Un poco más intenso en hover
+            },
+            // Añadimos un borde izquierdo para reforzar el color
+            borderLeft: `5px solid ${
+              status === 'expired'
+                ? theme.palette.error.main
+                : status === 'warning'
+                  ? theme.palette.warning.main
+                  : theme.palette.success.main
+            }`,
           },
-          // Añadimos un borde izquierdo para reforzar el color
-          borderLeft: `5px solid ${
-            status === 'expired'
-              ? theme.palette.error.main
-              : status === 'warning'
-                ? theme.palette.warning.main
-                : theme.palette.success.main
-          }`,
-        },
-      }
+        }
+      },
     },
-  })
+  }
 
   const handleConfirmAction = () => {
-    const selectedRows = table.getSelectedRowModel().flatRows.map((row) => row.original)
+    const selectedRows = lotes.filter((item) =>
+      Object.keys(rowSelection).includes(item._id),
+    )
     if (selectedRows.length > 0) {
       // Verificamos si se debe validar la expiracion
       if (
@@ -346,18 +317,31 @@ const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
             </AlertTitle>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} mt={1}>
               <LegendItem
-                color={theme.palette.success.main}
+                color={statusColors.healthy}
                 text="Vigente (Vence en +30 días)"
               />
               <LegendItem
-                color={theme.palette.warning.main}
+                color={statusColors.warning}
                 text="Próximo a vencer (<30 días)"
               />
-              <LegendItem color={theme.palette.error.main} text="Lote Vencido" />
+              <LegendItem color={statusColors.expired} text="Lote Vencido" />
             </Stack>
           </Alert>
         </Box>
-        <MaterialReactTable table={table} />
+        <MrtDynamicTable
+          config={config}
+          data={lotes}
+          state={{
+            rowSelection,
+          }}
+          onStateChange={{
+            onRowSelectionChange: setRowSelection,
+          }}
+          isLoading={isLoading}
+          refetch={refetch}
+          isError={isError}
+          isFetching={isFetching}
+        />
       </DialogContent>
 
       <DialogActions sx={{ justifyContent: 'center' }}>
@@ -369,10 +353,10 @@ const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
           variant={'contained'}
           size={'small'}
           startIcon={<Save />}
-          disabled={table.getSelectedRowModel().flatRows.length === 0}
+          disabled={Object.keys(rowSelection).length === 0}
           onClick={handleConfirmAction}
         >
-          Confirmar Selección ({table.getSelectedRowModel().flatRows.length})
+          Confirmar Selección ({Object.keys(rowSelection).length})
         </Button>
       </DialogActions>
     </Dialog>

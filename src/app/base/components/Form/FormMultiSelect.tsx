@@ -1,10 +1,11 @@
 // noinspection DuplicatedCode
 
 import { FormControl, FormControlProps, FormHelperText, useTheme } from '@mui/material'
+import { FocusEvent, memo, useCallback, useId, useMemo, useState } from 'react'
 import Select, { GroupBase, Props as DefaultProps } from 'react-select'
 
 import { MyInputLabel } from '../MyInputs/MyInputLabel'
-import { selectStyles } from '../MySelect/ReactSelect'
+import { MuiSelectSize, useMuiSelectStyles } from '../MySelect/selectStyles.tsx'
 
 /*
 EJEMPLO
@@ -52,11 +53,13 @@ type SelectProps<
   Option,
   IsMulti extends boolean = true,
   Group extends GroupBase<Option> = GroupBase<Option>,
-> = DefaultProps<Option, IsMulti, Group> & {
+> = Omit<DefaultProps<Option, IsMulti, Group>, 'isMulti'> & {
   error?: boolean
   formHelperText?: string
   inputLabel?: string
   formControlProps?: FormControlProps
+  size?: MuiSelectSize
+  isMulti?: IsMulti
 }
 
 /**
@@ -65,38 +68,94 @@ type SelectProps<
  * @param props
  * @constructor
  */
-const FormMultiSelect = <
-  Option,
+const FormMultiSelectComponent = <
+  OptionType,
   IsMulti extends boolean = true,
-  Group extends GroupBase<Option> = GroupBase<Option>,
+  Group extends GroupBase<OptionType> = GroupBase<OptionType>,
 >(
-  props: SelectProps<Option, IsMulti, Group>,
+  props: SelectProps<OptionType, IsMulti, Group>,
 ) => {
-  const t = useTheme()
-  const { error, formHelperText, inputLabel, formControlProps, ...others } = props
+  const theme = useTheme()
+  const {
+    error,
+    formHelperText,
+    inputLabel,
+    formControlProps,
+    size = 'small',
+    onFocus,
+    onBlur,
+    isMulti = true as unknown as IsMulti,
+    ...others
+  } = props
+
+  const uniqueId = useId()
+  const selectInputId = props.inputId || `mui-multi-select-input-${uniqueId}`
+  const labelId = `mui-multi-select-input-${uniqueId}`
+
+  // Estado local para el foco
+  const [isFocused, setIsFocused] = useState(false)
+
+  const handleFocus = useCallback(
+    (event: FocusEvent<HTMLInputElement>) => {
+      setIsFocused(true)
+      if (onFocus) onFocus(event)
+    },
+    [onFocus],
+  )
+
+  const handleBlur = useCallback(
+    (event: FocusEvent<HTMLInputElement>) => {
+      setIsFocused(false)
+      if (onBlur) onBlur(event)
+    },
+    [onBlur],
+  )
+
+  // React-select puede ser sensible a cambios en esta prop
+  const reactSelectThemeConfig = useMemo(
+    () => (reactSelectTheme: any) => ({
+      ...reactSelectTheme,
+      colors: {
+        ...reactSelectTheme.colors,
+        primary: theme.palette.primary.main,
+      },
+    }),
+    [theme.palette.primary.main],
+  )
+
   const fc: FormControlProps = formControlProps
     ? { fullWidth: true, ...formControlProps }
     : { fullWidth: true }
+
+  const customStyles = useMuiSelectStyles<OptionType, IsMulti, Group>(error, size)
+
   return (
-    <FormControl error={error || false} {...fc}>
-      {inputLabel && <MyInputLabel shrink>{inputLabel}</MyInputLabel>}
+    <FormControl error={error || false} {...fc} variant="outlined" focused={isFocused}>
+      {inputLabel && (
+        <MyInputLabel
+          id={labelId} // ID del Label
+          htmlFor={selectInputId} // Vinculación estándar HTML
+          shrink
+          focused={isFocused}
+          error={error}
+        >
+          {inputLabel}
+        </MyInputLabel>
+      )}
       <Select
-        menuPosition={'fixed'}
-        theme={(theme) => ({
-          ...theme,
-          colors: {
-            ...theme.colors,
-            primary: t.palette.primary.light,
-          },
-        })}
-        styles={{
-          ...selectStyles(error || false, t),
-        }}
         {...others}
+        isMulti={isMulti}
+        placeholder={'Seleccione...'}
+        inputId={selectInputId}
+        styles={customStyles}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        theme={reactSelectThemeConfig}
       />
       <FormHelperText>{formHelperText || ''}</FormHelperText>
     </FormControl>
   )
 }
 
+const FormMultiSelect = memo(FormMultiSelectComponent) as typeof FormMultiSelectComponent
 export default FormMultiSelect

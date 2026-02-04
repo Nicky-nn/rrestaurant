@@ -8,9 +8,8 @@ import { useRoutes } from 'react-router-dom'
 
 import ReloadPrompt from './app/base/components/ReloadPrompt/ReloadPrompt'
 import MatxTheme from './app/base/components/Template/MatxTheme/MatxTheme'
-import UxModoGlobalApplier from './app/base/components/UxModoGlobalApplier'
 import { AuthProvider } from './app/base/contexts/JWTAuthContext'
-import { SettingsProvider } from './app/base/contexts/SettingsContext'
+import SettingsProvider from './app/base/contexts/SettingsContext.tsx'
 import { appRoutes } from './app/routes/routes'
 
 /**
@@ -32,7 +31,6 @@ function App() {
   return (
     <SettingsProvider>
       <AuthProvider>
-        <UxModoGlobalApplier />
         <MatxTheme>
           <ConfirmProvider
             defaultOptions={{
@@ -47,6 +45,17 @@ function App() {
                 disableRestoreFocus: true,
                 disableEnforceFocus: true,
                 'aria-hidden': false,
+              },
+              titleProps: {
+                sx: {
+                  py: 1.5,
+                },
+              },
+              contentProps: {
+                dividers: true,
+                sx: {
+                  bgcolor: 'background.paper',
+                },
               },
               dialogActionsProps: {
                 sx: { justifyContent: 'center' },

@@ -1,7 +1,6 @@
-import { ThemeTypeColorsProps } from '../MatxTheme/themeColors'
-
 /**
  * @author isi-template
+ * @deprecated
  */
 export const mainThemes = [
   'purple1',
@@ -12,6 +11,14 @@ export const mainThemes = [
   'blueDark',
 ]
 
-export const mainSidebarThemes: ThemeTypeColorsProps[] = ['blueDark']
+/**
+ * No se usa custom de temas por front-end
+ * @deprecated
+ */
+export const mainSidebarThemes: any = ['blueDark']
 
-export const topbarThemes: ThemeTypeColorsProps[] = ['blueDark']
+/**
+ * No se usa custom de temas por front-end
+ * @deprecated
+ */
+export const topbarThemes: any = ['blueDark']

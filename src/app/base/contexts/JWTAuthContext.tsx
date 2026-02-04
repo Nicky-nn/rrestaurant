@@ -1,10 +1,13 @@
+import { PaletteMode } from '@mui/material'
 import { jwtDecode } from 'jwt-decode'
 import React, { createContext, ReactNode, useEffect, useReducer } from 'react'
 
 import { swalException } from '../../utils/swal'
+import { apiCuentaCambiarUxModo } from '../api/apiCuentaCambiarUxModo.ts'
 import { apiLicenciaProducto } from '../api/apiLicenciaProducto'
 import { apiValidarUsuario } from '../api/validarUsuario.api'
 import MatxLoading from '../components/Template/MatxLoading/MatxLoading'
+import useSettings from '../hooks/useSettings.ts'
 import { LicenciaProductoProps } from '../interfaces/licenciaProducto'
 import { loginModel, PerfilProps, UserProps } from '../models/loginModel'
 import { AccessToken } from '../models/paramsModel'
@@ -36,46 +39,34 @@ const initialState: InitialStateProps = {
   },
 }
 
+// Es token válido
 const isValidToken = (accessToken: string) => {
-  if (!accessToken) {
-    return false
-  }
-
+  if (!accessToken) return false
   const decodedToken: any = jwtDecode(accessToken)
   const currentTime = Date.now() / 1000
   return decodedToken.exp > currentTime
 }
 
+// Seteamos a storage la sesión
 const setSession = (accessToken: string | null) => {
   if (accessToken) {
-    localStorage.setItem('accessToken', accessToken)
-    // axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`
+    localStorage.setItem(AccessToken, accessToken)
   } else {
-    localStorage.removeItem('accessToken')
-    // delete axios.defaults.headers.common.Authorization
+    localStorage.removeItem(AccessToken)
   }
 }
 
+// Configuracion de reducr con acciones
 const reducer = (state: any, action: any) => {
   switch (action.type) {
-    case 'INIT': {
+    case 'INIT':
+    case 'LOGIN': // INIT y LOGIN suelen hacer lo mismo con el payload
+    case 'REGISTER': {
       const { isAuthenticated, user, lw, li } = action.payload
-
       return {
         ...state,
-        isAuthenticated,
+        isAuthenticated: isAuthenticated !== undefined ? isAuthenticated : true,
         isInitialised: true,
-        user,
-        lw,
-        li,
-      }
-    }
-    case 'LOGIN': {
-      const { user, lw, li } = action.payload
-
-      return {
-        ...state,
-        isAuthenticated: true,
         user,
         lw,
         li,
@@ -85,20 +76,20 @@ const reducer = (state: any, action: any) => {
       return {
         ...state,
         isAuthenticated: false,
+        isInitialised: true,
         user: {},
         lw: {},
         li: {},
       }
     }
-    case 'REGISTER': {
-      const { user, lw, li } = action.payload
-
+    case 'UPDATE_THEME': {
+      const { theme } = action.payload
       return {
         ...state,
-        isAuthenticated: true,
-        user,
-        lw,
-        li,
+        user: {
+          ...state.user,
+          uxModo: theme,
+        },
       }
     }
     default: {
@@ -110,10 +101,11 @@ const reducer = (state: any, action: any) => {
 const AuthContext = createContext({
   ...initialState,
   method: 'JWT',
-  login: () => Promise.resolve(),
-  logout: () => { },
+  login: (shop: string, email: string, password: string) => Promise.resolve(),
+  logout: () => {},
   register: () => Promise.resolve(),
   refreshUser: () => Promise.resolve(),
+  updateTheme: (mode: PaletteMode) => Promise.resolve(),
 })
 
 export interface AuthProviderProps {
@@ -127,6 +119,28 @@ export interface AuthProviderProps {
  */
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [state, dispatch] = useReducer(reducer, initialState)
+  const { applyMode } = useSettings()
+
+  // Helper para aplicar tema (seguro contra nulos y mayúsculas)
+  const setTheme = (uxMode?: string | null) => {
+    const mode =
+      !uxMode || uxMode === 'SYSTEM'
+        ? 'light'
+        : (uxMode.toLowerCase() as 'light' | 'dark')
+    applyMode(mode)
+  }
+
+  // Queremos resetear a thema por default light
+  const resetTheme = () => {
+    applyMode('light')
+  }
+
+  // Helper interno para limpiar sesión
+  const handleSessionCleanUp = () => {
+    setSession(null)
+    resetTheme()
+    dispatch({ type: 'LOGOUT' })
+  }
 
   /**
    * @description login de usuario
@@ -135,51 +149,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
    * @param password
    */
   const login = async (shop: string, email: string, password: string) => {
-    const user: UserProps = await loginModel(shop, email, password)
-    const validarUsuario = await apiValidarUsuario(user.token)
-    const { lw, li } = await apiLicenciaProducto(user.token)
-    if (validarUsuario) {
-      setSession(user.token)
-      dispatch({
-        type: 'LOGIN',
-        payload: {
-          user: user.perfil,
-          lw,
-          li,
-        },
-      })
-    } else {
-      setSession(null)
-      dispatch({ type: 'LOGOUT' })
-      throw new Error(
-        `No cuenta con permisos para acceder al sistema; verifique url Comercio o consulte los permisos con el administrador del sistema`,
-      )
+    try {
+      const user: UserProps = await loginModel(shop, email, password)
+      // Validación temprana: si no hay token, fallar antes de llamar a otras APIs
+      if (!user?.token)
+        throw new Error('Error al obtener credenciales, intente nuevamente')
+      const validarUsuario = await apiValidarUsuario(user.token)
+      const { lw, li } = await apiLicenciaProducto(user.token)
+      if (validarUsuario) {
+        setSession(user.token)
+        setTheme(user.perfil.uxModo)
+        dispatch({
+          type: 'LOGIN',
+          payload: {
+            user: user.perfil,
+            lw,
+            li,
+          },
+        })
+      } else {
+        throw new Error(
+          `No cuenta con permisos para acceder al sistema; verifique url Comercio o consulte los permisos con el administrador del sistema`,
+        )
+      }
+    } catch (e: any) {
+      handleSessionCleanUp()
+      throw e // Re-lanzar para que el componente Login maneje la UI (alerts)
     }
   }
   const register = async (email: string, username: string, password: string) => {
-    /*
-            const response = await axios.post('/api/auth/register', {
-                email,
-                username,
-                password,
-            })
-
-            const {accessToken, user} = response.data
-
-            setSession(accessToken)
-
-            dispatch({
-                type: 'REGISTER',
-                payload: {
-                    user,
-                },
-            })
-            */
+    // Implementacion pendiente
   }
 
+  // Cuando se cierra la sesión
   const logout = () => {
-    setSession(null)
-    dispatch({ type: 'LOGOUT' })
+    handleSessionCleanUp()
   }
 
   /**
@@ -189,6 +193,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const accessToken = window.localStorage.getItem(AccessToken)
     const perfil: PerfilProps = await perfilModel()
     const { lw, li } = await apiLicenciaProducto(accessToken || '')
+    setTheme(perfil.uxModo)
     dispatch({
       type: 'LOGIN',
       payload: {
@@ -199,61 +204,61 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     })
   }
 
+  // Actualizamos el thema uxModo
+  const updateTheme = async (mode: PaletteMode) => {
+    applyMode(mode)
+    try {
+      await apiCuentaCambiarUxModo(mode.toUpperCase())
+      dispatch({
+        type: 'UPDATE_THEME',
+        payload: {
+          theme: mode.toUpperCase(),
+        },
+      })
+    } catch (err) {
+      swalException(err)
+    }
+  }
+
+  // Inicio del sistema
   useEffect(() => {
-    ; (async () => {
+    ;(async () => {
       try {
         const accessToken = window.localStorage.getItem(AccessToken)
         if (accessToken && isValidToken(accessToken)) {
           setSession(accessToken)
-          const user = await perfilModel()
-          const validarUsuario = await apiValidarUsuario(accessToken)
-          const { lw, li } = await apiLicenciaProducto(accessToken)
+          // const user = await perfilModel()
+          // const validarUsuario = await apiValidarUsuario(accessToken)
+          // const { lw, li } = await apiLicenciaProducto(accessToken)
+          const [user, validarUsuario, licencias] = await Promise.all([
+            perfilModel(),
+            apiValidarUsuario(accessToken),
+            apiLicenciaProducto(accessToken),
+          ])
+
           if (validarUsuario) {
+            setTheme(user.uxModo)
             dispatch({
               type: 'INIT',
               payload: {
                 isAuthenticated: true,
                 user,
-                lw,
-                li,
+                lw: licencias.lw,
+                li: licencias.li,
               },
             })
           } else {
-            dispatch({
-              type: 'INIT',
-              payload: {
-                isAuthenticated: false,
-                user: {},
-                lw,
-                li,
-              },
-            })
             throw new Error(
               `No cuenta con permisos para acceder al sistema; verifique url Comercio o consulte los permisos con el administrador del sistema`,
             )
           }
         } else {
-          dispatch({
-            type: 'INIT',
-            payload: {
-              isAuthenticated: false,
-              user: {},
-              lw: {},
-              li: {},
-            },
-          })
+          handleSessionCleanUp()
         }
       } catch (err) {
         swalException(err)
-        dispatch({
-          type: 'INIT',
-          payload: {
-            isAuthenticated: false,
-            user: {},
-            lw: {},
-            li: {},
-          },
-        })
+        console.error(err) // Log para debug
+        handleSessionCleanUp()
       }
     })()
   }, [])
@@ -271,6 +276,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         logout,
         register,
         refreshUser,
+        updateTheme,
       }}
     >
       {children}

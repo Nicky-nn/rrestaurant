@@ -5,7 +5,6 @@ import {
   MuiDisplayColumnDefOptions,
   MuiFilterTextFieldProps,
   MuiSearchTextFieldProps,
-  MuiTableMrtTheme,
   MuiTablePaginationProps,
   MuiTablePaperProps,
   MuiTableProps,
@@ -155,9 +154,9 @@ export const MuiTableAdvancedOptionsProps: MRT_TableOptions<any> = {
     ...MuiTablePaperProps,
   },
   muiTableProps: MuiTableProps,
-  mrtTheme: (theme) => ({
-    ...MuiTableMrtTheme(theme),
-  }),
+  // mrtTheme: (theme) => ({
+  //   ...MuiTableMrtTheme(theme),
+  // }),
   muiSearchTextFieldProps: MuiSearchTextFieldProps,
   displayColumnDefOptions: MuiDisplayColumnDefOptions,
 }

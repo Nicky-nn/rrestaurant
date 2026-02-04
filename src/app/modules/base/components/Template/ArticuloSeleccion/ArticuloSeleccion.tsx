@@ -1,12 +1,20 @@
 import { ScreenSearchDesktop } from '@mui/icons-material'
-import { ButtonGroup, FormControl, Grid, IconButton, Tooltip } from '@mui/material'
+import {
+  ButtonGroup,
+  FormControl,
+  FormHelperText,
+  Grid,
+  IconButton,
+  Tooltip,
+  useTheme,
+} from '@mui/material'
 import React, { forwardRef, useEffect, useState } from 'react'
 import { SelectInstance } from 'react-select'
 import AsyncSelect from 'react-select/async'
 
 import { apiArticuloInventarioListado } from '../../../../../base/api/apiArticuloInventarioListado.ts'
 import { MyInputLabel } from '../../../../../base/components/MyInputs/MyInputLabel.tsx'
-import { reactSelectStyle } from '../../../../../base/components/MySelect/ReactSelect.tsx'
+import { getSelectStyles } from '../../../../../base/components/MySelect/selectStyles.tsx'
 import { EntidadInputProps, PAGE_DEFAULT } from '../../../../../interfaces'
 import { ArticuloProps } from '../../../../../interfaces/articulo.ts'
 import { genApiQuery } from '../../../../../utils/helper.ts'
@@ -35,6 +43,10 @@ interface OwnProps {
   label?: string
   /** Agrega Placeholder al inputText */
   placeholder?: string
+  /** Error */
+  error?: boolean
+  /** Texto de ayuda */
+  helperText?: string
 }
 
 type Props = OwnProps
@@ -58,9 +70,12 @@ const ArticuloSeleccion = forwardRef<SelectInstance<ArticuloProps>, Props>(
       seleccionMultiple = true,
       extraQuery = [],
       entidad,
+      error = false,
+      helperText,
     } = props
     const [articulo, setArticulo] = useState<ArticuloProps[]>([])
     const [openArticuloListado, setOpenArticuloListado] = useState<boolean>(false)
+    const theme = useTheme()
 
     /**
      * Busqueda del cliente en base de datos
@@ -97,12 +112,12 @@ const ArticuloSeleccion = forwardRef<SelectInstance<ArticuloProps>, Props>(
       <div>
         <Grid container spacing={0.5}>
           <Grid size={{ xs: 10, sm: 11, md: 11, lg: 11, xl: 11 }}>
-            <FormControl fullWidth>
+            <FormControl fullWidth error={error}>
               {label !== '' && <MyInputLabel shrink>{label}</MyInputLabel>}
               <AsyncSelect<ArticuloProps>
                 key={`select-${id}`}
                 ref={ref}
-                styles={reactSelectStyle(false)}
+                styles={getSelectStyles(theme, error)}
                 menuPosition={'fixed'}
                 placeholder={placeholder}
                 loadOptions={articuloBusqueda}
@@ -133,6 +148,7 @@ const ArticuloSeleccion = forwardRef<SelectInstance<ArticuloProps>, Props>(
                 }
                 loadingMessage={() => 'Buscando...'}
               />
+              {helperText && <FormHelperText>{helperText}</FormHelperText>}
             </FormControl>
           </Grid>
           <Grid size={{ xs: 2, sm: 1, md: 1, lg: 1, xl: 1 }}>

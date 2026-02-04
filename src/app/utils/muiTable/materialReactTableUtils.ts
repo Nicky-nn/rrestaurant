@@ -136,12 +136,7 @@ export const MuiTablePaginationProps: any = {
  * @author isi-template
  */
 export const MuiTablePaperProps: PaperProps = {
-  elevation: 1, //Cambiamos la elevacion de sombras
-  //customizamos los bordes
-  sx: {
-    borderRadius: '2',
-    border: '1px solid rgba(81, 81, 81, .1)',
-  },
+  variant: 'outlined',
 }
 
 /*
@@ -222,9 +217,6 @@ export const MuiTableBasicOptionsProps: MRT_TableOptions<any> = {
   enableBottomToolbar: false,
   muiTableProps: MuiTableCompactProps,
   muiTableBodyRowProps: { hover: false },
-  mrtTheme: (theme) => ({
-    ...MuiTableMrtTheme(theme),
-  }),
   initialState: {
     density: 'compact',
   },

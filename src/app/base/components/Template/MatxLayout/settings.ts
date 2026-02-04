@@ -1,5 +1,4 @@
-import { themes } from '../MatxTheme/initThemes'
-import { CreateMatxThemesProps, ThemeTypeColorsProps } from '../MatxTheme/themeColors'
+import { themes, ThemesMap } from '../MatxTheme/initThemes'
 import { LayoutSettingsProps } from './Layout1/Layout1Settings'
 
 /**
@@ -7,30 +6,29 @@ import { LayoutSettingsProps } from './Layout1/Layout1Settings'
  */
 export interface MatxLayoutSettingsProps {
   activeLayout: 'layout1' | 'layout2' // layout1, layout2
-  activeTheme: ThemeTypeColorsProps // View all valid theme colors inside MatxTheme/themeColors.js
+  activeTheme: string // View all valid theme colors inside MatxTheme/themeColors.js
   perfectScrollbar: boolean
-  themes: CreateMatxThemesProps
+  themes: ThemesMap
   layout1Settings: LayoutSettingsProps // open Layout1/Layout1Settings.js
 
   secondarySidebar: {
     show: boolean
     open: boolean
-    theme: ThemeTypeColorsProps // View all valid theme colors inside MatxTheme/themeColors.js
+    theme: string // View all valid theme colors inside MatxTheme/themeColors.js
   }
   // Footer options
   footer: {
     show: boolean
     fixed: boolean
-    theme: ThemeTypeColorsProps // View all valid theme colors inside MatxTheme/themeColors.js
+    theme: string // View all valid theme colors inside MatxTheme/themeColors.js
   }
+  // Nuevo, tipo de tema, dark o light
+  mode: 'light' | 'dark'
 }
 
-const activeTheme: ThemeTypeColorsProps = (import.meta.env.ISI_THEME ||
-  'default') as ThemeTypeColorsProps
-const activeThemeDark = `${activeTheme}Dark` as ThemeTypeColorsProps
+const activeTheme = import.meta.env.ISI_THEME || 'default'
+const activeThemeDark = `${activeTheme}Dark`
 
-// UPDATE BELOW CODE
-// DOC http://demos.ui-lib.com/matx-react-doc/layout.html
 /**
  * @author isi-template
  */
@@ -40,6 +38,7 @@ export const MatxLayoutSettings: MatxLayoutSettingsProps = {
   perfectScrollbar: false,
 
   themes: themes,
+  mode: activeTheme as any,
   // Color del layout izquierdo y del top
   layout1Settings: {
     leftSidebar: {
@@ -64,6 +63,6 @@ export const MatxLayoutSettings: MatxLayoutSettingsProps = {
   footer: {
     show: true,
     fixed: false,
-    theme: activeThemeDark, // View all valid theme colors inside MatxTheme/themeColors.js
+    theme: activeTheme, // View all valid theme colors inside MatxTheme/themeColors.js
   },
 }

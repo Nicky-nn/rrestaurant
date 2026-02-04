@@ -1,4 +1,4 @@
-import { Save } from '@mui/icons-material'
+import { Close, Save } from '@mui/icons-material'
 import {
   Button,
   Dialog,
@@ -6,33 +6,19 @@ import {
   DialogContent,
   DialogProps,
   DialogTitle,
+  IconButton,
 } from '@mui/material'
-import { useQuery } from '@tanstack/react-query'
-import {
-  MaterialReactTable,
-  MRT_ColumnFiltersState,
-  MRT_PaginationState,
-  MRT_RowSelectionState,
-  MRT_SortingState,
-  MRT_TableOptions,
-  useMaterialReactTable,
-} from 'material-react-table'
+import { MRT_RowSelectionState } from 'material-react-table'
 import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
 
 import { apiArticuloInventarioListado } from '../../../../../base/api/apiArticuloInventarioListado.ts'
-import MuiRenderTopToolbarCustomActions from '../../../../../base/components/MuiTable/MuiRenderTopToolbarCustomActions.tsx'
-import {
-  EntidadInputProps,
-  PAGE_DEFAULT,
-  PageInputProps,
-} from '../../../../../interfaces'
+import { FilterTypeMap } from '../../../../../base/components/Table/castMrtFilters.ts'
+import { genMrtQueryPagination } from '../../../../../base/components/Table/genMrtQueryPagination.ts'
+import { MrtDynamicTable } from '../../../../../base/components/Table/MrtDynamicTable.tsx'
+import { MrtTableConfig } from '../../../../../base/components/Table/mrtTypes.ts'
+import { useMrtQuery } from '../../../../../base/components/Table/useMrtQuery.tsx'
+import { EntidadInputProps } from '../../../../../interfaces'
 import { ArticuloProps } from '../../../../../interfaces/articulo.ts'
-import { genApiQuery } from '../../../../../utils/helper.ts'
-import {
-  MuiTablePaginationProps,
-  MuiToolbarAlertBannerProps,
-} from '../../../../../utils/muiTable/materialReactTableUtils.ts'
-import { MuiTableAdvancedOptionsProps } from '../../../../../utils/muiTable/muiTableAdvancedOptionsProps.ts'
 import { notDanger } from '../../../../../utils/notification.ts'
 import { ArticuloSeleccionListadoColumns } from './ArticuloSeleccionListadoColumns.tsx'
 
@@ -71,117 +57,65 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
 
   const columns = useMemo(() => ArticuloSeleccionListadoColumns, [])
 
-  // ESTADO DATATABLE
-  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([])
-  const [sorting, setSorting] = useState<MRT_SortingState>([])
-  const [pagination, setPagination] = useState<MRT_PaginationState>({
-    pageIndex: PAGE_DEFAULT.page,
-    pageSize: PAGE_DEFAULT.limit,
-  })
-  const [rowCount, setRowCount] = useState<number>(0)
-  const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({}) //ts type available
-  // FIN ESTADO DATATABLE
+  // Estado para la selección de filas
+  const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({})
 
-  const { data, isError, isRefetching, isLoading, refetch } = useQuery({
+  const CLIENT_FILTER_TYPES: FilterTypeMap<ArticuloProps> = {
+    'articuloPrecioBase.monedaPrimaria.precio': 'number',
+  }
+
+  // Llamada a la api de listado
+  const datos = useMrtQuery({
     queryKey: [
       'articulo-seleccion-listado-dialog',
       open,
       entidad,
-      columnFilters,
-      pagination.pageIndex,
-      pagination.pageSize,
-      sorting,
+      verificarPrecio,
+      verificarInventario,
     ],
-    queryFn: async () => {
-      if (open) {
-        const query = genApiQuery(columnFilters, [...extraQuery])
-        const fetchPagination: PageInputProps = {
-          ...PAGE_DEFAULT,
-          page: pagination.pageIndex + 1,
-          limit: pagination.pageSize,
-          reverse: sorting.length <= 0,
-          query,
-        }
-        const { docs, pageInfo } = await apiArticuloInventarioListado(
-          entidad,
-          fetchPagination,
-          {
-            verificarPrecio,
-            verificarInventario,
-          },
-        )
-        setRowCount(pageInfo.totalDocs)
-        return docs || []
-      }
-      return []
+    queryFn: async (ctx) => {
+      // Paginación y filtros
+      const pgs = genMrtQueryPagination(ctx, {
+        filterTypes: CLIENT_FILTER_TYPES,
+        filterFields: extraQuery,
+      })
+      return await apiArticuloInventarioListado(entidad, pgs, {
+        verificarPrecio,
+        verificarInventario,
+      })
     },
-    refetchOnReconnect: false,
-    refetchInterval: false,
-    refetchOnWindowFocus: false,
+    queryOptions: {
+      enabled: open,
+      refetchOnReconnect: false,
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+    },
   })
 
-  const table = useMaterialReactTable({
-    ...(MuiTableAdvancedOptionsProps as MRT_TableOptions<ArticuloProps>),
-    columns: columns,
-    data: data || [],
-    initialState: { showColumnFilters: true },
-    getRowId: (row) => row.codigoArticulo,
-    muiTableBodyRowProps: ({ row }) => ({
-      onClick: row.getToggleSelectedHandler(),
-      sx: { cursor: 'pointer' },
-    }),
-    muiSelectCheckboxProps: {
-      sx: {
-        '&.Mui-disabled': {
-          backgroundColor: (theme) => theme.palette.text.disabled,
+  // Configuración del data table
+  const config: MrtTableConfig<ArticuloProps> = {
+    id: 'listado-articulos-inventario-a2dd',
+    columns,
+    manualPagination: true,
+    showIconRefetch: true,
+    additionalOptions: {
+      getRowId: (row) => row.codigoArticulo,
+      muiTableBodyRowProps: ({ row }) => ({
+        onClick: row.getToggleSelectedHandler(),
+        sx: { cursor: 'pointer' },
+      }),
+      muiSelectCheckboxProps: {
+        sx: {
+          '&.Mui-disabled': {
+            backgroundColor: (theme) => theme.palette.text.disabled,
+          },
         },
       },
+      enableRowSelection: (row) =>
+        !bloquearCodigosArticulo.includes(row.original.codigoArticulo),
+      enableMultiRowSelection: seleccionMultiple,
     },
-    enablePagination: true,
-    enableRowNumbers: true,
-    enableRowActions: false,
-    enableColumnActions: false,
-    enableSorting: false,
-    enableColumnPinning: false,
-    enableHiding: false,
-    enableFullScreenToggle: false,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onPaginationChange: setPagination,
-    rowCount,
-    enableRowSelection: (row) =>
-      !bloquearCodigosArticulo.includes(row.original.codigoArticulo),
-    enableMultiRowSelection: seleccionMultiple,
-    muiToolbarAlertBannerProps: MuiToolbarAlertBannerProps(isError),
-    onRowSelectionChange: setRowSelection,
-    state: {
-      isLoading,
-      columnFilters,
-      pagination,
-      showAlertBanner: isError,
-      showProgressBars: isRefetching,
-      density: 'compact',
-      rowSelection,
-      sorting,
-    },
-    muiPaginationProps: {
-      ...MuiTablePaginationProps,
-    },
-    enableTopToolbar: false,
-    enableBottomToolbar: true,
-    enableTableFooter: false,
-    muiTableProps: {
-      sx: {
-        '& .MuiTableRow-root.MuiTableRow-head': {
-          paddingTop: 0.2,
-        },
-      },
-    },
-    positionToolbarAlertBanner: 'none',
-    renderBottomToolbarCustomActions: () => (
-      <MuiRenderTopToolbarCustomActions refetch={refetch} />
-    ),
-  })
+  }
 
   /**
    * Selección de articulos
@@ -189,7 +123,9 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
   const onSeleccionArticulos = () => {
     const idsArticulo = Object.keys(rowSelection)
     if (idsArticulo.length > 0) {
-      const articulos = (data || []).filter((a) => idsArticulo.includes(a.codigoArticulo))
+      const articulos = (datos.data?.docs || []).filter((a) =>
+        idsArticulo.includes(a.codigoArticulo),
+      )
       // const articuloOperaciones = articuloToOperacion(articulos)
       onClose(articulos)
     } else {
@@ -203,7 +139,7 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
     if (open) {
       setRowSelection({})
     }
-  }, [open])
+  }, [open, datos.state.columnFilters])
   /***********************************************************************************/
   /***********************************************************************************/
   /***********************************************************************************/
@@ -218,8 +154,32 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
       {...other}
     >
       <DialogTitle>Selección de articulos</DialogTitle>
+      <IconButton
+        aria-label="close"
+        title={'Cerrar o presione la tecla ESC'}
+        onClick={() => onClose([])}
+        sx={{
+          position: 'absolute',
+          right: 8,
+          top: 8,
+          color: (theme) => theme.palette.grey[500],
+        }}
+      >
+        <Close />
+      </IconButton>
       <DialogContent dividers>
-        <MaterialReactTable table={table} />
+        <MrtDynamicTable
+          config={config}
+          {...datos}
+          state={{
+            ...datos.state, // Mantiene paginación/filtros
+            rowSelection, // Agrega la selección
+          }}
+          onStateChange={{
+            ...datos.onStateChange,
+            onRowSelectionChange: setRowSelection, // Sincroniza el cambio
+          }}
+        />
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'center' }}>
         <Button color={'error'} onClick={() => onClose([])}>

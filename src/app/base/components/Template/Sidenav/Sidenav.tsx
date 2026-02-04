@@ -3,16 +3,14 @@ import { FC, Fragment, JSX } from 'react'
 
 import { navigations } from '../../../../navigations'
 import useSettings from '../../../hooks/useSettings'
-import MatxVerticalNav from '../MatxVerticalNav/MatxVerticalNav'
-import useAuth from '../../../hooks/useAuth'
 import StyledScrollBar from '../../Container/StyledScrollBar'
+import MatxVerticalNav from '../MatxVerticalNav/MatxVerticalNav'
 
 const StyledScrollBarSidenav = styled(StyledScrollBar)(() => ({
   paddingLeft: '1rem',
   paddingRight: '1rem',
   position: 'relative',
 }))
-
 
 const SideNavMobile = styled('div')(({ theme }) => ({
   position: 'fixed',
@@ -37,14 +35,11 @@ type SidenavProps = {
  * @constructor
  */
 const Sidenav: FC<any> = ({ children }: SidenavProps) => {
-  const { user } = useAuth()
   const { settings, updateSettings }: any = useSettings()
-
 
   const updateSidebarMode = (sidebarSettings: any) => {
     let activeLayoutSettingsName = settings.activeLayout + 'Settings'
     let activeLayoutSettings = settings[activeLayoutSettingsName]
-
 
     updateSettings({
       ...settings,
@@ -60,7 +55,7 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
 
   return (
     <Fragment>
-      <StyledScrollBarSidenav >
+      <StyledScrollBarSidenav>
         {children}
         <MatxVerticalNav items={navigations} />
       </StyledScrollBarSidenav>

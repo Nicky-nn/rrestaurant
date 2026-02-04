@@ -172,7 +172,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
             }}
             sx={(theme) => ({
               fontWeight: 400,
-              color: error ? theme.palette.error.main : theme.palette.primary.main,
+              color: error ? theme.palette.error.main : theme.palette.text.primary,
               textAlign: montoProps?.textAlign || 'center',
             })}
           >
