@@ -1,6 +1,5 @@
 import { AllInclusive } from '@mui/icons-material'
 import { alpha } from '@mui/material'
-import { blue, green, orange, yellow } from '@mui/material/colors'
 import { MRT_ColumnDef } from 'material-react-table'
 import React from 'react'
 

@@ -105,7 +105,7 @@ const IconBox = styled('div')(({ theme }) => ({
  */
 const Layout1Topbar: FC<any> = () => {
   const theme = useTheme()
-  const { settings, updateSettings, applyMode }: any = useSettings()
+  const { settings, updateSettings }: any = useSettings()
   const { logout, user, updateTheme }: any = useAuth()
   const isMdScreen = useMediaQuery(theme.breakpoints.down('md'))
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)

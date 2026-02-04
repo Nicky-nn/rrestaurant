@@ -4,7 +4,6 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import {
   MuiDisplayColumnDefOptions,
   MuiFilterTextFieldProps,
-  MuiTableMrtTheme,
   MuiTablePaginationProps,
   MuiTablePaperProps,
   MuiTableProps,

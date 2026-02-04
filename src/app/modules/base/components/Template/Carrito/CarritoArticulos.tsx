@@ -21,7 +21,6 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { amber } from '@mui/material/colors'
 import React, { FC, FunctionComponent, memo } from 'react'
 
 import { IconButtonTextAreaPopover } from '../../../../../base/components/MyInputs/IconButtonTextAreaPopover.tsx'

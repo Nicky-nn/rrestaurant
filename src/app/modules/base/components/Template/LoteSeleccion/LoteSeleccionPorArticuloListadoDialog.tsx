@@ -17,14 +17,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
-import { useReactTable } from '@tanstack/react-table'
-import {
-  MaterialReactTable,
-  type MRT_ColumnDef,
-  MRT_RowSelectionState,
-  MRT_TableOptions,
-  useMaterialReactTable,
-} from 'material-react-table'
+import { type MRT_ColumnDef, MRT_RowSelectionState } from 'material-react-table'
 import React, { useEffect, useMemo, useState } from 'react'
 
 import { apiLotePorArticuloInventarioAlmacenListado } from '../../../../../base/api/apiLotePorArticuloInventarioAlmacenListado.ts'
@@ -32,18 +25,12 @@ import { apiLotePorArticuloListado } from '../../../../../base/api/apiLotePorArt
 import MuiRenderTopToolbarCustomActions from '../../../../../base/components/MuiTable/MuiRenderTopToolbarCustomActions.tsx'
 import { MrtDynamicTable } from '../../../../../base/components/Table/MrtDynamicTable.tsx'
 import { MrtTableConfig } from '../../../../../base/components/Table/mrtTypes.ts'
-import { useMrtQuery } from '../../../../../base/components/Table/useMrtQuery.tsx'
 import { apiEstado } from '../../../../../interfaces'
 import { LoteProps } from '../../../../../interfaces/lote.ts'
 import {
   fechaStringExpirationStatus,
   fechaStringVerificaExpiracion,
 } from '../../../../../utils/dayjsHelper.ts'
-import {
-  MuiTablePaginationProps,
-  MuiToolbarAlertBannerProps,
-} from '../../../../../utils/muiTable/materialReactTableUtils.ts'
-import { MuiTableNormalOptionsProps } from '../../../../../utils/muiTable/muiTableNormalOptionsProps.ts'
 import { notError } from '../../../../../utils/notification.ts'
 import { apiLoteTipoLista } from './LoteSeleccion.tsx'
 
