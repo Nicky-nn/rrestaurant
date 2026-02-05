@@ -83,21 +83,19 @@ export const ContentConfirmMessage: FunctionComponent<Props> = (props) => {
         <Box
           sx={{
             width: '100%',
-            pl: 2.5,
-            pr: 2.5,
-            pt: 1.5,
-            pb: 1.5,
-            bgcolor: (theme) => alpha(theme.palette.grey[100], 0.5),
+            px: 2.5,
+            py: 1.5,
+            bgcolor: (theme) => alpha(theme.palette.background.default, 0.2),
             borderRadius: 2,
             border: '1px dashed',
-            borderColor: 'grey.300',
+            borderColor: (theme) => alpha(theme.palette.grey.A400, 0.6),
           }}
         >
           <Typography
             variant="overline"
             display="block"
             color="text.secondary"
-            sx={{ mb: 0.3, fontWeight: 700 }}
+            sx={{ mb: 0.3, mt: -1, fontWeight: 700 }}
           >
             Operaciones:
           </Typography>
@@ -110,7 +108,7 @@ export const ContentConfirmMessage: FunctionComponent<Props> = (props) => {
                     width: 6,
                     height: 6,
                     borderRadius: '50%',
-                    bgcolor: 'success.main',
+                    bgcolor: 'success.light',
                     mt: '7px !important',
                     flexShrink: 0,
                   }}
