@@ -1,5 +1,5 @@
 import { Refresh } from '@mui/icons-material'
-import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material'
+import { alpha, Box, Divider, IconButton, Tooltip, Typography } from '@mui/material'
 import {
   MaterialReactTable,
   MRT_ColumnFiltersState,
@@ -389,6 +389,11 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
         hover: true,
       }
     },
+    mrtTheme: (theme) => ({
+      baseBackgroundColor: theme.palette.background.paper,
+      draggingBorderColor: theme.palette.secondary.main,
+      matchHighlightColor: alpha(theme.palette.primary.main, 0.5),
+    }),
     ...cleanAdditionalOptions,
   })
 

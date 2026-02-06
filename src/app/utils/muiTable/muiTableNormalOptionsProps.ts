@@ -1,3 +1,4 @@
+import { alpha } from '@mui/material'
 import { MRT_TableOptions } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
@@ -122,6 +123,11 @@ export const MuiTableNormalOptionsProps: MRT_TableOptions<any> = {
   },
   muiTableProps: MuiTableProps,
   displayColumnDefOptions: MuiDisplayColumnDefOptions,
+  mrtTheme: (theme) => ({
+    baseBackgroundColor: theme.palette.background.paper,
+    draggingBorderColor: theme.palette.secondary.main,
+    matchHighlightColor: alpha(theme.palette.primary.main, 0.5),
+  }),
   // enableRowVirtualization: true,
   // rowVirtualizerOptions: { overscan: 10 }, //optionally customize the row virtualizer
 }

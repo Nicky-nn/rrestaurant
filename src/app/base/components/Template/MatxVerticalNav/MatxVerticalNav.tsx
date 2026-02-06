@@ -1,4 +1,4 @@
-import { Box, ButtonBase, styled } from '@mui/material'
+import { Box, ButtonBase, lighten, styled } from '@mui/material'
 import Icon from '@mui/material/Icon'
 import React, { FC, Fragment } from 'react'
 import { NavLink } from 'react-router-dom'
@@ -44,13 +44,13 @@ const ExtAndIntCommon = {
 }
 const ExternalLink = styled('a')(({ theme }: any): any => ({
   ...ExtAndIntCommon,
-  color: theme.palette.text.primary,
+  color: lighten(theme.palette.text.primary, 0.8),
 }))
 
 const InternalLink = styled(Box)(({ theme }) => ({
   '& a': {
     ...ExtAndIntCommon,
-    color: theme.palette.text.primary,
+    color: lighten(theme.palette.text.primary, 0.8),
   },
   '& .navItemActive': {
     backgroundColor: 'rgba(255, 255, 255, 0.16)',
