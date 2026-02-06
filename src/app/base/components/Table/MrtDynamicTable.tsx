@@ -288,17 +288,14 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
     renderDetailPanel: config.renderDetailPanel
       ? ({ row }) => config.renderDetailPanel!(row.original)
       : undefined,
-    muiDetailPanelProps: {
-      sx: {
-        width: '100%',
-        '& > .MuiTableCell-root': { p: 0, borderBottom: 'none', width: '100%' },
-        '& > .MuiTableCell-root > .MuiCollapse-root': {
-          width: '100% !important',
-          maxWidth: 'unset !important',
-          display: 'block',
-        },
-      },
-    },
+    muiDetailPanelProps: () => ({
+      sx: (theme) => ({
+        backgroundColor:
+          theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.03)'
+            : 'rgba(0, 0, 0, 0.02)',
+      }),
+    }),
     // Toolbars
     ...((config.title ||
       config.showIconRefetch ||
@@ -386,7 +383,6 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
       const customProps = config.getRowProps?.(row.original) ?? {}
       return {
         ...customProps, // Mantenemos eventos como onClick y props base
-        hover: true,
       }
     },
     mrtTheme: (theme) => ({
