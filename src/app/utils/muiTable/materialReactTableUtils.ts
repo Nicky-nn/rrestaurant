@@ -1,4 +1,4 @@
-import { PaperProps, TextFieldProps, Theme } from '@mui/material'
+import { alpha, PaperProps, TextFieldProps, Theme } from '@mui/material'
 import { AlertProps } from '@mui/material/Alert'
 import { TableProps } from '@mui/material/Table'
 import { MRT_DisplayColumnDef, MRT_RowData, MRT_TableOptions } from 'material-react-table'
@@ -220,5 +220,10 @@ export const MuiTableBasicOptionsProps: MRT_TableOptions<any> = {
   initialState: {
     density: 'compact',
   },
+  mrtTheme: (theme) => ({
+    baseBackgroundColor: theme.palette.background.paper,
+    draggingBorderColor: theme.palette.secondary.main,
+    matchHighlightColor: alpha(theme.palette.primary.main, 0.5),
+  }),
   localization: MRT_Localization_ES,
 }

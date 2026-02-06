@@ -1,4 +1,4 @@
-import { Box, ButtonBase, Icon, styled } from '@mui/material'
+import { Box, ButtonBase, Icon, lighten, styled } from '@mui/material'
 import clsx from 'clsx'
 import React, { FC, JSX, useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -38,7 +38,7 @@ const BaseButton = styled(ButtonBase)(({ theme }) => ({
   marginBottom: '8px',
   display: 'flex',
   justifyContent: 'space-between !important',
-  color: theme.palette.text.primary,
+  color: lighten(theme.palette.text.primary, 0.8),
   '&:hover': { background: 'rgba(255, 255, 255, 0.08)' },
   '& .icon': {
     width: 36,

@@ -69,16 +69,16 @@ const getBestContrastColor = (background: string): string => {
 
 const textLight = {
   primary: 'rgba(52, 49, 76, 1)',
-  secondary: 'rgba(52, 49, 76, 0.54)',
+  secondary: 'rgba(52, 49, 76, 0.70)',
   disabled: 'rgba(52, 49, 76, 0.38)',
-  hint: 'rgba(52, 49, 76, 0.38)',
+  hint: 'rgba(52, 49, 76, 0.60)',
 }
 
 const textDark = {
-  primary: 'rgba(255, 255, 255, 0.87)',
-  secondary: 'rgba(255, 255, 255, 0.80)',
-  disabled: 'rgba(255, 255, 255, 0.74)',
-  hint: 'rgba(255, 255, 255, 0.64)',
+  primary: 'rgba(250, 250, 250, 0.87)', // Warm white
+  secondary: 'rgba(250, 250, 250, 0.60)',
+  disabled: 'rgba(250, 250, 250, 0.38)',
+  hint: 'rgba(250, 250, 250, 0.50)',
 }
 
 const errorColor = { main: '#F44336' }
@@ -290,18 +290,19 @@ const createCompleteTheme = (
   const extendedPalette = getExtendedColors(mode)
 
   // Lógica de background
-  let background = {
-    paper: isDark ? '#1e1e1e' : '#ffffff',
-    default: isDark ? '#121212' : '#fafafa',
+  const background = {
+    paper: isDark ? '#1e1e1e' : '#FAFAFA', // Blanco puro para tarjetas
+    default: isDark ? '#0a0a0a' : '#F5F5F5', // Gris suave para el fondo de la app
+    elevated: isDark ? '#242424' : '#FFFFFF',
   }
 
   // Override de background específico para ciertos temas en Dark Mode
-  if (isDark) {
-    background.default = '#1D1D1D' // Tu fondo dark general
-    background.paper = '#353535'
-    // // Fondos de tarjetas personalizados según el tema
-    // if (variantName === 'green') background.paper = '#00625D'
-  }
+  // if (isDark) {
+  //   background.default = '#1D1D1D' // Tu fondo dark general
+  //   background.paper = '#353535'
+  //   // // Fondos de tarjetas personalizados según el tema
+  //   // if (variantName === 'green') background.paper = '#00625D'
+  // }
 
   return {
     palette: {
