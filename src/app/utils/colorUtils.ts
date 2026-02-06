@@ -1,4 +1,4 @@
-import { darken, getContrastRatio, Theme } from '@mui/material'
+import { alpha, darken, getContrastRatio, Theme } from '@mui/material'
 
 // --- CACHÉ DE ALTO RENDIMIENTO ---
 // Guardamos los resultados aquí para no recalcular matemáticas complejas.
@@ -14,7 +14,7 @@ const contrastCache = new Map<string, string>()
 export const adaptColor = (
   color: string,
   theme: Theme,
-  darknessFactor: number = 0.5,
+  darknessFactor: number = 0.55,
 ): string => {
   // 1. Si es Light Mode, retornamos rápido (Coste 0)
   if (theme.palette.mode === 'light') {
@@ -36,6 +36,60 @@ export const adaptColor = (
   colorCache.set(cacheKey, result)
 
   return result
+}
+
+/**
+ * Asignamos el alpha dependiendo del tema
+ * @param color
+ * @param theme
+ * @param darknessFactor
+ */
+export const alphaByTheme = (
+  color: string,
+  theme: Theme,
+  darknessFactor: number = 0.2,
+) => {
+  // 2. Generamos clave única para el caché
+  const cacheKey = `alpha-${color}-${theme.palette.mode}-${darknessFactor}`
+  if (colorCache.has(cacheKey)) {
+    return colorCache.get(cacheKey)!
+  }
+
+  if (theme.palette.mode === 'light') {
+    const l = alpha(color, 1 - darknessFactor)
+    colorCache.set(cacheKey, l)
+    return l
+  }
+  const d = alpha(color, darknessFactor)
+  colorCache.set(cacheKey, d)
+  return d
+}
+
+/**
+ * Asignamos el alpha dependiendo del model light o dark
+ * @param color
+ * @param mode
+ * @param darknessFactor
+ */
+export const alphaByMode = (
+  color: string,
+  mode: 'light' | 'dark',
+  darknessFactor: number = 0.2,
+) => {
+  // 2. Generamos clave única para el caché
+  const cacheKey = `alpha-${color}-${mode}-${darknessFactor}`
+  if (colorCache.has(cacheKey)) {
+    return colorCache.get(cacheKey)!
+  }
+
+  if (mode === 'light') {
+    const l = alpha(color, 1 - darknessFactor)
+    colorCache.set(cacheKey, l)
+    return l
+  }
+  const d = alpha(color, darknessFactor)
+  colorCache.set(cacheKey, d)
+  return d
 }
 
 /**
