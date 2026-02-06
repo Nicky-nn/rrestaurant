@@ -1,15 +1,14 @@
 import { alpha, Menu, MenuProps, Paper, styled } from '@mui/material'
 
-import { themeShadows } from '../../../../base/components/Template/MatxTheme/themeColors'
 import { topBarHeightRestriccion } from '../../../../utils/constant'
 
 export const RestriccionTopBarRoot = styled('div')(({ theme }) => ({
   top: 0,
   zIndex: 96,
   transition: 'all 0.3s ease',
-  boxShadow: themeShadows[8],
+  // boxShadow: themeShadows[8],
   height: topBarHeightRestriccion,
-  background: theme.palette.background.default,
+  background: theme.palette.background.paper,
 }))
 
 export const RestriccionTopBarContainer = styled(Paper)(({ theme }) => ({
@@ -18,9 +17,10 @@ export const RestriccionTopBarContainer = styled(Paper)(({ theme }) => ({
   display: 'flex',
   height: '100%',
   alignItems: 'center',
-  background: theme.palette.background.default,
+  background: theme.palette.background.paper,
   borderRadius: 0,
   justifyContent: 'space-between',
+  boxShadow: '0 4px 6px -2px rgba(0, 0, 0, 0.1)',
 }))
 
 export const RestriccionStyledMenu = styled((props: MenuProps) => (

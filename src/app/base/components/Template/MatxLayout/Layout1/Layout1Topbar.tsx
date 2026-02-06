@@ -31,7 +31,6 @@ import { NotificationProvider } from '../../../../contexts/NotificationContext'
 import useAuth from '../../../../hooks/useAuth'
 import useSettings from '../../../../hooks/useSettings'
 import MatxMenu from '../../MatxMenu/MatxMenu'
-import { themeShadows } from '../../MatxTheme/themeColors'
 import NotificationBar from '../../NotificationBar/NotificationBar'
 import { Span } from '../../Typography'
 
@@ -43,7 +42,7 @@ const TopbarRoot = styled('div')(() => ({
   top: 0,
   zIndex: 96,
   transition: 'all 0.3s ease',
-  boxShadow: themeShadows[8],
+  // boxShadow: themeShadows[8],
   height: topBarHeight,
 }))
 
@@ -55,7 +54,7 @@ const TopbarContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  background: theme.palette.background.default,
+  background: theme.palette.background.paper,
   [theme.breakpoints.down('sm')]: {
     paddingLeft: 16,
     paddingRight: 16,
