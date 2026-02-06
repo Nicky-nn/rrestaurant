@@ -1,3 +1,4 @@
+import { darken, lighten } from '@mui/material'
 import { alpha, Theme, useTheme } from '@mui/material/styles'
 import { useMemo } from 'react'
 import { GroupBase, StylesConfig } from 'react-select'
@@ -10,7 +11,7 @@ const sizeConfig = {
   small: {
     minHeight: '36.13px',
     fontSize: '14px', // 14px
-    paddingY: '1px', // Padding vertical interno reducido
+    paddingY: '0', // Padding vertical interno reducido
   },
   medium: {
     minHeight: '56px', // Estándar MUI
@@ -46,20 +47,30 @@ export const getSelectStyles = <
     control: (provided, state) => {
       let borderColor = isDark ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)'
       let focusBorderColor = theme.palette.primary.main
+      let backgroundColor = theme.palette.background.paper
 
       if (error) {
         borderColor = theme.palette.error.main
         focusBorderColor = theme.palette.error.main
       } else if (state.isFocused) {
         borderColor = theme.palette.primary.main
+      } else if (state.isDisabled) {
+        borderColor = alpha(theme.palette.text.disabled, 0.4)
+        backgroundColor =
+          theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.05)'
+            : 'rgba(0, 0, 0, 0.03)'
       }
 
       return {
         ...provided,
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor,
         borderColor,
         color: theme.palette.text.primary,
-
+        ...(state.isDisabled && {
+          borderStyle: 'dashed',
+          borderWidth: '1px',
+        }),
         // APLICAMOS TAMAÑO
         minHeight: currentSize.minHeight,
         fontSize: currentSize.fontSize,
@@ -93,9 +104,9 @@ export const getSelectStyles = <
     }),
 
     // --- SINGLE VALUE (El texto seleccionado) ---
-    singleValue: (provided) => ({
+    singleValue: (provided, state) => ({
       ...provided,
-      color: theme.palette.text.primary,
+      color: state.isDisabled ? theme.palette.text.secondary : theme.palette.text.primary,
       marginLeft: 0, // Ajuste fino
     }),
 
@@ -150,9 +161,11 @@ export const getSelectStyles = <
     },
 
     // --- MULTI VALUE (Chips) ---
-    multiValue: (provided) => ({
+    multiValue: (provided, state) => ({
       ...provided,
-      backgroundColor: alpha(theme.palette.primary.main, 0.16),
+      backgroundColor: state.isDisabled
+        ? alpha(theme.palette.primary.main, 0.08)
+        : alpha(theme.palette.primary.main, 0.16),
       borderRadius: theme.shape.borderRadius,
       // Ajustamos el chip si es modo small
       margin: size === 'small' ? '1px' : '2px',
@@ -160,7 +173,10 @@ export const getSelectStyles = <
 
     multiValueLabel: (provided) => ({
       ...provided,
-      color: theme.palette.primary.main,
+      color:
+        theme.palette.mode === 'dark'
+          ? lighten(theme.palette.primary.main, 0.5)
+          : theme.palette.primary.main,
       fontWeight: 500,
       fontSize: size === 'small' ? '0.75rem' : '0.85rem', // Chip más pequeño en small
       padding: size === 'small' ? '1px 4px' : '3px 6px',

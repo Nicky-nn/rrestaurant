@@ -139,6 +139,8 @@ const MyDateRangePickerFieldComponent: FunctionComponent<MyDateRangePickerProps>
               },
               ...((showIcon || isClearable) && {
                 input: {
+                  disabled: props.disabled,
+                  readOnly: props.readOnly,
                   ...(isClearable && {
                     endAdornment: (
                       <InputAdornment position="end">
