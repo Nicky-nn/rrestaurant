@@ -146,6 +146,7 @@ const FormSelectComponent = <
         onFocus={handleFocus}
         onBlur={handleBlur}
         theme={reactSelectThemeConfig}
+        menuPosition={'fixed'}
       />
       {formHelperText && <FormHelperText>{formHelperText}</FormHelperText>}
     </FormControl>
