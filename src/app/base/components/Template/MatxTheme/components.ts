@@ -1,4 +1,4 @@
-import { Components, Theme } from '@mui/material'
+import { alpha, Components, Theme } from '@mui/material'
 
 import { themeShadows } from './themeColors'
 
@@ -127,7 +127,6 @@ export const components: ComponentsProps = {
         transform: 'translate(15px, -11px) scale(0.90) !important',
       },
       outlined: {
-        // transform: 'translate(15px 9px) scale(1)',
         backgroundColor: 'transparent',
       },
     },
@@ -143,7 +142,66 @@ export const components: ComponentsProps = {
   },
   MuiOutlinedInput: {
     styleOverrides: {
-      root: () => ({
+      root: ({ theme }) => ({
+        // ----------------------------------------------------------------
+        // 1. ESTILO DISABLED (Deshabilitado)
+        // "Parece desconectado, borde discontinuo, opacidad baja"
+        // ----------------------------------------------------------------
+        '&.Mui-disabled': {
+          // Fondo sutilmente gris para diferenciarlo del fondo blanco/negro puro
+          backgroundColor:
+            theme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.05)'
+              : 'rgba(0, 0, 0, 0.03)',
+
+          '& .MuiOutlinedInput-notchedOutline': {
+            // El borde dashed es un indicador universal de "inactivo"
+            borderStyle: 'dashed',
+            borderColor: theme.palette.text.disabled,
+            borderWidth: '1px',
+          },
+
+          // El texto se ve más apagado
+          '& .MuiInputBase-input': {
+            // 3. TEXTO: El cambio más importante para la legibilidad
+            opacity: 1, // Forzamos a que el navegador no lo desvanezca
+
+            // Usamos 'text.secondary' (gris medio) en vez de 'text.disabled' (gris fantasma)
+            color: theme.palette.text.secondary,
+
+            // Fix necesario para Safari/Chrome en inputs disabled
+            WebkitTextFillColor: theme.palette.text.secondary,
+            fontWeight: 500, // Un poco más de peso ayuda a leerlo
+          },
+        },
+        // ----------------------------------------------------------------
+        // 2. ESTILO READONLY (Solo Lectura)
+        // "Parece dato fijo, alto contraste, sin borde o borde muy sutil"
+        // ----------------------------------------------------------------
+        '&.Mui-readOnly': {
+          // Un fondo tintado con el color Primary muy suave (elegante)
+          backgroundColor:
+            theme.palette.mode === 'dark'
+              ? alpha(theme.palette.primary.main, 0.04)
+              : alpha(theme.palette.primary.main, 0.02),
+
+          // Quitamos el puntero de texto
+          cursor: 'default',
+
+          '& .MuiOutlinedInput-notchedOutline': {
+            // Borde transparente o muy sutil para que parezca "dato impreso"
+            borderColor: 'transparent',
+            // Opcional: si prefieres un borde muy fino:
+            // borderColor: alpha(theme.palette.divider, 0.5),
+          },
+
+          // IMPORTANTE: El texto se mantiene con alto contraste (Primary Text)
+          '& .MuiInputBase-input': {
+            cursor: 'default',
+            // color: theme.palette.text.primary, // Legibilidad total
+            fontWeight: 400, // Un poco más de peso para denotar valor
+          },
+        },
         '& fieldset': {
           fontSize: '18px',
         },

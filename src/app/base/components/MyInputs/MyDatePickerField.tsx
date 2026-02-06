@@ -106,6 +106,8 @@ const MyDatePickerFieldComponent: FunctionComponent<MuiDatePickerProps> = (props
               },
               ...((showIcon || isClearable) && {
                 input: {
+                  disabled: props.disabled,
+                  readOnly: props.readOnly,
                   ...(isClearable && {
                     endAdornment: (
                       <InputAdornment position="end">
