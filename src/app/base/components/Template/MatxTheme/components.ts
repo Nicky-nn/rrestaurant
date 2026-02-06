@@ -30,17 +30,17 @@ export const components: ComponentsProps = {
       },
     },
   },
-  MuiTableCell: {
-    styleOverrides: {
-      head: {
-        fontSize: '0.84rem',
-      },
-      root: {
-        fontSize: '0.80rem',
-        whiteSpace: 'pre-wrap',
-      },
-    },
-  },
+  // MuiTableCell: {
+  //   styleOverrides: {
+  //     head: {
+  //       fontSize: '0.84rem',
+  //     },
+  //     root: {
+  //       fontSize: '0.80rem',
+  //       whiteSpace: 'pre-wrap',
+  //     },
+  //   },
+  // },
   MuiButton: {
     styleOverrides: {
       root: {
@@ -151,8 +151,8 @@ export const components: ComponentsProps = {
           // Fondo sutilmente gris para diferenciarlo del fondo blanco/negro puro
           backgroundColor:
             theme.palette.mode === 'dark'
-              ? 'rgba(255, 255, 255, 0.05)'
-              : 'rgba(0, 0, 0, 0.03)',
+              ? 'rgba(255, 255, 255, 0.06)'
+              : 'rgba(0, 0, 0, 0.04)',
 
           '& .MuiOutlinedInput-notchedOutline': {
             // El borde dashed es un indicador universal de "inactivo"

@@ -41,7 +41,6 @@ export const adaptColor = (
 /**
  * 2. GET CONTRAST (Optimizado)
  * Decide si el texto debe ser blanco o negro según el fondo.
- * @author isi-template
  */
 export const getContrastColor = (background: string): string => {
   if (contrastCache.has(background)) {

@@ -68,20 +68,12 @@ export const MrtFlatTable = <T extends MRT_RowData>({
         },
       }}
       mrtTheme={(theme) => ({
-        baseBackgroundColor: theme.palette.grey['100'],
+        baseBackgroundColor: theme.palette.background.paper,
         draggingBorderColor: theme.palette.secondary.main,
+        matchHighlightColor: alpha(theme.palette.primary.main, 0.5),
       })}
       initialState={{
         density,
-      }}
-      // Estilos de Fila (Densidad)
-      muiTableBodyRowProps={{
-        hover: true,
-        sx: {
-          '&:hover': {
-            backgroundColor: (theme) => alpha(theme.palette.action.hover, 0.4),
-          },
-        },
       }}
       // Mensaje de "Sin Datos"
       renderEmptyRowsFallback={() => (
