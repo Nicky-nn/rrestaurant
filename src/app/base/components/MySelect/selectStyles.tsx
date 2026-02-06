@@ -1,4 +1,4 @@
-import { darken, lighten } from '@mui/material'
+import { lighten } from '@mui/material'
 import { alpha, Theme, useTheme } from '@mui/material/styles'
 import { useMemo } from 'react'
 import { GroupBase, StylesConfig } from 'react-select'

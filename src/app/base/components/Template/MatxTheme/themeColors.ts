@@ -323,7 +323,7 @@ const createCompleteTheme = (
       error: errorColor,
       background,
       action: {
-        active: isDark ? 'rgba(255, 255, 255, 0.80)' : 'rgba(0, 0, 0, 0.54)',
+        active: isDark ? 'rgba(255, 255, 255, 0.78)' : 'rgba(0, 0, 0, 0.54)',
         hover: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
         selected: isDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.08)',
         disabled: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.26)',
