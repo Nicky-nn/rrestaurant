@@ -331,6 +331,16 @@ const createCompleteTheme = (
       },
     } as PaletteOptions,
     shadows: themeShadows,
+    components: {
+      MuiDialogContent: {
+        styleOverrides: {
+          root: {
+            // Si usas dividers, asegúrate de que el borde sea visible en dark
+            borderColor: isDark ? alpha('#ffffff', 0.12) : alpha('#000000', 0.12),
+          },
+        },
+      },
+    },
   }
 }
 
