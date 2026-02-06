@@ -68,9 +68,6 @@ function App() {
                     },
                     contentProps: {
                       dividers: true,
-                      sx: {
-                        bgcolor: 'background.paper',
-                      },
                     },
                     dialogActionsProps: {
                       sx: { justifyContent: 'center' },

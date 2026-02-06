@@ -13,13 +13,23 @@ interface ComponentsProps extends Components<Omit<Theme, 'components'>> {
  * @author isi-template
  */
 export const components: ComponentsProps = {
-  // MuiTable: {
-  //   styleOverrides: {
-  //     root: {
-  //       tableLayout: 'fixed',
-  //     },
-  //   },
-  // },
+  MuiPaper: {
+    styleOverrides: {
+      root: {
+        // Esto desactiva la capa blanca automática en modo oscuro
+        backgroundImage: 'none',
+      },
+    },
+  },
+  MuiDialog: {
+    styleOverrides: {
+      paper: {
+        // Asegura que use tu color definido en themeColors.ts
+        backgroundColor: 'background.paper',
+        backgroundImage: 'none',
+      },
+    },
+  },
   MuiTableCell: {
     styleOverrides: {
       head: {
@@ -31,27 +41,6 @@ export const components: ComponentsProps = {
       },
     },
   },
-  // MUIDataTableSelectCell: {
-  //   styleOverrides: {
-  //     root: {
-  //       paddingLeft: 12,
-  //     },
-  //   },
-  // },
-  // MUIDataTableHeadCell: {
-  //   styleOverrides: {
-  //     root: {
-  //       paddingLeft: 16,
-  //     },
-  //   },
-  // },
-  // MUIDataTableBodyCell: {
-  //   styleOverrides: {
-  //     root: {
-  //       paddingLeft: 8,
-  //     },
-  //   },
-  // },
   MuiButton: {
     styleOverrides: {
       root: {
@@ -139,7 +128,7 @@ export const components: ComponentsProps = {
       },
       outlined: {
         // transform: 'translate(15px 9px) scale(1)',
-        backgroundColor: 'none',
+        backgroundColor: 'transparent',
       },
     },
   },
@@ -154,11 +143,11 @@ export const components: ComponentsProps = {
   },
   MuiOutlinedInput: {
     styleOverrides: {
-      root: {
+      root: () => ({
         '& fieldset': {
           fontSize: '18px',
         },
-      },
+      }),
     },
   },
   MuiSelect: {

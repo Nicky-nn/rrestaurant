@@ -56,9 +56,12 @@ export const ContentConfirmMessage: FunctionComponent<Props> = (props) => {
         icon={iconMap[type]}
         sx={{
           borderRadius: 2,
-          backgroundColor: (theme) => alpha(theme.palette[type].main, 0.08),
+          backgroundColor: (theme) =>
+            theme.palette.mode === 'dark'
+              ? alpha(theme.palette[type].main, 0.15)
+              : alpha(theme.palette[type].main, 0.08),
           border: '1px solid',
-          borderColor: (theme) => alpha(theme.palette[type].main, 0.2),
+          borderColor: (theme) => alpha(theme.palette[type].main, 0.3),
           '& .MuiAlert-message': { width: '100%' },
         }}
       >

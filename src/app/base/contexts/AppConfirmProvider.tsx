@@ -135,7 +135,7 @@ const ConfirmDialogInternal: React.FC<{
         </IconButton>
       )}
 
-      <DialogContent dividers sx={{ bgcolor: 'background.paper' }}>
+      <DialogContent dividers>
         <Box sx={{ mb: shouldShowInput ? 2 : 0 }}>
           {typeof options.content === 'string' || !options.content ? (
             <ContentConfirmMessage
