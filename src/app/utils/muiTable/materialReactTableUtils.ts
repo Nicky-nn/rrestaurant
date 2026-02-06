@@ -220,6 +220,14 @@ export const MuiTableBasicOptionsProps: MRT_TableOptions<any> = {
   initialState: {
     density: 'compact',
   },
+  muiDetailPanelProps: () => ({
+    sx: (theme) => ({
+      backgroundColor:
+        theme.palette.mode === 'dark'
+          ? 'rgba(255, 255, 255, 0.03)'
+          : 'rgba(0, 0, 0, 0.02)',
+    }),
+  }),
   mrtTheme: (theme) => ({
     baseBackgroundColor: theme.palette.background.paper,
     draggingBorderColor: theme.palette.secondary.main,
