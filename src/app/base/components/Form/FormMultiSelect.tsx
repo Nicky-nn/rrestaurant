@@ -151,6 +151,7 @@ const FormMultiSelectComponent = <
         onFocus={handleFocus}
         onBlur={handleBlur}
         theme={reactSelectThemeConfig}
+        menuPosition={'fixed'}
       />
       <FormHelperText>{formHelperText || ''}</FormHelperText>
     </FormControl>
