@@ -17,7 +17,7 @@ export const themeShadows: Shadows = themeLightShadow
 const WHITE_STRONG = 'rgba(255, 255, 255, 0.99)'
 const WHITE_SOFT = 'rgba(255, 255, 255, 0.87)'
 const BLACK = 'rgba(0, 0, 0, 0.87)'
-const DARK_ALPHA = 0.8
+const DARK_ALPHA = 0.5
 
 // Devuelve blanco o negro según la luminosidad del color de fondo
 const getBestContrastColor = (background: string): string => {
@@ -29,12 +29,12 @@ const getBestContrastColor = (background: string): string => {
     return WHITE_SOFT
   }
 
-  // Fondo muy oscuro → blanco fuerte (contraste excelente)
+  // Fondo muy oscuro → blanco fuerte
   if (contrastWithWhite >= 7) {
     return WHITE_STRONG
   }
 
-  // Fondo medio-oscuro → blanco suave (contraste bueno)
+  // Fondo medio-oscuro → blanco suave
   if (contrastWithWhite >= 4.5) {
     return WHITE_SOFT
   }
@@ -138,6 +138,7 @@ interface ColorDefinition {
   primary: SimplePaletteColorOptions
   secondary: SimplePaletteColorOptions
 }
+
 interface ThemeDefinition {
   light: ColorDefinition
   dark: ColorDefinition
@@ -145,14 +146,14 @@ interface ThemeDefinition {
 
 // Definiciion principal de colores
 const colors = {
-  default: { pri: '#363e5d', sec: '#df9c16' },
-  green: { pri: '#00625D', sec: '#F47A20' },
-  indigo: { pri: '#1c4c96', sec: '#ff7360' },
-  purple: { pri: '#4745b6', sec: '#ff8000' },
-  blue: { pri: '#1976d2', sec: '#d27619' },
-  blue1: { pri: '#00539A', sec: '#E15200' },
-  blue2: { pri: '#25368B', sec: '#FCC346' },
-  purple2: { pri: '#584569', sec: '#ED6C20' },
+  default: { pri: '#363e5d', sec: '#df9c16', darkLighten: 0.02 },
+  green: { pri: '#00625D', sec: '#F47A20', darkLighten: 0.0 },
+  indigo: { pri: '#1c4c96', sec: '#ff7360', darkLighten: 0.02 },
+  purple: { pri: '#4745b6', sec: '#ff8000', darkLighten: 0.02 },
+  blue: { pri: '#1976d2', sec: '#d27619', darkLighten: 0 },
+  blue1: { pri: '#00539A', sec: '#E15200', darkLighten: 0.2 },
+  blue2: { pri: '#25368B', sec: '#FCC346', darkLighten: 0 },
+  purple2: { pri: '#584569', sec: '#ED6C20', darkLighten: 0.02 },
 }
 
 // ----------------------------------------------------------------------
@@ -161,100 +162,38 @@ const colors = {
 /**
  * Crea el objeto completo de paleta { main, light, dark }
  * @param hexColor El color principal
- * @param lightenAmount
+ * @param isDarkMode
+ * @param darkLighten
  */
-const createPalette = (hexColor: string, lightenAmount: number = 0) => {
-  const mainColor = lightenAmount > 0 ? lighten(hexColor, lightenAmount) : hexColor
+const createPalette = (
+  hexColor: string,
+  isDarkMode: boolean,
+  darkLighten: number = 0,
+) => {
+  const mainColor =
+    isDarkMode && darkLighten > 0 ? lighten(hexColor, darkLighten) : hexColor
   return {
     base: hexColor,
     main: mainColor,
-    light: lighten(hexColor, 0.2), // Genera primary.light
-    dark: darken(hexColor, 0.1), // Genera primary.dark
+    light: lighten(mainColor, 0.2), // Genera primary.light
+    dark: darken(mainColor, 0.15), // Genera primary.dark
   }
 }
-const coeficiente = 0.1
-const themeConfig: Record<string, ThemeDefinition> = {
-  default: {
+
+// Generamos la paleta de colores para primary y secondary
+const themeConfig: Record<string, ThemeDefinition> = {}
+Object.entries(colors).forEach(([key, value]) => {
+  themeConfig[key] = {
     light: {
-      primary: createPalette(colors.default.pri),
-      secondary: createPalette(colors.default.sec),
+      primary: createPalette(value.pri, false, value.darkLighten),
+      secondary: createPalette(value.sec, false, value.darkLighten),
     },
     dark: {
-      primary: createPalette(colors.default.pri, coeficiente),
-      secondary: createPalette(colors.default.sec, coeficiente),
+      primary: createPalette(value.pri, true, value.darkLighten),
+      secondary: createPalette(value.sec, true, value.darkLighten),
     },
-  },
-  green: {
-    light: {
-      primary: createPalette(colors.green.pri),
-      secondary: createPalette(colors.green.sec),
-    },
-    dark: {
-      primary: createPalette(colors.green.pri, coeficiente),
-      secondary: createPalette(colors.green.sec, coeficiente),
-    },
-  },
-  indigo: {
-    light: {
-      primary: createPalette(colors.indigo.pri),
-      secondary: createPalette(colors.indigo.sec),
-    },
-    dark: {
-      primary: createPalette(colors.indigo.pri, coeficiente),
-      secondary: createPalette(colors.indigo.sec, coeficiente),
-    },
-  },
-  purple: {
-    light: {
-      primary: createPalette(colors.purple.pri),
-      secondary: createPalette(colors.purple.sec),
-    },
-    dark: {
-      primary: createPalette(colors.purple.pri, coeficiente),
-      secondary: createPalette(colors.purple.sec, coeficiente),
-    },
-  },
-  blue: {
-    light: {
-      primary: createPalette(colors.blue.pri),
-      secondary: createPalette(colors.blue.sec),
-    },
-    dark: {
-      primary: createPalette(colors.blue.pri, coeficiente),
-      secondary: createPalette(colors.blue.sec, coeficiente),
-    },
-  },
-  blue1: {
-    light: {
-      primary: createPalette(colors.blue1.pri),
-      secondary: createPalette(colors.blue1.sec),
-    },
-    dark: {
-      primary: createPalette(colors.blue1.pri, coeficiente),
-      secondary: createPalette(colors.blue1.sec, coeficiente),
-    },
-  },
-  blue2: {
-    light: {
-      primary: createPalette(colors.blue2.pri),
-      secondary: createPalette(colors.blue2.sec),
-    },
-    dark: {
-      primary: createPalette(colors.blue2.pri, coeficiente),
-      secondary: createPalette(colors.blue2.sec, coeficiente),
-    },
-  },
-  purple2: {
-    light: {
-      primary: createPalette(colors.purple2.pri),
-      secondary: createPalette(colors.purple2.sec),
-    },
-    dark: {
-      primary: createPalette(colors.purple2.pri, coeficiente),
-      secondary: createPalette(colors.purple2.sec, coeficiente),
-    },
-  },
-}
+  }
+})
 
 // Generamos la configuracion de la paleta de colores
 const createCompleteTheme = (
