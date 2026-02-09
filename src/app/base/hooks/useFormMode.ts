@@ -6,7 +6,7 @@ import {
   FormModeConfig,
   FormModeDefaults,
   FormModeFieldState,
-} from '../services/formModes.ts'
+} from '../interfaces/formModes.ts'
 
 /**
  * Hook para el manejo de estados en los formularios

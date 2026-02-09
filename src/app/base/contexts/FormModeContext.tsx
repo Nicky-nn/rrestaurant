@@ -2,7 +2,7 @@ import { createContext, FC, ReactNode, useContext, useMemo } from 'react'
 import { FieldValues, Path } from 'react-hook-form' // Tu hook actual
 
 import { useFormMode } from '../hooks/useFormMode'
-import { FormModeConfig, FormModeDefaults } from '../services/formModes.ts'
+import { FormModeConfig, FormModeDefaults } from '../interfaces/formModes.ts'
 
 // Definimos qué va a compartir el contexto
 interface FormModeContextType {
