@@ -26,14 +26,17 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
     'plugin:jsx-a11y/recommended',
+    'plugin:react-hooks/recommended',
     'plugin:prettier/recommended', // Make sure this is always the last element in the array.
   ],
   plugins: ['simple-import-sort', 'prettier'],
   rules: {
     'no-unused-vars': 'off',
     'prettier/prettier': ['error', {}, { usePrettierrc: true }],
+    'react-hooks/exhaustive-deps': 'off',
     'react/react-in-jsx-scope': 'off',
     'jsx-a11y/accessible-emoji': 'off',
     'react/prop-types': 'off',
@@ -42,9 +45,11 @@ module.exports = {
     'simple-import-sort/exports': 'error',
     'jsx-a11y/click-events-have-key-events': 'off',
     'jsx-a11y/no-static-element-interactions': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
     'react/display-name': 'off',
     'jsx-a11y/no-autofocus': 'off',
     'react/no-unescaped-entities': 'off',
+    '@typescript-eslint/no-empty-object-type': 'off',
     'no-restricted-imports': [
       'error',
       {
