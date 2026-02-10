@@ -17,6 +17,9 @@ export const almacenFragment = gql`
       ...facturaSucursalFields
     }
     ubicacion
+    tipo
+    prioridad
+    activo
     updatedAt
     usucre
     usumod

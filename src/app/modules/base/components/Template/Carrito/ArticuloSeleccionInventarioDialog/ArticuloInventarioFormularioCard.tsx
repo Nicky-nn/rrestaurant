@@ -47,8 +47,12 @@ export interface AlmacenSeleccionProps {
   autoSeleccion?: boolean // Si value contiene datos, se prioriza, luego autoselección, default false
 }
 export interface CantidadSeleccionProps extends MontoSeleccionProps {}
+// Distrubucion de precios a operar
 export interface PrecioSeleccionProps extends MontoSeleccionProps {
-  tipoMonto: TipoMontoProps // default precio
+  // - precio = setea independiente del valor origen al precio de formulario
+  // - costo = setea independiente del valor origen al precio de formulario
+  // - delivery = setea independiente del valor origen al precio de formulario
+  tipoMonto?: TipoMontoProps // default lo que aparece del callback
 }
 export interface DescuentoSeleccionProps extends MontoSeleccionProps {}
 
@@ -211,7 +215,11 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     )
     if (articuloPrecio) {
       const monedaPrecio = transformarArticuloPrecioService(articuloPrecio, moneda)
-      let precioFinal = monedaPrecio.precio
+      let precioFinal =
+        precioWatch != null || precioWatch !== undefined
+          ? precioWatch
+          : monedaPrecio.precio
+      if (precioProps?.tipoMonto === 'precio') precioFinal = monedaPrecio.precio
       if (precioProps?.tipoMonto === 'costo') precioFinal = monedaPrecio.precioBase
       if (precioProps?.tipoMonto === 'delivery') precioFinal = monedaPrecio.delivery
 

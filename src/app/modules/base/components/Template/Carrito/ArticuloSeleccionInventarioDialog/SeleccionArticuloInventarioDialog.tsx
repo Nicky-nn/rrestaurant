@@ -52,7 +52,7 @@ interface OwnProps extends Omit<DialogProps, 'id' | 'onClose'> {
   loteProps: LoteSeleccionProps
   unidadMedidaProps?: UnidadMedidaSeleccionProps
   cantidadProps?: CantidadSeleccionProps
-  precioProps: PrecioSeleccionProps
+  precioProps?: PrecioSeleccionProps
   descuentoProps?: DescuentoSeleccionProps
   moneda: MonedaProps // para para visualización
   articuloIndex: number // Si el articulo es de tipo lista y ocupa una posición
@@ -183,9 +183,7 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
   /*###############################################################*/
   useEffect(() => {
     if (open && isSuccess && item && articulo) {
-      reset({
-        ...item,
-      })
+      reset({ ...item })
     }
     setMensajes([])
   }, [open, isSuccess, item, articulo])
