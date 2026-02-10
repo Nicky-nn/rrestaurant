@@ -488,7 +488,8 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
               lista={true}
               sigla={moneda?.sigla}
               onChange={(precio) => {
-                if (precio && onChangePrecio) onChangePrecio({ index, item, precio })
+                if (precio !== null && onChangePrecio)
+                  onChangePrecio({ index, item, precio: precio ?? 0 })
               }}
               montoProps={{
                 textAlign: 'right',
@@ -516,8 +517,8 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
               sigla={moneda?.sigla}
               lista
               onChange={(descuento) => {
-                if (descuento && onChangeDescuento)
-                  onChangeDescuento({ index, item, descuento })
+                if (descuento !== null && onChangeDescuento)
+                  onChangeDescuento({ index, item, descuento: descuento ?? 0 })
               }}
               montoProps={{
                 textAlign: 'right',
