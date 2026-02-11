@@ -1,0 +1,101 @@
+# ========================================
+# WHITELIST APPROACH - Ignorar todo por defecto
+# ========================================
+# Ignora todo
+*
+# Ignora todo en todos los subdirectorios
+**/
+
+# ========================================
+# PERMITIR: Archivos y carpetas del proyecto
+# ========================================
+
+# --- Carpetas principales ---
+!src/
+!src/**
+!public/
+!public/**
+!docs/
+!docs/**
+
+# --- Archivos de configuración del proyecto ---
+!package.json
+!tsconfig.json
+!tsconfig.node.json
+!vite.config.mts
+!pwaOptions.ts
+!index.html
+
+# --- Variables de entorno ---
+!.env
+!.env.integrate
+!.env.sandbox
+!.env.gosocket
+!.env.fenix
+!.env.quickpay
+!.env.softrest
+
+# --- Documentación ---
+!CHANGELOG.md
+!README.md
+
+# --- VSCode ---
+!.vscode/
+!.vscode/extensions.json
+
+# --- Editor Confif --
+!.editorconfig
+
+# --- Git ---
+!.gitignore
+!.gitattributes
+
+# ========================================
+# BLOQUEAR EXPLÍCITAMENTE (dentro de carpetas permitidas)
+# ========================================
+# Logs
+*.log
+
+# Build outputs
+dist/
+dist-ssr/
+dist-zip/
+dev-dist/
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Cache y temporales
+*.local
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
+
+# Lock files (opcional - si quieres versionarlos, quítalos)
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+
+# Python scripts auxiliares
+*.py
+*.pyc
+__pycache__/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+requirements.txt
+
+# CSV y archivos de datos
+*.csv
+
+# Editor
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
