@@ -66,10 +66,8 @@ export interface AlmacenInputProps {
   nombre: string
   ubicacion: string
   sucursal: SucursalProps | null
-  codigoSucursal: SucursalProps | null
   tipo: AlmacenTipoListadoProps
   activo: boolean
-  state?: string
 }
 
 /**
@@ -91,7 +89,6 @@ export const ALMACEN_INITIAL_VALUES: AlmacenInputProps = {
   nombre: '',
   ubicacion: '',
   sucursal: null,
-  codigoSucursal: null,
   tipo: ALMACEN_TIPO_LISTADO[0],
   activo: true,
 }
