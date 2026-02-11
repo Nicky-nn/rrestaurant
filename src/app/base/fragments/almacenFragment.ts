@@ -19,7 +19,7 @@ export const almacenFragment = gql`
     ubicacion
     tipo
     prioridad
-    ubicacion
+    activo
     updatedAt
     usucre
     usumod
