@@ -14,6 +14,7 @@ import { transformarArticuloPrecioService } from '../../../../../../base/service
 import { EntidadInputProps } from '../../../../../../interfaces'
 import { ArticuloProps } from '../../../../../../interfaces/articulo.ts'
 import { ArticuloOperacionInputProps } from '../../../../../../interfaces/articuloOperacion.ts'
+import { ArticuloUnidadMedidaProps } from '../../../../../../interfaces/articuloUnidadMedida.ts'
 import { apiGestionArticulo } from '../../../../../../interfaces/gestionArticulo.ts'
 import { InventarioOperacionProps } from '../../../../../../interfaces/InventarioOperacion.ts'
 import { MonedaProps } from '../../../../../../interfaces/monedaPrecio.ts'
@@ -230,29 +231,38 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     })
   }, [calculos.montoDescuento, setValue])
 
-  // Actualizar precio cuando cambia la unidad de medida
-  useEffect(() => {
-    if (!articuloUnidadMedidaWatch?.codigoUnidadMedida || !articulo) return
-
-    const articuloPrecio = [articulo.articuloPrecioBase, ...articulo.articuloPrecio].find(
-      (ap) => ap.articuloUnidadMedida.codigoUnidadMedida === articuloUnidadMedidaWatch.codigoUnidadMedida,
+  // Mapeamos articulo en map para facil acceso de valores
+  const articuloPrecioMap = useMemo(() => {
+    if (!articulo) return new Map()
+    return new Map(
+      [articulo.articuloPrecioBase, ...articulo.articuloPrecio].map((ap) => [
+        ap.articuloUnidadMedida.codigoUnidadMedida,
+        ap,
+      ]),
     )
+  }, [articulo])
 
-    if (articuloPrecio) {
-      const monedaPrecio = transformarArticuloPrecioService(articuloPrecio, moneda)
-      // Posiblemente bug al hacer onchage en unidad de medida
-      let precioFinal = monedaPrecio.precio
+  // Cambio de unidad de medida y seteamos el precio en función configuracion de tipo moneda
+  const onChangeUnidadMedida = (item: ArticuloUnidadMedidaProps | null) => {
+    if (!item) return
+    // Si los codigos son iguales no hacemos nada
+    if (item.codigoUnidadMedida === articuloUnidadMedidaWatch?.codigoUnidadMedida) return
 
-      if (precioProps?.tipoMonto === 'precio') precioFinal = monedaPrecio.precio
-      if (precioProps?.tipoMonto === 'costo') precioFinal = monedaPrecio.precioBase
-      if (precioProps?.tipoMonto === 'delivery') precioFinal = monedaPrecio.delivery
+    const articuloPrecio = articuloPrecioMap.get(item.codigoUnidadMedida)
+    if (!articuloPrecio) return
 
-      setValue('precio', precioFinal, {
-        shouldValidate: true,
-        shouldDirty: true,
-      })
-    }
-  }, [articuloUnidadMedidaWatch?.codigoUnidadMedida, moneda, articulo, setValue, precioProps?.tipoMonto])
+    const monedaPrecio = transformarArticuloPrecioService(articuloPrecio, moneda)
+    let precioFinal = monedaPrecio.precio
+
+    if (precioProps?.tipoMonto === 'precio') precioFinal = monedaPrecio.precio
+    if (precioProps?.tipoMonto === 'costo') precioFinal = monedaPrecio.precioBase
+    if (precioProps?.tipoMonto === 'delivery') precioFinal = monedaPrecio.delivery
+
+    setValue('precio', precioFinal, {
+      shouldValidate: true,
+      shouldDirty: true,
+    })
+  }
 
   /***********************************************************************************/
   /***********************************************************************************/
@@ -324,7 +334,10 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
               <ArticuloUnidadMedidaSeleccion
                 value={field.value}
                 error={error?.message}
-                onChange={field.onChange}
+                onChange={(item) => {
+                  field.onChange(item)
+                  onChangeUnidadMedida(item)
+                }}
                 datos={articulosUnidadMedida}
                 unidadMedidaProps={unidadMedidaProps}
               />

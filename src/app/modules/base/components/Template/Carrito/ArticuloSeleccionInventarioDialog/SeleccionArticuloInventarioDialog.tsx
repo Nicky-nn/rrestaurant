@@ -160,7 +160,6 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInve
     if (open && isSuccess && item && articulo) {
       reset({ ...item })
     }
-    setMensajes([])
   }, [open, isSuccess, item, articulo, reset])
   /*###############################################################*/
   /*###############################################################*/
