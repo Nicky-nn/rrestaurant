@@ -1,14 +1,4 @@
-import {
-  Box,
-  Divider,
-  FormControl,
-  Grid,
-  Paper,
-  Stack,
-  styled,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Box, Divider, FormControl, Grid, Paper, Stack, styled, TextField, Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import React, { FunctionComponent, useEffect, useMemo } from 'react'
 import { Control, Controller, UseFormSetValue, useWatch } from 'react-hook-form'
@@ -17,11 +7,9 @@ import { apiAlmacenPorSucursalListado } from '../../../../../../base/api/apiAlma
 import { SimpleBox } from '../../../../../../base/components/Container/SimpleBox.tsx'
 import FormSelect from '../../../../../../base/components/Form/FormSelect.tsx'
 import { numberWithCommasPlaces } from '../../../../../../base/components/MyInputs/NumberInput.tsx'
-import { reactSelectStyle } from '../../../../../../base/components/MySelect/ReactSelect.tsx'
 import NumberSpinnerField from '../../../../../../base/components/NumberSpinnerField/NumberSpinnerField.tsx'
 import MontoMonedaTexto from '../../../../../../base/components/PopoverMonto/MontoMonedaTexto.tsx'
 import { PreloadFieldSkeleton } from '../../../../../../base/components/skeleton/PreloadFieldSkeleton.tsx'
-import { TipoMontoProps } from '../../../../../../base/interfaces/base.ts'
 import { transformarArticuloPrecioService } from '../../../../../../base/services/transformarArticuloPrecioService.ts'
 import { EntidadInputProps } from '../../../../../../interfaces'
 import { ArticuloProps } from '../../../../../../interfaces/articulo.ts'
@@ -33,56 +21,26 @@ import { handleFocus } from '../../../../../../utils/helper.ts'
 import ArticuloUnidadMedidaSeleccion, {
   UnidadMedidaSeleccionProps,
 } from '../../ArticuloUnidadMedidaSeleccion/ArticuloUnidadMedidaSeleccion.tsx'
-import LoteSeleccion, { LoteSeleccionProps } from '../../LoteSeleccion/LoteSeleccion.tsx'
-
-interface MontoSeleccionProps {
-  label?: string
-  readOnly?: boolean
-  disabled?: boolean
-  ocultar?: boolean
-}
-export interface AlmacenSeleccionProps {
-  label?: string
-  disabled?: boolean // Deshabilita el componente, default false
-  autoSeleccion?: boolean // Si value contiene datos, se prioriza, luego autoselección, default false
-}
-export interface CantidadSeleccionProps extends MontoSeleccionProps {}
-// Distrubucion de precios a operar
-export interface PrecioSeleccionProps extends MontoSeleccionProps {
-  // - precio = setea independiente del valor origen al precio de formulario
-  // - costo = setea independiente del valor origen al precio de formulario
-  // - delivery = setea independiente del valor origen al precio de formulario
-  tipoMonto?: TipoMontoProps // default lo que aparece del callback
-}
-export interface DescuentoSeleccionProps extends MontoSeleccionProps {}
-
-interface OwnProps {
-  control: Control<ArticuloOperacionInputProps>
-  setValue: UseFormSetValue<ArticuloOperacionInputProps>
-  articulo: ArticuloProps
-  moneda: MonedaProps
-  inventario: InventarioOperacionProps | null
-  open: boolean // si es true, se cargan los datos, open de dialog
-  entidad: EntidadInputProps
-  loteProps: LoteSeleccionProps
-  almacenProps: AlmacenSeleccionProps
-  unidadMedidaProps: UnidadMedidaSeleccionProps
-  cantidadProps?: CantidadSeleccionProps
-  precioProps?: PrecioSeleccionProps
-  descuentoProps?: DescuentoSeleccionProps
-  ocultarCalculos?: boolean // Si queremos ocultar el cuadro de calculos
-}
-
-type Props = OwnProps
+import LoteSeleccion from '../../LoteSeleccion/LoteSeleccion.tsx'
+import { LoteSeleccionProps } from '../../LoteSeleccion/LoteSeleccionTypes.ts'
+import {
+  obtenerDetalleInventarioPorAlmacen,
+  procesarAlmacenesDesdeInventario,
+  procesarAlmacenesDesdeTabla,
+  procesarLotesDesdeInventario,
+  seleccionarAlmacenAutomatico,
+} from './articuloInventarioUtils.ts'
+import {
+  AlmacenSeleccionProps,
+  CantidadSeleccionProps,
+  DescuentoSeleccionProps,
+  PrecioSeleccionProps,
+} from './ArticuloSeleccionInventarioTypes.ts'
 
 // IMPORTANTE: Estilo para TextField readonly | oculto
 const TextFieldReadonly = styled(TextField)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
-    transition: theme.transitions.create([
-      'background-color',
-      'box-shadow',
-      'border-color',
-    ]),
+    transition: theme.transitions.create(['background-color', 'box-shadow', 'border-color']),
 
     // IMPORTANTE: Quitamos el outline del elemento de entrada interno
     '& input': {
@@ -115,9 +73,28 @@ const ReadOnlyBox = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
 }))
 
+interface OwnProps {
+  control: Control<ArticuloOperacionInputProps>
+  setValue: UseFormSetValue<ArticuloOperacionInputProps>
+  articulo: ArticuloProps
+  moneda: MonedaProps
+  inventario: InventarioOperacionProps | null
+  open: boolean // si es true, se cargan los datos, open de dialog
+  entidad: EntidadInputProps
+  almacenProps: AlmacenSeleccionProps
+  loteProps: LoteSeleccionProps
+  unidadMedidaProps: UnidadMedidaSeleccionProps
+  cantidadProps?: CantidadSeleccionProps
+  precioProps?: PrecioSeleccionProps
+  descuentoProps?: DescuentoSeleccionProps
+  ocultarCalculos?: boolean // Si queremos ocultar el cuadro de calculos
+}
+
+type Props = OwnProps
+
 /**
- * Tarjeta de articulo con el inventario, describe las cantidades disponibles de stock según la unidad de medida
- * En case sea un articulo sin verificar stock, muestra el icono de infinito
+ * Tarjeta de formulario de artículo con inventario
+ * Soporta múltiples fuentes de datos para almacenes y lotes
  * @param props
  * @constructor
  */
@@ -139,27 +116,79 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     ocultarCalculos = false,
   } = props
 
-  const [
-    cantidadWatch,
-    precioWatch,
-    descuentoPWatch,
-    almacenWatch,
-    articuloUnidadMedidaWatch,
-  ] = useWatch({
+  // ===== OBSERVACON DE CAMPOS DEL FORMULARIO =====
+  const [cantidadWatch, precioWatch, descuentoPWatch, almacenWatch, articuloUnidadMedidaWatch] = useWatch({
     control,
     name: ['cantidad', 'precio', 'descuentoP', 'almacen', 'articuloUnidadMedida'],
   })
 
-  const { data: almacenes, isLoading: loadingAlmacenes } = useQuery({
+  // ===== CARGA DE ALMACENES DESDE TABLA (solo si fuente === 'tbl') =====
+  const {
+    data: almacenesTabla,
+    isLoading: loadingAlmacenesTabla,
+    isSuccess,
+  } = useQuery({
     queryKey: ['articulo-inventario-formulario-almacenes-list', entidad, open],
     queryFn: () => apiAlmacenPorSucursalListado(entidad.codigoSucursal),
-    enabled: open, // Solo cargar si el diálogo está abierto
+    enabled: open && (almacenProps.fuente || 'tbl') === 'tbl',
     refetchInterval: false,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
   })
 
-  // Listamos los articulos unidad de medida
+  // ===== PROCESAMIENTO DE ALMACENES SEGÚN LA FUENTE =====
+  const almacenes = useMemo(() => {
+    const fuente = almacenProps.fuente || 'tbl'
+
+    if (fuente === 'tbl') {
+      // Usar almacenes de la tabla general
+      return almacenesTabla ? procesarAlmacenesDesdeTabla(almacenesTabla, almacenProps) : []
+    } else {
+      // Usar almacenes del inventario del artículo
+      const inventarioDetalle = articulo?.inventario?.[0]?.detalle || []
+      return procesarAlmacenesDesdeInventario(inventarioDetalle, almacenProps)
+    }
+  }, [almacenProps, almacenesTabla, articulo])
+
+  // loading siempre y cuando sea de tbl
+  const loadingAlmacenes = (almacenProps.fuente || 'tbl') === 'tbl' ? loadingAlmacenesTabla : false
+
+  // ===== PROCESAMIENTO DE LOTES SEGÚN LA FUENTE =====
+  const lotesDisponibles = useMemo(() => {
+    if (!almacenWatch?.codigoAlmacen) return []
+
+    const fuente = loteProps.fuente || 'inv'
+
+    if (fuente === 'inv') {
+      // Usar lotes del inventario del artículo por almacén
+      const inventarioDetalle = articulo?.inventario?.[0]?.detalle || []
+      const detalleAlmacen = obtenerDetalleInventarioPorAlmacen(inventarioDetalle, almacenWatch.codigoAlmacen)
+
+      if (!detalleAlmacen) return []
+
+      return procesarLotesDesdeInventario(detalleAlmacen.lotes, loteProps)
+    } else {
+      // fuente === 'tbl': Usar lotes de la API (todos los lotes del artículo)
+      // Por ahora retornamos vacío, pero aquí iría la llamada a la API de lotes
+      // cuando no dependan del almacén específico
+      return []
+    }
+  }, [almacenWatch, loteProps, articulo])
+
+  // ===== AUTOSELECCIÓN DE ALMACÉN =====
+  useEffect(() => {
+    if (almacenProps.autoSeleccion && isSuccess && almacenes.length > 0 && !almacenWatch) {
+      const primerAlmacen = seleccionarAlmacenAutomatico(almacenes)
+      if (primerAlmacen) {
+        setValue('almacen', primerAlmacen, {
+          shouldValidate: true,
+          shouldDirty: true,
+        })
+      }
+    }
+  }, [almacenProps.autoSeleccion, isSuccess, almacenes, almacenWatch, setValue])
+
+  // ===== UNIDADES DE MEDIDA DEL ARTÍCULO =====
   const articulosUnidadMedida = useMemo(() => {
     if (!articulo) return []
     return [
@@ -168,14 +197,14 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     ]
   }, [articulo])
 
-  // Definición del label de precio
+  // ===== LABEL DE PRECIO SEGÚN TIPO =====
   const precioLabel = useMemo(() => {
     if (precioProps?.tipoMonto === 'costo') return 'Costo unitario'
     if (precioProps?.tipoMonto === 'delivery') return 'Precio delivery'
     return 'Precio unitario'
   }, [precioProps?.tipoMonto])
 
-  // Calculos para mostrar en la tarjeta
+  // ===== CÁLCULOS DE MONTOS =====
   const calculos = useMemo(() => {
     const cant = Number(cantidadWatch) || 0
     const prec = Number(precioWatch) || 0
@@ -192,55 +221,43 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     }
   }, [cantidadWatch, precioWatch, descuentoPWatch])
 
-  /*********************************************************************************/
-  /*********************************************************************************/
+  // ===== EFECTOS =====
+  // Sincronizar monto de descuento con el campo del formulario
   useEffect(() => {
-    // Sincronizamos el total calculado con el campo del formulario
     setValue('descuento', calculos.montoDescuento || 0, {
       shouldValidate: true,
       shouldDirty: true,
     })
   }, [calculos.montoDescuento, setValue])
 
+  // Actualizar precio cuando cambia la unidad de medida
   useEffect(() => {
-    // Si no hay unidad o no ha cargado el artículo, no hacemos nada
-    if (!articuloUnidadMedidaWatch || !articulo) return
+    if (!articuloUnidadMedidaWatch?.codigoUnidadMedida || !articulo) return
 
-    // 2. Buscamos el precio sugerido para esta unidad específica
-    // Asumiendo que el objeto articulo tiene un array de precios/unidades
     const articuloPrecio = [articulo.articuloPrecioBase, ...articulo.articuloPrecio].find(
-      (ap) =>
-        ap.articuloUnidadMedida.codigoUnidadMedida ===
-        articuloUnidadMedidaWatch.codigoUnidadMedida,
+      (ap) => ap.articuloUnidadMedida.codigoUnidadMedida === articuloUnidadMedidaWatch.codigoUnidadMedida,
     )
+
     if (articuloPrecio) {
       const monedaPrecio = transformarArticuloPrecioService(articuloPrecio, moneda)
-      let precioFinal =
-        precioWatch != null || precioWatch !== undefined
-          ? precioWatch
-          : monedaPrecio.precio
+      // Posiblemente bug al hacer onchage en unidad de medida
+      let precioFinal = monedaPrecio.precio
+
       if (precioProps?.tipoMonto === 'precio') precioFinal = monedaPrecio.precio
       if (precioProps?.tipoMonto === 'costo') precioFinal = monedaPrecio.precioBase
       if (precioProps?.tipoMonto === 'delivery') precioFinal = monedaPrecio.delivery
 
-      // Si encontramos un precio, actualizamos el campo
       setValue('precio', precioFinal, {
         shouldValidate: true,
         shouldDirty: true,
       })
     }
-  }, [
-    articuloUnidadMedidaWatch?.codigoUnidadMedida,
-    moneda,
-    articulo,
-    setValue,
-    precioProps?.tipoMonto,
-  ])
+  }, [articuloUnidadMedidaWatch?.codigoUnidadMedida, moneda, articulo, setValue, precioProps?.tipoMonto])
 
   /***********************************************************************************/
   /***********************************************************************************/
   /***********************************************************************************/
-
+  // ===== RENDERIZADO =====
   return (
     <SimpleBox sx={{ p: 2, pt: 3 }}>
       <Grid container rowSpacing={2.6} columnSpacing={1.5}>
@@ -250,22 +267,20 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             control={control}
             name={'almacen'}
             render={({ field, fieldState: { error } }) => (
-              <PreloadFieldSkeleton label={'Almacen...'} isLoading={loadingAlmacenes}>
+              <PreloadFieldSkeleton label="Almacén..." isLoading={loadingAlmacenes}>
                 <FormControl fullWidth error={!!error}>
                   <FormSelect
                     inputLabel={almacenProps?.label ?? 'Almacén'}
-                    styles={reactSelectStyle(!!error)}
-                    placeholder={'Seleccione un almacen...'}
+                    placeholder="Seleccione un almacén..."
                     options={almacenes || []}
                     value={field.value}
                     onChange={(newValue) => {
                       field.onChange(newValue)
+                      // Limpiar lote al cambiar almacén
                       setValue('lote', null)
                     }}
                     getOptionValue={(item) => item.codigoAlmacen}
-                    getOptionLabel={(item) =>
-                      `Cod. ${item.codigoAlmacen} - ${item.nombre}`
-                    }
+                    getOptionLabel={(item) => `${item.codigoAlmacen} - ${item.nombre}`}
                     error={!!error}
                     formHelperText={error?.message}
                     isSearchable={false}
@@ -290,6 +305,12 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
                 value={field.value}
                 error={error?.message}
                 onChange={field.onChange}
+                // Pasar lotes procesados si viene del inventario por almacén
+                lotesInventario={
+                  (loteProps.fuente || 'almacen') === 'almacen'
+                    ? lotesDisponibles.map((l) => l.lote)
+                    : undefined
+                }
               />
             )}
             name={'lote'}
@@ -311,17 +332,14 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             name={'articuloUnidadMedida'}
           />
         </Grid>
+        {/* CANTIDAD */}
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           {cantidadProps?.readOnly || cantidadProps?.ocultar ? (
             <ReadOnlyBox>
               <TextFieldReadonly
                 id="cantidad-outline-saskdd"
                 label={cantidadProps?.label ?? 'Cantidad *'}
-                value={
-                  cantidadProps?.ocultar
-                    ? '--'
-                    : numberWithCommasPlaces(cantidadWatch || 0)
-                }
+                value={cantidadProps?.ocultar ? '--' : numberWithCommasPlaces(cantidadWatch || 0)}
                 size={'small'}
                 fullWidth
                 slotProps={{
@@ -357,15 +375,14 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             />
           )}
         </Grid>
+        {/* PRECIO */}
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           {precioProps?.readOnly || precioProps?.ocultar ? (
             <ReadOnlyBox>
               <TextFieldReadonly
                 id="precio-outline-saskdd"
                 label={precioProps?.label ?? precioLabel}
-                value={
-                  precioProps?.ocultar ? '--' : numberWithCommasPlaces(precioWatch || 0)
-                }
+                value={precioProps?.ocultar ? '--' : numberWithCommasPlaces(precioWatch || 0)}
                 size={'small'}
                 fullWidth
                 slotProps={{
@@ -400,15 +417,14 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             />
           )}
         </Grid>
+        {/* DESCUENTO */}
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           {descuentoProps?.readOnly || descuentoProps?.ocultar ? (
             <ReadOnlyBox>
               <TextFieldReadonly
                 id="precio-outline-saskdd"
                 label={descuentoProps?.label ?? 'Descuento %'}
-                value={
-                  descuentoProps?.ocultar ? '--' : numberWithCommasPlaces(descuentoPWatch)
-                }
+                value={descuentoProps?.ocultar ? '--' : numberWithCommasPlaces(descuentoPWatch)}
                 size={'small'}
                 fullWidth
                 slotProps={{
@@ -446,6 +462,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             />
           )}
         </Grid>
+        {/* CÁLCULOS */}
         {!ocultarCalculos && (
           <Grid size={12}>
             <Box>
@@ -475,12 +492,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
               >
                 <Stack spacing={0.1}>
                   {/* Línea de Subtotal */}
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    spacing={1}
-                  >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                     <Typography variant="body2" color="text.secondary" noWrap>
                       Subtotal
                     </Typography>
@@ -492,11 +504,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
                   </Stack>
 
                   {/* Línea de Descuento */}
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Typography variant="body2" color="text.secondary" noWrap>
                       Descuento{' '}
                       <Box component="span" sx={{ color: 'error.main', fontWeight: 700 }}>

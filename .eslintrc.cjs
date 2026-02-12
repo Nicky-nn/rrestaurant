@@ -7,12 +7,14 @@ module.exports = {
     ecmaFeatures: {
       jsx: true,
     },
+    project: './tsconfig.json',
   },
   settings: {
     react: {
       version: 'detect',
     },
     'import/resolver': {
+      typescript: {},
       node: {
         paths: ['src'],
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
@@ -32,11 +34,12 @@ module.exports = {
     'plugin:react-hooks/recommended',
     'plugin:prettier/recommended', // Make sure this is always the last element in the array.
   ],
-  plugins: ['simple-import-sort', 'prettier'],
+  plugins: ['@typescript-eslint', 'simple-import-sort'],
   rules: {
     'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     'prettier/prettier': ['error', {}, { usePrettierrc: true }],
-    'react-hooks/exhaustive-deps': 'off',
+    'react-hooks/exhaustive-deps': 'warn',
     'react/react-in-jsx-scope': 'off',
     'jsx-a11y/accessible-emoji': 'off',
     'react/prop-types': 'off',
@@ -56,10 +59,5 @@ module.exports = {
         patterns: ['@mui/*/*/*'],
       },
     ],
-  },
-  globals: {
-    React: true,
-    JSX: true,
-    TypeScript: true,
   },
 }

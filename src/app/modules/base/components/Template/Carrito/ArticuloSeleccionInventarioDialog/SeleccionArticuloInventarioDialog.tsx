@@ -9,89 +9,63 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogProps,
   DialogTitle,
   Grid,
   IconButton,
   Typography,
 } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
-import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
+import React, { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { apiArticuloInventarioPorId } from '../../../../../../base/api/apiArticuloInventarioPorId.ts'
+import { MetodoSeleccionLote } from '../../../../../../base/services/articuloToArticuloOperacionInputService.ts'
 import { articuloToInventarioOperacion } from '../../../../../../base/services/articuloToInventarioOperacion.ts'
 import { articuloOperacionInputValidator } from '../../../../../../base/validator/articuloOperacionInputValidator.ts'
-import { ActionFormProps, EntidadInputProps } from '../../../../../../interfaces'
 import { ArticuloOperacionInputProps } from '../../../../../../interfaces/articuloOperacion.ts'
-import { MonedaProps } from '../../../../../../interfaces/monedaPrecio.ts'
 import { UnidadMedidaSeleccionProps } from '../../ArticuloUnidadMedidaSeleccion/ArticuloUnidadMedidaSeleccion.tsx'
-import { LoteSeleccionProps } from '../../LoteSeleccion/LoteSeleccion.tsx'
-import ArticuloInventarioFormularioCard, {
-  AlmacenSeleccionProps,
+import { LoteSeleccionProps } from '../../LoteSeleccion/LoteSeleccionTypes.ts'
+import ArticuloInventarioFormularioCard from './ArticuloInventarioFormularioCard.tsx'
+import ArticuloInventarioInformacionCard from './ArticuloInventarioInformacionCard.tsx'
+import {
   CantidadSeleccionProps,
   DescuentoSeleccionProps,
   PrecioSeleccionProps,
-} from './ArticuloInventarioFormularioCard.tsx'
-import ArticuloInventarioInformacionCard from './ArticuloInventarioInformacionCard.tsx'
+  SeleccionArticuloInventarioDialogProps,
+} from './ArticuloSeleccionInventarioTypes.ts'
 import { seleccionArticuloInventarioReglas } from './seleccionArticuloInventarioReglas.ts'
 
-export interface SeleccionArticuloReglasProps {
-  validarCantidad: boolean
-  validarTotal?: boolean
-  validarInventario?: boolean
-  ocultarCalculos?: boolean
-}
-
-interface OwnProps extends Omit<DialogProps, 'id' | 'onClose'> {
-  id: string
-  articuloId: string | null
-  verificarPrecio?: boolean // Busqueda de articulo con precio, default true
-  verificarInventario?: boolean // Busqueda de articulo con inventario, default false
-  almacenProps?: AlmacenSeleccionProps
-  loteProps: LoteSeleccionProps
-  unidadMedidaProps?: UnidadMedidaSeleccionProps
-  cantidadProps?: CantidadSeleccionProps
-  precioProps?: PrecioSeleccionProps
-  descuentoProps?: DescuentoSeleccionProps
-  moneda: MonedaProps // para para visualización
-  articuloIndex: number // Si el articulo es de tipo lista y ocupa una posición
-  item: ArticuloOperacionInputProps | null
-  action: ActionFormProps
-  entidad: EntidadInputProps
-  reglas: SeleccionArticuloReglasProps
-  actionButtons?: {
-    mostrarBtnCerrar?: boolean // muestra el btn de cerrar, default false
-    ocultarBtnActualizar?: boolean // muestra el btn de guardar, default false
-    btnCerrarText?: string // texto del btn de cerrar, default "Cerrar"
-    btnActualizarText?: string // texto del btn de guardar, default "Actualizar item"
-  }
-  onClose: (resp?: { index: number; item: ArticuloOperacionInputProps }) => void
-  onClear: () => void
-}
-
-type Props = OwnProps
-
 /**
- * Dialogo de seleccion de articulo
- * @param props
+ * Diálogo de selección de artículo con inventario
+ *
+ * Permite configurar la fuente de datos de almacenes y lotes:
+ * - listaAlmacen: 'tbl' usa API general | 'inv' usa inventario del artículo
+ * - listaLote: 'tbl' usa API general | 'inv' usa inventario del artículo
+ *
+ * Configuraciones avanzadas disponibles en listaAlmacenProps y listaLoteProps
+ *
+ * @param props - Propiedades del componente
  * @constructor
+ * @autor isi-template
  */
-const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
+const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInventarioDialogProps> = (
+  props,
+) => {
   const {
     onClose,
     open,
     articuloId,
     item,
-    action,
     articuloIndex = -1,
     moneda,
     entidad,
     verificarPrecio = true,
     verificarInventario = false,
     onClear, // Para limpiar los parametros de entrada, resuelve Blocked aria-hidden
-    loteProps,
-    almacenProps = {},
+    almacenProps,
+    loteProps = {
+      metodoSeleccion: MetodoSeleccionLote.MANUAL,
+    } as LoteSeleccionProps,
     unidadMedidaProps = {} as UnidadMedidaSeleccionProps,
     cantidadProps = {} as CantidadSeleccionProps,
     precioProps = {} as PrecioSeleccionProps,
@@ -104,17 +78,16 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
   const [mensajes, setMensajes] = useState<string[]>([])
 
   // Creamos el formulario
-  const { control, handleSubmit, reset, setValue } = useForm<ArticuloOperacionInputProps>(
-    {
-      defaultValues: item || {},
-      resolver: yupResolver(articuloOperacionInputValidator),
-    },
-  )
+  const { control, handleSubmit, reset, setValue } = useForm<ArticuloOperacionInputProps>({
+    defaultValues: item || {},
+    resolver: yupResolver(articuloOperacionInputValidator),
+  })
 
   const {
     data: articulo,
     isLoading: articuloLoading,
     isSuccess,
+    isError,
   } = useQuery({
     queryKey: [
       'seleccion-articulo-inventario-por-id',
@@ -126,30 +99,31 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
     ],
     enabled: open && Boolean(articuloId),
     queryFn: async () => {
-      if (articuloId) {
-        const resp = await apiArticuloInventarioPorId({
-          entidad,
-          verificarPrecio,
-          verificarInventario,
-          id: articuloId,
-        })
-        return resp ?? null
-      }
-      return null
+      if (!articuloId) return null
+      const resp = await apiArticuloInventarioPorId({
+        entidad,
+        verificarPrecio,
+        verificarInventario,
+        id: articuloId,
+      })
+      return resp ?? null
     },
     refetchInterval: false,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   })
+
+  // ===== OBSERVACION DE DATOS DEL FORMULARIO =====
   const [almacenWatch, loteWatch, articuloUnidadMedidaWatch] = useWatch({
     control,
     name: ['almacen', 'lote', 'articuloUnidadMedida'],
   })
 
-  // Datos del inventario actual
+  // ===== CÁLCULO DEL INVENTARIO ACTUAL =====
   const inventario = useMemo(() => {
     if (!articulo) return null
+
     return articuloToInventarioOperacion(articulo, {
       codigoAlmacen: almacenWatch?.codigoAlmacen ?? null,
       codigoLote: loteWatch?.codigoLote ?? null,
@@ -157,42 +131,43 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
     })
   }, [articulo, almacenWatch, loteWatch, articuloUnidadMedidaWatch])
 
-  // Registro formulario
-  const onSubmit = (data: ArticuloOperacionInputProps) => {
-    const errors = seleccionArticuloInventarioReglas(articulo, data, inventario, {
-      loteProps,
-      unidadMedidaProps,
-      reglas,
-    })
-    setMensajes(errors.length > 0 ? errors : [])
-    if (errors.length > 0) return
-    onClose({
-      index: articuloIndex,
-      item: data,
-    })
-  }
+  // ===== MANEJO DE ENVÍO DEL FORMULARIO =====
+  const onSubmit = useCallback(
+    (data: ArticuloOperacionInputProps) => {
+      const errors = seleccionArticuloInventarioReglas(articulo, data, inventario, {
+        loteProps,
+        unidadMedidaProps,
+        reglas,
+      })
+      setMensajes(errors.length > 0 ? errors : [])
+      if (errors.length > 0) return
+      onClose({
+        index: articuloIndex,
+        item: data,
+      })
+    },
+    [articulo, inventario, loteProps, unidadMedidaProps, reglas, articuloIndex, onClose],
+  )
 
-  const onError = (errors: any) => {
-    console.log(errors)
-    setMensajes(['No se podido validar el formulario'])
-  }
+  const onError = useCallback((errors: any) => {
+    console.error('Errores de validación del formulario:', errors)
+    setMensajes(['No se ha podido validar el formulario'])
+  }, [])
 
-  /*###############################################################*/
-  /*###############################################################*/
-  /*###############################################################*/
-  /*###############################################################*/
+  // ===== EFECTOS =====
+  // Reset del formulario cuando cambian los datos
   useEffect(() => {
     if (open && isSuccess && item && articulo) {
       reset({ ...item })
     }
     setMensajes([])
-  }, [open, isSuccess, item, articulo])
+  }, [open, isSuccess, item, articulo, reset])
   /*###############################################################*/
   /*###############################################################*/
 
-  // Renderizamos el contenido
-  const renderContent = () => {
-    // Carga de articulo en servidor
+  // ===== RENDERIZAMOS EL CONTENIDO =====
+  const renderContent = useCallback(() => {
+    // Estado de carga
     if (articuloLoading) {
       return (
         <Box display="flex" justifyContent="center" p={3}>
@@ -201,28 +176,38 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
       )
     }
 
-    // Verifica Inexistencia de articulo o item
+    // Error de carga
+    if (isError) {
+      return (
+        <Alert severity="error">
+          <AlertTitle>Error</AlertTitle>
+          No se ha podido cargar los datos del artículo desde el servidor. Por favor, intente nuevamente.
+        </Alert>
+      )
+    }
+
+    // Validación de existencia de datos
     if (!articulo || !item) {
       return (
         <Alert severity="warning">
           <AlertTitle>Alerta</AlertTitle>
-          No se ha podido encontrar los datos del artículo en el servidor o el item
-          seleccionado es inexistente, cierre el diálogo e intente de nuevo.
+          No se ha podido encontrar los datos del artículo en el servidor o el item seleccionado es
+          inexistente. Cierre el diálogo e intente de nuevo.
         </Alert>
       )
     }
 
-    // Verifica que el articulo del servidor no coincide con la selección
+    // Validación de coincidencia de artículo
     if (articulo._id !== item.articuloId) {
       return (
         <Alert severity="warning">
           <AlertTitle>Alerta</AlertTitle>
-          El artículo del servidor no coincide con el articulo seleccionado, cierre el
-          diálogo y vuelva a intentar.
+          El artículo del servidor no coincide con el artículo seleccionado. Cierre el diálogo y vuelva a
+          intentar.
         </Alert>
       )
     }
-
+    // Contenido principal
     return (
       <Grid container spacing={2} columns={12}>
         <Grid size={{ xs: 12, md: 5, lg: 4 }}>
@@ -241,19 +226,52 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
             moneda={moneda}
             inventario={inventario}
             entidad={entidad}
-            loteProps={loteProps}
-            unidadMedidaProps={unidadMedidaProps}
             almacenProps={almacenProps}
+            loteProps={{
+              // Heredar fuente de almacenProps si no se especifica en loteProps
+              fuente: loteProps?.fuente ?? almacenProps?.fuente ?? 'inv',
+              // Expandir el resto de propiedades de loteProps
+              ...loteProps,
+            }}
+            unidadMedidaProps={unidadMedidaProps}
             cantidadProps={cantidadProps}
             precioProps={precioProps}
             descuentoProps={descuentoProps}
-            ocultarCalculos={reglas.ocultarCalculos}
+            ocultarCalculos={reglas?.ocultarCalculos}
             open={open}
           />
         </Grid>
       </Grid>
     )
-  }
+  }, [
+    articuloLoading,
+    isError,
+    articulo,
+    item,
+    control,
+    moneda,
+    inventario,
+    setValue,
+    entidad,
+    loteProps,
+    unidadMedidaProps,
+    almacenProps,
+    cantidadProps,
+    precioProps,
+    descuentoProps,
+    reglas?.ocultarCalculos,
+    open,
+  ])
+
+  // ===== MANEJO DE CIERRE =====
+  const handleClose = useCallback(() => {
+    onClose()
+  }, [onClose])
+
+  // ===== MANEJO DE ENVÍO =====
+  const handleFormSubmit = useCallback(() => {
+    handleSubmit(onSubmit, onError)()
+  }, [handleSubmit, onSubmit, onError])
 
   return (
     <Dialog
@@ -263,7 +281,7 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
       // maxWidth="lg"
       fullWidth
       open={open}
-      onClose={() => onClose()}
+      onClose={handleClose}
       onTransitionExited={onClear}
       keepMounted={false}
       {...other}
@@ -279,9 +297,7 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
             mb: -0.2,
           }}
         >
-          {articulo
-            ? `${articulo.codigoArticulo} - ${articulo.nombreArticulo}`
-            : 'Cargando...'}
+          {articulo ? `${articulo.codigoArticulo} - ${articulo.nombreArticulo}` : 'Cargando...'}
         </Typography>
       </DialogTitle>
       <IconButton
@@ -297,19 +313,17 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
       >
         <Close />
       </IconButton>
-      <DialogContent dividers>
-        {renderContent()}
-        {mensajes.length > 0 && (
-          <Box>
-            <Alert severity={'error'}>
-              <AlertTitle>Se han detectado los siguientes errores:</AlertTitle>{' '}
-              {mensajes.map((m, index) => (
-                <Typography key={index}>- {m}</Typography>
-              ))}
-            </Alert>
-          </Box>
-        )}
-      </DialogContent>
+      <DialogContent dividers>{renderContent()}</DialogContent>
+      {mensajes.length > 0 && (
+        <Box>
+          <Alert severity={'error'}>
+            <AlertTitle>Se han detectado los siguientes errores:</AlertTitle>{' '}
+            {mensajes.map((m, index) => (
+              <Typography key={index}>- {m}</Typography>
+            ))}
+          </Alert>
+        </Box>
+      )}
       <DialogActions sx={{ justifyContent: 'center' }}>
         {actionButtons.mostrarBtnCerrar && (
           <Button color="error" variant={'text'} onClick={() => onClose()}>
@@ -317,24 +331,15 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<Props> = (props) => {
           </Button>
         )}
 
-        {!actionButtons.ocultarBtnActualizar && (
-          <>
-            {articulo && item && articulo._id === item.articuloId && (
-              <Button
-                color={item ? 'secondary' : 'primary'}
-                variant={'contained'}
-                sx={{ mr: 2 }}
-                startIcon={<AddShoppingCart />}
-                onClick={() => handleSubmit(onSubmit, onError)()}
-              >
-                {actionButtons.btnActualizarText
-                  ? actionButtons.btnActualizarText
-                  : item
-                    ? 'Actualizar item'
-                    : 'Agregar item'}
-              </Button>
-            )}
-          </>
+        {!actionButtons.ocultarBtnActualizar && articulo && item && articulo._id === item.articuloId && (
+          <Button
+            color={item ? 'secondary' : 'primary'}
+            variant="contained"
+            startIcon={<AddShoppingCart />}
+            onClick={handleFormSubmit}
+          >
+            {actionButtons.btnActualizarText || (item ? 'Actualizar item' : 'Agregar item')}
+          </Button>
         )}
       </DialogActions>
     </Dialog>

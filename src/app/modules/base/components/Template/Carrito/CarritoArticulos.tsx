@@ -28,11 +28,16 @@ import MontoMonedaTexto from '../../../../../base/components/PopoverMonto/MontoM
 import { ArticuloOperacionInputProps } from '../../../../../interfaces/articuloOperacion.ts'
 import { apiGestionArticulo } from '../../../../../interfaces/gestionArticulo.ts'
 import { MonedaProps } from '../../../../../interfaces/monedaPrecio.ts'
+import { alphaByTheme } from '../../../../../utils/colorUtils.ts'
 
 // Estilos para las celdas de la tabla
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.primary.main,
+    backgroundColor: alphaByTheme(
+      theme.palette.primary.main,
+      theme,
+      theme.palette.mode === 'dark' ? 0.3 : 0.1,
+    ),
     color: theme.palette.common.white,
     padding: '7px 5px',
   },
@@ -75,23 +80,11 @@ interface OwnProps {
   // Evento cuando se cambia el tipo de cambio
   onChangeTipoCambio?: (tipoCambio: number) => void
   // Evento cambio de cantidad, si se envía el componente se convierte en modificable
-  onChangeCantidad?: (resp?: {
-    index: number
-    item: ArticuloOperacionInputProps
-    cantidad: number
-  }) => void
+  onChangeCantidad?: (resp?: { index: number; item: ArticuloOperacionInputProps; cantidad: number }) => void
   // Evento cambio de precio
-  onChangePrecio?: (resp?: {
-    index: number
-    item: ArticuloOperacionInputProps
-    precio: number
-  }) => void
+  onChangePrecio?: (resp?: { index: number; item: ArticuloOperacionInputProps; precio: number }) => void
   // Evento cambio de descuento
-  onChangeDescuento?: (resp?: {
-    index: number
-    item: ArticuloOperacionInputProps
-    descuento: number
-  }) => void
+  onChangeDescuento?: (resp?: { index: number; item: ArticuloOperacionInputProps; descuento: number }) => void
   // Evento cambio de detalle extra
   onChangeDetalleExtra?: (resp?: {
     index: number
@@ -164,21 +157,9 @@ export interface RowCarritoArticulosProps {
   monedaPrimaria: MonedaProps
   tipoCambio: number
   indexActivo: number | null
-  onChangeCantidad?: (resp?: {
-    index: number
-    item: ArticuloOperacionInputProps
-    cantidad: number
-  }) => void
-  onChangePrecio?: (resp?: {
-    index: number
-    item: ArticuloOperacionInputProps
-    precio: number
-  }) => void
-  onChangeDescuento?: (resp?: {
-    index: number
-    item: ArticuloOperacionInputProps
-    descuento: number
-  }) => void
+  onChangeCantidad?: (resp?: { index: number; item: ArticuloOperacionInputProps; cantidad: number }) => void
+  onChangePrecio?: (resp?: { index: number; item: ArticuloOperacionInputProps; precio: number }) => void
+  onChangeDescuento?: (resp?: { index: number; item: ArticuloOperacionInputProps; descuento: number }) => void
   onChangeDetalleExtra?: (resp?: {
     index: number
     item: ArticuloOperacionInputProps
@@ -229,10 +210,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
     return (
       <Box>
         {Title && Title}
-        <Paper
-          elevation={0}
-          sx={{ textAlign: 'center', color: (theme) => theme.palette.grey[500] }}
-        >
+        <Paper elevation={0} sx={{ textAlign: 'center', color: (theme) => theme.palette.grey[500] }}>
           <ShoppingCart sx={{ fontSize: 80 }} />
           <Typography variant={'body1'} color={'warning'} gutterBottom>
             Requiere al menos 1 articulo
@@ -258,9 +236,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
       onChangeDetalleExtra,
     } = props
 
-    const RowArticuloText: FC<{ itemArticulo: ArticuloOperacionInputProps }> = ({
-      itemArticulo,
-    }) => (
+    const RowArticuloText: FC<{ itemArticulo: ArticuloOperacionInputProps }> = ({ itemArticulo }) => (
       <Box>
         <Typography
           fontSize={12}
@@ -268,8 +244,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
           className="ca-codigo-articulo"
           sx={{
             fontWeight: 500,
-            color: (theme) =>
-              theme.palette.mode === 'dark' ? 'cyan.light' : 'primary.main',
+            color: (theme) => (theme.palette.mode === 'dark' ? 'cyan.light' : 'primary.main'),
           }}
         >
           {itemArticulo.codigoArticulo},&nbsp;&nbsp;
@@ -324,8 +299,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
               editar={Boolean(onChangeCantidad)}
               lista={true}
               onChange={(cantidad) => {
-                if (cantidad && onChangeCantidad)
-                  onChangeCantidad({ index, item, cantidad })
+                if (cantidad && onChangeCantidad) onChangeCantidad({ index, item, cantidad })
               }}
               montoProps={{
                 textAlign: 'right',
@@ -405,12 +379,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
                       </Typography>
                     </Tooltip>
                   ) : (
-                    <Tooltip
-                      title={`Almacen Requerido`}
-                      disableInteractive
-                      placement={'top'}
-                      arrow
-                    >
+                    <Tooltip title={`Almacen Requerido`} disableInteractive placement={'top'} arrow>
                       <Typography fontSize={'smaller'} noWrap color={'error'}>
                         <strong>REQUERIDO</strong>
                       </Typography>
@@ -443,23 +412,13 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
                   {!item.lote && (
                     <>
                       {item.gestionArticulo === apiGestionArticulo.LOTE ? (
-                        <Tooltip
-                          title={`Lote requerido`}
-                          disableInteractive
-                          placement={'top'}
-                          arrow
-                        >
+                        <Tooltip title={`Lote requerido`} disableInteractive placement={'top'} arrow>
                           <Typography fontSize={'smaller'} noWrap color={'error'}>
                             <strong>REQUERIDO</strong>
                           </Typography>
                         </Tooltip>
                       ) : (
-                        <Tooltip
-                          title={`No requerido`}
-                          disableInteractive
-                          placement={'top'}
-                          arrow
-                        >
+                        <Tooltip title={`No requerido`} disableInteractive placement={'top'} arrow>
                           <Typography fontSize={'smaller'} noWrap>
                             --
                           </Typography>
@@ -488,7 +447,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
               lista={true}
               sigla={moneda?.sigla}
               onChange={(precio) => {
-                if (precio && onChangePrecio) onChangePrecio({ index, item, precio })
+                if (precio !== null && onChangePrecio) onChangePrecio({ index, item, precio: precio ?? 0 })
               }}
               montoProps={{
                 textAlign: 'right',
@@ -516,8 +475,8 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
               sigla={moneda?.sigla}
               lista
               onChange={(descuento) => {
-                if (descuento && onChangeDescuento)
-                  onChangeDescuento({ index, item, descuento })
+                if (descuento !== null && onChangeDescuento)
+                  onChangeDescuento({ index, item, descuento: descuento ?? 0 })
               }}
               montoProps={{
                 textAlign: 'right',
@@ -575,9 +534,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
   return (
     <Box>
       <Grid container spacing={1}>
-        {Title && moneda?.sigla === monedaPrimaria.sigla && (
-          <Grid size={12}>{Title}</Grid>
-        )}
+        {Title && moneda?.sigla === monedaPrimaria.sigla && <Grid size={12}>{Title}</Grid>}
 
         {moneda?.sigla !== monedaPrimaria?.sigla && (
           <>
@@ -635,9 +592,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
                 </StyledTableCell>
               )}
               {!almacenLoteProps.ocultar && (
-                <StyledTableCell width={150}>
-                  {almacenLoteProps?.label ?? 'Almacen / Lote'}
-                </StyledTableCell>
+                <StyledTableCell width={150}>{almacenLoteProps?.label ?? 'Almacen / Lote'}</StyledTableCell>
               )}
               {!precioProps.ocultar && (
                 <StyledTableCell align="right" width={120}>
@@ -651,9 +606,7 @@ const CarritoArticulos: FunctionComponent<Props> = (props) => {
               )}
 
               {!opcionesProps?.ocultar && (
-                <StyledTableCell width={60}>
-                  {opcionesProps?.label ?? 'Opciones'}
-                </StyledTableCell>
+                <StyledTableCell width={60}>{opcionesProps?.label ?? 'Opciones'}</StyledTableCell>
               )}
             </StyledTableRow>
           </TableHead>
