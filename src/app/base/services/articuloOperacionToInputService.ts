@@ -7,9 +7,7 @@ import { genRandomString } from '../../utils/helper.ts'
  * @param ao
  * @author isi-template
  */
-export const articuloOperacionToInputService = (
-  ao: ArticuloOperacionProps,
-): ArticuloOperacionInputProps => {
+export const articuloOperacionToInputService = (ao: ArticuloOperacionProps): ArticuloOperacionInputProps => {
   return {
     id: genRandomString(10).toUpperCase(),
     nroItem: ao.nroItem,
@@ -24,13 +22,13 @@ export const articuloOperacionToInputService = (
     lote: ao.lote,
     sinProductoServicio: ao.sinProductoServicio,
     articuloUnidadMedida: ao.articuloPrecio.articuloUnidadMedida,
-    cantidadOriginal: ao.articuloPrecio.cantidad!,
-    cantidad: ao.articuloPrecio.cantidad!,
-    descuento: ao.articuloPrecio.descuento!,
+    cantidadOriginal: ao.articuloPrecio.cantidad,
+    cantidad: ao.articuloPrecio.cantidad,
+    descuento: ao.articuloPrecio.descuento,
     descuentoP: 0,
     impuesto: ao.articuloPrecio.impuesto,
-    precio: ao.articuloPrecio.monedaPrecio.precio,
-    moneda: ao.articuloPrecio.monedaPrecio.moneda,
+    precio: ao.articuloPrecio.valor,
+    moneda: ao.articuloPrecio.moneda,
     detalleExtra: ao.detalleExtra,
     nota: ao.nota,
     verificarStock: ao.verificarStock,

@@ -71,9 +71,7 @@ interface OpcionesArticuloOperacion {
  * Filtra los detalles de inventario excluyendo almacenes inactivos
  * Solo retorna detalles donde almacen.activo !== false
  */
-const filtrarAlmacenesActivos = (
-  detalles: InventarioDetalleProps[],
-): InventarioDetalleProps[] => {
+const filtrarAlmacenesActivos = (detalles: InventarioDetalleProps[]): InventarioDetalleProps[] => {
   return detalles.filter((detalle) => detalle.almacen.activo !== false)
 }
 
@@ -81,9 +79,7 @@ const filtrarAlmacenesActivos = (
  * Filtra los detalles de inventario por stock disponible
  * Solo retorna detalles donde stock > 0
  */
-const filtrarAlmacenesConStock = (
-  detalles: InventarioDetalleProps[],
-): InventarioDetalleProps[] => {
+const filtrarAlmacenesConStock = (detalles: InventarioDetalleProps[]): InventarioDetalleProps[] => {
   return detalles.filter((detalle) => detalle.disponible > 0)
 }
 
@@ -92,9 +88,7 @@ const filtrarAlmacenesConStock = (
  * Prioriza: despacho (1) -> otros (2-998) -> virtual (999)
  * IMPORTANTE: Solo debe recibir detalles de almacenes activos
  */
-const ordenarDetallesPorPrioridad = (
-  detalles: InventarioDetalleProps[],
-): InventarioDetalleProps[] => {
+const ordenarDetallesPorPrioridad = (detalles: InventarioDetalleProps[]): InventarioDetalleProps[] => {
   return [...detalles].sort((a, b) => {
     const prioridadA = a.almacen.prioridad ?? 999
     const prioridadB = b.almacen.prioridad ?? 999
@@ -228,18 +222,14 @@ const seleccionarAlmacen = (
 
   // Si se especificó un almacén, buscarlo
   if (options.codigoAlmacen) {
-    const detalleEspecifico = detallesOrdenados.find(
-      (d) => d.codigoAlmacen === options.codigoAlmacen,
-    )
+    const detalleEspecifico = detallesOrdenados.find((d) => d.codigoAlmacen === options.codigoAlmacen)
     if (detalleEspecifico) {
       return detalleEspecifico.almacen
     }
   }
 
   // Buscar el primer almacén que no sea virtual
-  const almacenNoVirtual = detallesOrdenados.find(
-    (d) => d.almacen.prioridad !== apiAlmacenPrioridad.virtual,
-  )
+  const almacenNoVirtual = detallesOrdenados.find((d) => d.almacen.prioridad !== apiAlmacenPrioridad.virtual)
 
   return almacenNoVirtual?.almacen ?? null
 }
@@ -292,9 +282,7 @@ const procesarLoteYAlmacen = (
         // Verificar stock del lote si se requiere
         if (options.mostrarLoteConStock) {
           const loteEnDetalle = resultado.almacen
-          const detalleAlmacen = detallesOrdenados.find(
-            (d) => d.almacen._id === loteEnDetalle._id,
-          )
+          const detalleAlmacen = detallesOrdenados.find((d) => d.almacen._id === loteEnDetalle._id)
           const loteConStock = detalleAlmacen?.lotes.find(
             (l) => l.lote.codigoLote === options.codigoLote && l.disponible > 0,
           )
@@ -309,14 +297,8 @@ const procesarLoteYAlmacen = (
       }
     } else {
       // Selección automática de lote
-      const lotesDisponibles = recolectarLotesDisponibles(
-        detallesOrdenados,
-        options.mostrarLoteConStock,
-      )
-      const loteOptimo = seleccionarLoteOptimo(
-        lotesDisponibles,
-        options.metodoSeleccionLote,
-      )
+      const lotesDisponibles = recolectarLotesDisponibles(detallesOrdenados, options.mostrarLoteConStock)
+      const loteOptimo = seleccionarLoteOptimo(lotesDisponibles, options.metodoSeleccionLote)
 
       if (loteOptimo) {
         lote = loteOptimo.lote
