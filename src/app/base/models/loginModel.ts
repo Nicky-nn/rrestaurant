@@ -41,7 +41,7 @@ export interface PerfilProps {
     emailFake: string
     denominacion: string
     nit: string
-    /** Agregado isipass v3.7 */
+    /** Agregado isipass v3.7, aun comentado en graphql */
     nroDecimales: number
   }
   tipoRepresentacionGrafica: TipoRepresentacionGrafica
