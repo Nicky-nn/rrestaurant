@@ -41,6 +41,8 @@ export interface PerfilProps {
     emailFake: string
     denominacion: string
     nit: string
+    /** Agregado isipass v3.7 */
+    nroDecimales: number
   }
   tipoRepresentacionGrafica: TipoRepresentacionGrafica
   usuario: string
@@ -76,11 +78,7 @@ const mutation = gql`
  * @param email
  * @param password
  */
-export const loginModel = async (
-  shop: string,
-  email: string,
-  password: string,
-): Promise<UserProps> => {
+export const loginModel = async (shop: string, email: string, password: string): Promise<UserProps> => {
   try {
     const variables = { shop, email, password }
     const client = new GraphQLClient(import.meta.env.ISI_API_URL)

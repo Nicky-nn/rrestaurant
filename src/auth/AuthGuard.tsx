@@ -21,9 +21,7 @@ const userHasPermission = (pathname: string, user: PerfilProps, routes: any) => 
     }
     // console.log(pathname, user)
     const matched = routes.find((r: any) => r.path === pathname)
-    return matched && matched.auth && matched.auth.length
-      ? matched.auth.includes(user.tipo)
-      : true
+    return matched && matched.auth && matched.auth.length ? matched.auth.includes(user.tipo) : true
   } catch (e: any) {
     return false
   }

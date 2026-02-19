@@ -68,6 +68,7 @@ export const PerfilFragment = gql`
       emailFake
       denominacion
       nit
+      nroDecimales
     }
     tipoRepresentacionGrafica
     usuario
