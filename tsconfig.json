@@ -30,6 +30,12 @@
     "src",
     "types"
   ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "eslint.config.cjs"
+  ],
   "references": [
     {
       "path": "./tsconfig.node.json"
