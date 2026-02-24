@@ -94,3 +94,8 @@ requirements.txt
 *.njsproj
 *.sln
 *.sw?
+
+# GraphQL Codegen - archivos generados
+.schema-check.json
+schema.json
+src/app/modules/restaurante/generated/
