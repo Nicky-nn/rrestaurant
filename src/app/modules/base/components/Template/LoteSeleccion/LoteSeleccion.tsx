@@ -1,52 +1,23 @@
 import { AddCircleOutline, Search } from '@mui/icons-material'
 import { Box, FormControl, IconButton, Stack, styled, Tooltip } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
 
 import { apiLotePorArticuloInventarioAlmacenListado } from '../../../../../base/api/apiLotePorArticuloInventarioAlmacenListado.ts'
 import { apiLotePorArticuloListado } from '../../../../../base/api/apiLotePorArticuloListado.ts'
 import FormSelect from '../../../../../base/components/Form/FormSelect.tsx'
-import { reactSelectStyle } from '../../../../../base/components/MySelect/ReactSelect.tsx'
 import { PreloadFieldSkeleton } from '../../../../../base/components/skeleton/PreloadFieldSkeleton.tsx'
+import { MetodoSeleccionLote } from '../../../../../base/services/articuloToArticuloOperacionInputService.ts'
 import { LoteProps } from '../../../../../interfaces/lote.ts'
 import LoteSeleccionPorArticuloListadoDialog from './LoteSeleccionPorArticuloListadoDialog.tsx'
 import LoteSeleccionRegistroDialog from './LoteSeleccionRegistroDialog.tsx'
-
-type LoteSeleccionTipoLista = 'articulo' | 'almacen'
-export const apiLoteTipoLista: Record<LoteSeleccionTipoLista, LoteSeleccionTipoLista> = {
-  articulo: 'articulo', // Lista solo en función al articulo, apto para registros, no depende de inventarios
-  almacen: 'almacen', // Lista por articulo el lote debe existir en el almacen de inventario, apto para ventas
-}
-
-export interface LoteSeleccionProps {
-  label?: string
-  disabled?: boolean // Deshabilita el componente independiente si esta gestionado por Lotes, default false
-  validarLote?: boolean // Valida Lote siempre y cuanto este gestionado por lotes, default false
-  validarFechaVencimiento?: boolean // Valida fecha vencimiento, default false
-  tipoLista: LoteSeleccionTipoLista // llama a objeto apiLoteSeleccionTipoLista
-  mostrarBusquedaAvanzada?: boolean
-  mostrarRegistrarNuevo?: boolean
-  autoSeleccion?: boolean // Si value contiene datos, se prioriza, luego autoselección, default false
-  tipoSeleccion?: 'FIFO' | 'LIFO'
-}
-
-interface OwnProps {
-  habilitado?: boolean
-  codigoArticulo: string
-  almacenId?: string
-  inventarioId?: string
-  value: LoteProps | null
-  onChange: (resp: LoteProps | null) => void
-  error?: string
-  loteProps: LoteSeleccionProps
-}
-
-type Props = OwnProps
+import { LoteSeleccionComponentProps } from './LoteSeleccionTypes.ts'
+import { procesarLotesDesdeAPI } from './loteSeleccionUtils.ts'
 
 const IconButtonWrapper = styled(Box, {
   // Evitamos que 'disabled' se pase al DOM del Box
   shouldForwardProp: (prop) => prop !== 'disabled',
-})<{ disabled?: boolean }>(({ theme, disabled }) => ({
+})<{ disabled?: boolean }>(({ theme }) => ({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -81,12 +52,22 @@ const IconButtonWrapper = styled(Box, {
 }))
 
 /**
- * Seleccion inteligente de lote
+ * Componente de selección inteligente de lote con soporte para diferentes métodos de ordenamiento
+ *
+ * Características:
+ * - Soporte para FEFO (First Expired, First Out)
+ * - Soporte para FIFO (First In, First Out)
+ * - Modo MANUAL sin ordenamiento automático
+ * - Autoselección según el metodo configurado
+ * - Filtro de lotes vencidos
+ * - Búsqueda avanzada y registro de nuevos lotes
+ *
  * @param props
+ * @author isi-template
  * @author isi-template
  * @constructor
  */
-const LoteSeleccion: FunctionComponent<Props> = (props) => {
+const LoteSeleccion: FunctionComponent<LoteSeleccionComponentProps> = (props) => {
   const {
     codigoArticulo,
     almacenId,
@@ -96,71 +77,99 @@ const LoteSeleccion: FunctionComponent<Props> = (props) => {
     value,
     habilitado = true,
     loteProps,
+    lotesInventario, // Nueva prop para lotes ya procesados
   } = props
 
   const [openLoteListado, setOpenLoteListado] = useState<boolean>(false)
   const [openLoteRegistro, setOpenLoteRegistro] = useState<boolean>(false)
 
+  // Extraer configuración con valores por defecto
   const {
     mostrarBusquedaAvanzada = true,
     mostrarRegistrarNuevo = true,
-    tipoLista = apiLoteTipoLista.articulo,
+    fuente = 'inv',
+    mostrarSoloConStock = false,
+    metodoSeleccion = MetodoSeleccionLote.MANUAL,
+    excluirVencidos = false,
     autoSeleccion = false,
     disabled = false,
+    label = 'Lote',
   } = loteProps
 
+  // ===== CARGA DE LOTES DESDE API =====
   const {
-    data: lotes = [],
+    data: lotesAPI = [],
     isLoading,
     isSuccess,
     refetch,
   } = useQuery({
-    queryKey: [
-      'lotes-por-articulo-servidor',
-      codigoArticulo,
-      almacenId,
-      inventarioId,
-      tipoLista,
-      habilitado,
-    ],
+    queryKey: ['lotes-por-articulo-servidor', codigoArticulo, almacenId, inventarioId, fuente, habilitado],
     enabled: () => {
-      // Habilitamos el query en función a las siguiente condiciones
+      // Si ya tenemos lotes del inventario, no consultar API
+      if (lotesInventario && lotesInventario.length > 0) return false
+
+      // Validaciones estándar
       if (!codigoArticulo || !habilitado) return false
-      if (apiLoteTipoLista.almacen === tipoLista) {
+      if (fuente === 'inv') {
         return !!(almacenId && inventarioId)
       }
       return true
     },
     queryFn: async () => {
-      if (tipoLista == apiLoteTipoLista.articulo) {
+      if (fuente === 'tbl') {
         return await apiLotePorArticuloListado(codigoArticulo)
       }
 
-      if (tipoLista === apiLoteTipoLista.almacen) {
+      if (fuente === 'inv') {
         if (!inventarioId || !almacenId) return []
-        return await apiLotePorArticuloInventarioAlmacenListado(
-          codigoArticulo,
-          inventarioId,
-          almacenId,
-        )
+        return await apiLotePorArticuloInventarioAlmacenListado(codigoArticulo, inventarioId, almacenId)
       }
       return []
     },
   })
 
+  // ===== PROCESAMIENTO DE LOTES =====
+  const lotesProcesados = useMemo(() => {
+    // Usar lotes del inventario si están disponibles, sino usar los de la API
+    const lotesBase = lotesInventario && lotesInventario.length > 0 ? lotesInventario : lotesAPI
+
+    let resultado = [...lotesBase]
+
+    // Filtrar por stock disponible (solo aplica con fuente 'inv')
+    // Todavia no es funcional
+    if (mostrarSoloConStock && fuente === 'inv') {
+      // Si son lotes del inventario (InventarioDetalleLoteProps), tienen propiedad disponible
+      resultado = resultado.filter((lote: any) => {
+        // Si tiene la propiedad disponible, usarla
+        if ('disponible' in lote) {
+          return lote.disponible > 0
+        }
+        // Si es LoteProps directamente, no filtrar
+        return true
+      })
+    }
+    // Procesar según configuración (ordenamiento y exclusión de vencidos)
+    return procesarLotesDesdeAPI(resultado, metodoSeleccion, excluirVencidos)
+  }, [lotesInventario, lotesAPI, mostrarSoloConStock, fuente, metodoSeleccion, excluirVencidos])
+
   /************************************************************************************/
   /************************************************************************************/
-  // Logica de auto seleccion
+  // ===== AUTOSELECCIÓN =====
   useEffect(() => {
-    if (autoSeleccion && isSuccess && lotes.length > 0 && !value) {
-      // Priorizamos el primer elemento (Idealmente el primero según FEFO)
-      const primerLote = lotes[0]
-      // IMPORTANTE: Pasamos el objeto formateado según lo que espera el formulario
+    if (
+      autoSeleccion &&
+      isSuccess &&
+      lotesProcesados.length > 0 &&
+      !value &&
+      metodoSeleccion !== MetodoSeleccionLote.MANUAL
+    ) {
+      // Seleccionar el primer lote según el ordenamiento
+      const primerLote = lotesProcesados[0]
       if (primerLote) {
         onChange(primerLote)
       }
     }
-  }, [autoSeleccion, isSuccess, lotes, value, onChange])
+  }, [autoSeleccion, isSuccess, lotesProcesados, value, onChange, metodoSeleccion])
 
   /*********************************************************************************/
   /*********************************************************************************/
@@ -175,16 +184,13 @@ const LoteSeleccion: FunctionComponent<Props> = (props) => {
         >
           <FormControl fullWidth error={!!error}>
             <FormSelect<LoteProps>
-              inputLabel={loteProps?.label ?? 'Lote'}
-              styles={reactSelectStyle(!!error)}
+              inputLabel={label}
               placeholder={habilitado ? 'Seleccione lote...' : ''}
-              options={lotes}
+              options={lotesProcesados}
               value={value}
               onChange={onChange}
               getOptionValue={(item) => item._id}
-              getOptionLabel={(item) =>
-                `${item.codigoLote} - Vence el ${item.fechaVencimiento}`
-              }
+              getOptionLabel={(item) => `${item.codigoLote} - Vence el ${item.fechaVencimiento || 'N/A'}`}
               error={!!error}
               formHelperText={error ?? ''}
               isSearchable={false}
@@ -201,11 +207,8 @@ const LoteSeleccion: FunctionComponent<Props> = (props) => {
               sx={{ marginTop: { sm: '-2px !important' } }}
             >
               {mostrarBusquedaAvanzada && (
-                <Tooltip title="Búsqueda Avanzada" placement={'top'} disableInteractive>
-                  <IconButtonWrapper
-                    disabled={!habilitado || disabled}
-                    sx={{ flex: { xs: 1, sm: 'none' } }}
-                  >
+                <Tooltip title="Búsqueda avanzada" placement={'top'} disableInteractive>
+                  <IconButtonWrapper disabled={!habilitado || disabled} sx={{ flex: { xs: 1, sm: 'none' } }}>
                     <IconButton
                       color="primary"
                       disabled={!habilitado || disabled}
@@ -220,15 +223,8 @@ const LoteSeleccion: FunctionComponent<Props> = (props) => {
               )}
 
               {mostrarRegistrarNuevo && (
-                <Tooltip
-                  title="Registrar Nuevo Lote"
-                  placement={'top'}
-                  disableInteractive
-                >
-                  <IconButtonWrapper
-                    disabled={!habilitado || disabled}
-                    sx={{ flex: { xs: 1, sm: 'none' } }}
-                  >
+                <Tooltip title="Registrar nuevo lote" placement={'top'} disableInteractive>
+                  <IconButtonWrapper disabled={!habilitado || disabled} sx={{ flex: { xs: 1, sm: 'none' } }}>
                     <IconButton
                       color="secondary"
                       disabled={!habilitado || disabled}
@@ -249,7 +245,9 @@ const LoteSeleccion: FunctionComponent<Props> = (props) => {
         codigoArticulo={codigoArticulo}
         almacenId={almacenId}
         inventarioId={inventarioId}
-        tipoLista={tipoLista}
+        fuente={fuente}
+        metodoSeleccion={metodoSeleccion}
+        excluirVencidos={excluirVencidos}
         validarFechaVencimiento={loteProps.validarFechaVencimiento}
         onClose={(resp) => {
           if (resp) {
@@ -270,6 +268,7 @@ const LoteSeleccion: FunctionComponent<Props> = (props) => {
             onChange(resp)
             await refetch()
           }
+          setOpenLoteRegistro(false)
         }}
       />
     </>

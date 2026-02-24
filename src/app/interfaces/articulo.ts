@@ -6,7 +6,7 @@ import { GestionArticuloProps } from './gestionArticulo.ts'
 import { GrupoArticuloOperacionProps } from './grupoArticulo.ts'
 import { GrupoUnidadMedidaProps } from './grupoUnidadMedida.ts'
 import { ImagenCloudProps } from './imagen.ts'
-import { actionForm, ActionFormProps, AuditoriaProps } from './index.ts'
+import { AuditoriaProps } from './index.ts'
 import { InventarioProps } from './inventario.ts'
 import { LoteProps } from './lote.ts'
 import { ProveedorOperacionProps } from './proveedorOperacion.ts'
@@ -127,8 +127,6 @@ export interface ArticuloInputProps {
   verificarStock: boolean // si es true, se verifica el stock del articulo
   activo: boolean // si es true, el articulo esta activo para su uso
   complemento: boolean
-  // @deprecated
-  action: ActionFormProps
 }
 
 export const ARTICULO_DEFAULTS: ArticuloInputProps = {
@@ -153,7 +151,6 @@ export const ARTICULO_DEFAULTS: ArticuloInputProps = {
   verificarStock: true,
   activo: true,
   complemento: false,
-  action: actionForm.REGISTER, // deprecado
 }
 
 /**

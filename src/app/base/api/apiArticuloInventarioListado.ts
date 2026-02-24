@@ -81,20 +81,17 @@ export const apiArticuloInventarioListado = async (
     client.setHeader('authorization', `Bearer ${token}`)
     const cds = parseInt(import.meta.env.ISI_DOCUMENTO_SECTOR.toString()!, 10)
 
-    const data: any = await client.request(
-      gqlQuery(genReplaceEmpty(input.fragment, null)),
-      {
-        cds,
-        entidad,
-        verificarPrecio,
-        verificarInventario,
-        limit,
-        page,
-        reverse,
-        query,
-        queryExtra,
-      },
-    )
+    const data: any = await client.request(gqlQuery(genReplaceEmpty(input.fragment, null)), {
+      cds,
+      entidad,
+      verificarPrecio,
+      verificarInventario,
+      limit,
+      page,
+      reverse,
+      query,
+      queryExtra,
+    })
     return data.articuloInventarioV2Listado
   } catch (e: any) {
     throw new MyGraphQlError(e)

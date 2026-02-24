@@ -9,7 +9,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogProps,
   DialogTitle,
   IconButton,
   Stack,
@@ -18,104 +17,92 @@ import {
 } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { type MRT_ColumnDef, MRT_RowSelectionState } from 'material-react-table'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 
 import { apiLotePorArticuloInventarioAlmacenListado } from '../../../../../base/api/apiLotePorArticuloInventarioAlmacenListado.ts'
 import { apiLotePorArticuloListado } from '../../../../../base/api/apiLotePorArticuloListado.ts'
 import MuiRenderTopToolbarCustomActions from '../../../../../base/components/MuiTable/MuiRenderTopToolbarCustomActions.tsx'
 import { MrtDynamicTable } from '../../../../../base/components/Table/MrtDynamicTable.tsx'
 import { MrtTableConfig } from '../../../../../base/components/Table/mrtTypes.ts'
+import { MetodoSeleccionLote } from '../../../../../base/services/articuloToArticuloOperacionInputService.ts'
 import { apiEstado } from '../../../../../interfaces'
 import { LoteProps } from '../../../../../interfaces/lote.ts'
+import { alphaByTheme } from '../../../../../utils/colorUtils.ts'
 import {
   fechaStringExpirationStatus,
   fechaStringVerificaExpiracion,
 } from '../../../../../utils/dayjsHelper.ts'
 import { notError } from '../../../../../utils/notification.ts'
-import { apiLoteTipoLista } from './LoteSeleccion.tsx'
-
-interface OwnProps extends Omit<DialogProps, 'onClose'> {
-  onClose: (resp?: LoteProps | null) => void
-  codigoArticulo: string
-  almacenId?: string
-  inventarioId?: string
-  tipoLista: any // es de LoteSeleccionTipoLista
-  validarFechaVencimiento?: boolean
-  open: boolean
-}
+import { LoteSeleccionListadoDialogProps } from './LoteSeleccionTypes.ts'
+import { procesarLotesDesdeAPI } from './loteSeleccionUtils.ts'
 
 // Componente auxiliar para la leyenda
 const LegendItem = ({ color, text }: { color: string; text: string }) => (
   <Stack direction="row" alignItems="center" spacing={1}>
-    <Box sx={{ width: 12, height: 12, borderRadius: '2px', bgcolor: color }} />
+    <Box sx={{ width: 15, height: 15, borderRadius: '2px', bgcolor: color }} />
     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
       {text}
     </Typography>
   </Stack>
 )
 
-type Props = OwnProps
-
 /**
  * Componente que nos permite seleccionar un lote de un artículo, es una funcion auxiliar de SeleccionArticuloDialog
- * asociado al lote
+ * asociado al lote, con soporte para ordenamiento FEFO/FIFO y filtros avanzados
  * @param props
  * @author isi-template
  * @constructor
  */
-const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
+const LoteSeleccionPorArticuloListadoDialog: React.FC<LoteSeleccionListadoDialogProps> = (props) => {
   const {
     onClose,
     open,
     codigoArticulo,
-    tipoLista,
+    fuente,
     almacenId,
     inventarioId,
+    metodoSeleccion = MetodoSeleccionLote.MANUAL,
+    excluirVencidos = false,
     validarFechaVencimiento = false,
     ...others
   } = props
 
   const theme = useTheme()
-
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({}) //ts type available
 
+  // ===== CARGA DE LOTES DESDE API =====
   const {
-    data: lotes = [],
+    data: lotesAPI = [],
     isLoading,
     isError,
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: [
-      'lotes-por-articulo-servidor',
-      codigoArticulo,
-      almacenId,
-      inventarioId,
-      tipoLista,
-    ],
+    queryKey: ['lotes-por-articulo-servidor-dialog', codigoArticulo, almacenId, inventarioId, fuente],
     enabled: () => {
       if (!codigoArticulo) return false
-      if (apiLoteTipoLista.almacen === tipoLista) {
+      if (fuente === 'inv') {
         return !!(almacenId && inventarioId)
       }
       return true
     },
     queryFn: async () => {
-      if (tipoLista == apiLoteTipoLista.articulo) {
+      if (fuente === 'tbl') {
         return await apiLotePorArticuloListado(codigoArticulo)
       }
 
-      if (tipoLista === apiLoteTipoLista.almacen) {
+      if (fuente === 'inv') {
         if (!inventarioId || !almacenId) return []
-        return await apiLotePorArticuloInventarioAlmacenListado(
-          codigoArticulo,
-          inventarioId,
-          almacenId,
-        )
+        return await apiLotePorArticuloInventarioAlmacenListado(codigoArticulo, inventarioId, almacenId)
       }
       return []
     },
   })
+
+  // ===== PROCESAMIENTO DE LOTES =====
+  const lotesProcesados = useMemo(() => {
+    return procesarLotesDesdeAPI(lotesAPI, metodoSeleccion, excluirVencidos)
+  }, [lotesAPI, metodoSeleccion, excluirVencidos])
 
   // 2. Columnas con MRT_ColumnDef<Lote>
   const columns = useMemo<MRT_ColumnDef<LoteProps>[]>(
@@ -186,12 +173,14 @@ const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
     [],
   )
 
+  // ===== COLORES DE ESTADO =====
   const statusColors = {
-    expired: alpha(theme.palette.error.light, 0.5), // Rojo suave
-    warning: alpha(theme.palette.warning.light, 0.5), // Naranja/Amarillo suave
-    healthy: alpha(theme.palette.success.light, 0.5), // Verde suave
+    expired: theme.palette.error.light,
+    warning: theme.palette.warning.light,
+    healthy: theme.palette.success.light,
   }
 
+  // ===== CONFIGURACIÓN DE LA TABLA =====
   const config: MrtTableConfig<LoteProps> = {
     id: 'listado-lotes-por-seleccion',
     columns,
@@ -199,9 +188,7 @@ const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
     enableSelection: true,
     multiSelection: false,
     showIconRefetch: true,
-    renderBottomToolbarCustomActions: () => (
-      <MuiRenderTopToolbarCustomActions refetch={refetch} />
-    ),
+    renderBottomToolbarCustomActions: () => <MuiRenderTopToolbarCustomActions refetch={refetch} />,
     additionalOptions: {
       enableTopToolbar: false,
       enableBottomToolbar: true,
@@ -213,17 +200,25 @@ const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
           onClick: row.getToggleSelectedHandler(),
           sx: {
             cursor: 'pointer',
-            backgroundColor: statusColors[status],
+            backgroundColor: alphaByTheme(
+              statusColors[status],
+              theme,
+              theme.palette.mode === 'light' ? 0.8 : 0.2,
+            ),
             '&:hover': {
-              backgroundColor: alpha(statusColors[status], 0.2), // Un poco más intenso en hover
+              backgroundColor: alphaByTheme(
+                statusColors[status],
+                theme,
+                theme.palette.mode === 'light' ? 0.7 : 0.3,
+              ), // Un poco más intenso en hover
             },
             // Añadimos un borde izquierdo para reforzar el color
             borderLeft: `5px solid ${
               status === 'expired'
-                ? theme.palette.error.main
+                ? alphaByTheme(theme.palette.error.main, theme)
                 : status === 'warning'
-                  ? theme.palette.warning.main
-                  : theme.palette.success.main
+                  ? alphaByTheme(theme.palette.warning.main, theme)
+                  : alphaByTheme(theme.palette.success.main, theme)
             }`,
           },
         }
@@ -231,35 +226,44 @@ const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
     },
   }
 
+  // ===== MANEJO DE CONFIRMACIÓN =====
   const handleConfirmAction = () => {
-    const selectedRows = lotes.filter((item) =>
-      Object.keys(rowSelection).includes(item._id),
-    )
+    const selectedRows = lotesProcesados.filter((item) => Object.keys(rowSelection).includes(item._id))
+
     if (selectedRows.length > 0) {
-      // Verificamos si se debe validar la expiracion
-      if (
-        validarFechaVencimiento &&
-        fechaStringVerificaExpiracion(selectedRows[0].fechaVencimiento)
-      ) {
-        // Si la fecha está vencida, no permitimos la selección
+      // Verificar si se debe validar la expiración
+      if (validarFechaVencimiento && fechaStringVerificaExpiracion(selectedRows[0].fechaVencimiento)) {
         notError(
-          `El producto / articulo expiro el ${selectedRows[0].fechaVencimiento}. Seleccione o registre un nuevo lote`,
+          `El producto/artículo expiró el ${selectedRows[0].fechaVencimiento}. Seleccione o registre un nuevo lote`,
         )
         return
-      } else {
-        onClose(selectedRows[0])
       }
+
+      onClose(selectedRows[0])
     }
   }
-
-  /**********************************************************************************/
-  /**********************************************************************************/
-  useEffect(() => {
-    if (open) {
-      setRowSelection({})
+  // ===== TEXTO DEL METODO DE ORDENAMIENTO =====
+  const metodoTexto = useMemo(() => {
+    switch (metodoSeleccion) {
+      case MetodoSeleccionLote.FEFO:
+        return 'ordenados por vencimiento (FEFO - más próximo primero)'
+      case MetodoSeleccionLote.FIFO:
+        return 'ordenados por antigüedad (FIFO - más antiguo primero)'
+      case MetodoSeleccionLote.MANUAL:
+      default:
+        return 'en orden natural del inventario'
     }
-  }, [open])
+  }, [metodoSeleccion])
 
+  /**********************************************************************************/
+  /**********************************************************************************/
+  // useEffect(() => {
+  //   if (open) {
+  //     setRowSelection({})
+  //   }
+  // }, [open])
+
+  // ===== RENDERIZADO =====
   return (
     <Dialog open={open} onClose={() => onClose()} fullWidth maxWidth="xl" {...others}>
       <DialogTitle
@@ -271,9 +275,16 @@ const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
           justifyContent: 'space-between',
         }}
       >
-        <Stack direction={'row'} spacing={0.5}>
+        <Stack direction="row" spacing={0.5} alignItems="center">
           <Ballot sx={{ color: 'primary.main' }} />
-          <Typography fontSize={'large'}>Selección de Lotes</Typography>
+          <Box>
+            <Typography fontSize="large">Selección de lotes</Typography>
+            {metodoSeleccion !== MetodoSeleccionLote.MANUAL && (
+              <Typography variant="caption" color="text.secondary">
+                Lotes {metodoTexto}
+              </Typography>
+            )}
+          </Box>
         </Stack>
       </DialogTitle>
 
@@ -304,20 +315,41 @@ const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
             </AlertTitle>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} mt={1}>
               <LegendItem
-                color={statusColors.healthy}
+                color={
+                  theme.palette.mode === 'dark'
+                    ? alphaByTheme(statusColors.healthy, theme, 0.5)
+                    : statusColors.healthy
+                }
                 text="Vigente (Vence en +30 días)"
               />
               <LegendItem
-                color={statusColors.warning}
+                color={
+                  theme.palette.mode === 'dark'
+                    ? alphaByTheme(statusColors.warning, theme, 0.5)
+                    : statusColors.warning
+                }
                 text="Próximo a vencer (<30 días)"
               />
-              <LegendItem color={statusColors.expired} text="Lote Vencido" />
+              <LegendItem
+                color={
+                  theme.palette.mode === 'dark'
+                    ? alphaByTheme(statusColors.expired, theme, 0.6)
+                    : statusColors.expired
+                }
+                text="Lote Vencido"
+              />
             </Stack>
+
+            {excluirVencidos && (
+              <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block' }}>
+                ⚠️ Los lotes vencidos están ocultos según la configuración
+              </Typography>
+            )}
           </Alert>
         </Box>
         <MrtDynamicTable
           config={config}
-          data={lotes}
+          data={lotesProcesados}
           state={{
             rowSelection,
           }}
@@ -338,12 +370,11 @@ const LoteSeleccionPorArticuloListadoDialog: React.FC<Props> = (props) => {
         <Button
           color={'primary'}
           variant={'contained'}
-          size={'small'}
           startIcon={<Save />}
           disabled={Object.keys(rowSelection).length === 0}
           onClick={handleConfirmAction}
         >
-          Confirmar Selección ({Object.keys(rowSelection).length})
+          Confirmar selección ({Object.keys(rowSelection).length})
         </Button>
       </DialogActions>
     </Dialog>

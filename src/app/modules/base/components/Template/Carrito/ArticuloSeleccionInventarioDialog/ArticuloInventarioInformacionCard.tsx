@@ -1,7 +1,6 @@
 import { AllInclusive } from '@mui/icons-material'
 import {
   Alert,
-  alpha,
   Avatar,
   CardActionArea,
   CardContent,
@@ -26,6 +25,7 @@ import { ArticuloProps } from '../../../../../../interfaces/articulo.ts'
 import { ArticuloOperacionInputProps } from '../../../../../../interfaces/articuloOperacion.ts'
 import { InventarioOperacionProps } from '../../../../../../interfaces/InventarioOperacion.ts'
 import { MonedaProps } from '../../../../../../interfaces/monedaPrecio.ts'
+import { alphaByTheme } from '../../../../../../utils/colorUtils.ts'
 
 const StyledTableCell = styled(TableCell)(() => ({
   [`&.${tableCellClasses.head}`]: {
@@ -64,10 +64,7 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
 
   const InventarioComponent = inventario ? (
     <>
-      <TableContainer
-        component={SimpleBox}
-        sx={{ padding: '0', width: '100%', m: 0, mt: 0 }}
-      >
+      <TableContainer component={SimpleBox} sx={{ padding: '0', width: '100%', m: 0, mt: 0 }}>
         <Table size={'small'} sx={{ border: 'none' }}>
           <TableBody>
             <TableRow>
@@ -90,7 +87,7 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
               <StyledTableCell sx={{ fontWeight: 500 }}>Stock</StyledTableCell>
               <StyledTableCell
                 sx={{
-                  bgcolor: (theme) => alpha(theme.palette.blue.main, 0.5),
+                  bgcolor: (theme) => alphaByTheme(theme.palette.blue.main, theme, 0.6),
                   // color: 'blue.contrastText',
                   textAlign: 'right',
                   fontWeight: 500,
@@ -99,21 +96,17 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
                 {articulo.verificarStock && (
                   <MontoMonedaTexto
                     monto={inventario.stock}
-                    sigla={
-                      inventario.articuloPrecio.articuloUnidadMedida.nombreUnidadMedida
-                    }
+                    sigla={inventario.articuloPrecio.articuloUnidadMedida.nombreUnidadMedida}
                   />
                 )}
-                {!articulo.verificarStock && (
-                  <AllInclusive sx={{ fontSize: '1rem', display: 'block' }} />
-                )}
+                {!articulo.verificarStock && <AllInclusive sx={{ fontSize: '1rem', display: 'block' }} />}
               </StyledTableCell>
             </TableRow>
             <TableRow>
               <StyledTableCell sx={{ fontWeight: 500 }}>Solicitado</StyledTableCell>
               <StyledTableCell
                 sx={{
-                  bgcolor: (theme) => alpha(theme.palette.orange.main, 0.5),
+                  bgcolor: (theme) => alphaByTheme(theme.palette.orange.main, theme, 0.5),
                   textAlign: 'right',
                   fontWeight: 500,
                 }}
@@ -121,21 +114,17 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
                 {articulo.verificarStock && (
                   <MontoMonedaTexto
                     monto={inventario.solicitado}
-                    sigla={
-                      inventario.articuloPrecio.articuloUnidadMedida.nombreUnidadMedida
-                    }
+                    sigla={inventario.articuloPrecio.articuloUnidadMedida.nombreUnidadMedida}
                   />
                 )}
-                {!articulo.verificarStock && (
-                  <AllInclusive sx={{ fontSize: '1rem', display: 'block' }} />
-                )}
+                {!articulo.verificarStock && <AllInclusive sx={{ fontSize: '1rem', display: 'block' }} />}
               </StyledTableCell>
             </TableRow>
             <TableRow>
               <StyledTableCell sx={{ fontWeight: 500 }}>Comprometido</StyledTableCell>
               <StyledTableCell
                 sx={{
-                  bgcolor: (theme) => alpha(theme.palette.yellow.main, 0.9),
+                  bgcolor: (theme) => alphaByTheme(theme.palette.yellow.main, theme, 0.7),
                   textAlign: 'right',
                   fontWeight: 500,
                 }}
@@ -143,21 +132,17 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
                 {articulo.verificarStock && (
                   <MontoMonedaTexto
                     monto={inventario.comprometido}
-                    sigla={
-                      inventario.articuloPrecio.articuloUnidadMedida.nombreUnidadMedida
-                    }
+                    sigla={inventario.articuloPrecio.articuloUnidadMedida.nombreUnidadMedida}
                   />
                 )}
-                {!articulo.verificarStock && (
-                  <AllInclusive sx={{ fontSize: '1rem', display: 'block' }} />
-                )}
+                {!articulo.verificarStock && <AllInclusive sx={{ fontSize: '1rem', display: 'block' }} />}
               </StyledTableCell>
             </TableRow>
             <TableRow>
               <StyledTableCell sx={{ fontWeight: 500 }}>Disponible</StyledTableCell>
               <StyledTableCell
                 sx={{
-                  bgcolor: (theme) => alpha(theme.palette.green.light, 0.9),
+                  bgcolor: (theme) => alphaByTheme(theme.palette.green.light, theme, 0.5),
                   textAlign: 'right',
                   fontWeight: 500,
                 }}
@@ -165,14 +150,10 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
                 {articulo.verificarStock && (
                   <MontoMonedaTexto
                     monto={inventario.disponible}
-                    sigla={
-                      inventario.articuloPrecio.articuloUnidadMedida.nombreUnidadMedida
-                    }
+                    sigla={inventario.articuloPrecio.articuloUnidadMedida.nombreUnidadMedida}
                   />
                 )}
-                {!articulo.verificarStock && (
-                  <AllInclusive sx={{ fontSize: '1rem', display: 'block' }} />
-                )}
+                {!articulo.verificarStock && <AllInclusive sx={{ fontSize: '1rem', display: 'block' }} />}
               </StyledTableCell>
             </TableRow>
             <TableRow>
@@ -180,9 +161,7 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
               <StyledTableCell sx={{ textAlign: 'right' }}>
                 <MontoMonedaTexto
                   monto={inventario.articuloPrecio.cantidadBase}
-                  sigla={
-                    articulo.articuloPrecioBase.articuloUnidadMedida.nombreUnidadMedida
-                  }
+                  sigla={articulo.articuloPrecioBase.articuloUnidadMedida.nombreUnidadMedida}
                 />
               </StyledTableCell>
             </TableRow>
@@ -200,9 +179,7 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
     </>
   ) : (
     <SimpleBox sx={{ p: 0, m: 0 }}>
-      <Alert severity={'warning'}>
-        Aun no cuenta con inventario para la sucursal, almacen solicitado.
-      </Alert>
+      <Alert severity={'warning'}>Aun no cuenta con inventario para la sucursal, almacen solicitado.</Alert>
     </SimpleBox>
   )
 
@@ -259,9 +236,7 @@ const ArticuloInventarioInformacionCard: FunctionComponent<Props> = memo((props)
           </Typography>
         }
       />
-      <CardContent sx={{ mt: -1, padding: 1, pb: '10px !important' }}>
-        {InventarioComponent}
-      </CardContent>
+      <CardContent sx={{ mt: -1, padding: 1, pb: '10px !important' }}>{InventarioComponent}</CardContent>
     </SimpleBox>
   )
 })

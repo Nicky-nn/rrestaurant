@@ -17,7 +17,7 @@ export const themeShadows: Shadows = themeLightShadow
 const WHITE_STRONG = 'rgba(255, 255, 255, 0.99)'
 const WHITE_SOFT = 'rgba(255, 255, 255, 0.87)'
 const BLACK = 'rgba(0, 0, 0, 0.87)'
-const DARK_ALPHA = 0.5
+const DARK_ALPHA = 0.6
 
 // Devuelve blanco o negro según la luminosidad del color de fondo
 const getBestContrastColor = (background: string): string => {
@@ -120,8 +120,7 @@ const getExtendedColors = (mode: PaletteMode) => {
     const colorKey = key as keyof typeof definitions
     const colorDef = definitions[colorKey]
 
-    const contrastText =
-      (colorDef as any).contrastText || getBestContrastColor(colorDef.main)
+    const contrastText = (colorDef as any).contrastText || getBestContrastColor(colorDef.main)
 
     acc[colorKey] = {
       ...colorDef,
@@ -165,13 +164,8 @@ const colors = {
  * @param isDarkMode
  * @param darkLighten
  */
-const createPalette = (
-  hexColor: string,
-  isDarkMode: boolean,
-  darkLighten: number = 0,
-) => {
-  const mainColor =
-    isDarkMode && darkLighten > 0 ? lighten(hexColor, darkLighten) : hexColor
+const createPalette = (hexColor: string, isDarkMode: boolean, darkLighten: number = 0) => {
+  const mainColor = isDarkMode && darkLighten > 0 ? lighten(hexColor, darkLighten) : hexColor
   return {
     base: hexColor,
     main: mainColor,
@@ -219,23 +213,37 @@ const createCompleteTheme = (
   //   // if (variantName === 'green') background.paper = '#00625D'
   // }
 
+  // creamos un contenedor para mui-modal
+  // Crear contenedor una sola vez
+  const getModalContainer = (() => {
+    let container: HTMLDivElement | null = null
+    return () => {
+      // Verificamos document para evitar errores en SSR
+      if (typeof document === 'undefined') return null
+
+      if (!container) {
+        container = document.createElement('div')
+        container.id = 'modal-root'
+        document.body.appendChild(container)
+      }
+      return container
+    }
+  })()
+
   return {
     palette: {
       mode,
       ...extendedPalette, // Agrega orange, green, etc.
       primary: {
         ...colors.primary,
-        contrastText:
-          (colors.primary as any).contrastText ||
-          getBestContrastColor(colors.primary.main),
+        contrastText: (colors.primary as any).contrastText || getBestContrastColor(colors.primary.main),
       },
       secondary: {
         ...colors.secondary,
-        contrastText:
-          (colors.secondary as any).contrastText ||
-          getBestContrastColor(colors.secondary.main),
+        contrastText: (colors.secondary as any).contrastText || getBestContrastColor(colors.secondary.main),
       },
       text: isDark ? textDark : textLight,
+      divider: isDark ? alpha('#ffffff', 0.12) : alpha('#000000', 0.12),
       error: errorColor,
       background,
       action: {
@@ -248,12 +256,14 @@ const createCompleteTheme = (
     } as PaletteOptions,
     shadows: isDark ? themeDarkShadow : themeShadows,
     components: {
-      MuiDialogContent: {
-        styleOverrides: {
-          root: {
-            // Si usas dividers, asegúrate de que el borde sea visible en dark
-            borderColor: isDark ? alpha('#ffffff', 0.12) : alpha('#000000', 0.12),
-          },
+      MuiModal: {
+        defaultProps: {
+          container: getModalContainer,
+        },
+      },
+      MuiPopover: {
+        defaultProps: {
+          container: getModalContainer,
         },
       },
     },

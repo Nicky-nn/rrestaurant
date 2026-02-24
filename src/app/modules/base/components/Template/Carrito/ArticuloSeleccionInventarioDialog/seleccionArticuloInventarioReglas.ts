@@ -3,79 +3,81 @@ import { ArticuloProps } from '../../../../../../interfaces/articulo.ts'
 import { ArticuloOperacionInputProps } from '../../../../../../interfaces/articuloOperacion.ts'
 import { apiGestionArticulo } from '../../../../../../interfaces/gestionArticulo.ts'
 import { InventarioOperacionProps } from '../../../../../../interfaces/InventarioOperacion.ts'
-import { parseStringToDate } from '../../../../../../utils/dayjsHelper.ts'
 import { UnidadMedidaSeleccionProps } from '../../ArticuloUnidadMedidaSeleccion/ArticuloUnidadMedidaSeleccion.tsx'
-import { LoteSeleccionProps } from '../../LoteSeleccion/LoteSeleccion.tsx'
-import { SeleccionArticuloReglasProps } from './SeleccionArticuloInventarioDialog.tsx'
+import { LoteSeleccionProps } from '../../LoteSeleccion/LoteSeleccionTypes.ts'
+import { validarLoteVencido } from '../../LoteSeleccion/loteSeleccionUtils.ts'
+import { SeleccionArticuloReglasProps } from './ArticuloSeleccionInventarioTypes.ts'
 
 /**
  * Implementamos las reglas de negocio para la seleccion de articulos de inventario
  */
 export const seleccionArticuloInventarioReglas = (
   articulo: ArticuloProps | null | undefined,
-  item: ArticuloOperacionInputProps,
+  item: ArticuloOperacionInputProps, // datos de formulario
   inventario: InventarioOperacionProps | null,
   options: {
     loteProps: LoteSeleccionProps
     unidadMedidaProps: UnidadMedidaSeleccionProps
-    reglas: SeleccionArticuloReglasProps
+    reglas?: SeleccionArticuloReglasProps
   },
 ) => {
-  const { loteProps, unidadMedidaProps, reglas } = options
+  const { loteProps, reglas = {} } = options
   const { validarTotal = true } = reglas
   if (!articulo)
-    return [
-      'No se ha podido construir los datos de articulo, cierre el dialogo e intente de nuevo',
-    ]
+    return ['No se ha podido construir los datos de articulo, cierre el dialogo e intente de nuevo']
 
-  if (reglas.validarInventario) {
+  if (reglas.validarExistenciaInventario) {
     if (!inventario) {
-      return ['Debe contar con datos de INVENTARIO ']
+      if (articulo.gestionArticulo === apiGestionArticulo.LOTE) {
+        return ['Debe seleccionar un almacen y lote con datos de inventario']
+      } else {
+        return ['Debe seleccionar un almacen con datos de inventario']
+      }
     }
   }
 
   // Validando lote siempre y cuando este gestionado por lotes
-  if (loteProps.validarLote) {
+  if ((loteProps.validarLote || reglas.validaLote) && !loteProps.disabled) {
     if (articulo.gestionArticulo === apiGestionArticulo.LOTE) {
       if (!item.lote) {
-        return [
-          `Articulo gestionado por ${apiGestionArticulo.LOTE}. Debe seleccionar o registra un LOTE`,
-        ]
+        return [`Articulo gestionado por ${apiGestionArticulo.LOTE}. Debe seleccionar o registra un LOTE`]
       }
     }
   }
 
   // Validando fecha vencimiento del lote
-  if (loteProps.validarFechaVencimiento) {
-    if (
-      item.lote &&
-      item.lote.fechaVencimiento &&
-      articulo.gestionArticulo === apiGestionArticulo.LOTE
-    ) {
-      if (parseStringToDate(item.lote.fechaVencimiento)! <= new Date()) {
+  if ((loteProps.validarFechaVencimiento || reglas.validaLoteFechaVencimiento) && !loteProps.disabled) {
+    if (item.lote && item.lote.fechaVencimiento && articulo.gestionArticulo === apiGestionArticulo.LOTE) {
+      if (!validarLoteVencido(item.lote.fechaVencimiento)) {
         return [
-          `Lote ${item.lote.codigoLote} vencio el ${item.lote.fechaVencimiento}. Seleccione o registre nuevo Lote`,
+          `Lote ${item.lote.codigoLote} vencio el ${item.lote.fechaVencimiento}. Seleccione o registre un nuevo Lote`,
         ]
       }
     }
   }
 
-  // Verificando cantidad a enviar, solo aplica si verificarStock es true
   if (reglas.validarCantidad) {
+    if (item.cantidad <= 0) {
+      return ['Debe ingresar un valor en cantidad']
+    }
+  }
+
+  // Verificando cantidad a enviar, solo aplica si verificarStock es true
+  if (reglas.validarCantidadStock) {
     // Validamos cantidad siempre y cuando verificarStock sea true
     if (articulo.verificarStock) {
       if (!inventario) {
-        return ['Para verificar la cantidad, deben existir datos de INVENTARIO ']
+        return ['Para verificar la cantidad por disponibilidad, deben existir datos de INVENTARIO ']
       }
       // Si esta gestionado por lotes
       if (articulo.gestionArticulo === apiGestionArticulo.LOTE) {
         if (!item.lote || !inventario.lote) {
-          return ['Para verificar la cantidad, debe seleccionar LOTE']
+          return ['Error en stock disponible, debe seleccionar un LOTE que cuente con inventario > 0']
         }
         // Verificamos la cantidad disponible
         if (item.cantidad > inventario.lote.disponible) {
           return [
-            `Cantidad ${item.cantidad} no debe exceder las ${inventario.lote?.disponible}  ${item.articuloUnidadMedida?.nombreUnidadMedida ?? ''} disponible en Lote ${item.lote.codigoLote}`,
+            `Cantidad ${item.cantidad} no debe exceder las ${inventario.lote?.disponible}  ${item.articuloUnidadMedida?.nombreUnidadMedida ?? ''} disponibles en Lote ${item.lote.codigoLote}`,
           ]
         }
       } else {
@@ -85,7 +87,7 @@ export const seleccionArticuloInventarioReglas = (
         }
         if (item.cantidad > inventario.almacen.disponible) {
           return [
-            `Cantidad ${item.cantidad} no debe exceder las ${inventario.almacen?.disponible} ${item.articuloUnidadMedida?.nombreUnidadMedida ?? ''} disponible en Almacen ${item.almacen.codigoAlmacen}`,
+            `Cantidad ${item.cantidad} no debe exceder las ${inventario.almacen?.disponible} ${item.articuloUnidadMedida?.nombreUnidadMedida ?? ''} disponibles en Almacen ${item.almacen.codigoAlmacen}`,
           ]
         }
       }

@@ -2,7 +2,7 @@ import { AlmacenProps } from './almacen.ts'
 import { ArticuloUnidadMedidaProps } from './articuloUnidadMedida.ts'
 import { AuditoriaProps } from './index.ts'
 import { KardexPeriodoProps } from './kardexPeriodo.ts'
-import { LoteProps } from './lote'
+import { LoteProps } from './lote.ts'
 import { SinTipoDocumentoSectorProps } from './sin.interface.ts'
 import { SucursalProps } from './sucursal.ts'
 

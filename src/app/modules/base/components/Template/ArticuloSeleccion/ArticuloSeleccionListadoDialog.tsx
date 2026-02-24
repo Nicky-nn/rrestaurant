@@ -17,6 +17,7 @@ import { genMrtQueryPagination } from '../../../../../base/components/Table/genM
 import { MrtDynamicTable } from '../../../../../base/components/Table/MrtDynamicTable.tsx'
 import { MrtTableConfig } from '../../../../../base/components/Table/mrtTypes.ts'
 import { useMrtQuery } from '../../../../../base/components/Table/useMrtQuery.tsx'
+import { TipoMontoProps } from '../../../../../base/interfaces/base.ts'
 import { EntidadInputProps } from '../../../../../interfaces'
 import { ArticuloProps } from '../../../../../interfaces/articulo.ts'
 import { notDanger } from '../../../../../utils/notification.ts'
@@ -29,6 +30,8 @@ interface OwnProps extends DialogProps {
   verificarInventario?: boolean
   bloquearCodigosArticulo: string[] // bloquea los articulos según el codigo de articulo
   seleccionMultiple?: boolean // default true
+  /** Renderizado de columna precio a precio, delivery, Costo */
+  tipoMonto?: TipoMontoProps
   open: boolean
   extraQuery?: string[] // Condiciones extras para filtro de articulos Ej: ["key=1", "key2=2"]
   onClose: (value: ArticuloProps[]) => void
@@ -52,10 +55,11 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
     verificarInventario,
     seleccionMultiple = true,
     extraQuery = [],
+    tipoMonto = 'precio',
     ...other
   } = props
 
-  const columns = useMemo(() => ArticuloSeleccionListadoColumns, [])
+  const columns = useMemo(() => ArticuloSeleccionListadoColumns(tipoMonto), [tipoMonto])
 
   // Estado para la selección de filas
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({})
@@ -66,13 +70,7 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
 
   // Llamada a la api de listado
   const datos = useMrtQuery({
-    queryKey: [
-      'articulo-seleccion-listado-dialog',
-      open,
-      entidad,
-      verificarPrecio,
-      verificarInventario,
-    ],
+    queryKey: ['articulo-seleccion-listado-dialog', open, entidad, verificarPrecio, verificarInventario],
     queryFn: async (ctx) => {
       // Paginación y filtros
       const pgs = genMrtQueryPagination(ctx, {
@@ -111,8 +109,7 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
           },
         },
       },
-      enableRowSelection: (row) =>
-        !bloquearCodigosArticulo.includes(row.original.codigoArticulo),
+      enableRowSelection: (row) => !bloquearCodigosArticulo.includes(row.original.codigoArticulo),
       enableMultiRowSelection: seleccionMultiple,
     },
   }
@@ -123,9 +120,7 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
   const onSeleccionArticulos = () => {
     const idsArticulo = Object.keys(rowSelection)
     if (idsArticulo.length > 0) {
-      const articulos = (datos.data?.docs || []).filter((a) =>
-        idsArticulo.includes(a.codigoArticulo),
-      )
+      const articulos = (datos.data?.docs || []).filter((a) => idsArticulo.includes(a.codigoArticulo))
       // const articuloOperaciones = articuloToOperacion(articulos)
       onClose(articulos)
     } else {
@@ -185,12 +180,7 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
         <Button color={'error'} onClick={() => onClose([])}>
           Cerrar
         </Button>
-        <Button
-          color={'primary'}
-          variant={'contained'}
-          startIcon={<Save />}
-          onClick={onSeleccionArticulos}
-        >
+        <Button color={'primary'} variant={'contained'} startIcon={<Save />} onClick={onSeleccionArticulos}>
           Seleccionar Articulo
         </Button>
       </DialogActions>
