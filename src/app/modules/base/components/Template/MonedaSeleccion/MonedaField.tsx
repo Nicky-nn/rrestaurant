@@ -26,8 +26,7 @@ type Props = OwnProps
  * @constructor
  */
 const MonedaField: FunctionComponent<Props> = (props) => {
-  const { value, onChange, isDisabled, error, formHelperText, isClearable, required } =
-    props
+  const { value, onChange, isDisabled, error, formHelperText, isClearable, required } = props
 
   const {
     data: monedas,

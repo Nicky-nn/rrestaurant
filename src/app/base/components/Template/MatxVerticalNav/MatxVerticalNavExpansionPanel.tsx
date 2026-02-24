@@ -105,7 +105,7 @@ const MatxVerticalNavExpansionPanel: FC<any> = ({
 
   const calcaulateHeight = useCallback((node: any) => {
     if (node.name !== 'child') {
-      for (let child of node.children) {
+      for (const child of node.children) {
         calcaulateHeight(child)
       }
     }
@@ -121,7 +121,7 @@ const MatxVerticalNavExpansionPanel: FC<any> = ({
     calcaulateHeight(elementRef.current)
 
     // OPEN DROPDOWN IF CHILD IS ACTIVE
-    for (let child of elementRef.current.children) {
+    for (const child of elementRef.current.children) {
       if (child.getAttribute('href') === pathname) {
         setCollapsed(false)
       }
@@ -143,9 +143,7 @@ const MatxVerticalNavExpansionPanel: FC<any> = ({
           {iconText && <BulletIcon />}
           <ItemText className="sidenavHoverShow">{name}</ItemText>
         </Box>
-        {badge && (
-          <BadgeValue className="sidenavHoverShow itemIcon">{badge.value}</BadgeValue>
-        )}
+        {badge && <BadgeValue className="sidenavHoverShow itemIcon">{badge.value}</BadgeValue>}
         <div
           className={clsx({
             sidenavHoverShow: true,
@@ -162,9 +160,7 @@ const MatxVerticalNavExpansionPanel: FC<any> = ({
       <div
         ref={elementRef}
         className="expansion-panel submenu"
-        style={
-          collapsed ? { maxHeight: '0px' } : { maxHeight: componentHeight.current + 'px' }
-        }
+        style={collapsed ? { maxHeight: '0px' } : { maxHeight: componentHeight.current + 'px' }}
       >
         {children}
       </div>

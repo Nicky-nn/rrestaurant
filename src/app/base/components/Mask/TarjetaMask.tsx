@@ -10,10 +10,7 @@ interface CustomProps {
  * @description Realiza un enmascarmiento para registro de una tarjeta
  * @author isi-template
  */
-export const TarjetaMask = forwardRef<HTMLElement, CustomProps>(function TextMaskCustom(
-  props,
-  ref: any,
-) {
+export const TarjetaMask = forwardRef<HTMLElement, CustomProps>(function TextMaskCustom(props, ref: any) {
   const { onChange, ...other } = props
   return (
     <IMaskInput
@@ -25,9 +22,7 @@ export const TarjetaMask = forwardRef<HTMLElement, CustomProps>(function TextMas
         '0': /[1-9-0]/,
       }}
       unmask={'typed'}
-      onAccept={(value: any, mask: any) =>
-        onChange({ target: { name: props.name, value } })
-      }
+      onAccept={(value: any, mask: any) => onChange({ target: { name: props.name, value } })}
       overwrite
     />
   )

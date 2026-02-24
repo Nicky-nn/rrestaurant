@@ -16,9 +16,7 @@ const validateGraphQlError = (e: Error): any => {
       status: parsed.response?.errors[0]?.extensions?.status || 400,
       message: parsed.response?.errors[0]?.message || 'Error no definido',
       originalMessage: parsed.response?.errors[0]?.extensions?.originalMessage || '',
-      stacktrace: `<code>${
-        parsed.response?.errors[0]?.extensions?.stacktrace?.join('') || ''
-      }</code>`,
+      stacktrace: `<code>${parsed.response?.errors[0]?.extensions?.stacktrace?.join('') || ''}</code>`,
       type: parsed.response?.errors[0]?.extensions?.code || 'BAD_REQUEST',
       path: parsed.response?.errors[0]?.path.join('<br />') || '',
     }

@@ -39,10 +39,7 @@ type NotificationProviderProps = {
   settings: any
 }
 
-export const NotificationProvider: FC<any> = ({
-  settings,
-  children,
-}: NotificationProviderProps) => {
+export const NotificationProvider: FC<any> = ({ settings, children }: NotificationProviderProps) => {
   const [state, dispatch] = useReducer(reducer, [])
 
   const deleteNotification: any = async (notificationID: any) => {

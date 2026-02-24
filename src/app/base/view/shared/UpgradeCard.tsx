@@ -36,12 +36,7 @@ const UpgradeCard = () => {
         <Paragraph>
           Upgrade to <b>MatX PRO</b> for <br /> more resources
         </Paragraph>
-        <Button
-          size="large"
-          color="primary"
-          variant="contained"
-          sx={{ textTransform: 'uppercase' }}
-        >
+        <Button size="large" color="primary" variant="contained" sx={{ textTransform: 'uppercase' }}>
           upgrade now
         </Button>
       </StyledCard>

@@ -40,9 +40,7 @@ export const SecurityProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const isAdmin = useMemo(() => {
     return (
       user?.rol &&
-      ['administrador', 'admin', 'adm'].some((adminRole) =>
-        user.rol.toLowerCase().includes(adminRole),
-      )
+      ['administrador', 'admin', 'adm'].some((adminRole) => user.rol.toLowerCase().includes(adminRole))
     )
   }, [user?.rol])
 
@@ -68,9 +66,7 @@ export const SecurityProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
 
     // Eliminar duplicados consecutivos (ej: ['Productos', 'Productos', 'Modificar'] -> ['Productos', 'Modificar'])
-    const uniqueHierarchy = fullHierarchy.filter(
-      (item, index, arr) => index === 0 || item !== arr[index - 1],
-    )
+    const uniqueHierarchy = fullHierarchy.filter((item, index, arr) => index === 0 || item !== arr[index - 1])
 
     // Normalizar y construir permiso
     const hierarchyParts = uniqueHierarchy.map(normalizeString)

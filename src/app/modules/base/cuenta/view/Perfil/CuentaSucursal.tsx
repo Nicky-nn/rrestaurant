@@ -18,10 +18,7 @@ const CuentaSucursal: FunctionComponent<Props> = (props) => {
   const { user } = useAuth()
   return (
     <>
-      <SimpleCard
-        title={'SUCURSAL / PUNTO VENTA / ACTIVIDAD ECONÓMICA'}
-        childIcon={<Home />}
-      >
+      <SimpleCard title={'SUCURSAL / PUNTO VENTA / ACTIVIDAD ECONÓMICA'} childIcon={<Home />}>
         <div className="responsive-table" style={{ marginBottom: 25 }}>
           <H4>SUCURSAL</H4>
           <table>
@@ -38,9 +35,7 @@ const CuentaSucursal: FunctionComponent<Props> = (props) => {
                 <td data-label={'CÓDIGO'}>{user.sucursal.codigo}</td>
                 <td data-label={'DIRECCIÓN'}>{user.sucursal.direccion}</td>
                 <td data-label={'TELEFONO'}>{user.sucursal.telefono}</td>
-                <td data-label={'DEPARTAMENTO'}>
-                  {user.sucursal.departamento.departamento}
-                </td>
+                <td data-label={'DEPARTAMENTO'}>{user.sucursal.departamento.departamento}</td>
               </tr>
             </tbody>
           </table>

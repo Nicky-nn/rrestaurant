@@ -23,9 +23,7 @@ const query = gql`
  * @param codigoArticulo
  * @author isi-template
  */
-export const apiLotePorArticuloListado = async (
-  codigoArticulo: string,
-): Promise<LoteProps[]> => {
+export const apiLotePorArticuloListado = async (codigoArticulo: string): Promise<LoteProps[]> => {
   try {
     const client = new GraphQLClient(import.meta.env.ISI_API_URL)
     const token = localStorage.getItem(AccessToken)

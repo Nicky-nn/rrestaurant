@@ -1,15 +1,15 @@
 import '@fontsource/roboto' // Defaults to weight 400
 import '@fontsource/roboto/300.css' // Specify weight
+import '@fontsource/roboto/400-italic.css' // Specify weight and style
 import '@fontsource/roboto/400.css' // Specify weight
 import '@fontsource/roboto/500.css' // Specify weight
 import '@fontsource/roboto/700.css' // Specify weight
 import '@fontsource/roboto/900.css' // Specify weight
-import '@fontsource/roboto/400-italic.css' // Specify weight and style
 import 'material-icons/iconfont/material-icons.css'
-import './index.css'
 import 'rc-input-number/assets/index.css'
-import 'react-toastify/dist/ReactToastify.css'
 import 'react-datepicker/dist/react-datepicker.css'
+import 'react-toastify/dist/ReactToastify.css'
+import './index.css'
 import './styles/accordion.css'
 import './styles/reactDatePicker.css'
 
@@ -34,3 +34,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </StyledEngineProvider>
   </React.StrictMode>,
 )
+

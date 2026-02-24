@@ -56,12 +56,9 @@ export const removeDarkMode = () => {
 /**
  * Determina qué modo visual aplicar según el modo configurado
  */
-export const getModoEfectivo = (
-  modo: 'LIGHT' | 'DARK' | 'SYSTEM' | null,
-): 'LIGHT' | 'DARK' => {
+export const getModoEfectivo = (modo: 'LIGHT' | 'DARK' | 'SYSTEM' | null): 'LIGHT' | 'DARK' => {
   if (modo === 'SYSTEM' || modo === null) {
-    const prefersDark =
-      window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
     return prefersDark ? 'DARK' : 'LIGHT'
   }
   return modo

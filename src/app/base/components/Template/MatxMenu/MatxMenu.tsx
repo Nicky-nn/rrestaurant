@@ -19,7 +19,7 @@ const MenuButton = styled(Box)(({ theme }) => ({
 const MatxMenu: FC<any> = (props: any) => {
   const [anchorEl, setAnchorEl] = React.useState(null)
   const children = React.Children.toArray(props.children)
-  let { shouldCloseOnItemClick = true, horizontalPosition = 'left' } = props
+  const { shouldCloseOnItemClick = true, horizontalPosition = 'left' } = props
   const { settings } = useSettings()
 
   const handleClick = (event: any) => {

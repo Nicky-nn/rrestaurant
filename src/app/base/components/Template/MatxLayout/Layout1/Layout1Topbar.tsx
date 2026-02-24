@@ -208,19 +208,9 @@ const Layout1Topbar: FC<any> = () => {
           <StyledIconButton>
             <Tooltip title="Ambiente">
               {user.miEmpresa.codigoAmbiente === 1 ? (
-                <Chip
-                  size={'small'}
-                  icon={<Storefront />}
-                  color={'success'}
-                  label={'Producción'}
-                />
+                <Chip size={'small'} icon={<Storefront />} color={'success'} label={'Producción'} />
               ) : (
-                <Chip
-                  size={'small'}
-                  icon={<Storefront />}
-                  color={'warning'}
-                  label={'Piloto'}
-                />
+                <Chip size={'small'} icon={<Storefront />} color={'warning'} label={'Piloto'} />
               )}
             </Tooltip>
           </StyledIconButton>

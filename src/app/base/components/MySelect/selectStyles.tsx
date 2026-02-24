@@ -56,10 +56,7 @@ export const getSelectStyles = <
         borderColor = theme.palette.primary.main
       } else if (state.isDisabled) {
         borderColor = alpha(theme.palette.text.disabled, 0.4)
-        backgroundColor =
-          theme.palette.mode === 'dark'
-            ? 'rgba(255, 255, 255, 0.05)'
-            : 'rgba(0, 0, 0, 0.03)'
+        backgroundColor = theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'
       }
 
       return {
@@ -174,9 +171,7 @@ export const getSelectStyles = <
     multiValueLabel: (provided) => ({
       ...provided,
       color:
-        theme.palette.mode === 'dark'
-          ? lighten(theme.palette.primary.main, 0.5)
-          : theme.palette.primary.main,
+        theme.palette.mode === 'dark' ? lighten(theme.palette.primary.main, 0.5) : theme.palette.primary.main,
       fontWeight: 500,
       fontSize: size === 'small' ? '0.75rem' : '0.85rem', // Chip más pequeño en small
       padding: size === 'small' ? '1px 4px' : '3px 6px',

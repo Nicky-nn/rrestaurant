@@ -1,15 +1,5 @@
 import { Box, BoxProps, useMediaQuery, useTheme } from '@mui/material'
-import {
-  Fragment,
-  JSX,
-  ReactNode,
-  UIEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { Fragment, JSX, ReactNode, UIEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 // Tipos para las props
 interface GridConfig {
@@ -205,15 +195,7 @@ function VirtualizedScrollContainer<T>({
     }
 
     return { visibleRows, totalHeight, startIndex, endIndex }
-  }, [
-    data,
-    dimensions.height,
-    scrollTop,
-    currentConfig,
-    itemHeight,
-    overscanCount,
-    spacingValue,
-  ])
+  }, [data, dimensions.height, scrollTop, currentConfig, itemHeight, overscanCount, spacingValue])
 
   return (
     <Box

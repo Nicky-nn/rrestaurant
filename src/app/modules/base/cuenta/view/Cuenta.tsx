@@ -1,12 +1,5 @@
 import { Cached, HomeWork, Key, Person, PictureAsPdf, Token } from '@mui/icons-material'
-import {
-  Box,
-  Grid,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-} from '@mui/material'
+import { Box, Grid, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material'
 import React, { FunctionComponent, useState } from 'react'
 
 import SimpleContainer from '../../../../base/components/Container/SimpleContainer'
@@ -31,10 +24,7 @@ type Props = OwnProps
 const Cuenta: FunctionComponent<Props> = (props) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
 
-  const handleListItemClick = (
-    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    index: number,
-  ) => {
+  const handleListItemClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
     setSelectedIndex(index)
   }
 

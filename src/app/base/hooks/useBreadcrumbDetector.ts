@@ -16,9 +16,7 @@ export const useBreadcrumbDetector = () => {
   useEffect(() => {
     setCurrentPath(location.pathname)
 
-    const currentPath = location.pathname.startsWith('/')
-      ? location.pathname
-      : `/${location.pathname}`
+    const currentPath = location.pathname.startsWith('/') ? location.pathname : `/${location.pathname}`
 
     // Función recursiva para buscar en cualquier nivel de profundidad
     const searchInChildren = (
@@ -30,11 +28,7 @@ export const useBreadcrumbDetector = () => {
       if (!children || children.length === 0) return null
 
       for (const child of children) {
-        const childPath = child.path
-          ? child.path.startsWith('/')
-            ? child.path
-            : `/${child.path}`
-          : null
+        const childPath = child.path ? (child.path.startsWith('/') ? child.path : `/${child.path}`) : null
 
         const currentTrail = [...breadcrumbTrail, child.name]
 
@@ -47,12 +41,7 @@ export const useBreadcrumbDetector = () => {
 
         // Si tiene hijos, buscar recursivamente
         if (child.children && child.children.length > 0) {
-          const found = searchInChildren(
-            child.children,
-            parentMenu,
-            parentIcon,
-            currentTrail,
-          )
+          const found = searchInChildren(child.children, parentMenu, parentIcon, currentTrail)
           if (found) return found
         }
       }
@@ -63,11 +52,7 @@ export const useBreadcrumbDetector = () => {
     for (const menuItem of navigations) {
       // Si el menu tiene hijos, verificar recursivamente
       if (menuItem.children && menuItem.children.length > 0) {
-        const found = searchInChildren(
-          menuItem.children,
-          menuItem.name,
-          menuItem.icon || '',
-        )
+        const found = searchInChildren(menuItem.children, menuItem.name, menuItem.icon || '')
         if (found) {
           setRootMenu(menuItem.name)
           setFullHierarchy(found.trail)
@@ -77,9 +62,7 @@ export const useBreadcrumbDetector = () => {
       }
       // Si el menu no tiene hijos y coincide con la ruta
       else if (menuItem.path) {
-        const menuPath = menuItem.path.startsWith('/')
-          ? menuItem.path
-          : `/${menuItem.path}`
+        const menuPath = menuItem.path.startsWith('/') ? menuItem.path : `/${menuItem.path}`
         if (menuPath === currentPath) {
           setRootMenu(menuItem.name)
           setFullHierarchy([menuItem.name])

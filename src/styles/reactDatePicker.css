@@ -1,19 +1,19 @@
 .myDatePicker {
-    width: 100%;
+  width: 100%;
 }
 
 .myDatePicker input {
-    width: 100%;
-    line-height: 1.5;
-    padding-top: 7px;
-    padding-bottom: 7px;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    transition:
-            border-color 0.15s ease-in-out,
-            box-shadow 0.15s ease-in-out;
+  width: 100%;
+  line-height: 1.5;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
 }
 
 .react-datepicker-popper {
-    z-index: 10 !important;
+  z-index: 10 !important;
 }

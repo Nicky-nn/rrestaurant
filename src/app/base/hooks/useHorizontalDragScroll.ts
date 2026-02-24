@@ -194,8 +194,7 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
   // Si isMobileDevice, si es telefono se desactiva todo
   const handleWheel = useCallback(
     (e: WheelEvent) => {
-      if (!enableWheelDrag || !containerRef.current || isMobileDevice || isDragging)
-        return
+      if (!enableWheelDrag || !containerRef.current || isMobileDevice || isDragging) return
 
       // Solo manejar scroll horizontal
       if (Math.abs(e.deltaX) === 0 && Math.abs(e.deltaY) > 0) {
@@ -229,14 +228,7 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
         }, 150)
       }
     },
-    [
-      enableWheelDrag,
-      isMobileDevice,
-      isDragging,
-      applyBounds,
-      wheelResistance,
-      applySnap,
-    ],
+    [enableWheelDrag, isMobileDevice, isDragging, applyBounds, wheelResistance, applySnap],
   )
 
   // Configura el event listener de scroll
@@ -270,22 +262,14 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
       document.removeEventListener('mouseup', handleMouseUp)
       container.removeEventListener('wheel', handleWheel)
     }
-  }, [
-    isDragging,
-    isMobileDevice,
-    handleMouseMove,
-    handleMouseUp,
-    enableWheelDrag,
-    handleWheel,
-  ])
+  }, [isDragging, isMobileDevice, handleMouseMove, handleMouseUp, enableWheelDrag, handleWheel])
 
   // Detectar si es un dispositivo móvil
   useEffect(() => {
     const checkIfMobile = () => {
-      const isMobile =
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent,
-        )
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      )
       setIsMobileDevice(isMobile && disableOnMobile)
     }
 
@@ -323,9 +307,7 @@ export const useHorizontalDragScroll = (options?: HorizontalDragScrollOptions) =
     isDragging,
     isMobileDevice, // Exportamos esta información por si es útil
     handlers: {
-      onMouseDown: isMobileDevice
-        ? undefined
-        : (e: React.MouseEvent) => handleMouseDown(e),
+      onMouseDown: isMobileDevice ? undefined : (e: React.MouseEvent) => handleMouseDown(e),
     }, // Manejadores del contenedor
     style: {
       padding: 0.2,

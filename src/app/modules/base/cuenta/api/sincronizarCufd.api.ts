@@ -21,7 +21,7 @@ const gqlQuery = gql`
  * @description Nos permite sincronizar el codigo cufd de la cuenta activa
  * @author isi-template
  */
-export const apiSincronizarCufd = async (): Promise<Boolean> => {
+export const apiSincronizarCufd = async (): Promise<boolean> => {
   try {
     const client = new GraphQLClient(import.meta.env.ISI_API_URL)
     const token = localStorage.getItem(AccessToken)

@@ -110,10 +110,7 @@ const ConfirmDialogInternal: React.FC<{
       maxWidth="sm"
       fullWidth
       onClose={(e, reason) => {
-        if (
-          options.disableCloseOnOverlay &&
-          (reason === 'backdropClick' || reason === 'escapeKeyDown')
-        )
+        if (options.disableCloseOnOverlay && (reason === 'backdropClick' || reason === 'escapeKeyDown'))
           return
         onClose()
       }}
@@ -141,8 +138,7 @@ const ConfirmDialogInternal: React.FC<{
             <ContentConfirmMessage
               title={options.title || 'Confirmación'}
               description={
-                options.description ||
-                (typeof options.content === 'string' ? options.content : undefined)
+                options.description || (typeof options.content === 'string' ? options.content : undefined)
               }
               type={options.confirmButtonColor as any}
               steps={steps}
@@ -160,10 +156,7 @@ const ConfirmDialogInternal: React.FC<{
             minRows={2}
             variant="outlined"
             required={options.inputRequired}
-            label={
-              options.inputLabel ||
-              (options.inputRequired ? 'Motivo (Obligatorio)' : 'Comentarios')
-            }
+            label={options.inputLabel || (options.inputRequired ? 'Motivo (Obligatorio)' : 'Comentarios')}
             placeholder={options.inputPlaceholder || 'Escriba aquí...'}
             value={reasonValue}
             onChange={(e) => {
@@ -175,9 +168,7 @@ const ConfirmDialogInternal: React.FC<{
             error={reasonError}
             // LÓGICA HELPER TEXT: Error > HelperText custom > Nada
             helperText={
-              reasonError
-                ? 'Este campo es obligatorio para continuar.'
-                : options.inputHelperText || ''
+              reasonError ? 'Este campo es obligatorio para continuar.' : options.inputHelperText || ''
             }
             sx={{ mt: 1 }}
           />
@@ -206,10 +197,7 @@ const ConfirmDialogInternal: React.FC<{
 const AppConfirmContext = createContext<AppConfirmContextType | undefined>(undefined)
 
 // Proveedor de datos
-export const AppConfirmProvider: React.FC<AppConfirmProviderProps> = ({
-  children,
-  defaultOptions = {},
-}) => {
+export const AppConfirmProvider: React.FC<AppConfirmProviderProps> = ({ children, defaultOptions = {} }) => {
   const [open, setOpen] = useState(false)
   const [options, setOptions] = useState<AppConfirmOptions>({})
 
@@ -254,7 +242,6 @@ export const AppConfirmProvider: React.FC<AppConfirmProviderProps> = ({
 // --- HOOK EXPORTADO CON NOMBRE ÚNICO ---
 export const useAppConfirm = () => {
   const context = useContext(AppConfirmContext)
-  if (!context)
-    throw new Error('useAppConfirm debe usarse dentro de un AppConfirmProvider')
+  if (!context) throw new Error('useAppConfirm debe usarse dentro de un AppConfirmProvider')
   return context
 }

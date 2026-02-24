@@ -16,9 +16,7 @@ export const StyledResponsiveTableContainer = styled(Box)(({ theme }) => ({
   overflowX: 'auto',
   '& table': {
     border: `1px solid ${
-      theme.palette.mode === 'dark'
-        ? 'rgba(255, 255, 255, 0.1)'
-        : 'rgba(204, 204, 204, 0.7)'
+      theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(204, 204, 204, 0.7)'
     }`,
     borderCollapse: 'collapse',
     margin: '0',
@@ -45,9 +43,7 @@ export const StyledResponsiveTableContainer = styled(Box)(({ theme }) => ({
   },
   '& table tr': {
     border: `1px solid ${
-      theme.palette.mode === 'dark'
-        ? 'rgba(255, 255, 255, 0.1)'
-        : 'rgba(204, 204, 204, 0.7)'
+      theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(204, 204, 204, 0.7)'
     }`,
     padding: '0.35em',
   },
@@ -71,18 +67,14 @@ export const StyledResponsiveTableContainer = styled(Box)(({ theme }) => ({
     },
     '& table tr': {
       borderBottom: `2px solid ${
-        theme.palette.mode === 'dark'
-          ? 'rgba(255, 255, 255, 0.1)'
-          : 'rgba(204, 204, 204, 0.7)'
+        theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(204, 204, 204, 0.7)'
       }`,
       display: 'block',
       marginBottom: '0.525em',
     },
     '& table td': {
       borderBottom: `1px solid ${
-        theme.palette.mode === 'dark'
-          ? 'rgba(255, 255, 255, 0.1)'
-          : 'rgba(204, 204, 204, 0.7)'
+        theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(204, 204, 204, 0.7)'
       }`,
       display: 'block',
       textAlign: 'right',

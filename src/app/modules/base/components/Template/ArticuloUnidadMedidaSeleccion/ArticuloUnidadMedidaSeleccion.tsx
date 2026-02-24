@@ -61,9 +61,7 @@ const ArticuloUnidadMedidaSeleccion: FunctionComponent<Props> = (props) => {
           value={value}
           onChange={onChange}
           getOptionValue={(item) => item._id}
-          getOptionLabel={(item) =>
-            `${item.codigoUnidadMedida} - ${item.nombreUnidadMedida}`
-          }
+          getOptionLabel={(item) => `${item.codigoUnidadMedida} - ${item.nombreUnidadMedida}`}
           error={!!error}
           formHelperText={error ?? ''}
           isSearchable={false}

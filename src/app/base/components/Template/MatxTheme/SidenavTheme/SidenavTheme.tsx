@@ -15,8 +15,7 @@ interface SidenavThemeProp {
 const SidenavTheme: FC<SidenavThemeProp> = ({ children }: SidenavThemeProp) => {
   const theme = useTheme()
   const { settings } = useSettings()
-  const sidenavTheme =
-    settings.themes[settings.layout1Settings.leftSidebar.theme] || theme
+  const sidenavTheme = settings.themes[settings.layout1Settings.leftSidebar.theme] || theme
 
   return <ThemeProvider theme={sidenavTheme}>{children}</ThemeProvider>
 }

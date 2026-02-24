@@ -30,7 +30,7 @@ export const convertHexToRGB = (hex: string) => {
 export function debounce(func: any, wait: number, immediate: any) {
   let timeout: any
   return function (this: any) {
-    let context = this,
+    const context = this,
       args = arguments
     clearTimeout(timeout)
     timeout = setTimeout(function () {
@@ -100,27 +100,27 @@ function elmYPosition(elm: any) {
  * @param elmID
  */
 export function scrollTo(scrollableElement: any, elmID: any) {
-  var elm = document.getElementById(elmID)
+  const elm = document.getElementById(elmID)
 
   if (!elmID || !elm) {
     return
   }
 
-  var startY = currentYPosition(scrollableElement)
-  var stopY = elmYPosition(elm)
+  const startY = currentYPosition(scrollableElement)
+  const stopY = elmYPosition(elm)
 
-  var distance = stopY > startY ? stopY - startY : startY - stopY
+  const distance = stopY > startY ? stopY - startY : startY - stopY
   if (distance < 100) {
     scrollTo(0, stopY)
     return
   }
-  var speed = Math.round(distance / 50)
+  let speed = Math.round(distance / 50)
   if (speed >= 20) speed = 20
-  var step = Math.round(distance / 25)
-  var leapY = stopY > startY ? startY + step : startY - step
-  var timer = 0
+  const step = Math.round(distance / 25)
+  let leapY = stopY > startY ? startY + step : startY - step
+  let timer = 0
   if (stopY > startY) {
-    for (var i = startY; i < stopY; i += step) {
+    for (let i = startY; i < stopY; i += step) {
       setTimeout(
         (function (leapY) {
           return () => {
@@ -156,7 +156,7 @@ export function scrollTo(scrollableElement: any, elmID: any) {
  * @param date
  */
 export function getTimeDifference(date: any) {
-  let difference = differenceInSeconds(new Date(), date)
+  const difference = differenceInSeconds(new Date(), date)
 
   if (difference < 60) {
     return `${Math.floor(difference)} sec`
@@ -177,8 +177,8 @@ export function getTimeDifference(date: any) {
  * @author isi-template
  */
 export function generateRandomId() {
-  let tempId = Math.random().toString()
-  let uid = tempId.substr(2, tempId.length - 1)
+  const tempId = Math.random().toString()
+  const uid = tempId.substr(2, tempId.length - 1)
   return uid
 }
 
@@ -187,13 +187,11 @@ export function generateRandomId() {
  * @param prop
  */
 export function getQueryParam(prop: any) {
-  let params: any = {}
-  let search = decodeURIComponent(
-    window.location.href.slice(window.location.href.indexOf('?') + 1),
-  )
-  let definitions = search.split('&')
+  const params: any = {}
+  const search = decodeURIComponent(window.location.href.slice(window.location.href.indexOf('?') + 1))
+  const definitions = search.split('&')
   definitions.forEach(function (val, key) {
-    let parts = val.split('=', 2)
+    const parts = val.split('=', 2)
     params[parts[0]] = parts[1]
   })
   return prop && prop in params ? params[prop] : params

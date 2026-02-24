@@ -7,10 +7,7 @@ import axios from 'axios'
  */
 export const apiCheckHuman = async (token: string): Promise<boolean> => {
   try {
-    const url = import.meta.env.ISI_API_URL.slice(
-      0,
-      import.meta.env.ISI_API_URL.lastIndexOf('/'),
-    )
+    const url = import.meta.env.ISI_API_URL.slice(0, import.meta.env.ISI_API_URL.lastIndexOf('/'))
     const axiosPost = await axios.post(`${url}/auth/checkCloudflareHuman`, { token })
     return axiosPost.data.success
   } catch (e: any) {

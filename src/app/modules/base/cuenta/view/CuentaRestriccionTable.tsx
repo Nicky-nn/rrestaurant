@@ -1,13 +1,5 @@
 import { Storefront } from '@mui/icons-material'
-import {
-  Alert,
-  Divider,
-  ListItemIcon,
-  ListItemText,
-  MenuItem,
-  MenuList,
-  Typography,
-} from '@mui/material'
+import { Alert, Divider, ListItemIcon, ListItemText, MenuItem, MenuList, Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import React, { FunctionComponent } from 'react'
 
@@ -80,8 +72,8 @@ const CuentaRestriccionTable: FunctionComponent<Props> = (props) => {
           <React.Fragment key={res.codigo}>
             <Alert color={'info'}>
               <Typography>
-                <strong>SUCURSAL {res.codigo}</strong> / {res.departamento.departamento} -{' '}
-                {res.municipio} / {res.direccion} / {res.telefono}
+                <strong>SUCURSAL {res.codigo}</strong> / {res.departamento.departamento} - {res.municipio} /{' '}
+                {res.direccion} / {res.telefono}
               </Typography>
             </Alert>
             <Divider />
@@ -90,21 +82,14 @@ const CuentaRestriccionTable: FunctionComponent<Props> = (props) => {
               {res.puntosVenta.length > 0 ? (
                 res.puntosVenta.map(
                   (pv) =>
-                    !(
-                      user.sucursal.codigo === res.codigo &&
-                      user.puntoVenta.codigo === pv.codigo
-                    ) && (
-                      <MenuItem
-                        key={pv.codigo}
-                        onClick={() => changePuntoVenta(res.codigo, pv.codigo)}
-                      >
+                    !(user.sucursal.codigo === res.codigo && user.puntoVenta.codigo === pv.codigo) && (
+                      <MenuItem key={pv.codigo} onClick={() => changePuntoVenta(res.codigo, pv.codigo)}>
                         <ListItemIcon>
                           <Storefront fontSize="small" color={'info'} />
                         </ListItemIcon>
                         <ListItemText>
-                          <strong>Suc. {res.codigo}</strong> /{' '}
-                          <strong>PUNTO VENTA {pv.codigo}</strong> / {pv.nombre} /{' '}
-                          {pv.tipoPuntoVenta.descripcion}
+                          <strong>Suc. {res.codigo}</strong> / <strong>PUNTO VENTA {pv.codigo}</strong> /{' '}
+                          {pv.nombre} / {pv.tipoPuntoVenta.descripcion}
                         </ListItemText>
                       </MenuItem>
                     ),

@@ -140,12 +140,7 @@ export const IconButtonTextAreaPopover: React.FC<IconButtonTextAreaPopoverProps>
             <Button size="small" color="secondary" onClick={handleClear}>
               Vaciar
             </Button>
-            <Button
-              size="small"
-              variant="contained"
-              onClick={handleApply}
-              startIcon={<CheckCircle />}
-            >
+            <Button size="small" variant="contained" onClick={handleApply} startIcon={<CheckCircle />}>
               Aplicar
             </Button>
           </Stack>

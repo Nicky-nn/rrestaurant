@@ -22,15 +22,7 @@ type Props = OwnProps
  * @author isi-template
  */
 const ParseMontoMoneda: FunctionComponent<Props> = (props) => {
-  const {
-    label,
-    monto,
-    sigla,
-    decimales,
-    boxProps = {},
-    siglaProps = {},
-    ...others
-  } = props
+  const { label, monto, sigla, decimales, boxProps = {}, siglaProps = {}, ...others } = props
   return (
     <Box {...boxProps}>
       {label && label}
@@ -40,12 +32,7 @@ const ParseMontoMoneda: FunctionComponent<Props> = (props) => {
       </Typography>
 
       {sigla && (
-        <Typography
-          fontSize={'smaller'}
-          sx={{ ml: 0.4 }}
-          display={'inline'}
-          {...siglaProps}
-        >
+        <Typography fontSize={'smaller'} sx={{ ml: 0.4 }} display={'inline'} {...siglaProps}>
           {sigla}
         </Typography>
       )}

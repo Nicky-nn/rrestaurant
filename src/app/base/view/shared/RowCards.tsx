@@ -81,9 +81,7 @@ const RowCards: any = () => {
               xs: 4,
             }}
           >
-            <Box color={textMuted}>
-              {format(new Date().getTime(), 'MM/dd/yyyy hh:mma')}
-            </Box>
+            <Box color={textMuted}>{format(new Date().getTime(), 'MM/dd/yyyy hh:mma')}</Box>
           </Grid>
 
           <Paper sx={{ display: { xs: 'none', sm: 'block' } }}>

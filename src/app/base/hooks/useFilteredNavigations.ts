@@ -46,10 +46,7 @@ export const useFilteredNavigations = ({
      * Verifica si un item de navegación tiene permiso.
      * Delega la construcción de la clave a la utilidad `buildPermissionFromEnv`.
      */
-    const checkItemPermission = (
-      parentName: string | null,
-      itemName: string,
-    ): boolean => {
+    const checkItemPermission = (parentName: string | null, itemName: string): boolean => {
       if (!itemName) return false
 
       const permissionKey = buildPermissionFromEnv(parentName, itemName)

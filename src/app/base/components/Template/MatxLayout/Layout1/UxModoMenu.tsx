@@ -11,9 +11,7 @@ export default function UxModoMenu({
   value: 'LIGHT' | 'DARK' | 'SYSTEM' | null
   onChange: (modo: 'LIGHT' | 'DARK' | 'SYSTEM') => void
 }) {
-  const [modoActual, setModoActual] = useState<'LIGHT' | 'DARK' | 'SYSTEM' | null>(
-    value ?? 'SYSTEM',
-  )
+  const [modoActual, setModoActual] = useState<'LIGHT' | 'DARK' | 'SYSTEM' | null>(value ?? 'SYSTEM')
 
   // Actualizar cuando el valor del padre cambia
   useEffect(() => {

@@ -23,10 +23,7 @@ export const numberWithCommas = (x: number | undefined, { userTyping, input }: a
  * @param value
  * @param maximumFractionDigits
  */
-export const numberWithCommasPlaces = (
-  value: any | undefined,
-  maximumFractionDigits = 2,
-) => {
+export const numberWithCommasPlaces = (value: any | undefined, maximumFractionDigits = 2) => {
   const options = {
     minimumFractionDigits: maximumFractionDigits,
     maximumFractionDigits,

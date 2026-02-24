@@ -63,15 +63,12 @@ export const apiLoteGlobalListado = async (
     client.setHeader('authorization', `Bearer ${token}`)
     // const cds = parseInt(import.meta.env.ISI_DOCUMENTO_SECTOR.toString()!, 10)
 
-    const data: any = await client.request(
-      gqlQuery(genReplaceEmpty(input?.fragment, null)),
-      {
-        limit,
-        page,
-        reverse,
-        query,
-      },
-    )
+    const data: any = await client.request(gqlQuery(genReplaceEmpty(input?.fragment, null)), {
+      limit,
+      page,
+      reverse,
+      query,
+    })
     return data.loteListado
   } catch (e: any) {
     throw new MyGraphQlError(e)

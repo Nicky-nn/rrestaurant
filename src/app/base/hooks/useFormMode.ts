@@ -2,11 +2,7 @@
 
 import { FieldValues, Path } from 'react-hook-form'
 
-import {
-  FormModeConfig,
-  FormModeDefaults,
-  FormModeFieldState,
-} from '../interfaces/formModes.ts'
+import { FormModeConfig, FormModeDefaults, FormModeFieldState } from '../interfaces/formModes.ts'
 
 /**
  * Hook para el manejo de estados en los formularios

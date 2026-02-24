@@ -45,9 +45,7 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
   // Verificar si el usuario es administrador
   const isAdmin =
     user.rol &&
-    ['administrador', 'admin', 'adm'].some((adminRole) =>
-      user.rol.toLowerCase().includes(adminRole),
-    )
+    ['administrador', 'admin', 'adm'].some((adminRole) => user.rol.toLowerCase().includes(adminRole))
 
   // Si es administrador, usar todas las navegaciones sin filtrar
   // Si no, filtrar por permisos
@@ -60,8 +58,8 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
       })
 
   const updateSidebarMode = (sidebarSettings: any) => {
-    let activeLayoutSettingsName = settings.activeLayout + 'Settings'
-    let activeLayoutSettings = settings[activeLayoutSettingsName]
+    const activeLayoutSettingsName = settings.activeLayout + 'Settings'
+    const activeLayoutSettings = settings[activeLayoutSettingsName]
 
     updateSettings({
       ...settings,

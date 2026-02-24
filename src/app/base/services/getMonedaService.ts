@@ -13,8 +13,7 @@ export const getMonedaPorArticuloMonedaService = (
   moneda: MonedaParamsProps,
   articuloMoneda: ArticuloMonedaProps,
 ) => {
-  const { monedaPrimaria, monedaAdicional1, monedaAdicional2, monedaAdicional3 } =
-    articuloMoneda
+  const { monedaPrimaria, monedaAdicional1, monedaAdicional2, monedaAdicional3 } = articuloMoneda
   if (moneda.codigo === monedaPrimaria.codigo) return monedaPrimaria
 
   if (monedaAdicional1) {
@@ -42,8 +41,7 @@ export const getMonedaPrecioPorArticuloPrecioService = (
   moneda: MonedaParamsProps,
   articuloPrecio: ArticuloPrecioProps,
 ): MonedaPrecioProps | null => {
-  const { monedaPrimaria, monedaAdicional1, monedaAdicional2, monedaAdicional3 } =
-    articuloPrecio
+  const { monedaPrimaria, monedaAdicional1, monedaAdicional2, monedaAdicional3 } = articuloPrecio
 
   if (moneda.codigo === monedaPrimaria.moneda.codigo) return monedaPrimaria
 

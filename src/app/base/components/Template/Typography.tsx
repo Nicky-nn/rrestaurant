@@ -8,14 +8,12 @@ interface StyledBoxProps extends BoxProps {
   ellipsis?: boolean
 }
 
-const StyledBox = styled(Box)<StyledBoxProps>(
-  ({ textTransformStyle, ellipsis }: any) => ({
-    textTransform: textTransformStyle || 'none',
-    whiteSpace: ellipsis ? 'nowrap' : 'normal',
-    overflow: ellipsis ? 'hidden' : '',
-    textOverflow: ellipsis ? 'ellipsis' : '',
-  }),
-)
+const StyledBox = styled(Box)<StyledBoxProps>(({ textTransformStyle, ellipsis }: any) => ({
+  textTransform: textTransformStyle || 'none',
+  whiteSpace: ellipsis ? 'nowrap' : 'normal',
+  overflow: ellipsis ? 'hidden' : '',
+  textOverflow: ellipsis ? 'ellipsis' : '',
+}))
 
 interface H1Props extends StyledBoxProps {
   children: ReactNode
@@ -32,13 +30,7 @@ interface H1Props extends StyledBoxProps {
  * @param props
  * @constructor
  */
-export const H1: FC<H1Props> = ({
-  children,
-  className,
-  ellipsis,
-  textTransform,
-  ...props
-}: H1Props) => {
+export const H1: FC<H1Props> = ({ children, className, ellipsis, textTransform, ...props }: H1Props) => {
   return (
     <StyledBox
       // textTransformStyle={textTransform}
@@ -72,13 +64,7 @@ interface H2Props extends StyledBoxProps {
  * @param props
  * @constructor
  */
-export const H2: FC<H2Props> = ({
-  children,
-  className,
-  ellipsis,
-  textTransform,
-  ...props
-}: H2Props) => {
+export const H2: FC<H2Props> = ({ children, className, ellipsis, textTransform, ...props }: H2Props) => {
   return (
     <StyledBox
       // textTransformStyle={textTransform}
@@ -112,13 +98,7 @@ type H3Props = {
  * @param props
  * @constructor
  */
-export const H3 = ({
-  children,
-  className,
-  ellipsis,
-  textTransform,
-  ...props
-}: H3Props) => {
+export const H3 = ({ children, className, ellipsis, textTransform, ...props }: H3Props) => {
   return (
     <StyledBox
       // textTransformStyle={textTransform}
@@ -151,13 +131,7 @@ type H4Props = {
  * @param props
  * @constructor
  */
-export const H4 = ({
-  children,
-  className,
-  ellipsis,
-  textTransform,
-  ...props
-}: H4Props) => {
+export const H4 = ({ children, className, ellipsis, textTransform, ...props }: H4Props) => {
   return (
     <StyledBox
       // textTransformStyle={textTransform}
@@ -192,13 +166,7 @@ interface H5Props extends StyledBoxProps {
  * @param props
  * @constructor
  */
-export const H5: FC<H5Props> = ({
-  children,
-  className,
-  ellipsis,
-  textTransform,
-  ...props
-}: H5Props) => {
+export const H5: FC<H5Props> = ({ children, className, ellipsis, textTransform, ...props }: H5Props) => {
   return (
     <StyledBox
       // textTransformStyle={textTransform}
@@ -233,13 +201,7 @@ interface H6Props extends StyledBoxProps {
  * @param props
  * @constructor
  */
-export const H6: FC<any> = ({
-  children,
-  className,
-  ellipsis,
-  textTransform,
-  ...props
-}: H6Props) => {
+export const H6: FC<any> = ({ children, className, ellipsis, textTransform, ...props }: H6Props) => {
   return (
     <StyledBox
       // textTransformStyle={textTransform}
@@ -313,13 +275,7 @@ interface SmallProps extends StyledBoxProps {
  * @param props
  * @constructor
  */
-export const Small: FC<any> = ({
-  children,
-  className,
-  ellipsis,
-  textTransform,
-  ...props
-}: SmallProps) => {
+export const Small: FC<any> = ({ children, className, ellipsis, textTransform, ...props }: SmallProps) => {
   return (
     <StyledBox
       // textTransformStyle={textTransform}
@@ -364,13 +320,7 @@ interface SpanProps extends StyledBoxProps {
  * @param props
  * @constructor
  */
-export const Span: any = ({
-  children,
-  className,
-  ellipsis,
-  textTransform,
-  ...props
-}: SpanProps) => {
+export const Span: any = ({ children, className, ellipsis, textTransform, ...props }: SpanProps) => {
   return (
     <StyledBox
       // textTransformStyle={textTransform || 'none'}
@@ -402,13 +352,7 @@ interface TinyProps extends StyledBoxProps {
  * @param props
  * @constructor
  */
-export const Tiny = ({
-  children,
-  className,
-  ellipsis,
-  textTransform,
-  ...props
-}: TinyProps) => {
+export const Tiny = ({ children, className, ellipsis, textTransform, ...props }: TinyProps) => {
   return (
     <StyledBox
       // textTransformStyle={textTransform}

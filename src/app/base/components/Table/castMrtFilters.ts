@@ -23,7 +23,7 @@ type NestedKeyOf<T> = {
   [K in keyof T & string]: T[K] extends Primitive
     ? K // Si es primitivo, solo devuelve la llave (Nivel 1)
     : // Si es objeto, devuelve "Llave" | "Llave.Subllave"
-      K | `${K}.${keyof T[K] & string}`
+        K | `${K}.${keyof T[K] & string}`
 }[keyof T & string]
 
 // Esto dice: "Un objeto donde las claves SON propiedades de T, y los valores son CastType"
@@ -44,7 +44,7 @@ export const castMrtFilters = <T>(
     const columnId = filter.id as any
     const targetType = typeMap[columnId]
 
-    let rawValue = filter.value
+    const rawValue = filter.value
 
     // Si no hay configuración para esta columna, devolvemos el filtro intacto
     if (!targetType) return filter

@@ -58,9 +58,7 @@ export const FormModeProvider = <TForm extends FieldValues, TMode extends string
     [logic.mode, config, defaults],
   )
 
-  return (
-    <FormModeContext.Provider value={contextValue}>{children}</FormModeContext.Provider>
-  )
+  return <FormModeContext.Provider value={contextValue}>{children}</FormModeContext.Provider>
 }
 
 /**
@@ -68,14 +66,9 @@ export const FormModeProvider = <TForm extends FieldValues, TMode extends string
  * const { isDisabled, isReadOnly } = useFormModeFieldState();
  * @author isi-template
  */
-export const useFormModeFieldState = <
-  T extends Record<string, any> = Record<string, any>,
->() => {
+export const useFormModeFieldState = <T extends Record<string, any> = Record<string, any>>() => {
   const context = useContext(FormModeContext)
-  if (!context)
-    throw new Error(
-      'useFieldState requiere envoltorio FormModeProvider and react-hook-form',
-    )
+  if (!context) throw new Error('useFieldState requiere envoltorio FormModeProvider and react-hook-form')
   return {
     ...context,
     isDisabled: context.isDisabled as (field: Path<T>) => boolean,
@@ -92,12 +85,7 @@ export const useFormModeFieldState = <
  * @param config
  * @param defaults
  */
-export const withFormMode = (
-  Component: FC,
-  mode: string,
-  config: any,
-  defaults?: any,
-) => (
+export const withFormMode = (Component: FC, mode: string, config: any, defaults?: any) => (
   <FormModeProvider mode={mode} config={config} defaults={defaults}>
     <Component />
   </FormModeProvider>

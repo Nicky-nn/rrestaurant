@@ -19,8 +19,7 @@ const Configuracion: FunctionComponent<Props> = (props) => {
           <Grid item sm={4} xs={12}>
             <SimpleCard>
               <Box>
-                Configuración de la cuenta, se registran opciones especificas del
-                front-end en cuestión
+                Configuración de la cuenta, se registran opciones especificas del front-end en cuestión
               </Box>
             </SimpleCard>
           </Grid>

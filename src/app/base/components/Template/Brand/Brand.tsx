@@ -44,10 +44,7 @@ const Brand = ({ children }: { children: JSX.Element | JSX.Element[] }) => {
           {nombreComercial}
         </StyledSpan>
       </Box>
-      <Box
-        className="sidenavHoverShow"
-        sx={{ display: mode === 'compact' ? 'none' : 'block' }}
-      >
+      <Box className="sidenavHoverShow" sx={{ display: mode === 'compact' ? 'none' : 'block' }}>
         {children || null}
       </Box>
     </BrandRoot>

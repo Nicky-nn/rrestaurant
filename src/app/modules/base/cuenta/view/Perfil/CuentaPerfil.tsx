@@ -29,12 +29,7 @@ const CuentaPerfil: FunctionComponent<Props> = (props) => {
             }}
           >
             <FormControl fullWidth>
-              <TextField
-                label="Nombres"
-                value={user.nombres}
-                variant="outlined"
-                size="small"
-              />
+              <TextField label="Nombres" value={user.nombres} variant="outlined" size="small" />
             </FormControl>
           </Grid>
           <Grid
@@ -45,12 +40,7 @@ const CuentaPerfil: FunctionComponent<Props> = (props) => {
             }}
           >
             <FormControl fullWidth>
-              <TextField
-                label="Apellidos"
-                value={user.apellidos}
-                variant="outlined"
-                size="small"
-              />
+              <TextField label="Apellidos" value={user.apellidos} variant="outlined" size="small" />
             </FormControl>
           </Grid>
           <Grid
@@ -61,12 +51,7 @@ const CuentaPerfil: FunctionComponent<Props> = (props) => {
             }}
           >
             <FormControl fullWidth>
-              <TextField
-                label="Cargo"
-                value={user.cargo}
-                variant="outlined"
-                size="small"
-              />
+              <TextField label="Cargo" value={user.cargo} variant="outlined" size="small" />
             </FormControl>
           </Grid>
           <Grid
@@ -77,12 +62,7 @@ const CuentaPerfil: FunctionComponent<Props> = (props) => {
             }}
           >
             <FormControl fullWidth>
-              <TextField
-                label="Rol Operaciones"
-                value={user.rol}
-                variant="outlined"
-                size="small"
-              />
+              <TextField label="Rol Operaciones" value={user.rol} variant="outlined" size="small" />
             </FormControl>
           </Grid>
           <Grid

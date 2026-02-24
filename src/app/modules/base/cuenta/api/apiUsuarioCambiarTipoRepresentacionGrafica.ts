@@ -7,9 +7,7 @@ import { MyGraphQlError } from '../../../../base/services/GraphqlError'
 
 const gqlQuery = gql`
   mutation CAMBIAR_TIPO_FACTURACION($tipoRepresentacionGrafica: String!) {
-    usuarioCambiarTipoRepresentacionGrafica(
-      tipoRepresentacionGrafica: $tipoRepresentacionGrafica
-    )
+    usuarioCambiarTipoRepresentacionGrafica(tipoRepresentacionGrafica: $tipoRepresentacionGrafica)
   }
 `
 
@@ -22,9 +20,7 @@ interface Props {
  * @author isi-template
  * @param props
  */
-export const apiUsuarioCambiarTipoRepresentacionGrafica = async (
-  props: Props,
-): Promise<boolean> => {
+export const apiUsuarioCambiarTipoRepresentacionGrafica = async (props: Props): Promise<boolean> => {
   try {
     const { tipoRepresentacionGrafica } = props
     const client = new GraphQLClient(import.meta.env.ISI_API_URL)

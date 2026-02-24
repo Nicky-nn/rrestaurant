@@ -37,10 +37,7 @@ export const SimpleMenuItem = styled(MenuItem)(({ theme }) => ({
     marginRight: theme.spacing(0.8),
   },
   '&:active': {
-    backgroundColor: alpha(
-      theme.palette.primary.main,
-      theme.palette.action.selectedOpacity,
-    ),
+    backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity),
   },
 }))
 
@@ -59,7 +56,7 @@ interface SimpleMenuProps {
 const SimpleMenu: FC<SimpleMenuProps> = (props: SimpleMenuProps) => {
   const [anchorEl, setAnchorEl] = useState(null)
   const children = Children.toArray(props.children)
-  let { shouldCloseOnItemClick = true, horizontalPosition = 'right' } = props
+  const { shouldCloseOnItemClick = true, horizontalPosition = 'right' } = props
   const { settings } = useSettings()
 
   const handleClick = (event: any) => {

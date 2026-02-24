@@ -31,10 +31,7 @@ type ThemeColorBarProviderProps = {
   settings: any
 }
 
-export const ThemeColorBarProvider: FC<any> = ({
-  settings,
-  children,
-}: ThemeColorBarProviderProps) => {
+export const ThemeColorBarProvider: FC<any> = ({ settings, children }: ThemeColorBarProviderProps) => {
   const [state, dispatch]: any = useReducer(reducer, [])
 
   const getThemeColorBar = async () => {

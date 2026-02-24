@@ -190,10 +190,7 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
 
     // Ui generales
     enableRowActions:
-      !!config.rowActions ||
-      !!config.rowIconsActions ||
-      !!config.showAudit ||
-      !!config.rowMenuActions, // Activa las acciones de fila
+      !!config.rowActions || !!config.rowIconsActions || !!config.showAudit || !!config.rowMenuActions, // Activa las acciones de fila
     enableColumnResizing: true, // habilita el redimensionamiento de columnas
     enableDensityToggle: false, // Habilita el toggle de compacto y normal
     enableMultiRowSelection: config.multiSelection ?? false,
@@ -258,11 +255,7 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
     renderRowActions: ({ row }) => (
       <Box sx={{ display: 'inline-flex', gap: 0.5, alignItems: 'center' }}>
         {config.rowMenuActions && (
-          <MrtRowMenu
-            row={row.original}
-            actions={config.rowMenuActions}
-            refetch={refetch}
-          />
+          <MrtRowMenu row={row.original} actions={config.rowMenuActions} refetch={refetch} />
         )}
         {config.rowIconsActions?.map((action, i) => {
           const isHidden = action.hidden ? action.hidden(row.original) : false
@@ -290,16 +283,11 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
       : undefined,
     muiDetailPanelProps: () => ({
       sx: (theme) => ({
-        backgroundColor:
-          theme.palette.mode === 'dark'
-            ? 'rgba(255, 255, 255, 0.03)'
-            : 'rgba(0, 0, 0, 0.02)',
+        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
       }),
     }),
     // Toolbars
-    ...((config.title ||
-      config.showIconRefetch ||
-      config.renderTopToolbarCustomActions) && {
+    ...((config.title || config.showIconRefetch || config.renderTopToolbarCustomActions) && {
       renderTopToolbarCustomActions: ({ table }) => {
         const tableInstance = table as unknown as MRT_TableInstance<T>
         return (
@@ -398,13 +386,7 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
 
   // 4. MODO PLANO (Early Return)
   if (config.isFlat) {
-    return (
-      <MrtFlatTable
-        data={tableData}
-        columns={config.columns}
-        options={config.flatOptions}
-      />
-    )
+    return <MrtFlatTable data={tableData} columns={config.columns} options={config.flatOptions} />
   }
 
   return <MaterialReactTable table={table} />

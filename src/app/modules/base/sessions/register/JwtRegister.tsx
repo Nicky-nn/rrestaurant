@@ -1,12 +1,4 @@
-import {
-  Box,
-  Button,
-  Card,
-  Checkbox,
-  FormControlLabel,
-  Grid,
-  styled,
-} from '@mui/material'
+import { Box, Button, Card, Checkbox, FormControlLabel, Grid, styled } from '@mui/material'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -63,7 +55,7 @@ const JwtRegister = () => {
     }
   }
 
-  let { username, email, password, agreement } = state
+  const { username, email, password, agreement } = state
 
   return (
     <JWTRegister>
@@ -115,10 +107,7 @@ const JwtRegister = () => {
                     Sign up
                   </Button>
                   <Span sx={{ mr: 1, ml: '20px' }}>or</Span>
-                  <Button
-                    sx={{ textTransform: 'capitalize' }}
-                    onClick={() => navigate('/session/signin')}
-                  >
+                  <Button sx={{ textTransform: 'capitalize' }} onClick={() => navigate('/session/signin')}>
                     Sign in
                   </Button>
                 </FlexBox>

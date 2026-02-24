@@ -113,7 +113,7 @@ const MatxCustomizer = () => {
   const handleTabChange = (index: any) => {
     setTabIndex(index)
   }
-  let activeTheme = { ...settings.themes[settings.activeTheme] }
+  const activeTheme = { ...settings.themes[settings.activeTheme] }
 
   return (
     <Fragment>
@@ -189,10 +189,7 @@ const MatxCustomizer = () => {
                 <div>
                   <div className="helpText">
                     We used React context API to control layout. Check out the{' '}
-                    <Link
-                      href="http://demos.ui-lib.com/matx-react-doc/layout.html"
-                      target="_blank"
-                    >
+                    <Link href="http://demos.ui-lib.com/matx-react-doc/layout.html" target="_blank">
                       Documentation
                     </Link>
                   </div>

@@ -1,20 +1,7 @@
 import { CalendarToday } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close'
-import {
-  Button,
-  IconButton,
-  InputAdornment,
-  TextField,
-  TextFieldProps,
-} from '@mui/material'
-import {
-  format,
-  lastDayOfMonth,
-  lastDayOfWeek,
-  startOfMonth,
-  startOfWeek,
-  subMonths,
-} from 'date-fns'
+import { Button, IconButton, InputAdornment, TextField, TextFieldProps } from '@mui/material'
+import { format, lastDayOfMonth, lastDayOfWeek, startOfMonth, startOfWeek, subMonths } from 'date-fns'
 import { es } from 'date-fns/locale/es'
 import React, { FunctionComponent, useCallback } from 'react'
 import DatePicker, { DatePickerProps, registerLocale } from 'react-datepicker'
@@ -28,21 +15,20 @@ registerLocale('es', es)
  * version react-datepicker: 9.1.0
  * @author isi-template
  */
-interface MyDateRangePickerProps
-  extends Omit<
-    DatePickerProps,
-    | 'onChange' // Redefinimos para devolver [Date, Date]
-    | 'selectsRange' // Siempre true
-    | 'selectsMultiple' // Siempre false
-    | 'startDate' // Lo pedimos explícitamente
-    | 'endDate' // Lo pedimos explícitamente
-    | 'selected' // No se usa en rangos (se usa start/end)
-    | 'customInput' // Inyectado por nosotros
-    | 'value' // Calculado automáticamente
-    | 'formatMultipleDates'
-    | 'showIcon'
-    | 'isClearable'
-  > {
+interface MyDateRangePickerProps extends Omit<
+  DatePickerProps,
+  | 'onChange' // Redefinimos para devolver [Date, Date]
+  | 'selectsRange' // Siempre true
+  | 'selectsMultiple' // Siempre false
+  | 'startDate' // Lo pedimos explícitamente
+  | 'endDate' // Lo pedimos explícitamente
+  | 'selected' // No se usa en rangos (se usa start/end)
+  | 'customInput' // Inyectado por nosotros
+  | 'value' // Calculado automáticamente
+  | 'formatMultipleDates'
+  | 'showIcon'
+  | 'isClearable'
+> {
   startDate: Date | null
   endDate: Date | null
   onChange: (
@@ -64,9 +50,7 @@ interface MyDateRangePickerProps
  * @param props
  * @constructor
  */
-const MyDateRangePickerFieldComponent: FunctionComponent<MyDateRangePickerProps> = (
-  props,
-) => {
+const MyDateRangePickerFieldComponent: FunctionComponent<MyDateRangePickerProps> = (props) => {
   const {
     startDate = null,
     endDate = null,
@@ -227,10 +211,7 @@ const MyDateRangePickerFieldComponent: FunctionComponent<MyDateRangePickerProps>
           size={'small'}
           fullWidth
           onClick={() => {
-            onChange([
-              startOfMonth(subMonths(new Date(), 1)),
-              lastDayOfMonth(subMonths(new Date(), 1)),
-            ])
+            onChange([startOfMonth(subMonths(new Date(), 1)), lastDayOfMonth(subMonths(new Date(), 1))])
             if (ref) ref.current?.setOpen(false)
           }}
         >

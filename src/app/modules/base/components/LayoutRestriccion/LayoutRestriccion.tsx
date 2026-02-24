@@ -1,10 +1,4 @@
-import {
-  Computer,
-  Home,
-  MonetizationOn,
-  RadioButtonChecked,
-  RepeatOne,
-} from '@mui/icons-material'
+import { Computer, Home, MonetizationOn, RadioButtonChecked, RepeatOne } from '@mui/icons-material'
 import {
   Chip,
   IconButton,
@@ -159,9 +153,7 @@ const LayoutRestriccion: FC<any> = () => {
                       leaveDelay={50}
                     >
                       <IconButton
-                        color={
-                          user.miEmpresa.codigoAmbiente === 1 ? 'success' : 'warning'
-                        }
+                        color={user.miEmpresa.codigoAmbiente === 1 ? 'success' : 'warning'}
                         style={{ padding: 0, margin: 0 }}
                         size={'small'}
                       >

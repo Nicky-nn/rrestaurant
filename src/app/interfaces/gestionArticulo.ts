@@ -5,11 +5,10 @@ import { KeyValueProp } from '../base/interfaces/base.ts'
  * @author isi-template
  */
 export type GestionArticuloProps = 'SERIE' | 'LOTE' // No se gestiona, SERIE, LOTE
-export const apiGestionArticulo: { [Key in GestionArticuloProps]: GestionArticuloProps } =
-  {
-    SERIE: 'SERIE',
-    LOTE: 'LOTE',
-  }
+export const apiGestionArticulo: { [Key in GestionArticuloProps]: GestionArticuloProps } = {
+  SERIE: 'SERIE',
+  LOTE: 'LOTE',
+}
 /**
  * @author isi-template
  */

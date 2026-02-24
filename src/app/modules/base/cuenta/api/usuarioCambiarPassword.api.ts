@@ -19,7 +19,7 @@ const gqlQuery = gql`
  */
 export const apiUsuarioCambiarPassword = async (
   input: UsuarioCambiarPasswordInputProps,
-): Promise<Boolean> => {
+): Promise<boolean> => {
   try {
     const client = new GraphQLClient(import.meta.env.ISI_API_URL)
     const token = localStorage.getItem(AccessToken)

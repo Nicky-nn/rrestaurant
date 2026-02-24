@@ -2,9 +2,7 @@ import { forwardRef } from 'react'
 import { NumericFormat, NumericFormatProps } from 'react-number-format'
 
 interface CustomProps {
-  onChange: (event: {
-    target: { name: string; value: number | undefined | null }
-  }) => void
+  onChange: (event: { target: { name: string; value: number | undefined | null } }) => void
   decimalScale?: number
   name: string
   allowNegative?: boolean
@@ -21,27 +19,28 @@ interface CustomProps {
  * scale es la cantidad de decimales que debe aceptar, por default es 2
  * @documentation https://s-yadav.github.io/react-number-format/docs/props
  */
-export const NumeroFormat = forwardRef<NumericFormatProps, CustomProps>(
-  function NumericFormatCustom(props, ref: any) {
-    const { onChange, decimalScale, allowNegative, ...other } = props
-    return (
-      <NumericFormat
-        {...other}
-        getInputRef={ref}
-        onValueChange={(values) => {
-          onChange({
-            target: {
-              name: props.name,
-              value: values.floatValue ?? null,
-            },
-          })
-        }}
-        thousandSeparator={' '}
-        decimalScale={decimalScale || (decimalScale === 0 ? 0 : 2)}
-        fixedDecimalScale={false}
-        valueIsNumericString={true}
-        allowNegative={allowNegative || false}
-      />
-    )
-  },
-)
+export const NumeroFormat = forwardRef<NumericFormatProps, CustomProps>(function NumericFormatCustom(
+  props,
+  ref: any,
+) {
+  const { onChange, decimalScale, allowNegative, ...other } = props
+  return (
+    <NumericFormat
+      {...other}
+      getInputRef={ref}
+      onValueChange={(values) => {
+        onChange({
+          target: {
+            name: props.name,
+            value: values.floatValue ?? null,
+          },
+        })
+      }}
+      thousandSeparator={' '}
+      decimalScale={decimalScale || (decimalScale === 0 ? 0 : 2)}
+      fixedDecimalScale={false}
+      valueIsNumericString={true}
+      allowNegative={allowNegative || false}
+    />
+  )
+})

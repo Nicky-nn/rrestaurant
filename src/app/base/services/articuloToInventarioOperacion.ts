@@ -31,9 +31,7 @@ export const articuloToInventarioOperacion = (
   )
   if (!articuloPrecio) return null
 
-  const alm = articulo.inventario[0].detalle.find(
-    (i) => i.almacen.codigoAlmacen === codigoAlmacen,
-  )
+  const alm = articulo.inventario[0].detalle.find((i) => i.almacen.codigoAlmacen === codigoAlmacen)
   if (!alm) return null
 
   const almacen: AlmacenInventarioProps = {
@@ -98,15 +96,9 @@ export const articuloToInventarioOperacion = (
     almacen,
     lote,
     totalStock: genRound(articulo.inventario[0].totalStock / articuloPrecio.cantidadBase),
-    totalComprometido: genRound(
-      articulo.inventario[0].totalComprometido / articuloPrecio.cantidadBase,
-    ),
-    totalSolicitado: genRound(
-      articulo.inventario[0].totalSolicitado / articuloPrecio.cantidadBase,
-    ),
-    totalDisponible: genRound(
-      articulo.inventario[0].totalDisponible / articuloPrecio.cantidadBase,
-    ),
+    totalComprometido: genRound(articulo.inventario[0].totalComprometido / articuloPrecio.cantidadBase),
+    totalSolicitado: genRound(articulo.inventario[0].totalSolicitado / articuloPrecio.cantidadBase),
+    totalDisponible: genRound(articulo.inventario[0].totalDisponible / articuloPrecio.cantidadBase),
     stock,
     comprometido,
     solicitado,

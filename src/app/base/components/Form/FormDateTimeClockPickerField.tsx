@@ -1,10 +1,6 @@
 import 'dayjs/locale/es.js'
 
-import {
-  DateTimePicker,
-  DateTimePickerProps,
-  LocalizationProvider,
-} from '@mui/x-date-pickers'
+import { DateTimePicker, DateTimePickerProps, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers'
 import React, { FunctionComponent } from 'react'

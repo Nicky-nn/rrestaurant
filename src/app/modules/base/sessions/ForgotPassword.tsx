@@ -75,7 +75,7 @@ const ForgotPassword = () => {
         </Grid>
       </Card>
     </ForgotPasswordRoot>
-  );
+  )
 }
 
 export default ForgotPassword

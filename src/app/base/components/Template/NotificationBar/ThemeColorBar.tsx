@@ -16,10 +16,10 @@ import {
 import { FC, Fragment, useState } from 'react'
 
 import useSettings from '../../../hooks/useSettings'
+import StyledScrollBar from '../../Container/StyledScrollBar'
 import BadgeSelected from '../MatxCustomizer/BadgeSelected'
 import { themeShadows } from '../MatxTheme/themeColors'
 import { H5 } from '../Typography'
-import StyledScrollBar from '../../Container/StyledScrollBar'
 
 const MaxCustomaizer = styled('div')(({ theme }) => ({
   height: '100vh',
@@ -98,7 +98,7 @@ const ThemeColorBar: FC<any> = ({ container }: any) => {
   const handleDrawerToggle = () => {
     setOpen(!open)
   }
-  let activeTheme = { ...settings.themes[settings.activeTheme] }
+  const activeTheme = { ...settings.themes[settings.activeTheme] }
   const { palette } = useTheme()
   const textColor = palette.text.primary
   return (
@@ -131,7 +131,7 @@ const ThemeColorBar: FC<any> = ({ container }: any) => {
                 <Icon className="icon">close</Icon>
               </IconButton>
             </Controller>
-            <StyledScrollBarSidenav >
+            <StyledScrollBarSidenav>
               {tabIndex === 0 && (
                 <Box sx={{ mb: 4, mx: 3 }}>
                   <Box sx={{ color: secondary }}>Layouts</Box>

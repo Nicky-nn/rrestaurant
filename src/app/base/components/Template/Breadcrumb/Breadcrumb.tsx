@@ -51,9 +51,7 @@ export default function Breadcrumb({ routeSegments }: any) {
     <BreadcrumbRoot>
       {routeSegments ? (
         <Fragment>
-          <BreadcrumbName>
-            {routeSegments[routeSegments.length - 1]['name']}
-          </BreadcrumbName>
+          <BreadcrumbName>{routeSegments[routeSegments.length - 1]['name']}</BreadcrumbName>
           <Separator>|</Separator>
         </Fragment>
       ) : null}

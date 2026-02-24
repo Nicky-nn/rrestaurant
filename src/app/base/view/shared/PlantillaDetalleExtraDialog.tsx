@@ -1,11 +1,4 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-} from '@mui/material'
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'
 import {
   MaterialReactTable,
   MRT_ColumnDef,
@@ -97,13 +90,7 @@ const PlantillaDetalleExtraDialog: FunctionComponent<Props> = (props) => {
           <MaterialReactTable table={table} />
         </DialogContent>
         <DialogActions>
-          <Button
-            variant={'contained'}
-            color={'primary'}
-            autoFocus
-            onClick={() => onClose()}
-            sx={{ mr: 2 }}
-          >
+          <Button variant={'contained'} color={'primary'} autoFocus onClick={() => onClose()} sx={{ mr: 2 }}>
             Cerrar
           </Button>
         </DialogActions>

@@ -25,9 +25,7 @@ export const apiListarImpresoras = async (host: string): Promise<{ name: string 
     const printers = response.data.printers
     return printers.map((name: string) => ({ name }))
   } catch (e: any) {
-    throw new Error(
-      `Error en escanear las impresoras disponibles en la red. ${e.message}`,
-    )
+    throw new Error(`Error en escanear las impresoras disponibles en la red. ${e.message}`)
   }
 }
 
@@ -38,11 +36,7 @@ export const apiListarImpresoras = async (host: string): Promise<{ name: string 
  * @param urlFile
  * @param namePrinter
  */
-export const apiImprimirUrl = async (
-  host: string,
-  urlFile: string,
-  namePrinter: string,
-): Promise<void> => {
+export const apiImprimirUrl = async (host: string, urlFile: string, namePrinter: string): Promise<void> => {
   try {
     await axios.post(
       `${host}/printPDF`,

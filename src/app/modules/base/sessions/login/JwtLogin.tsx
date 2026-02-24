@@ -80,9 +80,7 @@ const validationSchema = object({
     value: string().required('Url de comercio es requerido'),
   }).required('Url de comercio es requerido'),
   email: string().email('Debe registrar un email válido').required('Correo es requerido'),
-  password: string()
-    .min(5, 'Password debe contener al menos 5 caracteres')
-    .required('Password es requerido'),
+  password: string().min(5, 'Password debe contener al menos 5 caracteres').required('Password es requerido'),
 })
 
 interface LoginProps {
@@ -180,18 +178,11 @@ const JwtLogin = () => {
                       control={form.control}
                       name={'shop'}
                       render={({ field }) => (
-                        <FormControl
-                          fullWidth
-                          error={Boolean(form.formState.errors.shop)}
-                          sx={{ mb: 0.2 }}
-                        >
+                        <FormControl fullWidth error={Boolean(form.formState.errors.shop)} sx={{ mb: 0.2 }}>
                           <MyInputLabel shrink>URL Comercio</MyInputLabel>
                           <CreatableSelect<StorageShopProps>
                             {...field}
-                            styles={getSelectStyles(
-                              theme,
-                              Boolean(form.formState.errors.shop),
-                            )}
+                            styles={getSelectStyles(theme, Boolean(form.formState.errors.shop))}
                             menuPosition={'fixed'}
                             name={'shop'}
                             placeholder={'Sel. o ingrese URL de comercio'}
@@ -200,9 +191,7 @@ const JwtLogin = () => {
                             options={shops}
                             isClearable
                           />
-                          <FormHelperText>
-                            {form.formState.errors.shop?.message || ''}
-                          </FormHelperText>
+                          <FormHelperText>{form.formState.errors.shop?.message || ''}</FormHelperText>
                         </FormControl>
                       )}
                     />
@@ -262,9 +251,7 @@ const JwtLogin = () => {
                               </InputAdornment>
                             }
                           />
-                          <FormHelperText>
-                            {form.formState.errors.password?.message}
-                          </FormHelperText>
+                          <FormHelperText>{form.formState.errors.password?.message}</FormHelperText>
                         </FormControl>
                       )}
                       name={'password'}
@@ -343,9 +330,7 @@ const JwtLogin = () => {
                   </Grid>
                 </Grid>
                 {message && (
-                  <FormHelperText sx={{ color: 'error.main', ml: 1, mt: -1 }}>
-                    {message}
-                  </FormHelperText>
+                  <FormHelperText sx={{ color: 'error.main', ml: 1, mt: -1 }}>{message}</FormHelperText>
                 )}
               </form>
             </ContentBox>

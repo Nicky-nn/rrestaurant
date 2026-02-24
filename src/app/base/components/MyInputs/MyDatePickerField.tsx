@@ -9,18 +9,17 @@ import { MuiReactDatePickerStyles } from './MuiReactDatePickerStyles.tsx'
 
 registerLocale('es', es)
 
-interface MuiDatePickerProps
-  extends Omit<
-    DatePickerProps,
-    | 'onChange' // Conflicto: La librería espera (Date | [Date, Date] | null)
-    | 'value' // Conflicto: La librería usa string aquí, nosotros Date object
-    | 'selected' // Nosotros lo manejamos vía la prop 'value'
-    | 'customInput' // Nosotros inyectamos el TextField
-    | 'selectsRange' // No soportado en este wrapper
-    | 'selectsMultiple' // No soportado en este wrapper
-    | 'showIcon'
-    | 'isClearable'
-  > {
+interface MuiDatePickerProps extends Omit<
+  DatePickerProps,
+  | 'onChange' // Conflicto: La librería espera (Date | [Date, Date] | null)
+  | 'value' // Conflicto: La librería usa string aquí, nosotros Date object
+  | 'selected' // Nosotros lo manejamos vía la prop 'value'
+  | 'customInput' // Nosotros inyectamos el TextField
+  | 'selectsRange' // No soportado en este wrapper
+  | 'selectsMultiple' // No soportado en este wrapper
+  | 'showIcon'
+  | 'isClearable'
+> {
   label?: string
   value: Date | null
   onChange: (

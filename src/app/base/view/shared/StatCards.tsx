@@ -42,8 +42,9 @@ const StatCards = () => {
       <Grid
         size={{
           xs: 12,
-          md: 6
-        }}>
+          md: 6,
+        }}
+      >
         <StyledCard elevation={6}>
           <ContentBox>
             <Icon className="icon">group</Icon>
@@ -62,8 +63,9 @@ const StatCards = () => {
       <Grid
         size={{
           xs: 12,
-          md: 6
-        }}>
+          md: 6,
+        }}
+      >
         <StyledCard elevation={6}>
           <ContentBox>
             <Icon className="icon">attach_money</Icon>
@@ -82,8 +84,9 @@ const StatCards = () => {
       <Grid
         size={{
           xs: 12,
-          md: 6
-        }}>
+          md: 6,
+        }}
+      >
         <StyledCard elevation={6}>
           <ContentBox>
             <Icon className="icon">store</Icon>
@@ -102,8 +105,9 @@ const StatCards = () => {
       <Grid
         size={{
           xs: 12,
-          md: 6
-        }}>
+          md: 6,
+        }}
+      >
         <StyledCard elevation={6}>
           <ContentBox>
             <Icon className="icon">shopping_cart</Icon>
@@ -120,7 +124,7 @@ const StatCards = () => {
         </StyledCard>
       </Grid>
     </Grid>
-  );
+  )
 }
 
 export default StatCards

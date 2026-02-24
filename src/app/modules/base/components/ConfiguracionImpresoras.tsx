@@ -77,8 +77,8 @@ const ConfiguracionImpresoras: FunctionComponent<Props> = (props) => {
             <AlertTitle>No cuenta con una licencia de impresión activa</AlertTitle>
             <ul>
               <li>
-                Para poder usar las funciones de impresion automática, debe solicitar
-                licencia con su proveedor de sistema.
+                Para poder usar las funciones de impresion automática, debe solicitar licencia con su
+                proveedor de sistema.
               </li>
             </ul>
           </Alert>
@@ -96,10 +96,7 @@ const ConfiguracionImpresoras: FunctionComponent<Props> = (props) => {
             <ul>
               <li>
                 Verifique que la aplicación{' '}
-                <Link
-                  href={'https://github.com/integrate-bolivia/isi-imp/releases'}
-                  target={'_blank'}
-                >
+                <Link href={'https://github.com/integrate-bolivia/isi-imp/releases'} target={'_blank'}>
                   Isi-Print
                 </Link>{' '}
                 este correctamente instalado y en ejecución.
@@ -116,8 +113,7 @@ const ConfiguracionImpresoras: FunctionComponent<Props> = (props) => {
           <>
             <Alert severity={'info'} sx={{ mb: 2 }}>
               <Typography gutterBottom>
-                Actualmente las impresiones están asociadas a la impresora{' '}
-                <strong>{nombrePrinter}</strong>
+                Actualmente las impresiones están asociadas a la impresora <strong>{nombrePrinter}</strong>
               </Typography>
               <Button
                 variant={'text'}

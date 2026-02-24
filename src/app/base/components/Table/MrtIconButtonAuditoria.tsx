@@ -13,15 +13,7 @@ import { ActionIconButton } from './ActionIconButton.tsx'
  * @constructor
  * @author isi-template
  */
-const AuditItem = ({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode
-  label: string
-  value?: string
-}) => (
+const AuditItem = ({ icon, label, value }: { icon: React.ReactNode; label: string; value?: string }) => (
   <Box
     sx={{
       display: 'flex',
@@ -129,32 +121,16 @@ export const MrtAuditPopoverAction = ({ data }: { data: AuditoriaProps }) => {
         <Stack spacing={1.5}>
           {/* Bloque de Creación */}
           <Box>
-            <AuditItem
-              icon={<Person />}
-              label="Creado por"
-              value={`${data.usucre ?? '--'}`}
-            />
-            <AuditItem
-              icon={<AccessTime />}
-              label="Fecha creación"
-              value={data.createdAt ?? '--'}
-            />
+            <AuditItem icon={<Person />} label="Creado por" value={`${data.usucre ?? '--'}`} />
+            <AuditItem icon={<AccessTime />} label="Fecha creación" value={data.createdAt ?? '--'} />
           </Box>
 
           <Divider sx={{ borderStyle: 'dashed', opacity: 0.8 }} />
 
           {/* Bloque de Modificación */}
           <Box>
-            <AuditItem
-              icon={<EditNote />}
-              label="Última modificación"
-              value={data.usumod ?? '--'}
-            />
-            <AuditItem
-              icon={<AccessTime />}
-              label="Fecha modificación"
-              value={data.updatedAt ?? '--'}
-            />
+            <AuditItem icon={<EditNote />} label="Última modificación" value={data.usumod ?? '--'} />
+            <AuditItem icon={<AccessTime />} label="Fecha modificación" value={data.updatedAt ?? '--'} />
           </Box>
         </Stack>
       </Popover>

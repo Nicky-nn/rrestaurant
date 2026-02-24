@@ -10,10 +10,7 @@ export const swalConfirm = {
   showLoaderOnConfirm: true,
 }
 
-export const swalErrorMsg = (
-  msg: string | Array<any>,
-  size: 'sm' | 'md' | 'lg' = 'lg',
-) => {
+export const swalErrorMsg = (msg: string | Array<any>, size: 'sm' | 'md' | 'lg' = 'lg') => {
   const width = size === 'sm' ? 450 : size === 'md' ? 600 : size === 'lg' ? 800 : 450
   Swal.fire({
     title: 'Alerta!!',

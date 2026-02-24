@@ -1,9 +1,4 @@
-import {
-  QueryFunctionContext,
-  QueryKey,
-  useQuery,
-  UseQueryOptions,
-} from '@tanstack/react-query'
+import { QueryFunctionContext, QueryKey, useQuery, UseQueryOptions } from '@tanstack/react-query'
 import {
   MRT_ColumnFiltersState,
   MRT_PaginationState,
@@ -61,10 +56,7 @@ export interface MrtQueryProps<T extends MRT_RowData, TResult = MrtQueryFnResult
   // 5. Opciones avanzadas de React Query
   // (ej: enabled, staleTime, refetchOnWindowFocus, retry)
   // Omitimos queryKey y queryFn porque ya los definimos explícitamente arriba
-  queryOptions?: Omit<
-    UseQueryOptions<TResult, Error, TResult, QueryKey>,
-    'queryKey' | 'queryFn'
-  >
+  queryOptions?: Omit<UseQueryOptions<TResult, Error, TResult, QueryKey>, 'queryKey' | 'queryFn'>
 }
 
 /**

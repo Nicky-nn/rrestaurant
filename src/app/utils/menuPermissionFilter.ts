@@ -44,11 +44,7 @@ export const buildPermissionKey = (
   accion: string | null | undefined,
 ): string => {
   // Normaliza todas las partes
-  const parts = [
-    normalizeString(dominio),
-    normalizeString(seccion),
-    normalizeString(accion),
-  ]
+  const parts = [normalizeString(dominio), normalizeString(seccion), normalizeString(accion)]
 
   // Filtra las partes vacías (resultantes de null o '') y las une.
   // Esto previene claves como "DOMINIO::ACCION" y genera "DOMINIO:ACCION"
@@ -64,10 +60,7 @@ export const buildPermissionKey = (
  * @returns true si el usuario tiene el permiso
  * @author isi-template 2026.1 para rol dominio
  */
-export const hasPermission = (
-  userPermissions: string[],
-  permissionToCheck: string,
-): boolean => {
+export const hasPermission = (userPermissions: string[], permissionToCheck: string): boolean => {
   if (!userPermissions || userPermissions.length === 0) return false
   if (!permissionToCheck) return false
 
@@ -91,10 +84,7 @@ export const hasPermission = (
  * @returns true si tiene al menos un permiso
  * @author isi-template 2026.1 para rol dominio
  */
-export const hasAnyPermission = (
-  userPermissions: string[],
-  permissionsToCheck: string[],
-): boolean => {
+export const hasAnyPermission = (userPermissions: string[], permissionsToCheck: string[]): boolean => {
   if (!userPermissions || userPermissions.length === 0) return false
   if (!permissionsToCheck || permissionsToCheck.length === 0) return false
 
@@ -102,9 +92,7 @@ export const hasAnyPermission = (
   // Complejidad O(n + m) en lugar de O(n * m)
   const permissionSet = new Set(userPermissions.map(normalizeString))
 
-  return permissionsToCheck.some((permission) =>
-    permissionSet.has(normalizeString(permission)),
-  )
+  return permissionsToCheck.some((permission) => permissionSet.has(normalizeString(permission)))
 }
 
 /**
@@ -116,10 +104,7 @@ export const hasAnyPermission = (
  * @returns true si tiene todos los permisos
  * @author isi-template 2026.1 para rol dominio
  */
-export const hasAllPermissions = (
-  userPermissions: string[],
-  permissionsToCheck: string[],
-): boolean => {
+export const hasAllPermissions = (userPermissions: string[], permissionsToCheck: string[]): boolean => {
   if (!userPermissions || userPermissions.length === 0) return false
   if (!permissionsToCheck || permissionsToCheck.length === 0) return false
 
@@ -127,9 +112,7 @@ export const hasAllPermissions = (
   // Complejidad O(n + m) en lugar de O(n * m)
   const permissionSet = new Set(userPermissions.map(normalizeString))
 
-  return permissionsToCheck.every((permission) =>
-    permissionSet.has(normalizeString(permission)),
-  )
+  return permissionsToCheck.every((permission) => permissionSet.has(normalizeString(permission)))
 }
 
 /**

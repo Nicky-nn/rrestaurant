@@ -53,12 +53,7 @@ export const PreloadFieldSkeleton = ({
               {label}
             </Typography>
           )}
-          <Skeleton
-            variant="rounded"
-            width="100%"
-            height={finalHeight}
-            sx={{ borderRadius: 1 }}
-          />
+          <Skeleton variant="rounded" width="100%" height={finalHeight} sx={{ borderRadius: 1 }} />
         </>
       ) : (
         <Box sx={{ minHeight: finalHeight }}>{children}</Box>

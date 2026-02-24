@@ -1,9 +1,4 @@
-import {
-  CheckCircleOutline,
-  ErrorOutline,
-  InfoOutlined,
-  WarningAmber,
-} from '@mui/icons-material'
+import { CheckCircleOutline, ErrorOutline, InfoOutlined, WarningAmber } from '@mui/icons-material'
 import { Alert, AlertTitle, alpha, Box, Stack, Typography } from '@mui/material'
 import React, { FunctionComponent, ReactNode } from 'react'
 
@@ -65,9 +60,7 @@ export const ContentConfirmMessage: FunctionComponent<Props> = (props) => {
           '& .MuiAlert-message': { width: '100%' },
         }}
       >
-        <AlertTitle sx={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: -0.5 }}>
-          {title}
-        </AlertTitle>
+        <AlertTitle sx={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: -0.5 }}>{title}</AlertTitle>
         {description && (
           <>
             {typeof description === 'string' ? (

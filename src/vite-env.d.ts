@@ -1,7 +1,5 @@
 /// <reference types="vite/client" />
-/**
- * @author isi-template
- */
+
 interface ImportMetaEnv {
   readonly ISI_TITLE: string
   readonly ISI_API_URL: string

@@ -10,22 +10,21 @@ interface CustomProps {
  * @description Realiza un enmascaramiento para registro de un codigo
  * @author isi-template
  */
-export const InputCodigoMask = forwardRef<HTMLElement, CustomProps>(
-  function InputCodigoMask(props, ref: any) {
-    const { onChange, ...other } = props
-    return (
-      <IMaskInput
-        {...other}
-        mask={/^[\w./+'"[\]-]*$/}
-        lazy={false}
-        inputRef={ref}
-        unmask={'typed'}
-        prepare={(s: string) => s}
-        onAccept={(value: any, mask: any) =>
-          onChange({ target: { name: props.name, value } })
-        }
-        overwrite
-      />
-    )
-  },
-)
+export const InputCodigoMask = forwardRef<HTMLElement, CustomProps>(function InputCodigoMask(
+  props,
+  ref: any,
+) {
+  const { onChange, ...other } = props
+  return (
+    <IMaskInput
+      {...other}
+      mask={/^[\w./+'"[\]-]*$/}
+      lazy={false}
+      inputRef={ref}
+      unmask={'typed'}
+      prepare={(s: string) => s}
+      onAccept={(value: any, mask: any) => onChange({ target: { name: props.name, value } })}
+      overwrite
+    />
+  )
+})

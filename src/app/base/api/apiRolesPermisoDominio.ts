@@ -18,19 +18,16 @@ export interface MisRolesPermisoDominioResponse {
  * Obtiene los roles permiso por dominio
  * @param dominio
  */
-export const apiMisRolesPermisoPorDominio = async (
-  dominio: string,
-): Promise<string[]> => {
+export const apiMisRolesPermisoPorDominio = async (dominio: string): Promise<string[]> => {
   try {
     const client = new GraphQLClient(import.meta.env.ISI_API_URL)
 
     const accessToken = localStorage.getItem(AccessToken)
     client.setHeader('authorization', `Bearer ${accessToken}`)
 
-    const data: MisRolesPermisoDominioResponse = await client.request(
-      QUERY_MIS_ROLES_PERMISO_DOMINIO,
-      { dominio },
-    )
+    const data: MisRolesPermisoDominioResponse = await client.request(QUERY_MIS_ROLES_PERMISO_DOMINIO, {
+      dominio,
+    })
     return data.misRolesPermisoPorDominio || []
   } catch (error: any) {
     console.error('Error al obtener permisos por dominio:', error)

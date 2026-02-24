@@ -8,12 +8,7 @@ type SecondarySidenavThemeProps = {
   open?: any
 }
 
-const SecondarySidenavTheme = ({
-  theme,
-  classes,
-  children,
-  open,
-}: SecondarySidenavThemeProps) => {
+const SecondarySidenavTheme = ({ theme, classes, children, open }: SecondarySidenavThemeProps) => {
   return <ThemeProvider theme={theme}>{children}</ThemeProvider>
 }
 export default SecondarySidenavTheme

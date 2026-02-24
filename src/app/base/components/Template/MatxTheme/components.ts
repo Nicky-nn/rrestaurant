@@ -150,9 +150,7 @@ export const components: ComponentsProps = {
         '&.Mui-disabled': {
           // Fondo sutilmente gris para diferenciarlo del fondo blanco/negro puro
           backgroundColor:
-            theme.palette.mode === 'dark'
-              ? 'rgba(255, 255, 255, 0.06)'
-              : 'rgba(0, 0, 0, 0.04)',
+            theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
 
           '& .MuiOutlinedInput-notchedOutline': {
             // El borde dashed es un indicador universal de "inactivo"

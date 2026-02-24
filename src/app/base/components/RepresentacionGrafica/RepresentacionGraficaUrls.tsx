@@ -1,11 +1,4 @@
-import {
-  Card,
-  CardActionArea,
-  CardContent,
-  Container,
-  Grid,
-  Typography,
-} from '@mui/material'
+import { Card, CardActionArea, CardContent, Container, Grid, Typography } from '@mui/material'
 import React, { FunctionComponent } from 'react'
 
 import { openInNewTab } from '../../../utils/helper'

@@ -15,7 +15,7 @@ const gqlQuery = gql`
  * Elimina redis de la memoria ram, esto en el servidor
  * @author isi-template
  */
-export const apiUsuarioVaciarCache = async (): Promise<Boolean> => {
+export const apiUsuarioVaciarCache = async (): Promise<boolean> => {
   try {
     const client = new GraphQLClient(import.meta.env.ISI_API_URL)
     const token = localStorage.getItem(AccessToken)

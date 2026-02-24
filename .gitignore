@@ -25,26 +25,13 @@
 !vite.config.mts
 !pwaOptions.ts
 !index.html
-
-# --- Variables de entorno ---
-!.env
-!.env.integrate
-!.env.sandbox
-!.env.gosocket
-!.env.fenix
-!.env.quickpay
-!.env.softrest
+!.editorconfig
 
 # --- Documentación ---
+!FORMATEO.md
 !CHANGELOG.md
-!README.md
-
-# --- VSCode ---
-!.vscode/
-!.vscode/extensions.json
-
-# --- Editor Confif --
-!.editorconfig
+!implementacion.md
+!plantilla.md
 
 # --- Git ---
 !.gitignore
@@ -53,6 +40,14 @@
 # ========================================
 # BLOQUEAR EXPLÍCITAMENTE (dentro de carpetas permitidas)
 # ========================================
+# Herramientas de formateo y linting (no usadas)
+.prettierrc.cjs
+.prettierignore
+eslint.config.cjs
+.eslintignore
+.eslintrc.cjs
+.vscode/
+
 # Logs
 *.log
 

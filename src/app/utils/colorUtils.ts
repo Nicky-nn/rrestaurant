@@ -11,11 +11,7 @@ const contrastCache = new Map<string, string>()
  * Devuelve el color ajustado (oscurecido en dark mode, normal en light).
  * @author isi-template
  */
-export const adaptColor = (
-  color: string,
-  theme: Theme,
-  darknessFactor: number = 0.55,
-): string => {
+export const adaptColor = (color: string, theme: Theme, darknessFactor: number = 0.55): string => {
   // 1. Si es Light Mode, retornamos rápido (Coste 0)
   if (theme.palette.mode === 'light') {
     return color
@@ -44,11 +40,7 @@ export const adaptColor = (
  * @param theme
  * @param darknessFactor
  */
-export const alphaByTheme = (
-  color: string,
-  theme: Theme,
-  darknessFactor: number = 0.2,
-) => {
+export const alphaByTheme = (color: string, theme: Theme, darknessFactor: number = 0.2) => {
   // 2. Generamos clave única para el caché
   const cacheKey = `alpha-${color}-${theme.palette.mode}-${darknessFactor}`
   if (colorCache.has(cacheKey)) {
@@ -71,11 +63,7 @@ export const alphaByTheme = (
  * @param mode
  * @param darknessFactor
  */
-export const alphaByMode = (
-  color: string,
-  mode: 'light' | 'dark',
-  darknessFactor: number = 0.2,
-) => {
+export const alphaByMode = (color: string, mode: 'light' | 'dark', darknessFactor: number = 0.2) => {
   // 2. Generamos clave única para el caché
   const cacheKey = `alpha-${color}-${mode}-${darknessFactor}`
   if (colorCache.has(cacheKey)) {
@@ -140,9 +128,7 @@ export const adaptBoxStyle = (
   const textColor = getContrastColor(adaptedBg)
 
   // Calculamos borde solo si existe
-  const adaptedBorder = borderColor
-    ? adaptColor(borderColor, theme, darknessFactor)
-    : undefined
+  const adaptedBorder = borderColor ? adaptColor(borderColor, theme, darknessFactor) : undefined
 
   return {
     backgroundColor: adaptedBg, // Usamos 'backgroundColor' que es más estándar que 'bgcolor'

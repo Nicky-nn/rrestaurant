@@ -1,8 +1,4 @@
-import {
-  MRT_ColumnFiltersState,
-  MRT_PaginationState,
-  MRT_SortingState,
-} from 'material-react-table'
+import { MRT_ColumnFiltersState, MRT_PaginationState, MRT_SortingState } from 'material-react-table'
 
 import { PAGE_DEFAULT } from '../../../interfaces'
 import { genApiQuery } from '../../../utils/helper.ts'
@@ -60,9 +56,7 @@ export const genMrtQueryPagination = <T = Record<string, any>>(
   const defaultPage = pagination.pageIndex + 1 // MRT es 0-index
   const defaultLimit = pagination.pageSize
   const defaultReverse = sorting.length > 0 ? sorting[0].desc : true // Asumiendo default true
-  const finalFilters = filterTypes
-    ? castMrtFilters(columnFilters, filterTypes)
-    : columnFilters
+  const finalFilters = filterTypes ? castMrtFilters(columnFilters, filterTypes) : columnFilters
 
   const defaultQuery = genApiQuery(finalFilters, filterFields)
 

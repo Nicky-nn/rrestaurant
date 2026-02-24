@@ -18,9 +18,7 @@ export const articuloOperacionInputIntegridadValidator = (
   for (const item of articulos) {
     if (item.cantidad > 0) {
       if (!item.almacen)
-        errors.push(
-          `Articulo ${item.codigoArticulo} - ${item.nombreArticulo} debe tener asignado un almacen`,
-        )
+        errors.push(`Articulo ${item.codigoArticulo} - ${item.nombreArticulo} debe tener asignado un almacen`)
       if (validarLote) {
         if (item.gestionArticulo === 'LOTE') {
           if (!item.lote)

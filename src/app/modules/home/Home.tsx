@@ -1,15 +1,5 @@
 import { Delete, Done, Newspaper } from '@mui/icons-material'
-import {
-  alpha,
-  Avatar,
-  Button,
-  Chip,
-  Grid,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { alpha, Avatar, Button, Chip, Grid, Paper, Stack, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 
 import SimpleContainer from '../../base/components/Container/SimpleContainer'
@@ -37,8 +27,7 @@ const Home = () => {
     <SimpleContainer maxWidth={'xl'}>
       <Breadcrumb routeSegments={[homeRoutesMap.home]} />
       <H2>
-        Página Principal para el usuario con correo {user.miEmpresa.email}{' '}
-        {user.miEmpresa.emailFake}
+        Página Principal para el usuario con correo {user.miEmpresa.email} {user.miEmpresa.emailFake}
       </H2>
       <hr />
       <Paper>
@@ -46,14 +35,12 @@ const Home = () => {
           <Grid container spacing={3}>
             <Grid size="grow">
               <Typography variant="body1" color={'primary'} gutterBottom>
-                ¡Bienvenido a la plantilla ISI-TEMPLATE a continuacion se muestra el color
-                primario
+                ¡Bienvenido a la plantilla ISI-TEMPLATE a continuacion se muestra el color primario
               </Typography>
             </Grid>
             <Grid size={12}>
               <Typography variant="body1" color={'secondary'} gutterBottom>
-                ¡Bienvenido a la plantilla ISI-TEMPLATE, a continuacion se muestra el
-                color secundario
+                ¡Bienvenido a la plantilla ISI-TEMPLATE, a continuacion se muestra el color secundario
               </Typography>
             </Grid>
             <Grid size={12}>
@@ -198,12 +185,7 @@ const Home = () => {
                 </Grid>
                 <Grid size={3}>
                   <Stack direction={'row'}>
-                    <TextField
-                      required
-                      label={'hola a todos'}
-                      defaultValue={'hola a todos'}
-                      size={'small'}
-                    />
+                    <TextField required label={'hola a todos'} defaultValue={'hola a todos'} size={'small'} />
                     <FormSelect
                       name={'formSelect'}
                       error={false}

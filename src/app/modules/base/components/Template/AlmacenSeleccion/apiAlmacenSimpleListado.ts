@@ -11,12 +11,7 @@ import { AlmacenProps } from '../../../../../interfaces/almacen.ts'
 const gqlQuery = gql`
   ${almacenFragment}
   ${facturaSucursalFragment}
-  query LISTADO(
-    $limit: Int! = 10
-    $page: Int = 1
-    $reverse: Boolean = false
-    $query: String
-  ) {
+  query LISTADO($limit: Int! = 10, $page: Int = 1, $reverse: Boolean = false, $query: String) {
     almacenListado(limit: $limit, page: $page, reverse: $reverse, query: $query) {
       pageInfo {
         totalPages

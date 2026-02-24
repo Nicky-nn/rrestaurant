@@ -51,20 +51,12 @@ const SimpleCard: FC<SimpleCardProps> = (props: SimpleCardProps) => {
   const { children, title, subtitle, childIcon, ...others } = props
   const titleRoot = typeof title === 'string' ? <H4>{title}</H4> : title
   const subHeader =
-    typeof subtitle === 'string' ? (
-      <Span sx={{ fontSize: '0.85rem' }}>{subtitle}</Span>
-    ) : (
-      subtitle
-    )
+    typeof subtitle === 'string' ? <Span sx={{ fontSize: '0.85rem' }}>{subtitle}</Span> : subtitle
 
   return (
     <CardRoot variant={'outlined'} {...others}>
       {title && (
-        <CardHeader
-          avatar={title && childIcon && childIcon}
-          title={titleRoot}
-          subheader={subHeader}
-        />
+        <CardHeader avatar={title && childIcon && childIcon} title={titleRoot} subheader={subHeader} />
       )}
 
       <CardContent>{children}</CardContent>

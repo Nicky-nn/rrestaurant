@@ -41,9 +41,7 @@ EJEMPLO
  * @author isi-template
  * @param error
  */
-export const reactSelectStyle = (
-  error: boolean = false,
-): StylesConfig<any, any, any> | undefined => ({
+export const reactSelectStyle = (error: boolean = false): StylesConfig<any, any, any> | undefined => ({
   menuPortal: (base) => ({
     ...base,
     zIndex: 9999,

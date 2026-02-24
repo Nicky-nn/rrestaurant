@@ -2,14 +2,7 @@
  * @author isi-template
  * @deprecated
  */
-export const mainThemes = [
-  'purple1',
-  'purple2',
-  'blue',
-  'purpleDark1',
-  'purpleDark2',
-  'blueDark',
-]
+export const mainThemes = ['purple1', 'purple2', 'blue', 'purpleDark1', 'purpleDark2', 'blueDark']
 
 /**
  * No se usa custom de temas por front-end

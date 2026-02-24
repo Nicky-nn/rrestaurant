@@ -37,9 +37,7 @@ interface WithSecurityOptions {
  * ```
  */
 export function withSecurity(options: WithSecurityOptions) {
-  return function <P extends object>(
-    WrappedComponent: ComponentType<P> | React.ReactElement,
-  ) {
+  return function <P extends object>(WrappedComponent: ComponentType<P> | React.ReactElement) {
     const WithSecurityComponent: FC<P> = (props) => {
       const { hasActionPermission, hasStaticPermission, loading } = useSecurity()
       const { action, staticPermission, keepInDom = false } = options
@@ -51,9 +49,7 @@ export function withSecurity(options: WithSecurityOptions) {
 
       // Validar que se proporcione action O staticPermission, no ambos
       if (action && staticPermission) {
-        console.error(
-          'withSecurity: No se puede usar action y staticPermission al mismo tiempo',
-        )
+        console.error('withSecurity: No se puede usar action y staticPermission al mismo tiempo')
         return null
       }
 
@@ -108,9 +104,7 @@ export const SecureComponent: FC<WithSecurityOptions & { children: React.ReactNo
 
   // Validar que se proporcione action O staticPermission, no ambos
   if (action && staticPermission) {
-    console.error(
-      'SecureComponent: No se puede usar action y staticPermission al mismo tiempo',
-    )
+    console.error('SecureComponent: No se puede usar action y staticPermission al mismo tiempo')
     return null
   }
 

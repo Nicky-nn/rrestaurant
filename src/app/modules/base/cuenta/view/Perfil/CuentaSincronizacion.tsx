@@ -89,13 +89,13 @@ const CuentaSincronizacion: FunctionComponent<Props> = (props) => {
             <ol>
               <li>Sincroniza todos los catalogos y clasificadores del sin.</li>
               <li>
-                Este proceso puede demorar varios minutos dependiente de la conexion de
-                internet y la diponibilidad de IMPUESTOS NACIONALES.
+                Este proceso puede demorar varios minutos dependiente de la conexion de internet y la
+                diponibilidad de IMPUESTOS NACIONALES.
               </li>
               <li>
-                Sincronización de: metodos pago, actividades, tipo punto venta, tipo
-                Emision, producto servicio, tipo moneda, actividades por documento sector,
-                tipo de factura, tipo documento identidad, motivo anulación, pais.
+                Sincronización de: metodos pago, actividades, tipo punto venta, tipo Emision, producto
+                servicio, tipo moneda, actividades por documento sector, tipo de factura, tipo documento
+                identidad, motivo anulación, pais.
               </li>
             </ol>
           </Grid>
@@ -106,11 +106,7 @@ const CuentaSincronizacion: FunctionComponent<Props> = (props) => {
               xs: 12,
             }}
           >
-            <Button
-              variant={'contained'}
-              size={'small'}
-              onClick={fetchSincronizarCatalogos}
-            >
+            <Button variant={'contained'} size={'small'} onClick={fetchSincronizarCatalogos}>
               EJECUTAR SERVICIO CATÁLOGOS
             </Button>
           </Grid>

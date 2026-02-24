@@ -28,14 +28,10 @@ export const MyAccordion = styled((props: AccordionProps) => (
  * @author isi-template
  */
 export const MyAccordionSummary = styled((props: AccordionSummaryProps) => (
-  <AccordionSummary
-    expandIcon={<ArrowDownwardIcon sx={{ fontSize: '1.2rem' }} />}
-    {...props}
-  />
+  <AccordionSummary expandIcon={<ArrowDownwardIcon sx={{ fontSize: '1.2rem' }} />} {...props} />
 ))(({ theme }) => ({
   minHeight: '40px',
-  backgroundColor:
-    theme.palette.mode === 'dark' ? theme.palette.grey['300'] : theme.palette.grey[50],
+  backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey['300'] : theme.palette.grey[50],
   flexDirection: 'row-reverse',
   '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': { transform: 'rotate(90deg)' },
   '& .MuiAccordionSummary-content': { marginLeft: theme.spacing(1) },

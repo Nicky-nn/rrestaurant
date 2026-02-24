@@ -1,12 +1,5 @@
 import { AddCircleOutlined, RemoveCircle } from '@mui/icons-material'
-import {
-  IconButton,
-  InputAdornment,
-  styled,
-  TextField,
-  type TextFieldProps,
-  Typography,
-} from '@mui/material'
+import { IconButton, InputAdornment, styled, TextField, type TextFieldProps, Typography } from '@mui/material'
 import * as React from 'react'
 import { ForwardedRef, useEffect, useRef, useState } from 'react'
 import { IMaskInput } from 'react-imask'
@@ -111,230 +104,225 @@ export type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
  * @param props
  * @constructor
  */
-const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
-  function NumberSpinnerField(props, ref: ForwardedRef<HTMLDivElement>) {
-    // const t = useTranslations('NumberInput')
-    const {
-      disabled = false,
-      hideActionButtons = false,
-      max = Infinity,
-      min = -Infinity,
-      onChange,
-      size = 'small',
-      slotProps,
-      step = 1,
-      value: valueProp,
-      textAlign = 'center',
-      unit,
-      helperText,
-      decimalScale = 2,
-      spinnerTabIndex = true,
-      mostrarMensajeError = true,
-      ...rest
-    } = props
+const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(function NumberSpinnerField(
+  props,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
+  // const t = useTranslations('NumberInput')
+  const {
+    disabled = false,
+    hideActionButtons = false,
+    max = Infinity,
+    min = -Infinity,
+    onChange,
+    size = 'small',
+    slotProps,
+    step = 1,
+    value: valueProp,
+    textAlign = 'center',
+    unit,
+    helperText,
+    decimalScale = 2,
+    spinnerTabIndex = true,
+    mostrarMensajeError = true,
+    ...rest
+  } = props
 
-    const intervalRef = useRef(null) // Referencia para almacenar el intervalo
-    const [stateValue, setStateValue] = useState<number | null>(null)
-    const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+  const intervalRef = useRef(null) // Referencia para almacenar el intervalo
+  const [stateValue, setStateValue] = useState<number | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
 
-    /**
-     * Cuando se presiona una tecla
-     * @param e
-     */
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      const char = getKeyDownChar(e)
-      if (!char)
-        // Ningun caracter
-        return
-      const target = e.target as HTMLInputElement
-      if (target.selectionStart == null || target.selectionEnd == null)
-        // Ninguna seleccion
-        return
-      return char
+  /**
+   * Cuando se presiona una tecla
+   * @param e
+   */
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const char = getKeyDownChar(e)
+    if (!char)
+      // Ningun caracter
+      return
+    const target = e.target as HTMLInputElement
+    if (target.selectionStart == null || target.selectionEnd == null)
+      // Ninguna seleccion
+      return
+    return char
+  }
+
+  /**
+   * Incrementa el valor
+   */
+  const increment = (forceChange = false) => {
+    const newValue = Number(
+      ((stateValue != null && !Number.isNaN(stateValue) ? Number(stateValue) : 0) + step).toFixed(
+        decimalScale,
+      ),
+    )
+    if (newValue > max) {
+      return
     }
-
-    /**
-     * Incrementa el valor
-     */
-    const increment = (forceChange = false) => {
-      const newValue = Number(
-        (
-          (stateValue != null && !Number.isNaN(stateValue) ? Number(stateValue) : 0) +
-          step
-        ).toFixed(decimalScale),
-      )
-      if (newValue > max) {
-        return
-      }
-      setStateValue(newValue)
-      if (forceChange) {
-        if (onChange) onChange(newValue)
-      }
+    setStateValue(newValue)
+    if (forceChange) {
+      if (onChange) onChange(newValue)
     }
+  }
 
-    /**
-     * Decrementa el valor
-     */
-    const decrement = (forceChange = false) => {
-      const newValue = Number(
-        (
-          (stateValue != null && !Number.isNaN(stateValue) ? Number(stateValue) : 0) -
-          step
-        ).toFixed(decimalScale),
-      )
+  /**
+   * Decrementa el valor
+   */
+  const decrement = (forceChange = false) => {
+    const newValue = Number(
+      ((stateValue != null && !Number.isNaN(stateValue) ? Number(stateValue) : 0) - step).toFixed(
+        decimalScale,
+      ),
+    )
 
-      if (newValue < min) {
-        return
-      }
-      setStateValue(newValue)
-      if (forceChange) {
-        if (onChange) onChange(newValue)
-      }
+    if (newValue < min) {
+      return
     }
-
-    /**
-     * Cuando se presiona una tecla
-     * @param e
-     */
-    const getKeyDownChar = (e: React.KeyboardEvent): string | undefined => {
-      if (e.key === 'ArrowUp') {
-        if (intervalRef.current !== null) return
-        increment()
-        return
-      } else if (e.key === 'ArrowDown') {
-        if (intervalRef.current !== null) return
-        decrement()
-        return
-      }
+    setStateValue(newValue)
+    if (forceChange) {
+      if (onChange) onChange(newValue)
     }
+  }
 
-    const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        // Limpiar el intervalo cuando se suelta la tecla
-        if (intervalRef.current !== null) {
-          clearInterval(intervalRef.current)
-          intervalRef.current = null
-        }
-      }
-      // Estado final de cambio afuera
-      if (onChange) {
-        if (!stateValue) {
-          onChange(null)
-        } else {
-          onChange(Number(stateValue))
-        }
+  /**
+   * Cuando se presiona una tecla
+   * @param e
+   */
+  const getKeyDownChar = (e: React.KeyboardEvent): string | undefined => {
+    if (e.key === 'ArrowUp') {
+      if (intervalRef.current !== null) return
+      increment()
+      return
+    } else if (e.key === 'ArrowDown') {
+      if (intervalRef.current !== null) return
+      decrement()
+      return
+    }
+  }
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      // Limpiar el intervalo cuando se suelta la tecla
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
       }
     }
-
-    /**
-     * Actualizacion de datos y envio fuera del componente
-     * @param value
-     */
-    const updateChange = (value: string) => {
-      const formattedValue = clampNumber(value)
-      // console.log(formattedValue, value.toString())
-      setStateValue(formattedValue)
-      // console.log(formattedValue, min, max)
-      if (Number(formattedValue) < min) {
-        if (mostrarMensajeError) setErrorMessage(`Valor mínimo es ${min}`)
+    // Estado final de cambio afuera
+    if (onChange) {
+      if (!stateValue) {
+        onChange(null)
       } else {
-        if (Number(formattedValue) > max) {
-          if (mostrarMensajeError) setErrorMessage('Valor maximo es ' + max)
-        } else {
-          setErrorMessage(undefined)
-        }
+        onChange(Number(stateValue))
       }
     }
+  }
 
-    /**
-     * Evento on change del componente
-     * @param e
-     */
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      updateChange(e.target.value)
+  /**
+   * Actualizacion de datos y envio fuera del componente
+   * @param value
+   */
+  const updateChange = (value: string) => {
+    const formattedValue = clampNumber(value)
+    // console.log(formattedValue, value.toString())
+    setStateValue(formattedValue)
+    // console.log(formattedValue, min, max)
+    if (Number(formattedValue) < min) {
+      if (mostrarMensajeError) setErrorMessage(`Valor mínimo es ${min}`)
+    } else {
+      if (Number(formattedValue) > max) {
+        if (mostrarMensajeError) setErrorMessage('Valor maximo es ' + max)
+      } else {
+        setErrorMessage(undefined)
+      }
     }
+  }
 
-    /******************************************************************************/
-    /******************************************************************************/
-    useEffect(() => {
-      setStateValue(valueProp ?? null)
-    }, [valueProp])
+  /**
+   * Evento on change del componente
+   * @param e
+   */
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateChange(e.target.value)
+  }
 
-    return (
-      <TextField
-        {...rest}
-        ref={ref}
-        value={stateValue?.toString() || null} // We can't ever pass null to value because it breaks the shrink state of the label, so we pass empty string instead
-        disabled={disabled}
-        size={size}
-        autoComplete={'off'}
-        onKeyDown={handleKeyDown}
-        onChange={handleChange}
-        onKeyUp={handleKeyUp}
-        helperText={errorMessage || helperText}
-        error={props.error || Number(stateValue) < min || Number(stateValue) > max}
-        placeholder={props.placeholder || min.toString()}
-        slotProps={{
-          ...slotProps,
-          input: {
-            sx: {
-              fontSize: '1.16em',
+  /******************************************************************************/
+  /******************************************************************************/
+  useEffect(() => {
+    setStateValue(valueProp ?? null)
+  }, [valueProp])
+
+  return (
+    <TextField
+      {...rest}
+      ref={ref}
+      value={stateValue?.toString() || null} // We can't ever pass null to value because it breaks the shrink state of the label, so we pass empty string instead
+      disabled={disabled}
+      size={size}
+      autoComplete={'off'}
+      onKeyDown={handleKeyDown}
+      onChange={handleChange}
+      onKeyUp={handleKeyUp}
+      helperText={errorMessage || helperText}
+      error={props.error || Number(stateValue) < min || Number(stateValue) > max}
+      placeholder={props.placeholder || min.toString()}
+      slotProps={{
+        ...slotProps,
+        input: {
+          sx: {
+            fontSize: '1.16em',
+          },
+          inputComponent: NumericFormatCustom as any,
+          inputProps: {
+            scale: decimalScale,
+            style: {
+              textAlign: textAlign,
+              height: 20,
             },
-            inputComponent: NumericFormatCustom as any,
-            inputProps: {
-              scale: decimalScale,
-              style: {
-                textAlign: textAlign,
-                height: 20,
-              },
-            },
-            startAdornment: !hideActionButtons && (
-              <InputAdornment position="start" sx={{ mr: 0.7 }}>
+          },
+          startAdornment: !hideActionButtons && (
+            <InputAdornment position="start" sx={{ mr: 0.7 }}>
+              <StyledIconButton
+                aria-label="decrementar valor"
+                onClick={() => decrement(true)}
+                edge="start"
+                disabled={disabled || (Number(stateValue) || 0) - step < min}
+                tabIndex={spinnerTabIndex ? undefined : -1}
+              >
+                <RemoveCircle />
+              </StyledIconButton>
+            </InputAdornment>
+          ),
+          endAdornment: (unit || !hideActionButtons) && (
+            <InputAdornment position="end">
+              {unit && (
+                <Typography component={'span'} fontSize={'smaller'} sx={{ lineHeight: 0, mt: 0.3 }}>
+                  {unit}
+                </Typography>
+              )}
+              {!hideActionButtons && (
                 <StyledIconButton
-                  aria-label="decrementar valor"
-                  onClick={() => decrement(true)}
-                  edge="start"
-                  disabled={disabled || (Number(stateValue) || 0) - step < min}
+                  aria-label="incrementar valor"
+                  onClick={() => increment(true)}
+                  edge="end"
+                  disabled={disabled || (Number(stateValue) || 0) + step > max}
                   tabIndex={spinnerTabIndex ? undefined : -1}
                 >
-                  <RemoveCircle />
+                  <AddCircleOutlined />
                 </StyledIconButton>
-              </InputAdornment>
-            ),
-            endAdornment: (unit || !hideActionButtons) && (
-              <InputAdornment position="end">
-                {unit && (
-                  <Typography
-                    component={'span'}
-                    fontSize={'smaller'}
-                    sx={{ lineHeight: 0, mt: 0.3 }}
-                  >
-                    {unit}
-                  </Typography>
-                )}
-                {!hideActionButtons && (
-                  <StyledIconButton
-                    aria-label="incrementar valor"
-                    onClick={() => increment(true)}
-                    edge="end"
-                    disabled={disabled || (Number(stateValue) || 0) + step > max}
-                    tabIndex={spinnerTabIndex ? undefined : -1}
-                  >
-                    <AddCircleOutlined />
-                  </StyledIconButton>
-                )}
-              </InputAdornment>
-            ),
-            ...slotProps?.input,
-          },
-          htmlInput: {
-            ...slotProps?.htmlInput,
-          },
-        }}
-      />
-    )
-  },
-)
+              )}
+            </InputAdornment>
+          ),
+          ...slotProps?.input,
+        },
+        htmlInput: {
+          ...slotProps?.htmlInput,
+        },
+      }}
+    />
+  )
+})
 
 export default NumberSpinnerField
 

@@ -34,9 +34,7 @@ interface ApiLicenciaProducto {
  * @author isi-template
  * @param token
  */
-export const apiLicenciaProducto = async (
-  token: string,
-): Promise<ApiLicenciaProducto> => {
+export const apiLicenciaProducto = async (token: string): Promise<ApiLicenciaProducto> => {
   let lw = { activo: false, licencia: {} as LicenciaProductoProps }
   let li = { activo: false, licencia: {} as LicenciaProductoProps }
   try {

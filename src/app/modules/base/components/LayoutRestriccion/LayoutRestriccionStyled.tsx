@@ -53,10 +53,7 @@ export const RestriccionStyledMenu = styled((props: MenuProps) => (
         marginRight: theme.spacing(1.5),
       },
       '&:active': {
-        backgroundColor: alpha(
-          theme.palette.primary.main,
-          theme.palette.action.selectedOpacity,
-        ),
+        backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity),
       },
     },
     ...theme.applyStyles('dark', {

@@ -25,8 +25,7 @@ export const localization = {
   pinToRight: 'Alfile a la derecha',
   save: 'Salvar',
   search: 'Búsqueda',
-  selectedCountOfRowCountRowsSelected:
-    '{selectedCount} de {rowCount} fila(s) seleccionadas',
+  selectedCountOfRowCountRowsSelected: '{selectedCount} de {rowCount} fila(s) seleccionadas',
   showAll: 'Mostrar todo',
   showAllColumns: 'Mostrar todas las columnas',
   showHideColumns: 'Mostrar/Ocultar columnas',

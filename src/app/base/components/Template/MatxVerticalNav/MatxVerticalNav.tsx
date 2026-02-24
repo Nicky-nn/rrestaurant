@@ -166,9 +166,7 @@ const MatxVerticalNav: FC<any> = ({ items }: any) => {
                   {item.name}
                 </StyledText>
                 <Box mx="auto"></Box>
-                {item.badge && (
-                  <BadgeValue className="sidenavHoverShow">{item.badge.value}</BadgeValue>
-                )}
+                {item.badge && <BadgeValue className="sidenavHoverShow">{item.badge.value}</BadgeValue>}
               </ButtonBase>
             </NavLink>
           </InternalLink>

@@ -7,8 +7,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import dayjs from 'dayjs'
 import React from 'react'
 
-interface SimpleDatePickerProps
-  extends Omit<DateTimePickerProps, 'value' | 'onChange' | 'label'> {
+interface SimpleDatePickerProps extends Omit<DateTimePickerProps, 'value' | 'onChange' | 'label'> {
   value: Date | null
   onChange: (date: Date | null) => void
   label?: string

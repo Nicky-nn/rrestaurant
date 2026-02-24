@@ -28,13 +28,7 @@ type Props = DialogProps & {
  * @param props
  * @constructor
  */
-const ConfirmationDialog: FC<Props> = ({
-  title,
-  description,
-  onCancel,
-  onConfirm,
-  ...props
-}) => {
+const ConfirmationDialog: FC<Props> = ({ title, description, onCancel, onConfirm, ...props }) => {
   const [loading, setLoading] = useState(false)
 
   return (
@@ -44,13 +38,7 @@ const ConfirmationDialog: FC<Props> = ({
         <DialogContentText>{description}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button
-          onClick={onCancel}
-          variant={'outlined'}
-          size={'small'}
-          color="error"
-          disabled={loading}
-        >
+        <Button onClick={onCancel} variant={'outlined'} size={'small'} color="error" disabled={loading}>
           Cancelar
         </Button>
         <Box sx={{ m: 1, position: 'relative' }}>

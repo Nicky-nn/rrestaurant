@@ -11,11 +11,7 @@ import { MyGraphQlError } from '../services/GraphqlError.ts'
 const query = gql`
   ${facturaSucursalFragment}
   ${loteFragment}
-  query LOTE_POR_INVENTARIO_ALMACEN(
-    $codigoArticulo: String!
-    $inventarioId: ID
-    $almacenId: ID
-  ) {
+  query LOTE_POR_INVENTARIO_ALMACEN($codigoArticulo: String!, $inventarioId: ID, $almacenId: ID) {
     lotePorArticuloInventarioAlmacenListado(
       codigoArticulo: $codigoArticulo
       inventarioId: $inventarioId

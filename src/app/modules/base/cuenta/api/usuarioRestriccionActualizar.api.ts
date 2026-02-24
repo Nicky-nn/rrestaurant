@@ -7,10 +7,7 @@ import { MyGraphQlError } from '../../../../base/services/GraphqlError'
 import { UsuarioRestriccionProps } from '../interfaces/restriccion.interface'
 
 const gqlQuery = gql`
-  mutation CAMBIAR_SUCURSAL_PUNTO_VENTA_ACTIVO(
-    $codigoSucursal: Int!
-    $codigoPuntoVenta: Int!
-  ) {
+  mutation CAMBIAR_SUCURSAL_PUNTO_VENTA_ACTIVO($codigoSucursal: Int!, $codigoPuntoVenta: Int!) {
     usuarioCambiarSucursalPuntoVentaActivo(
       codigoSucursal: $codigoSucursal
       codigoPuntoVenta: $codigoPuntoVenta

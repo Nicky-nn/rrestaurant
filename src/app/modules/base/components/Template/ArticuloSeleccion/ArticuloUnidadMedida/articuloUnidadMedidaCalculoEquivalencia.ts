@@ -22,9 +22,7 @@ export const articuloUnidadMedidaCalculoEquivalencia = (props: {
     }
   }
   const ap = articulo.articuloPrecio.find(
-    (ap) =>
-      ap.articuloUnidadMedida.codigoUnidadMedida ===
-      articuloUnidadMedida.codigoUnidadMedida,
+    (ap) => ap.articuloUnidadMedida.codigoUnidadMedida === articuloUnidadMedida.codigoUnidadMedida,
   )
   if (!ap) {
     return null

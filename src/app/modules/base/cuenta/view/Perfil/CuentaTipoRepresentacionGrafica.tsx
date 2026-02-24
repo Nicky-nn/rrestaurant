@@ -32,9 +32,7 @@ const CuentaTipoRepresentacionGrafica: FunctionComponent<Props> = (props) => {
   const auth = useAuth()
   const { user } = auth
 
-  const [tipo, setTipo] = useState<TipoRepresentacionGrafica>(
-    user.tipoRepresentacionGrafica || 'pdf',
-  )
+  const [tipo, setTipo] = useState<TipoRepresentacionGrafica>(user.tipoRepresentacionGrafica || 'pdf')
 
   const handleTipoChange = (event: ChangeEvent<HTMLInputElement>) => {
     setTipo(event.target.value as TipoRepresentacionGrafica)
@@ -61,10 +59,7 @@ const CuentaTipoRepresentacionGrafica: FunctionComponent<Props> = (props) => {
   }
   return (
     <>
-      <SimpleCard
-        title={'Cambiar Tipo Representación Grafica'}
-        childIcon={<PictureAsPdfOutlined />}
-      >
+      <SimpleCard title={'Cambiar Tipo Representación Grafica'} childIcon={<PictureAsPdfOutlined />}>
         <Grid container spacing={2}>
           <Grid size={12}>
             <Typography variant={'body2'} gutterBottom>
@@ -74,22 +69,9 @@ const CuentaTipoRepresentacionGrafica: FunctionComponent<Props> = (props) => {
           <Grid size={12}>
             <FormControl>
               <FormLabel id="tipo">Seleccione:</FormLabel>
-              <RadioGroup
-                aria-labelledby="tipo"
-                value={tipo}
-                onChange={handleTipoChange}
-                name="tipo"
-              >
-                <FormControlLabel
-                  value="pdf"
-                  control={<Radio />}
-                  label="Pdf Medio Oficio"
-                />
-                <FormControlLabel
-                  value="rollo"
-                  control={<Radio />}
-                  label="Pdf Formato Rollo"
-                />
+              <RadioGroup aria-labelledby="tipo" value={tipo} onChange={handleTipoChange} name="tipo">
+                <FormControlLabel value="pdf" control={<Radio />} label="Pdf Medio Oficio" />
+                <FormControlLabel value="rollo" control={<Radio />} label="Pdf Formato Rollo" />
                 <FormControlLabel
                   value="rolloResumen"
                   control={<Radio />}
@@ -102,8 +84,7 @@ const CuentaTipoRepresentacionGrafica: FunctionComponent<Props> = (props) => {
                 />
               </RadioGroup>
               <FormHelperText>
-                Pdf Formato Rollo Resumido, Reducido solo esta disponible para facturación
-                Compra-Venta
+                Pdf Formato Rollo Resumido, Reducido solo esta disponible para facturación Compra-Venta
               </FormHelperText>
             </FormControl>
           </Grid>

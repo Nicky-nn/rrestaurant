@@ -131,10 +131,7 @@ function isNumeric(str: any) {
  * @param data
  * @param extraQuery = query extra
  */
-export const genApiQuery = (
-  data: MRT_ColumnFiltersState,
-  extraQuery: string[] = [],
-): string => {
+export const genApiQuery = (data: MRT_ColumnFiltersState, extraQuery: string[] = []): string => {
   if (data.length === 0) return extraQuery.join('&')
   const query = data.map((item) => {
     if (typeof item.value === 'boolean') {

@@ -28,16 +28,7 @@ type Props = OwnProps
  * @constructor
  */
 const AlmacenField: FunctionComponent<Props> = (props) => {
-  const {
-    value,
-    onChange,
-    isDisabled,
-    error,
-    formHelperText,
-    isClearable,
-    required,
-    entidad,
-  } = props
+  const { value, onChange, isDisabled, error, formHelperText, isClearable, required, entidad } = props
 
   const {
     data: almacenes,

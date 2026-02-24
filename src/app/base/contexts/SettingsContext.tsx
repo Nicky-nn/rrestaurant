@@ -1,10 +1,7 @@
 import { merge } from 'lodash'
 import React, { useState } from 'react'
 
-import {
-  MatxLayoutSettings,
-  MatxLayoutSettingsProps,
-} from '../components/Template/MatxLayout/settings'
+import { MatxLayoutSettings, MatxLayoutSettingsProps } from '../components/Template/MatxLayout/settings'
 import SettingsContext, { SettingsProviderProps } from './settingsContext.ts'
 
 const SettingsProvider = ({ settings, children }: SettingsProviderProps) => {

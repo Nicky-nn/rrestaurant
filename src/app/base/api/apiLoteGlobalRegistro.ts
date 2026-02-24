@@ -18,12 +18,7 @@ const gqlQuery = gql`
     $entidad: EntidadParamsInput!
     $input: LoteInput!
   ) {
-    loteRegistro(
-      codigoLote: $codigoLote
-      codigoArticulo: $codigoArticulo
-      entidad: $entidad
-      input: $input
-    ) {
+    loteRegistro(codigoLote: $codigoLote, codigoArticulo: $codigoArticulo, entidad: $entidad, input: $input) {
       ...loteFields
     }
   }

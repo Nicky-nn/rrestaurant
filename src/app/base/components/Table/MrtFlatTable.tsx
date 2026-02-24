@@ -1,9 +1,5 @@
 import { alpha } from '@mui/material'
-import {
-  MaterialReactTable,
-  type MRT_ColumnDef,
-  type MRT_RowData,
-} from 'material-react-table'
+import { MaterialReactTable, type MRT_ColumnDef, type MRT_RowData } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
 import { MrtFlatOptions } from './mrtTypes.ts'
@@ -14,11 +10,7 @@ interface MrtFlatTableProps<T extends MRT_RowData> {
   options?: MrtFlatOptions
 }
 
-export const MrtFlatTable = <T extends MRT_RowData>({
-  data,
-  columns,
-  options,
-}: MrtFlatTableProps<T>) => {
+export const MrtFlatTable = <T extends MRT_RowData>({ data, columns, options }: MrtFlatTableProps<T>) => {
   const density = options?.dense || 'compact'
   return (
     <MaterialReactTable
