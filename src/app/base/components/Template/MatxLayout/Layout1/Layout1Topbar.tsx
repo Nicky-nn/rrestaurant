@@ -11,6 +11,7 @@ import {
 } from '@mui/icons-material'
 import {
   Avatar,
+  Badge,
   Box,
   Chip,
   IconButton,
@@ -22,6 +23,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
+import { sha256 } from 'js-sha256'
 import React, { FC, useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -34,6 +36,17 @@ import MatxMenu from '../../MatxMenu/MatxMenu'
 import NotificationBar from '../../NotificationBar/NotificationBar'
 import { Span } from '../../Typography'
 
+const StyledBadge = styled(Badge)(({ theme }) => ({
+  '& .MuiBadge-badge': {
+    backgroundColor: theme.palette.success.main,
+    color: theme.palette.success.main,
+    boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
+    '&.MuiBadge-anchorOriginTopRightCircular': {
+      top: '0',
+      right: '0',
+    },
+  },
+}))
 const StyledIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.text.primary,
 }))
@@ -108,6 +121,14 @@ const Layout1Topbar: FC<any> = () => {
   const { logout, user, updateTheme }: any = useAuth()
   const isMdScreen = useMediaQuery(theme.breakpoints.down('md'))
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
+
+  // Función para generar el hash SHA256 del email (como indica la documentación de Gravatar)
+  const getGravatarUrl = (email: string, size: number = 80): string => {
+    const normalizedEmail = email?.trim().toLowerCase() || 'usuario@email.com'
+    const hash = sha256(normalizedEmail)
+    // Usar robohash como tipo de imagen por defecto
+    return `https://gravatar.com/avatar/${hash}?s=${size}&d=robohash&r=x`
+  }
 
   const updateSidebarMode = (sidebarSettings: any) => {
     updateSettings({
@@ -208,9 +229,19 @@ const Layout1Topbar: FC<any> = () => {
           <StyledIconButton>
             <Tooltip title="Ambiente">
               {user.miEmpresa.codigoAmbiente === 1 ? (
-                <Chip size={'small'} icon={<Storefront />} color={'success'} label={'Producción'} />
+                <Chip
+                  size={'small'}
+                  icon={<Storefront />}
+                  color={'success'}
+                  label={'Producción'}
+                />
               ) : (
-                <Chip size={'small'} icon={<Storefront />} color={'warning'} label={'Piloto'} />
+                <Chip
+                  size={'small'}
+                  icon={<Storefront />}
+                  color={'warning'}
+                  label={'Piloto'}
+                />
               )}
             </Tooltip>
           </StyledIconButton>
@@ -219,7 +250,10 @@ const Layout1Topbar: FC<any> = () => {
           <IconButton
             aria-label="Cambio modo oscuro/claro"
             onClick={() => {
-              updateTheme(settings.mode === 'dark' ? 'light' : 'dark')
+              const isNight = settings.mode === 'dark'
+              const newMode = isNight ? 'light' : 'dark'
+              updateTheme(newMode)
+              localStorage.setItem('nightMode', (!isNight).toString())
             }}
           >
             {settings.mode === 'dark' ? <DarkMode /> : <LightMode />}
@@ -245,7 +279,29 @@ const Layout1Topbar: FC<any> = () => {
                     Hola <strong>{user.nombres} </strong>
                   </Span>
                 </Box>
-                <Avatar src={user.avatar} sx={{ cursor: 'pointer', ml: 1 }} />
+                <StyledBadge
+                  overlap="circular"
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  variant="dot"
+                >
+                  <Avatar
+                    sx={{
+                      cursor: 'pointer',
+                      width: 36,
+                      height: 36,
+                      border: `2px solid ${theme.palette.primary.main}`,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'scale(1.1)',
+                        boxShadow: theme.shadows[4],
+                      },
+                    }}
+                    src={getGravatarUrl(
+                      user.correo || user.email || user.username || 'usuario@email.com',
+                      80,
+                    )}
+                  />
+                </StyledBadge>
               </UserMenu>
             }
           >
@@ -273,3 +329,4 @@ const Layout1Topbar: FC<any> = () => {
 }
 
 export default React.memo(Layout1Topbar)
+

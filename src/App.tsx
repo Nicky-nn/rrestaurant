@@ -1,7 +1,7 @@
 import './App.css'
 
 import { CheckCircleTwoTone } from '@mui/icons-material'
-import { CssBaseline } from '@mui/material'
+import { Box, CssBaseline, Typography } from '@mui/material'
 import { ConfirmProvider } from 'material-ui-confirm'
 import { useEffect } from 'react'
 import { useRoutes } from 'react-router-dom'
@@ -22,6 +22,12 @@ import { appRoutes } from './app/routes/routes'
 function App() {
   const content = useRoutes(appRoutes)
   const link = document.querySelector('link[rel="icon"]')
+  const version = import.meta.env.ISI_VERSION
+
+  const isDebugMode =
+    import.meta.env.ISI_DEBUG === true ||
+    import.meta.env.ISI_DEBUG === 'true' ||
+    import.meta.env.ISI_DEBUG === '1'
 
   useEffect(() => {
     if (link) {
@@ -29,7 +35,21 @@ function App() {
         link.setAttribute('href', import.meta.env.ISI_FAVICON)
       }
     }
-  }, [])
+
+    console.clear()
+
+    // Mensaje de advertencia con estilos en la consola
+    const appName = import.meta.env.ISI_TITLE || 'ISI-PAY'
+    const appVersion = import.meta.env.ISI_VERSION || version
+    const message = `%c ¡Atención! Estás utilizando la aplicación para ${appName}. Versión: ${appVersion}`
+    const styles = [
+      'color: #ff9800', // Naranja Amber
+      'font-size: 1.2em',
+      'font-weight: bold',
+    ].join(';')
+
+    console.log(message, styles)
+  }, [version, link])
 
   return (
     <SettingsProvider>
@@ -91,6 +111,38 @@ function App() {
                   }}
                 >
                   <CssBaseline />
+                  {isDebugMode && (
+                    <Box
+                      sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 9999,
+                        pointerEvents: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: { xs: '140px', sm: '180px', md: '220px' },
+                          fontWeight: 100,
+                          color: 'rgba(0, 0, 0, 0.04)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '30px',
+                          userSelect: 'none',
+                          transform: 'rotate(-45deg)',
+                        }}
+                      >
+                        SANDBOX
+                      </Typography>
+                    </Box>
+                  )}
+
                   {content}
                   <ReloadPrompt />
                 </ConfirmProvider>
@@ -104,3 +156,4 @@ function App() {
 }
 
 export default App
+
