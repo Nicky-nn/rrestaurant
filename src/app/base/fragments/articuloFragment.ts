@@ -10,10 +10,7 @@ import { grupoArticuloFragment } from './grupoArticuloFragment.ts'
 import { grupoUnidadMedidaFragment } from './grupoUnidadMedidaFragment.ts'
 import { imagenCloudFragment } from './imagenCloudFragment.ts'
 import { impresoraFragment } from './impresoraFragment.ts'
-import {
-  inventarioDetalleFragment,
-  inventarioLoteFragment,
-} from './inventarioFragment.ts'
+import { inventarioDetalleFragment, inventarioLoteFragment } from './inventarioFragment.ts'
 import { loteFragment } from './loteFragment.ts'
 import { monedaPrecioFragment } from './monedaPrecioFragment.ts'
 import { monedaFragment } from './monedaPrecioOperacionFragment.ts'
