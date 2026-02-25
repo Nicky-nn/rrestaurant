@@ -5,6 +5,7 @@ import MatxLayout from '../base/components/Template/MatxLayout/MatxLayout'
 import cuentaRoutes from '../modules/base/cuenta/CuentaRoutes'
 import NotFound from '../modules/base/sessions/NotFound'
 import sessionRoutes from '../modules/base/sessions/SessionRoutes'
+import clientsRoutes from '../modules/clients/clientsRoutes'
 import homeRoutes, { homeRoutesMap } from '../modules/home/HomeRoutes'
 
 export const appRoutes = [
@@ -14,7 +15,7 @@ export const appRoutes = [
         <MatxLayout />
       </AuthGuard>
     ),
-    children: [...homeRoutes, ...cuentaRoutes],
+    children: [...homeRoutes, ...cuentaRoutes, ...clientsRoutes],
   },
   ...sessionRoutes,
   { path: '/', element: <Navigate to={homeRoutesMap.home.path} /> },

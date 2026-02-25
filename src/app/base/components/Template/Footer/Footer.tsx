@@ -1,8 +1,8 @@
-import { AppBar, styled, ThemeProvider, Toolbar, useTheme } from '@mui/material'
-import React, { FC } from 'react'
+import { AppBar, styled, Toolbar } from '@mui/material'
+import { FC } from 'react'
+import { useLocation } from 'react-router-dom'
 
 import { topBarHeight } from '../../../../utils/constant'
-import useSettings from '../../../hooks/useSettings'
 import { Paragraph, Span } from '../Typography'
 
 const AppFooter = styled(Toolbar)(() => ({
@@ -32,35 +32,32 @@ const FooterContent = styled('div')(() => ({
   margin: '0 auto',
 }))
 
-const nombreComercial = import.meta.env.ISI_NOMBRE_COMERCIAL || 'ISI.INVOICE'
+const nombreComercial = import.meta.env.ISI_NOMBRE_COMERCIAL || 'ISI.PAY'
 const urlEmpresa = import.meta.env.ISI_URL || 'https://integrate.com.bo'
 
-/**
- * @author isi-template
- * @constructor
- */
 const Footer: FC<any> = () => {
-  const theme = useTheme()
-  const { settings } = useSettings()
+  const location = useLocation()
 
-  const footerTheme = settings.themes[settings.footer.theme] || theme
+  const shouldBeCompact = location.pathname.includes('/pedidos/registrar')
+
+  if (shouldBeCompact) {
+    return null // Si se cumple la condición, el Footer no se mostrará
+  }
 
   return (
-    <ThemeProvider theme={footerTheme}>
-      <AppBar color={'primary'} position="static" sx={{ zIndex: 96 }}>
-        <AppFooter>
-          <FooterContent>
-            <Span sx={{ m: 'auto' }}></Span>
-            <Paragraph sx={{ m: 0 }}>
-              <a href={urlEmpresa} target="_blank" rel="noreferrer">
-                © {nombreComercial}
-              </a>{' '}
-              - {import.meta.env.ISI_VERSION || '--'}
-            </Paragraph>
-          </FooterContent>
-        </AppFooter>
-      </AppBar>
-    </ThemeProvider>
+    <AppBar color="primary" position="static" sx={{ zIndex: 96 }}>
+      <AppFooter>
+        <FooterContent>
+          <Span sx={{ m: 'auto' }}></Span>
+          <Paragraph sx={{ m: 0 }}>
+            <a href={urlEmpresa} target="_blank" rel="noreferrer">
+              © {nombreComercial}{' '}
+            </a>
+            {new Date().getFullYear()} - v{import.meta.env.ISI_VERSION}
+          </Paragraph>
+        </FooterContent>
+      </AppFooter>
+    </AppBar>
   )
 }
 

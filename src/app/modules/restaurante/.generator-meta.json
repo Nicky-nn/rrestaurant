@@ -1,0 +1,19 @@
+{
+  "last_sync": "2026-02-25T15:34:19.673883",
+  "fragments": [
+    "fragments/RestPedidoFragments.ts"
+  ],
+  "queries": [],
+  "mutations": [
+    "mutations/useRestPedidoRegistrarCompletar.ts"
+  ],
+  "types": [
+    "types/index.ts"
+  ],
+  "client": [
+    "client/index.ts"
+  ],
+  "index": [
+    "index.ts"
+  ]
+}

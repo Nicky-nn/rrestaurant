@@ -8,8 +8,5 @@
     "moduleDetection": "force",
     "jsxImportSource": "@emotion/react"
   },
-  "include": [
-    "vite.config.mts",
-    "pwaOptions.ts"
-  ]
+  "include": ["vite.config.mts", "pwaOptions.ts"]
 }

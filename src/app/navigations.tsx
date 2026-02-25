@@ -1,3 +1,4 @@
+import { clientsRoutesMap } from './modules/clients/clientsRoutes'
 import { homeRoutesMap } from './modules/home/HomeRoutes'
 
 export interface NavigationProps {
@@ -10,6 +11,7 @@ export interface NavigationProps {
   badge?: { value: string; color: string }
   children?: Array<{
     name: string
+    icon?: string
     iconText: string
     path: string
   }>
@@ -20,6 +22,18 @@ export const navigations: NavigationProps[] = [
     name: homeRoutesMap.home.name,
     icon: 'dashboard',
     path: homeRoutesMap.home.path,
+  },
+  {
+    name: 'Clientes',
+    icon: 'person',
+    children: [
+      {
+        name: clientsRoutesMap.clients.name,
+        icon: '',
+        iconText: 'CL',
+        path: clientsRoutesMap.clients.path,
+      },
+    ],
   },
 ]
 
