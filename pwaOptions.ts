@@ -1,18 +1,6 @@
 import type { VitePWAOptions } from 'vite-plugin-pwa'
 
 /**
- * Generamos un cache único para dev y producción evitando coolicion de caches
- * @param env
- */
-const generateCacheId = (env: any): string => {
-  const hostname = new URL(env.ISI_BASE_URL).hostname
-  // localhost:3002     -> "localhost"
-  // dev.test.net      -> "dev.test.net"
-  // produccion.test.net -> "produccion.test.net"
-  return `${env.ISI_SIGLA}-${env.APP_ENV}-${hostname}`.toLowerCase()
-}
-
-/**
  * Configuración para service worker según la instancia
  * @author isi-template
  */
@@ -23,7 +11,7 @@ const pwaOptions = (env: any): Partial<VitePWAOptions> => {
     registerType: isLocal ? 'autoUpdate' : 'prompt',
     workbox: {
       globPatterns: isLocal ? [] : ['**/*.{js,css,html,ico,png,jpeg,svg,webp}'], // Precache correcto
-      cacheId: generateCacheId(env),
+      cacheId: `${env.ISI_SIGLA}-${env.APP_ENV}-${env.ISI_BASE_URL}`.toLowerCase(),
       cleanupOutdatedCaches: true, // Limpia cachés viejos
       clientsClaim: true, // SW toma control inmediato de las pestañas
       skipWaiting: true, // No espera a cerrar pestañas para activarse
