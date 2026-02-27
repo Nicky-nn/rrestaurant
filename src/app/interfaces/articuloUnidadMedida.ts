@@ -34,7 +34,7 @@ export interface UnidadMedidaProps extends AuditoriaProps {
 export interface UnidadMedidaInputProps {
   codigoUnidadMedida: string
   nombreUnidadMedida: string
-  sinUnidadMedida: SinUnidadMedidaProps
+  sinUnidadMedida: SinUnidadMedidaProps | null
 }
 /**
  * @author isi-template
@@ -42,5 +42,21 @@ export interface UnidadMedidaInputProps {
 export const UNIDAD_MEDIDA_INITIAL_VALUES: UnidadMedidaInputProps = {
   codigoUnidadMedida: '',
   nombreUnidadMedida: '',
-  sinUnidadMedida: {} as SinUnidadMedidaProps,
+  sinUnidadMedida: null,
+}
+/**
+ * @author isi-template
+ */
+export interface ArticuloUnidadMedidaInputProps {
+  codigoUnidadMedida: string
+  nombreUnidadMedida: string
+  sinUnidadMedida: SinUnidadMedidaProps | null
+}
+/**
+ * @author isi-template
+ */
+export const ARTICULO_UNIDAD_MEDIDA_INITIAL_VALUES: ArticuloUnidadMedidaInputProps = {
+  codigoUnidadMedida: '',
+  nombreUnidadMedida: '',
+  sinUnidadMedida: null,
 }
