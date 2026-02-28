@@ -42,7 +42,7 @@ export const adaptColor = (color: string, theme: Theme, darknessFactor: number =
  */
 export const alphaByTheme = (color: string, theme: Theme, darknessFactor: number = 0.2) => {
   // 2. Generamos clave única para el caché
-  const cacheKey = `alpha-${color}-${theme.palette.mode}-${darknessFactor}`
+  const cacheKey = `alpha-theme-${color}-${theme.palette.mode}-${darknessFactor}`
   if (colorCache.has(cacheKey)) {
     return colorCache.get(cacheKey)!
   }
@@ -65,7 +65,7 @@ export const alphaByTheme = (color: string, theme: Theme, darknessFactor: number
  */
 export const alphaDark = (color: string, theme: Theme, darknessFactor: number = 0.3) => {
   // 2. Generamos clave única para el caché
-  const cacheKey = `alpha-${color}-${theme.palette.mode}-${darknessFactor}`
+  const cacheKey = `alpha-dark-${color}-${theme.palette.mode}-${darknessFactor}`
   if (colorCache.has(cacheKey)) {
     return colorCache.get(cacheKey)!
   }
@@ -81,6 +81,22 @@ export const alphaDark = (color: string, theme: Theme, darknessFactor: number = 
 }
 
 /**
+ * Asignamos el alpha a un color, a diferencia de alpha, este cachea los colores
+ * @param color
+ * @param darknessFactor
+ */
+export const alphaNormal = (color: string, darknessFactor: number = 0.09) => {
+  // 2. Generamos clave única para el caché
+  const cacheKey = `alpha-normal-${color}-${darknessFactor}`
+  if (colorCache.has(cacheKey)) {
+    return colorCache.get(cacheKey)!
+  }
+  const d = alpha(color, darknessFactor)
+  colorCache.set(cacheKey, d)
+  return d
+}
+
+/**
  * Asignamos el alpha dependiendo del model light o dark
  * @param color
  * @param mode
@@ -88,7 +104,7 @@ export const alphaDark = (color: string, theme: Theme, darknessFactor: number = 
  */
 export const alphaByMode = (color: string, mode: 'light' | 'dark', darknessFactor: number = 0.2) => {
   // 2. Generamos clave única para el caché
-  const cacheKey = `alpha-${color}-${mode}-${darknessFactor}`
+  const cacheKey = `alpha-mode-${color}-${mode}-${darknessFactor}`
   if (colorCache.has(cacheKey)) {
     return colorCache.get(cacheKey)!
   }

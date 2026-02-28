@@ -11,7 +11,7 @@ import {
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import React, { useMemo } from 'react'
 
-import { alphaByTheme } from '../../../utils/colorUtils.ts'
+import { alphaByTheme, alphaNormal } from '../../../utils/colorUtils.ts'
 import { MuiToolbarAlertBannerProps } from '../../../utils/muiTable/materialReactTableUtils.ts'
 import { ActionIconButton } from './ActionIconButton.tsx'
 import { MrtFlatTable } from './MrtFlatTable.tsx'
@@ -306,11 +306,12 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
               width: '100%',
               height: '100%',
               cursor: 'pointer',
-              '&:hover .expand-icon-wrapper': {
-                borderColor: mrtRowExpandColor(theme, { dark: 0.5, light: 0.5 }),
-                backgroundColor: row.getIsExpanded()
-                  ? mrtRowExpandColor(theme, { dark: 0.2, light: 0.7 })
-                  : mrtRowExpandColor(theme, { dark: 0.2, light: 0.7 }),
+              transition: 'background-color 0.2s ease',
+              '&:hover': {
+                backgroundColor: alphaNormal(theme.palette.primary.main, 0.1),
+              },
+              '&:active': {
+                backgroundColor: alphaNormal(theme.palette.primary.main, 0.16),
               },
             })}
           >
