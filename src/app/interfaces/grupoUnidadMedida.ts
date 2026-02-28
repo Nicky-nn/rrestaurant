@@ -20,8 +20,7 @@ export interface GrupoUnidadMedidaProps extends AuditoriaProps {
   _id: string
   codigoGrupo: string // Código que identifica al grupo de unidad de medida
   nombreGrupo: string // descripcion del grupo de unidad de medida
-  unidadMedidaBase?: ArticuloUnidadMedidaProps // unidad de medida base del grupo
-  codigoUnidadMedidaBase: ArticuloUnidadMedidaProps // unidad de medida base del grupo
+  unidadMedidaBase: ArticuloUnidadMedidaProps // unidad de medida base del grupo
   definicion: GrupoUnidadMedidaDefinicionProp[]
   state?: string // estado del registro
 }
@@ -30,7 +29,7 @@ export interface GrupoUnidadMedidaProps extends AuditoriaProps {
  * @author isi-template
  */
 export interface GrupoUnidadMedidaDefinicionInputProps {
-  codigoUnidadMedida: string // Código que identifica a la unidad de medida, se replica con sin unidad medida
+  unidadMedida: ArticuloUnidadMedidaProps // Código que identifica a la unidad de medida, se replica con sin unidad medida
   cantidadBase: number
 }
 
@@ -39,7 +38,7 @@ export interface GrupoUnidadMedidaDefinicionInputProps {
  */
 export interface GrupoUnidadMedidaInputProps {
   nombreGrupo: string
-  codigoUnidadMedidaBase: string
+  unidadMedidaBase: ArticuloUnidadMedidaProps | null
   definicion: GrupoUnidadMedidaDefinicionInputProps[]
 }
 
@@ -49,15 +48,17 @@ export interface GrupoUnidadMedidaInputProps {
 export interface GrupoUnidadMedidaInputApiProps {
   nombreGrupo: string
   codigoUnidadMedidaBase: string
-  definicion: GrupoUnidadMedidaDefinicionInputProps[]
+  definicion: {
+    codigoUnidadMedida: string
+    cantidadBase: string
+  }[]
 }
 
 /**
  * @author isi-template 2025.3
  */
 export const GRUPO_UNIDAD_MEDIDA_INITIAL_VALUES: GrupoUnidadMedidaInputProps = {
-  //codigoGrupo: null,
   nombreGrupo: '',
-  codigoUnidadMedidaBase: '',
+  unidadMedidaBase: null,
   definicion: [],
 }
