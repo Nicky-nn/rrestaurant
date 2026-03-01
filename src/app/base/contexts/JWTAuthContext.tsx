@@ -123,10 +123,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Helper para aplicar tema (seguro contra nulos y mayúsculas)
   const setTheme = (uxMode?: string | null) => {
-    const mode =
-      !uxMode || uxMode === 'SYSTEM'
-        ? 'light'
-        : (uxMode.toLowerCase() as 'light' | 'dark')
+    const mode = !uxMode || uxMode === 'SYSTEM' ? 'light' : (uxMode.toLowerCase() as 'light' | 'dark')
     applyMode(mode)
   }
 
@@ -152,8 +149,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const user: UserProps = await loginModel(shop, email, password)
       // Validación temprana: si no hay token, fallar antes de llamar a otras APIs
-      if (!user?.token)
-        throw new Error('Error al obtener credenciales, intente nuevamente')
+      if (!user?.token) throw new Error('Error al obtener credenciales, intente nuevamente')
       const validarUsuario = await apiValidarUsuario(user.token)
       const { lw, li } = await apiLicenciaProducto(user.token)
       if (validarUsuario) {

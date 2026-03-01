@@ -1,9 +1,6 @@
 import { createContext, ReactNode } from 'react'
 
-import {
-  MatxLayoutSettings,
-  MatxLayoutSettingsProps,
-} from '../components/Template/MatxLayout/settings.ts'
+import { MatxLayoutSettings, MatxLayoutSettingsProps } from '../components/Template/MatxLayout/settings.ts'
 
 // Aplicamos el partial a los hijos de 2do nivel
 type DeepPartial<T> = {

@@ -28,7 +28,7 @@ function App() {
         link.setAttribute('href', import.meta.env.ISI_FAVICON)
       }
     }
-  }, [])
+  }, [link])
 
   return (
     <SettingsProvider>

@@ -14,7 +14,7 @@ export type ThemesMap = Record<ThemeNames, Theme>
  * @author isi-template
  */
 const createMatxThemes = (): ThemesMap => {
-  let themes: ThemesMap = {} as ThemesMap
+  const themes: ThemesMap = {} as ThemesMap
   // Recorremos nuestro objeto de colores generado anteriormente
   Object.keys(themeColors).forEach((key) => {
     const themeName = key as ThemeNames

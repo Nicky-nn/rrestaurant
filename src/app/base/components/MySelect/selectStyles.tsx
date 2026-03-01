@@ -9,12 +9,12 @@ export type MuiSelectSize = 'small' | 'medium' | 'large'
 // Configuración de dimensiones según el tamaño
 const sizeConfig = {
   small: {
-    minHeight: '36.13px',
-    fontSize: '14px', // 14px
+    minHeight: '39px',
+    fontSize: '1rem', // 14px
     paddingY: '0', // Padding vertical interno reducido
   },
   medium: {
-    minHeight: '56px', // Estándar MUI
+    minHeight: '54.5px', // Estándar MUI
     fontSize: '1rem', // 16px
     paddingY: '8px',
   },
@@ -56,10 +56,7 @@ export const getSelectStyles = <
         borderColor = theme.palette.primary.main
       } else if (state.isDisabled) {
         borderColor = alpha(theme.palette.text.disabled, 0.4)
-        backgroundColor =
-          theme.palette.mode === 'dark'
-            ? 'rgba(255, 255, 255, 0.05)'
-            : 'rgba(0, 0, 0, 0.03)'
+        backgroundColor = theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'
       }
 
       return {
@@ -174,9 +171,7 @@ export const getSelectStyles = <
     multiValueLabel: (provided) => ({
       ...provided,
       color:
-        theme.palette.mode === 'dark'
-          ? lighten(theme.palette.primary.main, 0.5)
-          : theme.palette.primary.main,
+        theme.palette.mode === 'dark' ? lighten(theme.palette.primary.main, 0.5) : theme.palette.primary.main,
       fontWeight: 500,
       fontSize: size === 'small' ? '0.75rem' : '0.85rem', // Chip más pequeño en small
       padding: size === 'small' ? '1px 4px' : '3px 6px',
