@@ -29,8 +29,8 @@ export interface GrupoUnidadMedidaProps extends AuditoriaProps {
  * @author isi-template
  */
 export interface GrupoUnidadMedidaDefinicionInputProps {
-  unidadMedida: ArticuloUnidadMedidaProps // Código que identifica a la unidad de medida, se replica con sin unidad medida
-  cantidadBase: number | null
+  unidadMedida: ArticuloUnidadMedidaProps | null // Código que identifica a la unidad de medida, se replica con sin unidad medida
+  cantidadBase: number
 }
 
 /**
