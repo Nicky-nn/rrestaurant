@@ -37,6 +37,7 @@ export interface GrupoUnidadMedidaDefinicionInputProps {
  * @author isi-template
  */
 export interface GrupoUnidadMedidaInputProps {
+  codigoGrupo: string
   nombreGrupo: string
   unidadMedidaBase: ArticuloUnidadMedidaProps | null
   definicion: GrupoUnidadMedidaDefinicionInputProps[]
@@ -58,6 +59,7 @@ export interface GrupoUnidadMedidaInputApiProps {
  * @author isi-template 2025.3
  */
 export const GRUPO_UNIDAD_MEDIDA_INITIAL_VALUES: GrupoUnidadMedidaInputProps = {
+  codigoGrupo: 'Autogenerado',
   nombreGrupo: '',
   unidadMedidaBase: null,
   definicion: [],
