@@ -21,7 +21,7 @@ interface ToastProviderProps {
 }
 
 interface ToastContextType {
-  showToast: {
+  toast: {
     // Cambiamos string por React.ReactNode
     (message: React.ReactNode, options?: ToastOptions & { severity?: AlertColor }): void
     // Métodos directos
@@ -97,8 +97,8 @@ export const ToastProvider = ({ children, defaultOptions }: ToastProviderProps) 
     [fallbackPosition, fallbackDuration],
   )
 
-  // Construimos el objeto showToast con sus submétodos usando useMemo
-  const showToast = useMemo(() => {
+  // Construimos el objeto toast con sus submétodos usando useMemo
+  const toast = useMemo(() => {
     const toastFn = (message: React.ReactNode, options?: ToastOptions & { severity?: AlertColor }) =>
       baseShowToast(message, options)
 
@@ -143,7 +143,7 @@ export const ToastProvider = ({ children, defaultOptions }: ToastProviderProps) 
   }, [toastConfig.position])
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ toast }}>
       {children}
       <Snackbar
         open={open}
