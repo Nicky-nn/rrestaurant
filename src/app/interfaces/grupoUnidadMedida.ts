@@ -51,7 +51,7 @@ export interface GrupoUnidadMedidaInputApiProps {
   codigoUnidadMedidaBase: string
   definicion: {
     codigoUnidadMedida: string
-    cantidadBase: string
+    cantidadBase: number
   }[]
 }
 
