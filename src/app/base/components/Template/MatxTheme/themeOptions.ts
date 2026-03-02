@@ -13,12 +13,12 @@ export interface ThemeOptionsProps extends ThemeOptions {
  * @author isi-template
  */
 const themeOptions: ThemeOptionsProps = {
-  // typography: {
-  //   fontSize: 14,
-  //   body1: {
-  //     fontSize: '14px',
-  //   },
-  // },
+  typography: {
+    fontSize: 14,
+    // body1: {
+    //   fontSize: '14px',
+    // },
+  },
   // breakpoints: {
   //   values: {
   //     xs: 0,
