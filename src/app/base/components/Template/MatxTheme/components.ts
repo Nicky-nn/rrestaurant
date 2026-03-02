@@ -71,19 +71,6 @@ export const components: ComponentsProps = {
     },
   },
 
-  // ❌ eliminado MuiMenuItem fontSize — MUI ya usa body2 (0.875rem) por defecto
-
-  MuiInputLabel: {
-    defaultProps: {
-      size: 'small',
-    },
-    styleOverrides: {
-      outlined: {
-        backgroundColor: 'transparent',
-      },
-    },
-  },
-
   MuiTextField: {
     defaultProps: {
       size: 'small',
@@ -140,7 +127,6 @@ export const components: ComponentsProps = {
     defaultProps: {
       size: 'small',
     },
-    // ❌ eliminado styleOverrides con fontSize en fieldset
   },
 
   MuiCheckbox: {
@@ -155,6 +141,17 @@ export const components: ComponentsProps = {
     styleOverrides: {
       root: {
         '& .MuiSvgIcon-root': { fontSize: 25 }, // ✅ se mantiene, es tamaño de ícono SVG
+      },
+    },
+  },
+
+  MuiTableCell: {
+    styleOverrides: {
+      root: {
+        padding: '6px 16px', // ajusta según tu diseño
+      },
+      head: {
+        fontWeight: 600,
       },
     },
   },
