@@ -1,5 +1,5 @@
 import { merge } from 'lodash'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { MatxLayoutSettings, MatxLayoutSettingsProps } from '../components/Template/MatxLayout/settings'
 import SettingsContext, { SettingsProviderProps } from './settingsContext.ts'
