@@ -10,7 +10,7 @@ import ReloadPrompt from './app/base/components/ReloadPrompt/ReloadPrompt'
 import MatxTheme from './app/base/components/Template/MatxTheme/MatxTheme'
 import { AppConfirmProvider } from './app/base/contexts/AppConfirmProvider.tsx'
 import { AuthProvider } from './app/base/contexts/JWTAuthContext'
-import SettingsProvider from './app/base/contexts/SettingsContext.tsx'
+import { SettingsProvider } from './app/base/contexts/SettingsContext.tsx'
 import { ToastProvider } from './app/base/contexts/ToastContext.tsx'
 import { appRoutes } from './app/routes/routes'
 

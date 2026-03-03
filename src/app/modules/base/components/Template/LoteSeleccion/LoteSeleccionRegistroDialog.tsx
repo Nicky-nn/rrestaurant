@@ -24,11 +24,7 @@ import { apiLoteGlobalRegistro } from '../../../../../base/api/apiLoteGlobalRegi
 import { ContentConfirmMessage } from '../../../../../base/components/Dialog/ContentConfirmMessage.tsx'
 import SimpleDatePicker from '../../../../../base/components/MyInputs/SimpleDatePicker.tsx'
 import SimpleDateTimePickerField from '../../../../../base/components/MyInputs/SimpleDateTimePickerField.tsx'
-import {
-  LoteApiInputProps,
-  LoteInputProps,
-  LoteProps,
-} from '../../../../../interfaces/lote.ts'
+import { LoteApiInputProps, LoteGlobalInputProps, LoteProps } from '../../../../../interfaces/lote.ts'
 import { dateToDMYHHMMSS, dayjsToDMY } from '../../../../../utils/dayjsHelper.ts'
 import { notSuccess } from '../../../../../utils/notification.ts'
 import { swalClose, swalException, swalLoading } from '../../../../../utils/swal.ts'
@@ -39,9 +35,7 @@ const schema = object({
     .required('El código de lote es obligatorio')
     .min(3, 'Mínimo 3 caracteres')
     .max(20, 'Máximo 20 caracteres'),
-  descripcion: string()
-    .required('La descripción es obligatoria')
-    .min(5, 'Debe ser más descriptivo'),
+  descripcion: string().required('La descripción es obligatoria').min(5, 'Debe ser más descriptivo'),
   codigoArticulo: string().required('El artículo es requerido'),
   fechaFabricacion: date().typeError('Fecha inválida').required('Requerido'),
   fechaAdmision: date().typeError('Fecha inválida').required('Requerido'),
@@ -56,6 +50,14 @@ interface NuevoLoteDialogProps {
   onSubmit: (resp: LoteProps) => void
   onClose: () => void
   codigoArticulo: string
+}
+const defaultForm = {
+  codigoArticulo: '',
+  codigoLote: '',
+  descripcion: '',
+  fechaAdmision: new Date(),
+  fechaFabricacion: dayjs(),
+  fechaVencimiento: dayjs(),
 }
 
 /**
@@ -73,21 +75,12 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
   onSubmit,
   codigoArticulo,
 }) => {
-  const defaultForm = {
-    codigoArticulo: '',
-    codigoLote: '',
-    descripcion: '',
-    fechaAdmision: new Date(),
-    fechaFabricacion: dayjs(),
-    fechaVencimiento: dayjs(),
-  }
-
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<LoteInputProps>({
+  } = useForm<LoteGlobalInputProps>({
     defaultValues: { ...defaultForm, codigoArticulo },
     resolver: yupResolver<any, any, any>(schema),
   })
@@ -98,7 +91,7 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
    * Guardamos los datos del lote
    * @param data
    */
-  const handleFormSubmit = async (data: LoteInputProps) => {
+  const handleFormSubmit = async (data: LoteGlobalInputProps) => {
     const input: LoteApiInputProps = {
       descripcion: data.descripcion,
       atributo1: data.atributo1,
@@ -108,24 +101,14 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
       fechaVencimiento: dayjsToDMY(data.fechaVencimiento)!, // string //DateDMY
     }
     const { confirmed } = await confirm({
-      content: (
-        <ContentConfirmMessage
-          title={'Nuevo Lote'}
-          description={'¿Desea crear el lote?'}
-        />
-      ),
+      content: <ContentConfirmMessage title={'Nuevo Lote'} description={'¿Desea crear el lote?'} />,
     })
     if (confirmed) {
       swalLoading()
-      const resp = await apiLoteGlobalRegistro(
-        data.codigoLote,
-        data.codigoArticulo,
-        input,
-        {
-          codigoSucursal: 0,
-          codigoPuntoVenta: 0,
-        },
-      ).catch((e) => {
+      const resp = await apiLoteGlobalRegistro(data.codigoLote, data.codigoArticulo, input, {
+        codigoSucursal: 0,
+        codigoPuntoVenta: 0,
+      }).catch((e) => {
         swalException(e)
         return null
       })
@@ -149,7 +132,7 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
         codigoArticulo,
       })
     }
-  }, [open, codigoArticulo])
+  }, [open, codigoArticulo, reset])
   /*********************************************************************************/
   /*********************************************************************************/
   /*********************************************************************************/
