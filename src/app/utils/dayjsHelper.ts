@@ -163,3 +163,23 @@ export const fechaStringExpirationStatus = (
     return 'healthy'
   }
 }
+
+/**
+ * Transforma una fecha dayjs a unix
+ * @param date
+ */
+export const dayjsToUnix = (date: Dayjs | null): number | null => {
+  if (!date) return null
+  if (date.isValid()) return date.unix()
+  return null
+}
+
+/**
+ * Transforma una fecha Date a unix
+ * @param date
+ */
+export const dateToUnix = (date: Date | null): number | null => {
+  if (!date) return null
+  if (dayjs(date).isValid()) return dayjs(date).unix()
+  return null
+}

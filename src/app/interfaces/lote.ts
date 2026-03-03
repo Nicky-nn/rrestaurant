@@ -41,6 +41,7 @@ export interface LoteGlobalInputProps {
   atributo1: string
   atributo2: string
 }
+
 /**
  * @author isi-template
  */
@@ -49,8 +50,8 @@ export interface LoteInputProps {
   articulo: ArticuloProps | null
   descripcion: string
   fechaAdmision: Date
-  fechaFabricacion: Dayjs
-  fechaVencimiento: Dayjs
+  fechaFabricacion: Date
+  fechaVencimiento: Date | null
   atributo1: string
   atributo2: string
 }
