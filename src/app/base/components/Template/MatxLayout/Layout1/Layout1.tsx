@@ -56,7 +56,6 @@ const LayoutContainer = styled(Box)(({ width, open }: LayoutContainerProps) => (
 const Layout1 = () => {
   const { settings, updateSettings } = useSettings()
   const { layout1Settings, secondarySidebar } = settings
-  // @ts-ignore
   const topbarTheme = settings.themes[layout1Settings.topbar.theme]
   const {
     leftSidebar: { mode: sidenavMode, show: showSidenav },
