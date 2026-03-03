@@ -1,5 +1,5 @@
 import { merge } from 'lodash'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { MatxLayoutSettings, MatxLayoutSettingsProps } from '../components/Template/MatxLayout/settings'
 import SettingsContext, { SettingsProviderProps } from './settingsContext.ts'
@@ -8,6 +8,12 @@ const SettingsProvider = ({ settings, children }: SettingsProviderProps) => {
   const [currentSettings, setCurrentSettings] = useState<MatxLayoutSettingsProps>(
     settings || MatxLayoutSettings,
   )
+
+  // Sincronizar data-theme en <html> al montar (leer localStorage)
+  useEffect(() => {
+    const isNight = localStorage.getItem('nightMode') === 'true'
+    document.documentElement.setAttribute('data-theme', isNight ? 'dark' : 'light')
+  }, [])
 
   const handleUpdateSettings = (update = {}) => {
     const merged = merge({}, currentSettings, update)
@@ -20,6 +26,7 @@ const SettingsProvider = ({ settings, children }: SettingsProviderProps) => {
    */
   const applyMode = (mode: 'light' | 'dark') => {
     const isDark = mode === 'dark'
+    document.documentElement.setAttribute('data-theme', mode)
     const activeTheme = (import.meta.env.ISI_THEME as any) || 'default'
     handleUpdateSettings({
       mode,

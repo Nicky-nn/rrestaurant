@@ -1,3 +1,72 @@
+/* View Transition: dark/light mode ripple from icon */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  will-change: clip-path;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* Evitar snapshots individuales en imágenes/iframes para acelerar la transición */
+img,
+video,
+iframe {
+  view-transition-name: none;
+}
+
+/* =============================================
+   SCROLLBAR — responde al modo oscuro/claro
+   ============================================= */
+
+/* Chromium / Safari */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: rgba(120, 120, 120, 0.4);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 120, 120, 0.7);
+  background-clip: content-box;
+}
+
+/* Modo oscuro: fondo del track oscuro, thumb más claro */
+[data-theme='dark']::-webkit-scrollbar-thumb {
+  background: rgba(200, 200, 200, 0.25);
+  background-clip: content-box;
+}
+
+[data-theme='dark']::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 200, 200, 0.5);
+  background-clip: content-box;
+}
+
+/* color-scheme hace que scrollbars nativos (Firefox, etc.) también sean oscuros */
+[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+}
+
 body {
   margin: 0;
   font-family:

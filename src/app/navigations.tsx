@@ -1,5 +1,6 @@
 import { clientsRoutesMap } from './modules/clients/clientsRoutes'
 import { homeRoutesMap } from './modules/home/HomeRoutes'
+import { restauranteRoutesMap } from './modules/restaurante/restauranteRoutes'
 
 export interface NavigationProps {
   name: string
@@ -22,6 +23,17 @@ export const navigations: NavigationProps[] = [
     name: homeRoutesMap.home.name,
     icon: 'dashboard',
     path: homeRoutesMap.home.path,
+  },
+  {
+    name: 'Ventas y Pedidos',
+    icon: 'shopping_cart',
+    children: [
+      {
+        name: restauranteRoutesMap.gestion.name,
+        iconText: 'PG',
+        path: restauranteRoutesMap.gestion.path,
+      },
+    ],
   },
   {
     name: 'Clientes',

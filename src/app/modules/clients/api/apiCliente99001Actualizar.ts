@@ -4,14 +4,30 @@ import { gql, GraphQLClient } from 'graphql-request'
 
 import { AccessToken } from '../../../base/models/paramsModel'
 import { MyGraphQlError } from '../../../base/services/GraphqlError'
-import { CLIENT_FIELDS_FRAGMENT } from '../graphql/clientsGql'
 import { ClientRegisterResp } from '../interfaces/client.resp'
 
 const queryGql = gql`
-  ${CLIENT_FIELDS_FRAGMENT}
   mutation CLIENTE_ACTUALIZAR($id: ID!, $input: Cliente99001UpdateInput!) {
     cliente99001Update(id: $id, input: $input) {
-      ...ClienteFields
+      _id
+      nombres
+      apellidos
+      codigoCliente
+      complemento
+      email
+      numeroDocumento
+      razonSocial
+      codigoExcepcion
+      tipoDocumentoIdentidad {
+        codigoClasificador
+        descripcion
+      }
+      telefono
+      state
+      usucre
+      createdAt
+      usumod
+      UpdatedAt
     }
   }
 `

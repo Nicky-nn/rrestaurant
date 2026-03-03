@@ -15,8 +15,6 @@ const Cliente99001FormBody: FunctionComponent<Props> = ({ form }) => {
     formState: { errors },
   } = form
 
-  console.log('render Cliente99001FormBody', form.getValues())
-
   return (
     <form>
       <Grid container columnSpacing={2} rowSpacing={1.5} sx={{ mt: 1 }}>

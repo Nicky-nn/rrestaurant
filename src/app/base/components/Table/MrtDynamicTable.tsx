@@ -9,7 +9,7 @@ import {
   useMaterialReactTable,
 } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 
 import { MuiToolbarAlertBannerProps } from '../../../utils/muiTable/materialReactTableUtils.ts'
 import { ActionIconButton } from './ActionIconButton.tsx'
@@ -214,6 +214,18 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
         border: '1px solid',
         borderColor: 'divider',
       },
+    },
+    muiTableContainerProps: {
+      sx: (theme) => ({
+        backgroundColor: theme.palette.background.paper,
+        // Scrollbar adaptado al modo oscuro
+        '&::-webkit-scrollbar': { height: 6, width: 6 },
+        '&::-webkit-scrollbar-track': { backgroundColor: theme.palette.background.paper },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+          borderRadius: 4,
+        },
+      }),
     },
     muiTableProps: {
       sx: {

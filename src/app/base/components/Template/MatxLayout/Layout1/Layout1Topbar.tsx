@@ -24,7 +24,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { sha256 } from 'js-sha256'
-import React, { FC, useState } from 'react'
+import React, { FC, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { cuentaRouteMap } from '../../../../../modules/base/cuenta/CuentaRoutesMap'
@@ -159,6 +159,44 @@ const Layout1Topbar: FC<any> = () => {
     setAnchorEl(null)
   }
 
+  const darkModeButtonRef = useRef<HTMLButtonElement>(null)
+
+  const handleThemeToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const isNight = settings.mode === 'dark'
+    const newMode = isNight ? 'light' : 'dark'
+
+    const applyTheme = () => {
+      updateTheme(newMode)
+      localStorage.setItem('nightMode', (!isNight).toString())
+    }
+
+    if (!('startViewTransition' in document)) {
+      applyTheme()
+      return
+    }
+
+    const btn = event.currentTarget
+    const rect = btn.getBoundingClientRect()
+    const x = rect.left + rect.width / 2
+    const y = rect.top + rect.height / 2
+    const endRadius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))
+
+    const transition = document.startViewTransition(applyTheme)
+
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`],
+        },
+        {
+          duration: 380,
+          easing: 'ease-out',
+          pseudoElement: '::view-transition-new(root)',
+        },
+      )
+    })
+  }
+
   const open = Boolean(anchorEl)
   const id = open ? 'simple-popover' : undefined
 
@@ -238,13 +276,9 @@ const Layout1Topbar: FC<any> = () => {
         </Box>
         <Box display="flex" alignItems="center">
           <IconButton
+            ref={darkModeButtonRef}
             aria-label="Cambio modo oscuro/claro"
-            onClick={() => {
-              const isNight = settings.mode === 'dark'
-              const newMode = isNight ? 'light' : 'dark'
-              updateTheme(newMode)
-              localStorage.setItem('nightMode', (!isNight).toString())
-            }}
+            onClick={handleThemeToggle}
           >
             {settings.mode === 'dark' ? <DarkMode /> : <LightMode />}
           </IconButton>
