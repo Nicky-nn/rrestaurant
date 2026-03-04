@@ -14,7 +14,7 @@ const pwaOptions = (env: any): Partial<VitePWAOptions> => {
       cacheId: `${env.ISI_SIGLA}-${env.APP_ENV}-${env.ISI_BASE_URL}`.toLowerCase(),
       cleanupOutdatedCaches: true, // Limpia cachés viejos
       clientsClaim: true, // SW toma control inmediato de las pestañas
-      skipWaiting: true, // No espera a cerrar pestañas para activarse
+      skipWaiting: isLocal, // No espera a cerrar pestañas para activarse
       navigateFallback: 'index.html', // SPA routing funciona offline
     },
     includeAssets: [env.ISI_FAVICON, env.ISI_FONDO, env.ISI_LOGO_FULL, env.ISI_LOGO_MINI],
