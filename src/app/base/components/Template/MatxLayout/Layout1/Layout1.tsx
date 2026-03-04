@@ -1,12 +1,12 @@
 import { Box, styled, ThemeProvider, useMediaQuery, useTheme } from '@mui/material'
 import { BoxProps } from '@mui/material/Box'
 import React, { useEffect, useRef } from 'react'
-import Scrollbar from 'react-perfect-scrollbar'
 import { Outlet } from 'react-router-dom'
 
-import LayoutRestriccion from '../../../../../modules/base/components/LayoutRestriccion/LayoutRestriccion'
+import LayoutRestriccionV2 from '../../../../../modules/base/components/LayoutRestriccion/LayoutRestriccionV2.tsx'
 import { sidenavCompactWidth, sideNavWidth } from '../../../../../utils/constant'
 import useSettings from '../../../../hooks/useSettings'
+import StyledScrollBar from '../../../Container/StyledScrollBar'
 import Footer from '../../Footer/Footer'
 import MatxSuspense from '../../MatxSuspense/MatxSuspense'
 import SidenavTheme from '../../MatxTheme/SidenavTheme/SidenavTheme'
@@ -27,12 +27,10 @@ const ContentBox = styled(Box)(() => ({
   justifyContent: 'space-between',
 }))
 
-const StyledScrollBar = styled(Scrollbar)(() => ({
-  height: '100%',
+const StyledScrollBarSidenav = styled(StyledScrollBar)(() => ({
+  paddingLeft: '1rem',
+  paddingRight: '1rem',
   position: 'relative',
-  display: 'flex',
-  flexGrow: '1',
-  flexDirection: 'column',
 }))
 
 interface LayoutContainerProps extends BoxProps {
@@ -86,12 +84,7 @@ const Layout1 = () => {
     const sidebarMode = settings.layout1Settings.leftSidebar.mode
     if (settings.layout1Settings.leftSidebar.show) {
       const mode = isMdScreen ? 'close' : sidebarMode
-      updateSettings({
-        layout1Settings: {
-          leftSidebar: { ...layout1Settings.leftSidebar, mode },
-          topbar: layout1Settings.topbar,
-        },
-      })
+      updateSettings({ layout1Settings: { leftSidebar: { mode } } })
     }
   }, [isMdScreen])
 
@@ -108,15 +101,17 @@ const Layout1 = () => {
           <>
             <ThemeProvider theme={topbarTheme}>
               <Layout1Topbar fixed={true} className="elevation-z8" />
+              <LayoutRestriccionV2 />
             </ThemeProvider>
           </>
         )}
 
         {settings.perfectScrollbar && (
-          <StyledScrollBar>
+          <StyledScrollBarSidenav>
             {layout1Settings.topbar.show && !layout1Settings.topbar.fixed && (
               <ThemeProvider theme={topbarTheme}>
                 <Layout1Topbar />
+                <LayoutRestriccionV2 />
               </ThemeProvider>
             )}
             <Box flexGrow={1} position="relative">
@@ -126,7 +121,7 @@ const Layout1 = () => {
             </Box>
 
             {settings.footer.show && !settings.footer.fixed && <Footer />}
-          </StyledScrollBar>
+          </StyledScrollBarSidenav>
         )}
 
         {!settings.perfectScrollbar && (
@@ -134,7 +129,7 @@ const Layout1 = () => {
             {layout1Settings.topbar.show && !layout1Settings.topbar.fixed && (
               <ThemeProvider theme={topbarTheme}>
                 <Layout1Topbar />
-                <LayoutRestriccion />
+                <LayoutRestriccionV2 />
               </ThemeProvider>
             )}
 

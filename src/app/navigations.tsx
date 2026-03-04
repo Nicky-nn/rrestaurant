@@ -29,6 +29,11 @@ export const navigations: NavigationProps[] = [
     icon: 'shopping_cart',
     children: [
       {
+        name: restauranteRoutesMap.registro.name,
+        iconText: 'PR',
+        path: restauranteRoutesMap.registro.path,
+      },
+      {
         name: restauranteRoutesMap.gestion.name,
         iconText: 'PG',
         path: restauranteRoutesMap.gestion.path,
