@@ -13,5 +13,12 @@ export const updateClientComposeService = (
     email: input.email,
     razonSocial: input.razonSocial,
     telefono: genReplaceEmpty(input.telefono, ''),
+    direccion: JSON.stringify({
+      calle: input.direccion.calle,
+      número: input.direccion.numero,
+      apartamento: input.direccion.apartamento,
+      barrio: input.direccion.barrio,
+      referenciasAdicionales: input.direccion.referenciasAdicionales,
+    }),
   }
 }

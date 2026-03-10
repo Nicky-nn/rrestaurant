@@ -14,4 +14,12 @@ export const clienteInputValidator = object({
     .required('Número de documento es un campo obligatorio'),
   complemento: string(),
   email: string().trim().email('Ingrese email válido').required('Email es requerido'),
+  telefono: string().nullable().optional(),
+  direccion: object({
+    calle: string().default(''),
+    numero: string().default(''),
+    apartamento: string().default(''),
+    barrio: string().default(''),
+    referenciasAdicionales: string().default(''),
+  }).optional(),
 })

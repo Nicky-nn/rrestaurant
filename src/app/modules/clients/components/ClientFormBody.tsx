@@ -1,19 +1,16 @@
-import { FormControl, FormHelperText, Grid } from '@mui/material'
-import { FunctionComponent, useEffect } from 'react'
+import { Button, Collapse, Divider, FormControl, FormHelperText, Grid } from '@mui/material'
+import { FunctionComponent, useEffect, useState } from 'react'
 import { Controller, UseFormReturn } from 'react-hook-form'
-import Select from 'react-select'
 
 import AlertError from '../../../base/components/Alert/AlertError'
 import AlertLoading from '../../../base/components/Alert/AlertLoading'
 import { FormTextField } from '../../../base/components/Form'
-import { MyInputLabel } from '../../../base/components/MyInputs/MyInputLabel'
-import { reactSelectStyle } from '../../../base/components/MySelect/ReactSelect'
+import FormSelect from '../../../base/components/Form/FormSelect.tsx'
 import { actionForm } from '../../../interfaces'
 import { SinTipoDocumentoIdentidadProps } from '../../../interfaces/sin.interface'
 import { isEmptyValue } from '../../../utils/helper'
 import useQueryTipoDocumentoIdentidad from '../hooks/useQueryTipoDocumento'
 import { ClientInputProps } from '../interfaces/client'
-import FormSelect from '../../../base/components/Form/FormSelect.tsx'
 
 interface ClientFormBodyProps {
   form: UseFormReturn<ClientInputProps>
@@ -22,6 +19,7 @@ interface ClientFormBodyProps {
 type Props = ClientFormBodyProps
 
 const ClientFormBody: FunctionComponent<Props> = (props) => {
+  const [openDireccion, setOpenDireccion] = useState(false)
   const { form } = props
   const {
     control,
@@ -206,6 +204,106 @@ const ClientFormBody: FunctionComponent<Props> = (props) => {
               />
             )}
           />
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Divider sx={{ my: 1 }} />
+          <Button
+            variant="text"
+            fullWidth
+            onClick={() => setOpenDireccion(!openDireccion)}
+          >
+            {openDireccion ? 'Ocultar Dirección' : 'Añadir Dirección'}
+          </Button>
+          <Collapse in={openDireccion} timeout="auto" unmountOnExit sx={{ width: '100%', mt: 1 }}>
+            <Grid container columnSpacing={2} rowSpacing={1.5}>
+              <Grid size={{ lg: 8, md: 8, sm: 12, xs: 12 }}>
+                <Controller
+                  control={control}
+                  name={'direccion.calle'}
+                  render={({ field }) => (
+                    <FormTextField
+                      name={'direccion.calle'}
+                      label="Calle/Avenida"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      error={Boolean(errors.direccion?.calle)}
+                      helperText={errors.direccion?.calle?.message}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ lg: 4, md: 4, sm: 12, xs: 12 }}>
+                <Controller
+                  control={control}
+                  name={'direccion.numero'}
+                  render={({ field }) => (
+                    <FormTextField
+                      name={'direccion.numero'}
+                      label="Número"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      error={Boolean(errors.direccion?.numero)}
+                      helperText={errors.direccion?.numero?.message}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ lg: 6, md: 6, sm: 12, xs: 12 }}>
+                <Controller
+                  control={control}
+                  name={'direccion.barrio'}
+                  render={({ field }) => (
+                    <FormTextField
+                      name={'direccion.barrio'}
+                      label="Barrio/Zona"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      error={Boolean(errors.direccion?.barrio)}
+                      helperText={errors.direccion?.barrio?.message}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ lg: 6, md: 6, sm: 12, xs: 12 }}>
+                <Controller
+                  control={control}
+                  name={'direccion.apartamento'}
+                  render={({ field }) => (
+                    <FormTextField
+                      name={'direccion.apartamento'}
+                      label="Piso/Apartamento"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      error={Boolean(errors.direccion?.apartamento)}
+                      helperText={errors.direccion?.apartamento?.message}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Controller
+                  control={control}
+                  name={'direccion.referenciasAdicionales'}
+                  render={({ field }) => (
+                    <FormTextField
+                      name={'direccion.referenciasAdicionales'}
+                      label="Referencias Adicionales"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      error={Boolean(errors.direccion?.referenciasAdicionales)}
+                      helperText={errors.direccion?.referenciasAdicionales?.message}
+                    />
+                  )}
+                />
+              </Grid>
+            </Grid>
+          </Collapse>
         </Grid>
       </Grid>
     </form>

@@ -2,4 +2,4 @@
 
 export * from './client';
 export * from './types';
-export * from './queries/useArticuloInventarioListado';
+export * from './queries/useTipoArticuloListado';

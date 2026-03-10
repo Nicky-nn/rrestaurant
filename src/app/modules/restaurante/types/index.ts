@@ -686,6 +686,16 @@ export interface DefinicionGrupoUnidadMedida {
 }
 
 /**
+ * Una conexión a una lista de elementos.
+ */
+export interface TipoArticuloConnection {
+  /** Lista de documentos. */
+  docs?: TipoArticulo[];
+  /** Información para ayudar en la paginación. */
+  pageInfo: PageInfo;
+}
+
+/**
  * Datos del tipo de articulo.
  */
 export interface TipoArticuloOperacion {

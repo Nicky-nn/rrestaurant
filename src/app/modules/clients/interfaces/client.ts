@@ -1,8 +1,8 @@
 import {
-  actionForm,
-  ActionFormProps,
-  AuditoriaProps,
-  PageInputProps,
+    actionForm,
+    ActionFormProps,
+    AuditoriaProps,
+    PageInputProps,
 } from '../../../interfaces'
 import { SinTipoDocumentoIdentidadProps } from '../../../interfaces/sin.interface'
 
@@ -39,6 +39,13 @@ export interface ClientInputProps {
   apellidos: string
   telefono: string
   action: ActionFormProps
+  direccion: {
+    calle: string
+    numero: string
+    apartamento: string
+    barrio: string
+    referenciasAdicionales: string
+  }
 }
 
 export interface ClientApiInputProps {
@@ -50,6 +57,7 @@ export interface ClientApiInputProps {
   complemento: string
   email: string
   telefono: string
+  direccion?: string
 }
 
 export const CLIENT_DEFAULT_INPUT: ClientInputProps = {
@@ -62,6 +70,13 @@ export const CLIENT_DEFAULT_INPUT: ClientInputProps = {
   apellidos: '',
   telefono: '',
   action: actionForm.REGISTER,
+  direccion: {
+    calle: '',
+    numero: '',
+    apartamento: '',
+    barrio: '',
+    referenciasAdicionales: '',
+  },
 }
 
 export const PAGE_DEFAULT_WITH_CREDIT: PageInputProps = {

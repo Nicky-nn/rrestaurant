@@ -35,3 +35,13 @@ export interface MesaUI {
   // Usuario que ocupa la mesa (si es otro usuario)
   usuarioOcupante?: string
 }
+
+export interface OpcionesParaLlevar {
+  cliente: any | null
+  horaRecojo: string
+  solicitarUtensilios: boolean
+  // Delivery
+  metodoDelivery?: 'PROPIO' | 'PEDIDOS_YA'
+  codigoOrdenApp?: string
+  nombreRepartidor?: string
+}
