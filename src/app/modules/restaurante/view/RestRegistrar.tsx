@@ -1,4 +1,4 @@
-import { Box, Grid } from '@mui/material'
+import { Alert, Box, Grid, Snackbar } from '@mui/material'
 import { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import useAuth from '../../../base/hooks/useAuth'
@@ -20,11 +20,15 @@ import RrMesas from './registrar/RrMesas'
  */
 const RestRegistrar: FunctionComponent = () => {
   const { user } = useAuth()
-  console.log('[RestRegistrar] Renderizando... Usuario:', user.usuario)
   const codigoSucursal = user.sucursal.codigo
   const codigoPuntoVenta = user.puntoVenta.codigo
   const [mesaSeleccionada, setMesaSeleccionada] = useState<MesaUI | null>(null)
   const [focusedIndex, setFocusedIndex] = useState(-1)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; key: number }>({
+    open: false,
+    message: '',
+    key: 0,
+  })
 
   // Obtener la lista de espacios de la sucursal actual
   const { data: espaciosRaw = [] } = useRestEspacioPorSucursal({ codigoSucursal })
@@ -59,7 +63,6 @@ const RestRegistrar: FunctionComponent = () => {
     : 'mesa.ubicacion=null&state!=FINALIZADO&state!=ANULADO&state!=CANCELADO'
 
   // Obtener pedidos completos de la sucursal actual con el query de ubicación
-  console.log('queryParams', queryParams)
   const {
     data: pedidosData,
     isLoading: pedidosLoading,
@@ -206,6 +209,13 @@ const RestRegistrar: FunctionComponent = () => {
   }, [pedidosData, mesasOcupadas, user.usuario, espacio, espaciosData])
 
   // Generar un color de fondo pastel distinto por cada espacio usando hash del _id
+  // Ref estable que siempre apunta al valor actual de mesaSeleccionada.
+  // Permite que handleAddProduct tenga deps=[] sin quedarse con un valor stale.
+  const mesaSeleccionadaRef = useRef(mesaSeleccionada)
+  useEffect(() => {
+    mesaSeleccionadaRef.current = mesaSeleccionada
+  }, [mesaSeleccionada])
+
   const bgColor = useMemo(() => {
     if (!espacio) return 'rgba(255, 255, 255, 0)' // Salón Principal: sin tinte
     const idx = espaciosData.findIndex((e) => e._id === espacio)
@@ -223,116 +233,184 @@ const RestRegistrar: FunctionComponent = () => {
     return paleta[idx % paleta.length]
   }, [espacio, espaciosData])
 
-  const handleAddProduct = useCallback((payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number }> }) => {
-    if (!mesaSeleccionada) {
-      alert('Por favor selecciona una mesa (o pedido Para Llevar / Delivery) antes de agregar productos.')
-      return
-    }
+  const handleAddProduct = useCallback(
+    (payload: {
+      articulo: Articulo
+      cantidad: number
+      notasIds: string[]
+      complementos: Array<{ _id: string; nombre: string; precio: number; cantidad: number }>
+    }) => {
+      if (!mesaSeleccionadaRef.current) {
+        alert('Por favor selecciona una mesa (o pedido Para Llevar / Delivery) antes de agregar productos.')
+        return
+      }
 
-    const { articulo, cantidad, notasIds, complementos } = payload
+      const { articulo, cantidad, notasIds, complementos } = payload
 
-    setMesaSeleccionada((prev) => {
-      if (!prev) return prev
-
-      const nuevoPedido = prev.pedido ? { ...prev.pedido } : {
-        _id: `nuevo-${Date.now()}`,
-        tipo: prev.value === 'Llevar' ? 'LLEVAR' : 'SALON',
-        state: 'NUEVO',
-        productos: [],
-        totalBase: 0,
-        totalCalculado: 0,
-        estadoLectura: false, // dummy values
-        estadoImpresora: false,
-      } as unknown as RestPedido
-
-      const productos = [...(nuevoPedido.productos || [])]
-
-      // Ordenar IDs para comparar de forma estricta independientemente del orden de inserción
+      // Calculamos si ya existe el item usando la ref (fuera del setState)
+      // para poder mostrar el toast ANTES de actualizar el estado.
+      const productosActuales = mesaSeleccionadaRef.current?.pedido?.productos || []
       const notasNuevasSorted = [...notasIds].sort()
       const compsNuevosSorted = [...complementos].sort((a, b) => a._id.localeCompare(b._id))
 
-      const existingIdx = productos.findIndex(p => {
-        // Misma base de articulo (manejar fallback a _id directo u originado de la prop)
+      const yaExiste = productosActuales.some((p) => {
         const pId = p.articuloId || (p as any).articulo?._id || (p as any)._id
         if (pId !== articulo._id) return false
-        
-        // Misma nota rapida
-        const pNotas = [...(p.notaRapida?.map(n => n.valor).filter(Boolean) || [])].sort()
+        const pNotas = [...(p.notaRapida?.map((n) => n.valor).filter(Boolean) || [])].sort()
         if (pNotas.join('|') !== notasNuevasSorted.join('|')) return false
-
-        // Si existen notas personalizadas escritas a mano (modificadas desde el carrito localmente), 
-        // son productos distintos por defecto porque vienen limpios de la card.
         if ((p.nota || '').trim() !== '') return false
-
-        // Mismos complementos (mismos IDs y misma cantidad configurada)
-        const pComps = p.complementos || []
-        if (pComps.length !== compsNuevosSorted.length) return false
-
-        for (const compNuevo of compsNuevosSorted) {
-          const matched = pComps.find(c => (c.articuloId || (c as any).id || (c as any)._id) === compNuevo._id)
-          if (!matched) return false
-          const pCompQty = matched.articuloPrecio?.cantidad ?? matched.articuloPrecioBase?.cantidad ?? 1
-          if (pCompQty !== compNuevo.cantidad) return false
+        const pCompsMap = new Map<string, number>()
+        for (const c of p.complementos || []) {
+          const cId = c.articuloId || (c as any).id || (c as any)._id
+          if (!cId) continue
+          pCompsMap.set(
+            cId,
+            (pCompsMap.get(cId) || 0) + (c.articuloPrecio?.cantidad ?? c.articuloPrecioBase?.cantidad ?? 1),
+          )
         }
-
-        return true // ¡Match perfecto!
+        if (pCompsMap.size !== compsNuevosSorted.length) return false
+        return compsNuevosSorted.every((cn) => pCompsMap.get(cn._id) === cn.cantidad)
       })
 
-      if (existingIdx >= 0) {
-        // Incrementar la cantidad del producto exacto
-        const existing = productos[existingIdx]
-        const currentQty = existing.articuloPrecio?.cantidad ?? existing.articuloPrecioBase?.cantidad ?? 1
-        const nextQty = currentQty + cantidad
-
-        productos[existingIdx] = {
-          ...existing,
-          articuloPrecio: {
-            ...existing.articuloPrecio,
-            cantidad: nextQty
-          },
-          articuloPrecioBase: {
-            ...existing.articuloPrecioBase,
-            cantidad: nextQty
-          }
-        }
+      if (yaExiste) {
+        const qtaActual = productosActuales.find((p) => (p.articuloId || (p as any)._id) === articulo._id)
+        const qtaNum =
+          (qtaActual?.articuloPrecio?.cantidad ?? qtaActual?.articuloPrecioBase?.cantidad ?? 1) + cantidad
+        setSnackbar((s) => ({
+          open: true,
+          message: `Modificando ${articulo.nombreArticulo} cantidad a ${qtaNum}`,
+          key: s.key + 1,
+        }))
       } else {
-        // Agregar uno completamente nuevo
-        const nuevoProd: ArticuloOperacion = {
-          articuloId: articulo._id,
-          codigoArticulo: articulo.codigoArticulo,
-          nombreArticulo: articulo.nombreArticulo,
-          claseArticulo: articulo.claseArticulo,
-          tipoArticulo: articulo.tipoArticulo,
-          gestionArticulo: articulo.gestionArticulo,
-          articuloPrecioBase: { 
-             cantidad, 
-             valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0, 
-             moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
-             monedaPrecio: { precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0 }
-          },
-          articuloPrecio: { 
-             cantidad, 
-             valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0, 
-             moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
-             monedaPrecio: { precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0 }
-          },
-          notaRapida: notasIds.map(n => ({ valor: n })),
-          nota: '', // vacias, luego el usuario las setea manual
-          cortesia: false,
-          complementos: complementos.map(c => ({
-             articuloId: c._id,
-             nombreArticulo: c.nombre,
-             articuloPrecioBase: { cantidad: c.cantidad, valor: c.precio, precio: c.precio, monedaPrecio: { precio: c.precio } },
-             articuloPrecio: { cantidad: c.cantidad, valor: c.precio, precio: c.precio, monedaPrecio: { precio: c.precio } }
-          }))
-        }
-        productos.push(nuevoProd)
+        setSnackbar((s) => ({
+          open: true,
+          message: `Adicionando ${articulo.nombreArticulo} al carrito`,
+          key: s.key + 1,
+        }))
       }
 
-      nuevoPedido.productos = productos
-      return { ...prev, pedido: nuevoPedido }
-    })
-  }, [mesaSeleccionada])
+      setMesaSeleccionada((prev) => {
+        if (!prev) return prev
+
+        const nuevoPedido = prev.pedido
+          ? { ...prev.pedido }
+          : ({
+              _id: `nuevo-${Date.now()}`,
+              tipo: prev.value === 'Llevar' ? 'LLEVAR' : 'SALON',
+              state: 'NUEVO',
+              productos: [],
+              totalBase: 0,
+              totalCalculado: 0,
+              estadoLectura: false, // dummy values
+              estadoImpresora: false,
+            } as unknown as RestPedido)
+
+        const productos = [...(nuevoPedido.productos || [])]
+
+        // Ordenar IDs para comparar de forma estricta independientemente del orden de inserción
+        const notasNuevasSorted = [...notasIds].sort()
+        const compsNuevosSorted = [...complementos].sort((a, b) => a._id.localeCompare(b._id))
+
+        const existingIdx = productos.findIndex((p) => {
+          // Misma base de articulo (manejar fallback a _id directo u originado de la prop)
+          const pId = p.articuloId || (p as any).articulo?._id || (p as any)._id
+          if (pId !== articulo._id) return false
+
+          // Misma nota rapida
+          const pNotas = [...(p.notaRapida?.map((n) => n.valor).filter(Boolean) || [])].sort()
+          if (pNotas.join('|') !== notasNuevasSorted.join('|')) return false
+
+          // Si existen notas personalizadas escritas a mano (modificadas desde el carrito localmente),
+          // son productos distintos por defecto porque vienen limpios de la card.
+          if ((p.nota || '').trim() !== '') return false
+
+          // Mismos complementos: agrupar por articuloId sumando cantidades para manejar
+          // tanto pedidos cargados del servidor (pueden tener varias entradas qty=1 por complemento)
+          // como pedidos locales (una sola entrada con la cantidad acumulada).
+          const pComps = p.complementos || []
+
+          // Construir mapa agrupado: articuloId → cantidad total
+          const pCompsMap = new Map<string, number>()
+          for (const c of pComps) {
+            const cId = c.articuloId || (c as any).id || (c as any)._id
+            if (!cId) continue
+            const qty = c.articuloPrecio?.cantidad ?? c.articuloPrecioBase?.cantidad ?? 1
+            pCompsMap.set(cId, (pCompsMap.get(cId) || 0) + qty)
+          }
+
+          // Debe haber exactamente los mismos articuloIds de complemento
+          if (pCompsMap.size !== compsNuevosSorted.length) return false
+
+          for (const compNuevo of compsNuevosSorted) {
+            const existingQty = pCompsMap.get(compNuevo._id)
+            if (existingQty === undefined) return false
+            if (existingQty !== compNuevo.cantidad) return false
+          }
+
+          return true // ¡Match perfecto!
+        })
+
+        if (existingIdx >= 0) {
+          // Incrementar la cantidad del producto exacto
+          const existing = productos[existingIdx]
+          const currentQty = existing.articuloPrecio?.cantidad ?? existing.articuloPrecioBase?.cantidad ?? 1
+          const nextQty = currentQty + cantidad
+
+          productos[existingIdx] = {
+            ...existing,
+            articuloPrecio: { ...existing.articuloPrecio, cantidad: nextQty },
+            articuloPrecioBase: { ...existing.articuloPrecioBase, cantidad: nextQty },
+          }
+        } else {
+          // Agregar uno completamente nuevo
+          const nuevoProd: ArticuloOperacion = {
+            articuloId: articulo._id,
+            codigoArticulo: articulo.codigoArticulo,
+            nombreArticulo: articulo.nombreArticulo,
+            claseArticulo: articulo.claseArticulo,
+            tipoArticulo: articulo.tipoArticulo,
+            gestionArticulo: articulo.gestionArticulo,
+            articuloPrecioBase: {
+              cantidad,
+              valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
+              moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
+              monedaPrecio: { precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0 },
+            },
+            articuloPrecio: {
+              cantidad,
+              valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
+              moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
+              monedaPrecio: { precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0 },
+            },
+            notaRapida: notasIds.map((n) => ({ valor: n })),
+            nota: '', // vacias, luego el usuario las setea manual
+            cortesia: false,
+            complementos: complementos.map((c) => ({
+              articuloId: c._id,
+              nombreArticulo: c.nombre,
+              articuloPrecioBase: {
+                cantidad: c.cantidad,
+                valor: c.precio,
+                precio: c.precio,
+                monedaPrecio: { precio: c.precio },
+              },
+              articuloPrecio: {
+                cantidad: c.cantidad,
+                valor: c.precio,
+                precio: c.precio,
+                monedaPrecio: { precio: c.precio },
+              },
+            })),
+          }
+          productos.push(nuevoProd)
+        }
+
+        nuevoPedido.productos = productos
+        return { ...prev, pedido: nuevoPedido }
+      })
+    },
+    [],
+  ) // ✅ deps vacías – la ref se mantiene fresca sin recrear el callback
 
   const handleUpdateProduct = useCallback((index: number, updatedItem: ArticuloOperacion) => {
     setMesaSeleccionada((prev) => {
@@ -353,61 +431,78 @@ const RestRegistrar: FunctionComponent = () => {
   }, [])
 
   return (
-    <Grid
-      container
-      spacing={2}
-      sx={{
-        height: 'calc(100vh - 150px)',
-        flexGrow: 1,
-        minHeight: 0,
-        overflow: 'hidden',
-        m: 0,
-        pb: 2,
-        width: '100%',
-      }}
-    >
+    <>
       <Grid
-        size={{ xs: 12, md: 8 }}
-        sx={{ display: 'flex', flexDirection: 'column', gap: 0, height: '100%' }}
+        container
+        spacing={1.5}
+        sx={{
+          height: 'calc(100vh - 105px)', // Reducido para evitar el scroll
+          flexGrow: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+          width: '100%',
+          pr: 2,
+          pb: 0,
+          mb: 0,
+          mt: 0,
+        }}
       >
-        <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-          <RrMesas
-            options={mesas}
-            selectedOption={mesaSeleccionada}
-            setSelectedOption={setMesaSeleccionada}
-            focusedIndex={focusedIndex}
-            setFocusedIndex={setFocusedIndex}
-            codigoSucursal={codigoSucursal}
-            isLoading={pedidosLoading}
-            bgColor={bgColor}
-          />
-        </Box>
-        <Box sx={{ flexGrow: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <RrCategoriasProductos
-            espacios={espaciosData}
-            espacioSeleccionado={espacio}
-            onChangeEspacio={handleChangeEspacio}
-            onAddProduct={handleAddProduct}
-          />
-        </Box>
-      </Grid>
+        <Grid
+          size={{ xs: 12, md: 8 }}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 0, height: '100%' }}
+        >
+          <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+            <RrMesas
+              options={mesas}
+              selectedOption={mesaSeleccionada}
+              setSelectedOption={setMesaSeleccionada}
+              focusedIndex={focusedIndex}
+              setFocusedIndex={setFocusedIndex}
+              codigoSucursal={codigoSucursal}
+              isLoading={pedidosLoading}
+              bgColor={bgColor}
+            />
+          </Box>
+          <Box
+            sx={{ flexGrow: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+          >
+            <RrCategoriasProductos
+              espacios={espaciosData}
+              espacioSeleccionado={espacio}
+              onChangeEspacio={handleChangeEspacio}
+              onAddProduct={handleAddProduct}
+            />
+          </Box>
+        </Grid>
 
-      <Grid
-        size={{ xs: 12, md: 4 }}
-        sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: '100%' }}
-      >
-        <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <RrCarrito 
-            mesaSeleccionada={mesaSeleccionada} 
-            onUpdateProduct={handleUpdateProduct} 
-            onRemoveProduct={handleRemoveProduct} 
-          />
-        </Box>
-        <Box sx={{ flexShrink: 0 }}>
-          <RrAcciones />
-        </Box>
+        <Grid
+          size={{ xs: 12, md: 4 }}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}
+        >
+          <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <RrCarrito
+              mesaSeleccionada={mesaSeleccionada}
+              onUpdateProduct={handleUpdateProduct}
+              onRemoveProduct={handleRemoveProduct}
+            />
+          </Box>
+          <Box sx={{ flexShrink: 0, mt: 'auto' }}>
+            <RrAcciones mesaSeleccionada={mesaSeleccionada} />
+          </Box>
+        </Grid>
       </Grid>
-    </Grid>
+      <Snackbar
+        key={`snackbar-${snackbar.key}`}
+        open={snackbar.open}
+        autoHideDuration={1200}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" variant="standard" sx={{ minWidth: 250, boxShadow: 2 }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   )
 }
 

@@ -29,7 +29,16 @@ import {
 } from '@mui/material'
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
-import { FunctionComponent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  FunctionComponent,
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
 import useAuth from '../../../../base/hooks/useAuth'
 import { useHorizontalDragScroll } from '../../../../base/hooks/useHorizontalDragScroll'
@@ -148,242 +157,249 @@ const SkeletonCard = () => (
 interface ProductCardProps {
   articulo: Articulo
   onClick?: (a: Articulo) => void
-  onAddProduct?: (payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number }> }) => void
+  onAddProduct?: (payload: {
+    articulo: Articulo
+    cantidad: number
+    notasIds: string[]
+    complementos: Array<{ _id: string; nombre: string; precio: number; cantidad: number }>
+  }) => void
   /** Si true, oculta el área de imagen (modo compacto para filas sin imágenes) */
   compact?: boolean
 }
 
-const ProductCard: FunctionComponent<ProductCardProps> = ({ articulo, onClick, onAddProduct, compact = false }) => {
-  const [complementoModalOpen, setComplementoModalOpen] = useState(false)
-  const listaComplemento = articulo.listaComplemento ?? []
-  const tieneComplementos = listaComplemento.length > 0
-  const disponible = isDisponible(articulo)
-  const imagenUrl = getImagenUrl(articulo)
-  const precio = articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0
-  const sigla = articulo.articuloPrecioBase?.monedaPrimaria?.moneda?.sigla ?? 'Bs'
+const ProductCard: FunctionComponent<ProductCardProps> = memo(
+  ({ articulo, onClick, onAddProduct, compact = false }) => {
+    const [complementoModalOpen, setComplementoModalOpen] = useState(false)
+    const listaComplemento = articulo.listaComplemento ?? []
+    const tieneComplementos = listaComplemento.length > 0
+    const disponible = isDisponible(articulo)
+    const imagenUrl = getImagenUrl(articulo)
+    const precio = articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0
+    const sigla = articulo.articuloPrecioBase?.monedaPrimaria?.moneda?.sigla ?? 'Bs'
 
-  return (
-    <>
-      <Tooltip
-        title={`${articulo.nombreArticulo} - ${sigla} ${precio.toFixed(2)}${!disponible ? ' (AGOTADO)' : ''}`}
-        placement="top"
-        arrow
-        enterDelay={400}
-        enterNextDelay={200}
-      >
-        <Card
-          sx={{
-            borderRadius: 2,
-            opacity: disponible ? 1 : 0.6,
-            transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s',
-            userSelect: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'relative',
-            bgcolor: (theme) =>
-              theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[200],
-            // Borde de color secondary cuando el artículo tiene complementos
-            border: '2px solid',
-            borderColor: tieneComplementos ? 'secondary.main' : 'transparent',
-            '&:hover': disponible ? { boxShadow: 6, transform: 'translateY(-3px)' } : {},
-          }}
+    return (
+      <>
+        <Tooltip
+          title={`${articulo.nombreArticulo} - ${sigla} ${precio.toFixed(2)}${!disponible ? ' (AGOTADO)' : ''}`}
+          placement="top"
+          arrow
+          enterDelay={400}
+          enterNextDelay={200}
         >
-          <CardActionArea
-            disabled={!disponible}
-            onClick={() => {
-              if (!disponible) return
-              if (tieneComplementos) {
-                setComplementoModalOpen(true)
-              } else {
-                onClick?.(articulo)
-                onAddProduct?.({
-                  articulo,
-                  cantidad: 1,
-                  notasIds: [],
-                  complementos: [],
-                })
-              }
-            }}
+          <Card
             sx={{
+              borderRadius: 2,
+              opacity: disponible ? 1 : 0.6,
+              transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s',
+              userSelect: 'none',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'stretch',
-              justifyContent: 'flex-start',
-              flexGrow: 1,
+              position: 'relative',
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[200],
+              // Borde de color secondary cuando el artículo tiene complementos
+              border: '2px solid',
+              borderColor: tieneComplementos ? 'secondary.main' : 'transparent',
+              '&:hover': disponible ? { boxShadow: 6, transform: 'translateY(-3px)' } : {},
             }}
           >
-            {/* Área de imagen: solo se muestra si no es modo compacto */}
-            {!compact && (
-              <Box sx={{ position: 'relative', width: '100%', height: 100, flexShrink: 0 }}>
-                {imagenUrl ? (
-                  <CardMedia
-                    component="img"
-                    image={imagenUrl}
-                    alt={articulo.nombreArticulo ?? ''}
-                    sx={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }}
-                  />
-                ) : (
-                  <Box
-                    sx={{
-                      width: '100%',
-                      height: 100,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: 'grey.100',
-                    }}
-                  >
-                    <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
-                      Sin imagen
-                    </Typography>
-                  </Box>
-                )}
-
-                {!disponible && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      bgcolor: 'error.main',
-                      color: 'error.contrastText',
-                      textAlign: 'center',
-                      py: 0.25,
-                    }}
-                  >
-                    <Typography
-                      sx={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: 0.8, lineHeight: 1.4 }}
-                    >
-                      AGOTADO
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            )}
-
-            {/* Barra accent primary para cards sin imagen (modo compacto) */}
-            {compact && (
-              <Box
-                sx={{
-                  width: '100%',
-                  height: 3,
-                  bgcolor: disponible ? 'primary.main' : 'error.main',
-                  flexShrink: 0,
-                }}
-              />
-            )}
-
-            {/* Texto: nombre + precio */}
-            <Box
+            <CardActionArea
+              disabled={!disponible}
+              onClick={() => {
+                if (!disponible) return
+                if (tieneComplementos) {
+                  setComplementoModalOpen(true)
+                } else {
+                  onClick?.(articulo)
+                  onAddProduct?.({
+                    articulo,
+                    cantidad: 1,
+                    notasIds: [],
+                    complementos: [],
+                  })
+                }
+              }}
               sx={{
-                px: 1,
-                pt: compact ? 0.75 : 0.5,
-                pb: compact ? 1.25 : 1,
-                flexShrink: 0,
-                minHeight: compact ? 52 : 44,
                 display: 'flex',
                 flexDirection: 'column',
+                alignItems: 'stretch',
                 justifyContent: 'flex-start',
-                gap: 0.25,
+                flexGrow: 1,
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  lineHeight: 1.3,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'normal',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  minHeight: '2.21em', // Altura mínima para 2 líneas
-                }}
-              >
-                {articulo.nombreArticulo}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: '0.85rem',
-                  fontWeight: 500,
-                  color: disponible ? 'text.secondary' : 'error.main',
-                  lineHeight: 1.2,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {sigla} {precio.toFixed(2)}
-                {compact && !disponible && (
-                  <Typography
-                    component="span"
-                    sx={{
-                      ml: 0.75,
-                      fontSize: '0.6rem',
-                      fontWeight: 700,
-                      color: 'error.main',
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    · AGOTADO
-                  </Typography>
-                )}
-              </Typography>
-            </Box>
-          </CardActionArea>
+              {/* Área de imagen: solo se muestra si no es modo compacto */}
+              {!compact && (
+                <Box sx={{ position: 'relative', width: '100%', height: 100, flexShrink: 0 }}>
+                  {imagenUrl ? (
+                    <CardMedia
+                      component="img"
+                      image={imagenUrl}
+                      alt={articulo.nombreArticulo ?? ''}
+                      sx={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: 100,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: 'grey.100',
+                      }}
+                    >
+                      <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
+                        Sin imagen
+                      </Typography>
+                    </Box>
+                  )}
 
-          {/* Badge de complementos — fuera del CardActionArea para no interferir con el click del card */}
-          {tieneComplementos && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 4,
-                right: 4,
-                zIndex: 2,
-              }}
-            >
-              <Tooltip
-                title={`${listaComplemento.length} complemento${listaComplemento.length !== 1 ? 's' : ''} — click para ver detalles`}
-                arrow
-              >
-                <Chip
-                  icon={<ExtensionIcon sx={{ fontSize: '0.75rem !important' }} />}
-                  label={listaComplemento.length}
-                  size="small"
-                  color="secondary"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setComplementoModalOpen(true)
-                  }}
+                  {!disponible && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        bgcolor: 'error.main',
+                        color: 'error.contrastText',
+                        textAlign: 'center',
+                        py: 0.25,
+                      }}
+                    >
+                      <Typography
+                        sx={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: 0.8, lineHeight: 1.4 }}
+                      >
+                        AGOTADO
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              {/* Barra accent primary para cards sin imagen (modo compacto) */}
+              {compact && (
+                <Box
                   sx={{
-                    height: 20,
-                    fontSize: '0.65rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    '& .MuiChip-icon': { ml: 0.5 },
-                    '& .MuiChip-label': { px: 0.75 },
+                    width: '100%',
+                    height: 3,
+                    bgcolor: disponible ? 'primary.main' : 'error.main',
+                    flexShrink: 0,
                   }}
                 />
-              </Tooltip>
-            </Box>
-          )}
-        </Card>
-      </Tooltip>
+              )}
 
-      {/* Modal en archivo separado RrComplementoModal.tsx */}
-      {tieneComplementos && (
-        <RrComplementoModal
-          open={complementoModalOpen}
-          onClose={() => setComplementoModalOpen(false)}
-          articulo={articulo}
-          listaComplemento={listaComplemento}
-          onAdd={onAddProduct}
-        />
-      )}
-    </>
-  )
-}
+              {/* Texto: nombre + precio */}
+              <Box
+                sx={{
+                  px: 1,
+                  pt: compact ? 0.75 : 0.5,
+                  pb: compact ? 1.25 : 1,
+                  flexShrink: 0,
+                  minHeight: compact ? 52 : 44,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-start',
+                  gap: 0.25,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    lineHeight: 1.3,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'normal',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    minHeight: '2.21em', // Altura mínima para 2 líneas
+                  }}
+                >
+                  {articulo.nombreArticulo}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 500,
+                    color: disponible ? 'text.secondary' : 'error.main',
+                    lineHeight: 1.2,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {sigla} {precio.toFixed(2)}
+                  {compact && !disponible && (
+                    <Typography
+                      component="span"
+                      sx={{
+                        ml: 0.75,
+                        fontSize: '0.6rem',
+                        fontWeight: 700,
+                        color: 'error.main',
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      · AGOTADO
+                    </Typography>
+                  )}
+                </Typography>
+              </Box>
+            </CardActionArea>
+
+            {/* Badge de complementos — fuera del CardActionArea para no interferir con el click del card */}
+            {tieneComplementos && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 4,
+                  right: 4,
+                  zIndex: 2,
+                }}
+              >
+                <Tooltip
+                  title={`${listaComplemento.length} complemento${listaComplemento.length !== 1 ? 's' : ''} — click para ver detalles`}
+                  arrow
+                >
+                  <Chip
+                    icon={<ExtensionIcon sx={{ fontSize: '0.75rem !important' }} />}
+                    label={listaComplemento.length}
+                    size="small"
+                    color="secondary"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setComplementoModalOpen(true)
+                    }}
+                    sx={{
+                      height: 20,
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      '& .MuiChip-icon': { ml: 0.5 },
+                      '& .MuiChip-label': { px: 0.75 },
+                    }}
+                  />
+                </Tooltip>
+              </Box>
+            )}
+          </Card>
+        </Tooltip>
+
+        {/* Modal en archivo separado RrComplementoModal.tsx */}
+        {tieneComplementos && (
+          <RrComplementoModal
+            open={complementoModalOpen}
+            onClose={() => setComplementoModalOpen(false)}
+            articulo={articulo}
+            listaComplemento={listaComplemento}
+            onAdd={onAddProduct}
+          />
+        )}
+      </>
+    )
+  },
+) as FunctionComponent<ProductCardProps>
 
 // ─── Category tab (Box) ────────────────────────────────────────────────────────
 
@@ -393,7 +409,7 @@ interface CategoryTabProps {
   onClick: () => void
 }
 
-const CategoryTab: FunctionComponent<CategoryTabProps> = ({ label, selected, onClick }) => (
+const CategoryTab: FunctionComponent<CategoryTabProps> = memo(({ label, selected, onClick }) => (
   <Box
     onClick={onClick}
     sx={{
@@ -417,7 +433,7 @@ const CategoryTab: FunctionComponent<CategoryTabProps> = ({ label, selected, onC
   >
     {label}
   </Box>
-)
+)) as FunctionComponent<CategoryTabProps>
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
@@ -425,7 +441,12 @@ interface RrCategoriasProductosProps {
   espacios?: { _id?: string; descripcion?: string | null; default?: number | null }[]
   espacioSeleccionado?: string | null
   onChangeEspacio?: (espacioId: string | null) => void
-  onAddProduct?: (payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number }> }) => void
+  onAddProduct?: (payload: {
+    articulo: Articulo
+    cantidad: number
+    notasIds: string[]
+    complementos: Array<{ _id: string; nombre: string; precio: number; cantidad: number }>
+  }) => void
 }
 
 /**
@@ -452,6 +473,7 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
   })
 
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string | null>(null)
+  const [searchModalArticulo, setSearchModalArticulo] = useState<Articulo | null>(null)
   const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(null)
   const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null)
   const [sortConfig, setSortConfig] = useState<SortConfig>(SORT_DEFAULT)
@@ -952,10 +974,15 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
                       return (
                         <Box
                           key={articulo._id ?? articulo.codigoArticulo}
-                          onClick={() =>
-                            disponible &&
-                            console.log('[RrCategoriasProductos] Seleccionado:', articulo.nombreArticulo)
-                          }
+                          onClick={() => {
+                            if (!disponible) return
+                            const tieneComps = (articulo.listaComplemento ?? []).length > 0
+                            if (tieneComps) {
+                              setSearchModalArticulo(articulo)
+                            } else {
+                              onAddProduct?.({ articulo, cantidad: 1, notasIds: [], complementos: [] })
+                            }
+                          }}
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
@@ -1047,7 +1074,6 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
                     key={articulo._id ?? articulo.codigoArticulo}
                     articulo={articulo}
                     compact={compact}
-                    onClick={(a) => console.log('[RrCategoriasProductos] Seleccionado:', a.nombreArticulo)}
                     onAddProduct={onAddProduct}
                   />
                 ))}
@@ -1057,6 +1083,20 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
           </Box>
         )}
       </Box>
+
+      {/* Modal complementos para búsqueda */}
+      {searchModalArticulo && (
+        <RrComplementoModal
+          open={Boolean(searchModalArticulo)}
+          onClose={() => setSearchModalArticulo(null)}
+          articulo={searchModalArticulo}
+          listaComplemento={searchModalArticulo.listaComplemento ?? []}
+          onAdd={(payload) => {
+            onAddProduct?.(payload)
+            setSearchModalArticulo(null)
+          }}
+        />
+      )}
 
       {/* Popover de espacios */}
       <Popover
