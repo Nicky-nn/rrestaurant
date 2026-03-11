@@ -18,6 +18,7 @@ export interface RrComplementoModalProps {
   onClose: () => void
   articulo: Articulo
   listaComplemento: ArticuloComplemento[]
+  onAdd?: (payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number }> }) => void
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -33,6 +34,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   onClose,
   articulo,
   listaComplemento,
+  onAdd,
 }) => {
   const { user } = useAuth()
   const codigoSucursal = user.sucursal.codigo
@@ -40,10 +42,19 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
 
   // ── Estado local ──────────────────────────────────────────────────────────
-  const [selectedComplementos, setSelectedComplementos] = useState<Set<string>>(new Set())
+  const [selectedComplementos, setSelectedComplementos] = useState<Record<string, number>>({})
   const [selectedNotas, setSelectedNotas] = useState<Set<string>>(new Set())
   const [cantidad, setCantidad] = useState(1)
   const [iconLoaded, setIconLoaded] = useState(false)
+
+  // ── Reset local state on open ─────────────────────────────────────────────
+  useEffect(() => {
+    if (open) {
+      setSelectedComplementos({})
+      setSelectedNotas(new Set())
+      setCantidad(1)
+    }
+  }, [open, articulo._id])
 
   // ── Lordicon script ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -88,24 +99,30 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
 
   // ── Precio total calculado ────────────────────────────────────────────────
   const precioBase = getPrecio(articulo)
-  const precioComplementos = Array.from(selectedComplementos).reduce((acc, compId) => {
+  const precioComplementos = Object.entries(selectedComplementos).reduce((acc, [compId, qty]) => {
     const comp = complementos?.find((c) => c._id === compId)
-    return acc + (comp ? getPrecio(comp) : 0)
+    return acc + (comp ? getPrecio(comp) * qty : 0)
   }, 0)
   const precioTotal = (precioBase + precioComplementos) * cantidad
 
   // ── Handlers ──────────────────────────────────────────────────────────────
-  const toggleComplemento = (id: string) => {
+  const toggleComplemento = (id: string, remove = false) => {
     setSelectedComplementos((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
+      const next = { ...prev }
+      if (remove) {
+        if (next[id] > 1) {
+          next[id] -= 1
+        } else {
+          delete next[id]
+        }
       } else {
-        next.add(id)
+        next[id] = (next[id] || 0) + 1
       }
       return next
     })
   }
+
+  const hasComplementosSelected = Object.keys(selectedComplementos).length > 0
 
   // ── Imagen del artículo ───────────────────────────────────────────────────
   const imagenUrl =
@@ -248,7 +265,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                   {/* Opción por defecto: "Sin Complementos" */}
                   <Box
-                    onClick={() => setSelectedComplementos(new Set())}
+                    onClick={() => setSelectedComplementos({})}
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -256,18 +273,18 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                       px: 2,
                       py: 0.75,
                       border: '1px solid',
-                      borderColor: selectedComplementos.size === 0 ? 'primary.main' : 'divider',
+                      borderColor: !hasComplementosSelected ? 'primary.main' : 'divider',
                       borderRadius: 8, // Aspecto de Chip (pill)
                       cursor: 'pointer',
                       bgcolor:
-                        selectedComplementos.size === 0
+                        !hasComplementosSelected
                           ? (theme) => alpha(theme.palette.primary.main, 0.1)
                           : 'transparent',
                       transition: 'all 0.15s ease',
                       '&:hover': {
-                        borderColor: selectedComplementos.size === 0 ? 'primary.main' : 'text.disabled',
+                        borderColor: !hasComplementosSelected ? 'primary.main' : 'text.disabled',
                         bgcolor:
-                          selectedComplementos.size === 0
+                          !hasComplementosSelected
                             ? (theme) => alpha(theme.palette.primary.main, 0.15)
                             : 'action.hover',
                       },
@@ -275,8 +292,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                   >
                     <Typography
                       variant="body2"
-                      fontWeight={selectedComplementos.size === 0 ? 600 : 400}
-                      color={selectedComplementos.size === 0 ? 'primary.main' : 'text.primary'}
+                      fontWeight={!hasComplementosSelected ? 600 : 400}
+                      color={!hasComplementosSelected ? 'primary.main' : 'text.primary'}
                     >
                       Sin Complemento
                     </Typography>
@@ -284,7 +301,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
 
                   {(complementos ?? []).map((comp) => {
                     const compId = comp._id ?? ''
-                    const selected = selectedComplementos.has(compId)
+                    const qty = selectedComplementos[compId] || 0
+                    const selected = qty > 0
                     const precio = getPrecio(comp)
                     const compImagenUrl =
                       comp.imagen?.variants?.thumbnail ??
@@ -295,7 +313,11 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     return (
                       <Box
                         key={compId}
-                        onClick={() => toggleComplemento(compId)}
+                        onClick={() => toggleComplemento(compId, false)}
+                        onContextMenu={(e) => {
+                          e.preventDefault()
+                          toggleComplemento(compId, true)
+                        }}
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
@@ -341,6 +363,11 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             color={selected ? 'primary.main' : 'text.primary'}
                           >
                             {comp.nombreArticulo}
+                            {qty > 1 && (
+                              <Typography component="span" sx={{ color: 'primary.main', ml: 0.5, fontWeight: 900, fontSize: '0.8rem' }}>
+                                x{qty}
+                              </Typography>
+                            )}
                           </Typography>
                         </Box>
                         {precio > 0 && (
@@ -418,9 +445,25 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
             fullWidth
             size="large"
             onClick={() => {
-              // 1. Guardar las notas seleccionadas en el historial (LocalStorage)
               guardarUsoNotasLocal(selectedNotas, articulo.tipoArticulo?._id ?? articulo._id)
-              // 2. Cerrar el modal (o enviar pedido, dependiendo de tu lógica arriba)
+              if (onAdd) {
+                const arrComps = Object.entries(selectedComplementos).map(([cId, qty]) => {
+                  const compData = complementos?.find(c => c._id === cId)
+                  return {
+                    _id: cId,
+                    nombre: compData?.nombreArticulo || `Complemento ${cId}`,
+                    precio: compData ? getPrecio(compData) : 0,
+                    cantidad: qty
+                  }
+                })
+
+                onAdd({
+                  articulo,
+                  cantidad,
+                  notasIds: Array.from(selectedNotas),
+                  complementos: arrComps,
+                })
+              }
               onClose()
             }}
             sx={{

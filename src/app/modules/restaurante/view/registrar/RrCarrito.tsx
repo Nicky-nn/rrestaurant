@@ -17,7 +17,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
-import { FunctionComponent, useEffect, useState } from 'react'
+import { FunctionComponent, useEffect, useRef, useState } from 'react'
 
 import NumberSpinnerField from '../../../../base/components/NumberSpinnerField/NumberSpinnerField'
 import InputSearchClients from '../../../clients/components/InputSearchClients'
@@ -33,9 +33,11 @@ import RrOpciones from './RrOpciones'
 
 interface RrCarritoProps {
   mesaSeleccionada?: MesaUI | null
+  onUpdateProduct?: (index: number, updatedItem: ArticuloOperacion) => void
+  onRemoveProduct?: (index: number) => void
 }
 
-const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada }) => {
+const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpdateProduct, onRemoveProduct }) => {
   const theme = useTheme()
   const [openOpciones, setOpenOpciones] = useState(false)
   const [tipoPedido, setTipoPedido] = useState<TipoPedido>(TIPO_PEDIDO.SALON)
@@ -63,47 +65,65 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada }) => {
 
   const isOrderEdited = initialCartState !== '' && initialCartState !== currentCartState
 
+  const lastSyncRef = useRef({ mesaValue: '', pedidoId: '' })
+
   // Sincronizar datos del carrito según si la mesa ya tiene una orden existente.
   useEffect(() => {
-    if (mesaSeleccionada?.pedido) {
-      const _tipo = (mesaSeleccionada.pedido.tipo as TipoPedido) || TIPO_PEDIDO.SALON
-      const _nota = mesaSeleccionada.pedido.nota || ''
-      const _cliente = mesaSeleccionada.pedido.cliente || null
+    const nextMesaValue = mesaSeleccionada?.value || ''
+    const nextPedidoId = mesaSeleccionada?.pedido?._id || 'NUEVO'
 
-      setInitialCartState(
-        JSON.stringify({
-          pedidoId: mesaSeleccionada.pedido._id,
-          tipo: _tipo,
-          nota: _nota,
-          cliente: extractClienteData(_cliente),
-        }),
-      )
+    const isSameMesa = lastSyncRef.current.mesaValue === nextMesaValue
+    const isSamePedido = lastSyncRef.current.pedidoId === nextPedidoId
 
-      setTipoPedido(_tipo)
-      setNotaGeneral(_nota)
+    const isLocalTransition = isSameMesa && 
+      (lastSyncRef.current.pedidoId === 'NUEVO' || lastSyncRef.current.pedidoId.startsWith('nuevo-')) && 
+      (nextPedidoId === 'NUEVO' || nextPedidoId.startsWith('nuevo-'))
 
-      if (_cliente) {
-        setOpcionesLlevar({
-          cliente: _cliente,
-          horaRecojo: '',
-          solicitarUtensilios: false,
-        })
+    const shouldSync = !isSameMesa || (!isSamePedido && !isLocalTransition)
+
+    if (shouldSync) {
+      lastSyncRef.current = { mesaValue: nextMesaValue, pedidoId: nextPedidoId }
+
+      if (mesaSeleccionada?.pedido) {
+        const _tipo = (mesaSeleccionada.pedido.tipo as TipoPedido) || TIPO_PEDIDO.SALON
+        const _nota = mesaSeleccionada.pedido.nota || ''
+        const _cliente = mesaSeleccionada.pedido.cliente || null
+
+        setInitialCartState(
+          JSON.stringify({
+            pedidoId: mesaSeleccionada.pedido._id,
+            tipo: _tipo,
+            nota: _nota,
+            cliente: extractClienteData(_cliente),
+          }),
+        )
+
+        setTipoPedido(_tipo)
+        setNotaGeneral(_nota)
+
+        if (_cliente) {
+          setOpcionesLlevar({
+            cliente: _cliente,
+            horaRecojo: '',
+            solicitarUtensilios: false,
+          })
+        } else {
+          setOpcionesLlevar(null)
+        }
       } else {
+        // Mesa Libre / Nueva
+        setInitialCartState(
+          JSON.stringify({
+            pedidoId: 'NUEVO',
+            tipo: TIPO_PEDIDO.SALON,
+            nota: '',
+            cliente: null,
+          }),
+        )
+        setTipoPedido(TIPO_PEDIDO.SALON)
         setOpcionesLlevar(null)
+        setNotaGeneral('')
       }
-    } else {
-      // Mesa Libre / Nueva
-      setInitialCartState(
-        JSON.stringify({
-          pedidoId: 'NUEVO',
-          tipo: TIPO_PEDIDO.SALON,
-          nota: '',
-          cliente: null,
-        }),
-      )
-      setTipoPedido(TIPO_PEDIDO.SALON)
-      setOpcionesLlevar(null)
-      setNotaGeneral('')
     }
   }, [mesaSeleccionada])
 
@@ -255,7 +275,12 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada }) => {
             sx={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1 }}
           >
             {mesaSeleccionada.pedido?.productos?.map((producto, index) => (
-              <CartItem key={`${producto.articuloId || index}-${index}`} item={producto} />
+              <CartItem 
+                key={`${producto.articuloId || index}-${index}`} 
+                item={producto} 
+                onUpdate={(updated) => onUpdateProduct?.(index, updated)}
+                onRemove={() => onRemoveProduct?.(index)}
+              />
             ))}
           </Box>
 
@@ -334,20 +359,30 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada }) => {
 
 // ─── Sub-componente para item del carrito ───────────────────────────────────
 
-const CartItem = ({ item }: { item: ArticuloOperacion }) => {
+const CartItem = ({ item, onUpdate, onRemove }: { item: ArticuloOperacion, onUpdate: (updated: ArticuloOperacion) => void, onRemove: () => void }) => {
   const theme = useTheme()
   const [isEditing, setIsEditing] = useState(false)
 
   const originalCortesia = !!item.cortesia
   const originalPrecio = item.articuloPrecio?.valor ?? item.articuloPrecio?.monedaPrecio?.precio ?? 0
   const originalNota = item.nota || ''
-  const originalCantidad = item.articuloPrecio?.cantidad ?? 1
+  
+  // Leemos la cantidad siempre desde el prop (estado global de RestRegistrar)
+  const cantidad = item.articuloPrecio?.cantidad ?? item.articuloPrecioBase?.cantidad ?? 1
 
   const [isCortesia, setIsCortesia] = useState(originalCortesia)
   const [precioNum, setPrecioNum] = useState<number | null>(originalPrecio)
   const [descuentoNum, setDescuentoNum] = useState<number | null>(0)
   const [nota, setNota] = useState(originalNota)
-  const [cantidad, setCantidad] = useState(originalCantidad)
+
+  // Dispara actualización hacia arriba para la cantidad
+  const handleCantidadChange = (next: number) => {
+    onUpdate({
+      ...item,
+      articuloPrecio: { ...(item.articuloPrecio || {}), cantidad: next },
+      articuloPrecioBase: { ...(item.articuloPrecioBase || {}), cantidad: next }
+    })
+  }
 
   const sigla = item.articuloPrecio?.moneda?.sigla ?? item.articuloPrecioBase?.moneda?.sigla ?? '$'
 
@@ -355,8 +390,7 @@ const CartItem = ({ item }: { item: ArticuloOperacion }) => {
     isCortesia !== originalCortesia ||
     precioNum !== originalPrecio ||
     nota !== originalNota ||
-    descuentoNum !== 0 ||
-    cantidad !== originalCantidad
+    descuentoNum !== 0
 
   const extras =
     item.complementos
@@ -420,7 +454,7 @@ const CartItem = ({ item }: { item: ArticuloOperacion }) => {
             {/* Controles de Cantidad */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 1 }}>
               <IconButton
-                onClick={() => setCantidad(Math.max(1, cantidad - 1))}
+                onClick={() => handleCantidadChange(Math.max(1, cantidad - 1))}
                 size="small"
                 sx={{ bgcolor: 'grey.100', '&:hover': { bgcolor: 'grey.200' }, width: 24, height: 24 }}
               >
@@ -430,7 +464,7 @@ const CartItem = ({ item }: { item: ArticuloOperacion }) => {
                 {cantidad}
               </Typography>
               <IconButton
-                onClick={() => setCantidad(cantidad + 1)}
+                onClick={() => handleCantidadChange(cantidad + 1)}
                 size="small"
                 sx={{
                   bgcolor: alpha(theme.palette.primary.main, 0.1),
@@ -470,6 +504,7 @@ const CartItem = ({ item }: { item: ArticuloOperacion }) => {
               </IconButton>
               <IconButton
                 size="small"
+                onClick={onRemove}
                 sx={{ color: 'text.secondary', '&:hover': { bgcolor: 'action.hover' } }}
               >
                 <DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />

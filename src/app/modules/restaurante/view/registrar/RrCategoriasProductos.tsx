@@ -148,11 +148,12 @@ const SkeletonCard = () => (
 interface ProductCardProps {
   articulo: Articulo
   onClick?: (a: Articulo) => void
+  onAddProduct?: (payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number }> }) => void
   /** Si true, oculta el área de imagen (modo compacto para filas sin imágenes) */
   compact?: boolean
 }
 
-const ProductCard: FunctionComponent<ProductCardProps> = ({ articulo, onClick, compact = false }) => {
+const ProductCard: FunctionComponent<ProductCardProps> = ({ articulo, onClick, onAddProduct, compact = false }) => {
   const [complementoModalOpen, setComplementoModalOpen] = useState(false)
   const listaComplemento = articulo.listaComplemento ?? []
   const tieneComplementos = listaComplemento.length > 0
@@ -195,6 +196,12 @@ const ProductCard: FunctionComponent<ProductCardProps> = ({ articulo, onClick, c
                 setComplementoModalOpen(true)
               } else {
                 onClick?.(articulo)
+                onAddProduct?.({
+                  articulo,
+                  cantidad: 1,
+                  notasIds: [],
+                  complementos: [],
+                })
               }
             }}
             sx={{
@@ -371,6 +378,7 @@ const ProductCard: FunctionComponent<ProductCardProps> = ({ articulo, onClick, c
           onClose={() => setComplementoModalOpen(false)}
           articulo={articulo}
           listaComplemento={listaComplemento}
+          onAdd={onAddProduct}
         />
       )}
     </>
@@ -417,6 +425,7 @@ interface RrCategoriasProductosProps {
   espacios?: { _id?: string; descripcion?: string | null; default?: number | null }[]
   espacioSeleccionado?: string | null
   onChangeEspacio?: (espacioId: string | null) => void
+  onAddProduct?: (payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number }> }) => void
 }
 
 /**
@@ -428,6 +437,7 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
   espacios = [],
   espacioSeleccionado = null,
   onChangeEspacio,
+  onAddProduct,
 }) => {
   const { user } = useAuth()
   const codigoSucursal = user.sucursal.codigo
@@ -1038,6 +1048,7 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
                     articulo={articulo}
                     compact={compact}
                     onClick={(a) => console.log('[RrCategoriasProductos] Seleccionado:', a.nombreArticulo)}
+                    onAddProduct={onAddProduct}
                   />
                 ))}
                 {hasMore && <div style={{ gridColumn: '1 / -1', height: 1 }} />}
