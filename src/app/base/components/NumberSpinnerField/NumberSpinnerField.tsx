@@ -7,7 +7,7 @@ import { IMaskInput } from 'react-imask'
 const StyledIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.text.secondary,
   '&:disabled': {
-    color: theme.palette.text.secondary,
+    color: theme.palette.action.disabled,
   },
   '&:hover': {
     color: theme.palette.primary.main,
@@ -19,6 +19,9 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
   padding: 4.5,
 }))
 
+// =========================================================================
+// ADAPTADOR PARA react-imask
+// =========================================================================
 interface CustomProps {
   onChange: (event: { target: { name: string; value: string } }) => void
   name: string
@@ -26,7 +29,7 @@ interface CustomProps {
 }
 
 /**
- * Control para validar datos numéricos.
+ * Aplicamos la mascara al tipo numeric en el input
  * @author isi-template
  */
 const NumericFormatCustom = React.forwardRef<HTMLInputElement, CustomProps>(
@@ -45,18 +48,16 @@ const NumericFormatCustom = React.forwardRef<HTMLInputElement, CustomProps>(
         mask={Number}
         unmask={true}
         onAccept={(value) => {
-          return onChange({
-            target: {
-              name: props.name,
-              value,
-            },
-          })
+          onChange({ target: { name: props.name, value: value.toString() } })
         }}
       />
     )
   },
 )
 
+// =========================================================================
+// INTERFACES
+// =========================================================================
 export type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
   value?: number | null
   min?: number
@@ -64,51 +65,23 @@ export type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
   step?: number
   decimalScale?: number
   unit?: string
-  helperText?: string
-  textAlign?:
-    | '-moz-initial'
-    | 'inherit'
-    | 'initial'
-    | 'revert'
-    | 'revert-layer'
-    | 'unset'
-    | '-webkit-match-parent'
-    | 'center'
-    | 'end'
-    | 'justify'
-    | 'left'
-    | 'match-parent'
-    | 'right'
-    | 'start'
+  textAlign?: 'left' | 'center' | 'right'
   hideActionButtons?: boolean
   onChange?: (value: number | null) => void
   spinnerTabIndex?: boolean
   mostrarMensajeError?: boolean
+  customEndAdornment?: React.ReactNode
+  customStartAdornment?: React.ReactNode
 }
 
 /**
- * Control para datos numericos
+ * Componente principal que nos permite generar un input de tipo number con funciones de validacion, decimales, y todas las propiedades adjuntas
  * @author isi-template
- * @param value
- * @param min Valor minimo aceptado, default 0
- * @param max Valor maximo aceptado, default Infinity
- * @param step Step de incremento, default 1
- * @param decimalScale Decimales a mostrar, default 0
- * @param unit Unidad a mostrar, default '', Ejemplo: 'BOB, Kg'
- * @param singleUnit Unidad a mostrar cuando solo hay un valor, default '', Ejemplo: 'BOB'
- * @param helperText Texto de ayuda, default ''
- * @param mostrarMensajeError Muestra los mensajes de error, maximo y minimo, default true
- * @param textAlign
- * @param hideActionButtons
- * @param onChange
- * @param props
- * @constructor
  */
 const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(function NumberSpinnerField(
   props,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
-  // const t = useTranslations('NumberInput')
   const {
     disabled = false,
     hideActionButtons = false,
@@ -118,196 +91,217 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
     size = 'small',
     slotProps,
     step = 1,
-    value: valueProp,
+    value: valueProp = null, // Renombramos internamente para no confundir con el state
     textAlign = 'center',
     unit,
     helperText,
     decimalScale = 2,
     spinnerTabIndex = true,
     mostrarMensajeError = true,
+    customEndAdornment,
+    customStartAdornment,
     ...rest
   } = props
 
-  const intervalRef = useRef(null) // Referencia para almacenar el intervalo
-  const [stateValue, setStateValue] = useState<number | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+  // =======================================================================
+  // BUFFER TRANSITORIO Y CANDADOS DE RENDIMIENTO
+  // =======================================================================
+  const [localValue, setLocalValue] = useState<number | null>(valueProp)
+  const spinBufferRef = useRef<number | null>(valueProp)
+  // Candado para saber si estamos presionando la tecla
+  const isSpinningRef = useRef(false)
 
-  /**
-   * Cuando se presiona una tecla
-   * @param e
-   */
+  // Controladores de tiempo para el clic mantenido
+  const spinTimeoutRef = useRef<number | null>(null)
+  const spinIntervalRef = useRef<number | null>(null)
+
+  // Sincronizamos con el padre SOLO si el valor entrante es realmente distinto
+  useEffect(() => {
+    if (valueProp !== spinBufferRef.current) {
+      setLocalValue(valueProp)
+      spinBufferRef.current = valueProp
+    }
+  }, [valueProp])
+
+  // Limpieza de memoria al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (spinTimeoutRef.current) clearTimeout(spinTimeoutRef.current)
+      if (spinIntervalRef.current) clearInterval(spinIntervalRef.current)
+    }
+  }, [])
+
+  const updateBuffer = (newVal: number | null, isFinalChange: boolean) => {
+    // FRENO DE BUCLE: Si el valor es exactamente el mismo, no hacemos nada
+    if (newVal === spinBufferRef.current) return
+
+    spinBufferRef.current = newVal
+    setLocalValue(newVal) // Actualiza la UI instantáneamente
+
+    // Si es un cambio final avisamos al formulario
+    if (isFinalChange && onChange) {
+      onChange(newVal)
+    }
+  }
+
+  // Evaluamos el error visual basado en el valor actual del buffer
+  const isOutOfRange = localValue !== null && (localValue < min || localValue > max)
+  const dynamicHelperText =
+    mostrarMensajeError && isOutOfRange
+      ? localValue! < min
+        ? `El valor mínimo es ${min}`
+        : `El valor máximo es ${max}`
+      : helperText
+  // Si no hay texto de error, le pasamos un espacio en blanco (' ')
+  // Esto obliga a Material-UI a mantener la altura del contenedor siempre fija.
+  const finalHelperText = dynamicHelperText || ' '
+
+  // ===== HANDLERS DE INCREMENTO / DECREMENTO =====
+  const executeIncrement = (isFinalChange: boolean) => {
+    const current = spinBufferRef.current ?? 0
+    let next = Number((current + step).toFixed(decimalScale))
+    if (next > max) next = max
+    updateBuffer(next, isFinalChange)
+  }
+
+  const executeDecrement = (isFinalChange: boolean) => {
+    const current = spinBufferRef.current ?? 0
+    let next = Number((current - step).toFixed(decimalScale))
+    if (next < min) next = min
+    updateBuffer(next, isFinalChange)
+  }
+
+  // ===== HANDLERS DE BOTONES (Clic mantenido / Touch) =====
+  const startSpin = (direction: 'UP' | 'DOWN') => {
+    isSpinningRef.current = true // Activamos el candado para que IMask no interfiera
+
+    // 1. Salto inmediato (como si fuera un clic normal)
+    if (direction === 'UP') executeIncrement(false)
+    else executeDecrement(false)
+
+    // 2. Esperamos 400ms (Delay natural antes de empezar la repetición rápida)
+    spinTimeoutRef.current = setTimeout(() => {
+      // 3. Empezamos a sumar/restar a toda velocidad (cada 50 milisegundos)
+      spinIntervalRef.current = setInterval(() => {
+        if (direction === 'UP') executeIncrement(false)
+        else executeDecrement(false)
+      }, 50)
+    }, 400)
+  }
+
+  const stopSpin = () => {
+    isSpinningRef.current = false // Quitamos el candado
+
+    // Detenemos los motores
+    if (spinTimeoutRef.current) clearTimeout(spinTimeoutRef.current)
+    if (spinIntervalRef.current) clearInterval(spinIntervalRef.current)
+
+    // Enviamos el valor final acumulado al formulario principal al soltar el dedo/clic
+    if (onChange) {
+      onChange(spinBufferRef.current)
+    }
+  }
+
+  // ===== HANDLERS DE TECLADO (Mantener presionado) =====
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const char = getKeyDownChar(e)
-    if (!char)
-      // Ningun caracter
-      return
-    const target = e.target as HTMLInputElement
-    if (target.selectionStart == null || target.selectionEnd == null)
-      // Ninguna seleccion
-      return
-    return char
-  }
-
-  /**
-   * Incrementa el valor
-   */
-  const increment = (forceChange = false) => {
-    const newValue = Number(
-      ((stateValue != null && !Number.isNaN(stateValue) ? Number(stateValue) : 0) + step).toFixed(
-        decimalScale,
-      ),
-    )
-    if (newValue > max) {
-      return
-    }
-    setStateValue(newValue)
-    if (forceChange) {
-      if (onChange) onChange(newValue)
-    }
-  }
-
-  /**
-   * Decrementa el valor
-   */
-  const decrement = (forceChange = false) => {
-    const newValue = Number(
-      ((stateValue != null && !Number.isNaN(stateValue) ? Number(stateValue) : 0) - step).toFixed(
-        decimalScale,
-      ),
-    )
-
-    if (newValue < min) {
-      return
-    }
-    setStateValue(newValue)
-    if (forceChange) {
-      if (onChange) onChange(newValue)
-    }
-  }
-
-  /**
-   * Cuando se presiona una tecla
-   * @param e
-   */
-  const getKeyDownChar = (e: React.KeyboardEvent): string | undefined => {
     if (e.key === 'ArrowUp') {
-      if (intervalRef.current !== null) return
-      increment()
-      return
+      e.preventDefault()
+      isSpinningRef.current = true // Activamos el candado
+      executeIncrement(false)
     } else if (e.key === 'ArrowDown') {
-      if (intervalRef.current !== null) return
-      decrement()
-      return
+      e.preventDefault()
+      isSpinningRef.current = true // Activamos el candado
+      executeDecrement(false)
     }
   }
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      // Limpiar el intervalo cuando se suelta la tecla
-      if (intervalRef.current !== null) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-    // Estado final de cambio afuera
-    if (onChange) {
-      if (!stateValue) {
-        onChange(null)
-      } else {
-        onChange(Number(stateValue))
+      isSpinningRef.current = false // Quitamos el candado al soltar
+
+      // Enviamos el valor final acumulado al formulario principal
+      if (onChange) {
+        onChange(spinBufferRef.current)
       }
     }
   }
 
-  /**
-   * Actualizacion de datos y envio fuera del componente
-   * @param value
-   */
-  const updateChange = (value: string) => {
-    const formattedValue = clampNumber(value)
-    // console.log(formattedValue, value.toString())
-    setStateValue(formattedValue)
-    // console.log(formattedValue, min, max)
-    if (Number(formattedValue) < min) {
-      if (mostrarMensajeError) setErrorMessage(`Valor mínimo es ${min}`)
-    } else {
-      if (Number(formattedValue) > max) {
-        if (mostrarMensajeError) setErrorMessage('Valor maximo es ' + max)
-      } else {
-        setErrorMessage(undefined)
-      }
-    }
-  }
-
-  /**
-   * Evento on change del componente
-   * @param e
-   */
+  // ===== HANDLER DE ESCRITURA NORMAL (Tipeo con IMask) =====
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateChange(e.target.value)
-  }
+    const valStr = e.target.value
+    const nextVal = valStr === '' ? null : Number(valStr)
 
-  /******************************************************************************/
-  /******************************************************************************/
-  useEffect(() => {
-    setStateValue(valueProp ?? null)
-  }, [valueProp])
+    // Si IMask dispara esto mientras mantenemos presionada la flecha,
+    // isSpinningRef será true, por lo que bloqueamos el envío final al padre.
+    updateBuffer(nextVal, !isSpinningRef.current)
+  }
 
   return (
     <TextField
       {...rest}
       ref={ref}
-      value={stateValue?.toString() || null} // We can't ever pass null to value because it breaks the shrink state of the label, so we pass empty string instead
+      value={localValue?.toString() ?? ''} // Usamos nuestro valor local rápido
       disabled={disabled}
       size={size}
       autoComplete={'off'}
       onKeyDown={handleKeyDown}
-      onChange={handleChange}
       onKeyUp={handleKeyUp}
-      helperText={errorMessage || helperText}
-      error={props.error || Number(stateValue) < min || Number(stateValue) > max}
+      onChange={handleChange}
+      helperText={finalHelperText}
+      error={props.error || isOutOfRange}
       placeholder={props.placeholder || min.toString()}
       slotProps={{
         ...slotProps,
         input: {
-          // sx: {
-          //   fontSize: '1.16em',
-          // },
           inputComponent: NumericFormatCustom as any,
           inputProps: {
             scale: decimalScale,
-            style: {
-              textAlign: textAlign,
-              // height: 20,
-            },
+            style: { textAlign },
           },
-          startAdornment: !hideActionButtons && (
+          startAdornment: (!hideActionButtons || customStartAdornment) && (
             <InputAdornment position="start" sx={{ mr: 0.7 }}>
-              <StyledIconButton
-                aria-label="decrementar valor"
-                onClick={() => decrement(true)}
-                edge="start"
-                disabled={disabled || (Number(stateValue) || 0) - step < min}
-                tabIndex={spinnerTabIndex ? undefined : -1}
-              >
-                <RemoveCircle />
-              </StyledIconButton>
+              {customStartAdornment}
+              {!hideActionButtons && (
+                <StyledIconButton
+                  aria-label="decrementar valor"
+                  edge="start"
+                  disabled={disabled || (localValue !== null && localValue - step < min)}
+                  tabIndex={spinnerTabIndex ? undefined : -1}
+                  onPointerDown={(e) => {
+                    e.preventDefault()
+                    startSpin('DOWN')
+                  }}
+                  onPointerUp={stopSpin}
+                  onPointerLeave={stopSpin}
+                  onPointerCancel={stopSpin}
+                >
+                  <RemoveCircle />
+                </StyledIconButton>
+              )}
             </InputAdornment>
           ),
-          endAdornment: (unit || !hideActionButtons) && (
+          endAdornment: (unit || !hideActionButtons || customEndAdornment) && (
             <InputAdornment position="end">
+              {customEndAdornment}
               {unit && (
-                <Typography component={'span'} fontSize={'smaller'} sx={{ lineHeight: 0, mt: 0.3 }}>
+                <Typography component={'span'} fontSize={'smaller'} sx={{ lineHeight: 0, mt: 0.3, px: 0.5 }}>
                   {unit}
                 </Typography>
               )}
               {!hideActionButtons && (
                 <StyledIconButton
                   aria-label="incrementar valor"
-                  onClick={() => increment(true)}
                   edge="end"
-                  disabled={disabled || (Number(stateValue) || 0) + step > max}
+                  disabled={disabled || (localValue !== null && localValue + step > max)}
                   tabIndex={spinnerTabIndex ? undefined : -1}
+                  // ¡Usamos Pointer Events para unificar Mouse y Touch!
+                  onPointerDown={(e) => {
+                    e.preventDefault() // Evita perder foco
+                    startSpin('UP')
+                  }}
+                  onPointerUp={stopSpin}
+                  onPointerLeave={stopSpin}
+                  onPointerCancel={stopSpin} // Corta el giro si el sistema interrumpe el gesto (ej. scroll)
                 >
                   <AddCircleOutlined />
                 </StyledIconButton>
@@ -324,13 +318,4 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
   )
 })
 
-export default NumberSpinnerField
-
-/**
- * Conversion y verificación de un valor a numérico
- * @param val
- */
-const clampNumber = (val: any): number | null => {
-  if (val === undefined) return null
-  return val
-}
+export default React.memo(NumberSpinnerField)

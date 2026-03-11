@@ -4,9 +4,9 @@ const validateGraphQlError = (e: Error): any => {
     if (!parsed.response || parsed.response?.status === 404) {
       return {
         status: 404,
-        message: e.message,
+        message: e.message || 'Recurso no encontrado',
+        stacktrace: `<pre>Error: Network Error\\n    at XMLHttpRequest.send</pre>`,
         originalMessage: 'Error conexión con el servidor',
-        stacktrace: `<pre></pre>`,
         type: 'BAD_REQUEST',
         path: 'fontEnd',
       }
@@ -16,13 +16,11 @@ const validateGraphQlError = (e: Error): any => {
       status: parsed.response?.errors[0]?.extensions?.status || 400,
       message: parsed.response?.errors[0]?.message || 'Error no definido',
       originalMessage: parsed.response?.errors[0]?.extensions?.originalMessage || '',
-      stacktrace: `<code>${
-        parsed.response?.errors[0]?.extensions?.stacktrace?.join('') || ''
-      }</code>`,
+      stacktrace: `<code>${parsed.response?.errors[0]?.extensions?.stacktrace?.join('') || 'No stacktrace available'}</code>`,
       type: parsed.response?.errors[0]?.extensions?.code || 'BAD_REQUEST',
       path: parsed.response?.errors[0]?.path.join('<br />') || '',
     }
-  } catch (erno: any) {
+  } catch {
     return {
       status: 400,
       message: e?.message || 'Error no definido',
@@ -39,6 +37,7 @@ const validateGraphQlError = (e: Error): any => {
  * @author isi-template
  */
 export class MyGraphQlError extends Error {
+  cause?: string
   constructor(e: Error) {
     const errors = validateGraphQlError(e)
     super(errors.message) // (1)

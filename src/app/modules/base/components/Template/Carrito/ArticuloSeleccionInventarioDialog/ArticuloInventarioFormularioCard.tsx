@@ -1,15 +1,17 @@
-import { Box, Divider, FormControl, Grid, Paper, Stack, styled, TextField, Typography } from '@mui/material'
+import { ArticleOutlined } from '@mui/icons-material'
+import { Box, Divider, FormControl, Grid, Paper, Stack, TextField, Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
-import React, { FunctionComponent, useEffect, useMemo } from 'react'
+import React, { FunctionComponent, useCallback, useEffect, useMemo } from 'react'
 import { Control, Controller, UseFormSetValue, useWatch } from 'react-hook-form'
 
 import { apiAlmacenPorSucursalListado } from '../../../../../../base/api/apiAlmacenPorSucursalListado.ts'
-import { SimpleBox } from '../../../../../../base/components/Container/SimpleBox.tsx'
+import { FormDescuentoField } from '../../../../../../base/components/Form/FormDescuentoField.tsx'
 import FormSelect from '../../../../../../base/components/Form/FormSelect.tsx'
 import { numberWithCommasPlaces } from '../../../../../../base/components/MyInputs/NumberInput.tsx'
 import NumberSpinnerField from '../../../../../../base/components/NumberSpinnerField/NumberSpinnerField.tsx'
 import MontoMonedaTexto from '../../../../../../base/components/PopoverMonto/MontoMonedaTexto.tsx'
 import { PreloadFieldSkeleton } from '../../../../../../base/components/skeleton/PreloadFieldSkeleton.tsx'
+import SimpleCard from '../../../../../../base/components/Template/Cards/SimpleCard.tsx'
 import { transformarArticuloPrecioService } from '../../../../../../base/services/transformarArticuloPrecioService.ts'
 import { EntidadInputProps } from '../../../../../../interfaces'
 import { ArticuloProps } from '../../../../../../interfaces/articulo.ts'
@@ -38,41 +40,165 @@ import {
   PrecioSeleccionProps,
 } from './ArticuloSeleccionInventarioTypes.ts'
 
-// IMPORTANTE: Estilo para TextField readonly | oculto
-const TextFieldReadonly = styled(TextField)(({ theme }) => ({
-  '& .MuiOutlinedInput-root': {
-    transition: theme.transitions.create(['background-color', 'box-shadow', 'border-color']),
+// =========================================================================
+// ENVOLTORIO PARA AISLAR EL RENDER DEL DESCUENTO
+// =========================================================================
+interface WrapperDescuentoProps {
+  control: Control<ArticuloOperacionInputProps>
+  setValue: UseFormSetValue<ArticuloOperacionInputProps>
+  monedaSigla: string
+  disabled?: boolean
+  nroDecimales: number
+}
 
-    // IMPORTANTE: Quitamos el outline del elemento de entrada interno
-    '& input': {
-      outline: 'none',
-    },
+const WrapperDescuento: FunctionComponent<WrapperDescuentoProps> = ({
+  control,
+  setValue,
+  monedaSigla,
+  disabled,
+  nroDecimales,
+}) => {
+  // Solo este pequeño wrapper se re-renderiza cuando cambian la cantidad o el precio
+  const [cantidad, precio] = useWatch({
+    control,
+    name: ['cantidad', 'precio'],
+  })
 
-    // Estado normal y Hover (ya lo habíamos dejado estático)
-    '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: theme.palette.divider,
-      transition: 'border-color 0.2s',
-    },
-    '&:hover .MuiOutlinedInput-notchedOutline': {
-      borderColor: theme.palette.divider, // Mantiene el gris
-    },
+  const subtotal = (Number(cantidad) || 0) * (Number(precio) || 0)
 
-    // ESTADO FOCO (Cuando entras con TAB o Click)
-    '&.Mui-focused': {
-      // Forzamos que el borde sea el nuestro y no el default
-      '& .MuiOutlinedInput-notchedOutline': {
-        borderColor: theme.palette.divider,
-        borderWidth: '1px', // Evitamos que se engrose (MUI usa 2px por defecto)
-      },
-    },
-  },
-}))
+  return (
+    <FormDescuentoField
+      control={control}
+      setValue={setValue}
+      namePorcentaje="descuentoP"
+      nameMonto="descuento"
+      subtotal={subtotal}
+      monedaSigla={monedaSigla}
+      disabled={disabled}
+      nroDecimales={nroDecimales}
+    />
+  )
+}
 
-// Estilo para el box de readonly
-const ReadOnlyBox = styled(Box)(({ theme }) => ({
-  // Estética: Fondo gris muy tenue y borde sólido sutil
-  backgroundColor: theme.palette.background.paper,
-}))
+// =========================================================================
+// COMPONENTE AISLADO: RESUMEN DE CÁLCULOS
+// Extraemos la observación de campos de alta frecuencia aquí
+// para evitar re-renderizar al momento de teclear
+// =========================================================================
+interface ResumenCalculosProps {
+  control: Control<ArticuloOperacionInputProps>
+  moneda: MonedaProps
+}
+
+/**
+ * Componente para generar los totales
+ * @param control
+ * @param setValue
+ * @param moneda
+ * @constructor
+ */
+const ResumenCalculos: FunctionComponent<ResumenCalculosProps> = ({ control, moneda }) => {
+  // 1. Escuchamos directamente el MONTO (descuento), no el porcentaje
+  const [cantidad, precio, descuentoMonto, descuentoPWatch] = useWatch({
+    control,
+    name: ['cantidad', 'precio', 'descuento', 'descuentoP'],
+  })
+
+  // 2. Cálculos simples
+  const calculos = useMemo(() => {
+    const subtotal = (Number(cantidad) || 0) * (Number(precio) || 0)
+    const montoDescuento = Number(descuentoMonto) || 0 // Ya viene calculado desde el wrapper
+    const totalNeto = subtotal - montoDescuento
+
+    return { subtotal, montoDescuento, totalNeto }
+  }, [cantidad, precio, descuentoMonto])
+
+  return (
+    <Paper
+      variant="outlined"
+      sx={{
+        pt: { xs: 0.5, sm: 0.3 },
+        pl: { xs: 1, sm: 1.5 },
+        pr: { xs: 1, sm: 1.5 },
+        pb: { xs: 0.5, sm: 0.1 },
+        bgcolor: 'background.default',
+        borderColor: 'primary.light',
+        position: 'relative',
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '4px',
+          height: '100%',
+          bgcolor: 'primary.main',
+        },
+        width: '100%',
+        boxSizing: 'border-box',
+      }}
+    >
+      <Stack spacing={0.1}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+          <Typography variant="body2" color="text.secondary" noWrap>
+            Subtotal
+          </Typography>
+          <MontoMonedaTexto
+            boxProps={{ fontSize: 'medium' }}
+            monto={calculos.subtotal}
+            sigla={moneda.sigla}
+          />
+        </Stack>
+
+        {/* DESCUENTO */}
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="body2" color="text.secondary" noWrap>
+            Descuento{' '}
+            <Box component="span" sx={{ color: 'error.main', fontWeight: 700 }}>
+              {/* Seguimos mostrando el % visualmente para el cliente */}(
+              {Number(descuentoPWatch || 0).toFixed(2)}%)
+            </Box>
+          </Typography>
+          <MontoMonedaTexto
+            boxProps={{ color: 'error.main', fontSize: 'medium' }}
+            label={'- '}
+            monto={calculos.montoDescuento} // Mostramos el monto exacto
+            sigla={moneda.sigla}
+          />
+        </Stack>
+
+        <Divider sx={{ borderStyle: 'dashed', pt: 0.5 }} />
+
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="baseline"
+          spacing={1}
+          sx={{ width: '100%' }}
+        >
+          <Typography
+            variant="button"
+            sx={{
+              fontSize: { xs: '0.90rem', sm: '1rem' },
+              fontWeight: 800,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            TOTAL
+          </Typography>
+          <MontoMonedaTexto
+            boxProps={{
+              color: (theme) => theme.palette.blue.light,
+              fontSize: 'large',
+            }}
+            monto={calculos.totalNeto}
+            sigla={moneda.sigla}
+          />
+        </Stack>
+      </Stack>
+    </Paper>
+  )
+}
 
 interface OwnProps {
   control: Control<ArticuloOperacionInputProps>
@@ -118,9 +244,10 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
   } = props
 
   // ===== OBSERVACON DE CAMPOS DEL FORMULARIO =====
-  const [cantidadWatch, precioWatch, descuentoPWatch, almacenWatch, articuloUnidadMedidaWatch] = useWatch({
+  // Solo observamos dependencias estructurales que cambian selects o listas
+  const [almacenWatch, articuloUnidadMedidaWatch] = useWatch({
     control,
-    name: ['cantidad', 'precio', 'descuentoP', 'almacen', 'articuloUnidadMedida'],
+    name: ['almacen', 'articuloUnidadMedida'],
   })
 
   // ===== CARGA DE ALMACENES DESDE TABLA (solo si fuente === 'tbl') =====
@@ -159,7 +286,6 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     if (!almacenWatch?.codigoAlmacen) return []
 
     const fuente = loteProps.fuente || 'inv'
-
     if (fuente === 'inv') {
       // Usar lotes del inventario del artículo por almacén
       const inventarioDetalle = articulo?.inventario?.[0]?.detalle || []
@@ -205,32 +331,6 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     return 'Precio unitario'
   }, [precioProps?.tipoMonto])
 
-  // ===== CÁLCULOS DE MONTOS =====
-  const calculos = useMemo(() => {
-    const cant = Number(cantidadWatch) || 0
-    const prec = Number(precioWatch) || 0
-    const descPorc = Number(descuentoPWatch) || 0
-
-    const subtotal = cant * prec
-    const montoDescuento = subtotal * (descPorc / 100)
-    const totalNeto = subtotal - montoDescuento
-
-    return {
-      subtotal,
-      montoDescuento,
-      totalNeto,
-    }
-  }, [cantidadWatch, precioWatch, descuentoPWatch])
-
-  // ===== EFECTOS =====
-  // Sincronizar monto de descuento con el campo del formulario
-  useEffect(() => {
-    setValue('descuento', calculos.montoDescuento || 0, {
-      shouldValidate: true,
-      shouldDirty: true,
-    })
-  }, [calculos.montoDescuento, setValue])
-
   // Mapeamos articulo en map para facil acceso de valores
   const articuloPrecioMap = useMemo(() => {
     if (!articulo) return new Map()
@@ -241,36 +341,63 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
       ]),
     )
   }, [articulo])
-
   // Cambio de unidad de medida y seteamos el precio en función configuracion de tipo moneda
-  const onChangeUnidadMedida = (item: ArticuloUnidadMedidaProps | null) => {
-    if (!item) return
-    // Si los codigos son iguales no hacemos nada
-    if (item.codigoUnidadMedida === articuloUnidadMedidaWatch?.codigoUnidadMedida) return
+  const onChangeUnidadMedida = useCallback(
+    (item: ArticuloUnidadMedidaProps | null) => {
+      if (!item) return
+      // Si los codigos son iguales no hacemos nada
+      if (item.codigoUnidadMedida === articuloUnidadMedidaWatch?.codigoUnidadMedida) return
 
-    const articuloPrecio = articuloPrecioMap.get(item.codigoUnidadMedida)
-    if (!articuloPrecio) return
+      const articuloPrecio = articuloPrecioMap.get(item.codigoUnidadMedida)
+      if (!articuloPrecio) return
 
-    const monedaPrecio = transformarArticuloPrecioService(articuloPrecio, moneda)
-    let precioFinal = monedaPrecio.precio
+      const monedaPrecio = transformarArticuloPrecioService(articuloPrecio, moneda)
+      let precioFinal = monedaPrecio.precio
 
-    if (precioProps?.tipoMonto === 'precio') precioFinal = monedaPrecio.precio
-    if (precioProps?.tipoMonto === 'costo') precioFinal = monedaPrecio.precioBase
-    if (precioProps?.tipoMonto === 'delivery') precioFinal = monedaPrecio.delivery
+      if (precioProps?.tipoMonto === 'precio') precioFinal = monedaPrecio.precio
+      if (precioProps?.tipoMonto === 'costo') precioFinal = monedaPrecio.precioBase
+      if (precioProps?.tipoMonto === 'delivery') precioFinal = monedaPrecio.delivery
 
-    setValue('precio', precioFinal, {
-      shouldValidate: true,
-      shouldDirty: true,
-    })
-  }
+      setValue('precio', precioFinal, {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+    },
+    [
+      articuloPrecioMap,
+      articuloUnidadMedidaWatch?.codigoUnidadMedida,
+      moneda,
+      precioProps?.tipoMonto,
+      setValue,
+    ],
+  )
+
+  const handleAlmacenChange = useCallback(
+    (newValue: any, fieldOnChange: (val: any) => void) => {
+      fieldOnChange(newValue)
+      setValue('lote', null)
+    },
+    [setValue],
+  )
+
+  const handleUnidadMedidaChange = useCallback(
+    (item: any, fieldOnChange: (val: any) => void) => {
+      fieldOnChange(item)
+      onChangeUnidadMedida(item)
+    },
+    [onChangeUnidadMedida],
+  )
 
   /***********************************************************************************/
   /***********************************************************************************/
   /***********************************************************************************/
   // ===== RENDERIZADO =====
   return (
-    <SimpleBox sx={{ p: 2, pt: 3 }}>
-      <Grid container rowSpacing={2.6} columnSpacing={1.5}>
+    <SimpleCard
+      title={`${articulo.codigoArticulo}: ${articulo.nombreArticulo}`}
+      childIcon={<ArticleOutlined />}
+    >
+      <Grid container rowSpacing={2.7} columnSpacing={1.5}>
         <Grid size={12}>
           {/* ALMACENES */}
           <Controller
@@ -284,11 +411,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
                     placeholder="Seleccione un almacén..."
                     options={almacenes || []}
                     value={field.value}
-                    onChange={(newValue) => {
-                      field.onChange(newValue)
-                      // Limpiar lote al cambiar almacén
-                      setValue('lote', null)
-                    }}
+                    onChange={(newValue) => handleAlmacenChange(newValue, field.onChange)}
                     getOptionValue={(item) => item.codigoAlmacen}
                     getOptionLabel={(item) => `${item.codigoAlmacen} - ${item.nombre}`}
                     error={!!error}
@@ -334,10 +457,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
               <ArticuloUnidadMedidaSeleccion
                 value={field.value}
                 error={error?.message}
-                onChange={(item) => {
-                  field.onChange(item)
-                  onChangeUnidadMedida(item)
-                }}
+                onChange={(item) => handleUnidadMedidaChange(item, field.onChange)}
                 datos={articulosUnidadMedida}
                 unidadMedidaProps={unidadMedidaProps}
               />
@@ -347,32 +467,34 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
         </Grid>
         {/* CANTIDAD */}
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
-          {cantidadProps?.readOnly || cantidadProps?.ocultar ? (
-            <ReadOnlyBox>
-              <TextFieldReadonly
-                id="cantidad-outline-saskdd"
-                label={cantidadProps?.label ?? 'Cantidad *'}
-                value={cantidadProps?.ocultar ? '--' : numberWithCommasPlaces(cantidadWatch || 0)}
-                size={'small'}
-                fullWidth
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    endAdornment: moneda.sigla,
-                  },
-                }}
-              />
-            </ReadOnlyBox>
-          ) : (
-            <Controller
-              control={control}
-              render={({ field, fieldState: { error } }) => (
+          <Controller
+            control={control}
+            name="cantidad"
+            render={({ field, fieldState: { error } }) => {
+              if (cantidadProps?.readOnly || cantidadProps?.ocultar) {
+                return (
+                  <TextField
+                    id="cantidad-readonly"
+                    label={cantidadProps?.label ?? 'Cantidad *'}
+                    value={
+                      cantidadProps?.ocultar
+                        ? '--'
+                        : numberWithCommasPlaces(field.value || 0, cantidadProps?.nroDecimales ?? 2)
+                    }
+                    size="small"
+                    fullWidth
+                    disabled={true}
+                    slotProps={{ input: { readOnly: true, endAdornment: moneda.sigla } }}
+                  />
+                )
+              }
+              return (
                 <NumberSpinnerField
                   min={0}
-                  decimalScale={2}
+                  decimalScale={cantidadProps?.nroDecimales ?? 2}
                   step={1}
                   label={cantidadProps?.label ?? 'Cantidad'}
-                  size={'small'}
+                  size="small"
                   fullWidth
                   onClick={handleFocus}
                   onChange={field.onChange}
@@ -383,37 +505,37 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
                   disabled={cantidadProps?.disabled ?? false}
                   required
                 />
-              )}
-              name={'cantidad'}
-            />
-          )}
+              )
+            }}
+          />
         </Grid>
         {/* PRECIO */}
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
-          {precioProps?.readOnly || precioProps?.ocultar ? (
-            <ReadOnlyBox>
-              <TextFieldReadonly
-                id="precio-outline-saskdd"
-                label={precioProps?.label ?? precioLabel}
-                value={precioProps?.ocultar ? '--' : numberWithCommasPlaces(precioWatch || 0)}
-                size={'small'}
-                fullWidth
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    endAdornment: moneda.sigla,
-                  },
-                }}
-              />
-            </ReadOnlyBox>
-          ) : (
-            <Controller
-              name={'precio'}
-              control={control}
-              render={({ field, fieldState: { error } }) => (
+          <Controller
+            control={control}
+            name="precio"
+            render={({ field, fieldState: { error } }) => {
+              if (precioProps?.readOnly || precioProps?.ocultar) {
+                return (
+                  <TextField
+                    id="precio-readonly"
+                    label={precioProps?.label ?? precioLabel}
+                    value={
+                      precioProps?.ocultar
+                        ? '--'
+                        : numberWithCommasPlaces(field.value || 0, precioProps?.nroDecimales ?? 2)
+                    }
+                    size="small"
+                    fullWidth
+                    disabled={true}
+                    slotProps={{ input: { readOnly: true, endAdornment: moneda.sigla } }}
+                  />
+                )
+              }
+              return (
                 <NumberSpinnerField
                   label={precioProps?.label ?? precioLabel}
-                  size={'small'}
+                  size="small"
                   min={0}
                   fullWidth
                   onClick={handleFocus}
@@ -425,150 +547,54 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
                   unit={moneda.sigla}
                   spinnerTabIndex={false}
                   disabled={precioProps?.disabled ?? false}
+                  hideActionButtons={true}
+                  decimalScale={precioProps?.nroDecimales ?? 2}
                 />
-              )}
-            />
-          )}
+              )
+            }}
+          />
         </Grid>
         {/* DESCUENTO */}
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           {descuentoProps?.readOnly || descuentoProps?.ocultar ? (
-            <ReadOnlyBox>
-              <TextFieldReadonly
-                id="precio-outline-saskdd"
-                label={descuentoProps?.label ?? 'Descuento %'}
-                value={descuentoProps?.ocultar ? '--' : numberWithCommasPlaces(descuentoPWatch)}
-                size={'small'}
-                fullWidth
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    endAdornment: moneda.sigla,
-                  },
-                }}
-              />
-            </ReadOnlyBox>
+            <TextField
+              id="descuento-readonly"
+              label={descuentoProps?.label ?? 'Descuento'}
+              // Mostramos el monto directamente, ya que el cálculo interno lo mantiene actualizado
+              value={
+                descuentoProps?.ocultar
+                  ? '--'
+                  : numberWithCommasPlaces(
+                      control._formValues.descuento || 0,
+                      descuentoProps?.nroDecimales ?? 2,
+                    )
+              }
+              size="small"
+              fullWidth
+              disabled={true}
+              slotProps={{ input: { readOnly: true, endAdornment: moneda.sigla } }}
+            />
           ) : (
-            <Controller
-              name={'descuentoP'}
+            <WrapperDescuento
               control={control}
-              render={({ field, fieldState: { error } }) => (
-                <NumberSpinnerField
-                  label={descuentoProps?.label ?? 'Descuento %'}
-                  min={0}
-                  max={100}
-                  decimalScale={2}
-                  step={1}
-                  size={'small'}
-                  fullWidth
-                  onClick={handleFocus}
-                  onChange={field.onChange}
-                  value={field.value}
-                  helperText={error?.message || ''}
-                  error={Boolean(error)}
-                  required
-                  unit={`% ${moneda.sigla || ''}`}
-                  spinnerTabIndex={false}
-                  disabled={descuentoProps?.disabled ?? false}
-                />
-              )}
+              setValue={setValue}
+              monedaSigla={moneda.sigla}
+              disabled={descuentoProps?.disabled}
+              nroDecimales={descuentoProps?.nroDecimales ?? 2}
             />
           )}
         </Grid>
-        {/* CÁLCULOS */}
+        {/* CÁLCULOS AISLADOS */}
         {!ocultarCalculos && (
           <Grid size={12}>
-            <Box>
-              <Paper
-                variant="outlined"
-                sx={{
-                  pt: { xs: 0.5, sm: 0.3 },
-                  pl: { xs: 1, sm: 1.5 },
-                  pr: { xs: 1, sm: 1.5 },
-                  pb: { xs: 0.5, sm: 0.1 },
-                  bgcolor: 'background.default',
-                  borderColor: 'primary.light',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '4px',
-                    height: '100%',
-                    bgcolor: 'primary.main',
-                  },
-                  width: '100%',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <Stack spacing={0.1}>
-                  {/* Línea de Subtotal */}
-                  <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      Subtotal
-                    </Typography>
-                    <MontoMonedaTexto
-                      boxProps={{ fontSize: 'medium' }}
-                      monto={calculos.subtotal}
-                      sigla={moneda.sigla}
-                    />
-                  </Stack>
-
-                  {/* Línea de Descuento */}
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      Descuento{' '}
-                      <Box component="span" sx={{ color: 'error.main', fontWeight: 700 }}>
-                        ({descuentoPWatch || 0}%)
-                      </Box>
-                    </Typography>
-                    <MontoMonedaTexto
-                      boxProps={{ color: 'error.main', fontSize: 'medium' }}
-                      label={'- '}
-                      monto={calculos.montoDescuento}
-                      sigla={moneda.sigla}
-                    />
-                  </Stack>
-
-                  <Divider sx={{ borderStyle: 'dashed', pt: 0.5 }} />
-
-                  {/* TOTAL FINAL */}
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="baseline"
-                    spacing={1}
-                    sx={{ width: '100%' }}
-                  >
-                    <Typography
-                      variant="button"
-                      sx={{
-                        fontSize: { xs: '0.90rem', sm: '1rem' },
-                        fontWeight: 800,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      TOTAL
-                    </Typography>
-                    <MontoMonedaTexto
-                      boxProps={{
-                        color: (theme) => theme.palette.blue.light,
-                        fontSize: 'large',
-                      }}
-                      monto={calculos.totalNeto}
-                      sigla={moneda.sigla}
-                    />
-                  </Stack>
-                </Stack>
-              </Paper>
+            <Box mt={-1.5}>
+              <ResumenCalculos control={control} moneda={moneda} />
             </Box>
           </Grid>
         )}
       </Grid>
-    </SimpleBox>
+    </SimpleCard>
   )
 }
 
-export default ArticuloInventarioFormularioCard
+export default React.memo(ArticuloInventarioFormularioCard)

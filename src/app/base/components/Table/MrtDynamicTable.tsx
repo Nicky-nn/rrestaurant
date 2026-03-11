@@ -345,9 +345,9 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
         header: 'Opciones',
         size: (() => {
           // 1. Calculamos el ancho de los iconos base (35px c/u)
-          const iconWidth = (config.rowIconsActions?.length || 0) * 30
-          const auditWidth = config.showAudit ? 30 : 0
-          const menuWidth = config.rowMenuActions ? 30 : 0
+          const iconWidth = (config.rowIconsActions?.length || 0) * 32
+          const auditWidth = config.showAudit ? 32 : 0
+          const menuWidth = config.rowMenuActions ? 32 : 0
 
           // Sumamos los anchos definidos por el usuario o un default de 80px por botón
           const customActionsWidth = Array.isArray(config.rowActions)
