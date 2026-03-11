@@ -75,6 +75,7 @@ bun.lock
 
 # Python scripts auxiliares
 *.py
+!isi_gql_generator.py
 *.pyc
 __pycache__/
 venv/
