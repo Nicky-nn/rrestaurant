@@ -138,6 +138,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
   const isOrderEdited = initialCartState !== '' && initialCartState !== currentCartState
 
   const lastSyncRef = useRef({ mesaValue: '', pedidoId: '' })
+  const lastSnapshotUpdateRef = useRef<number>(0)
 
   // Sincronizar datos del carrito según si la mesa ya tiene una orden existente.
   useEffect(() => {
@@ -152,12 +153,23 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
       (lastSyncRef.current.pedidoId === 'NUEVO' || lastSyncRef.current.pedidoId.startsWith('nuevo-')) &&
       (nextPedidoId === 'NUEVO' || nextPedidoId.startsWith('nuevo-'))
 
-    const shouldSync = !isSameMesa || (!isSamePedido && !isLocalTransition)
+    const currentSnapshotUpdate = (mesaSeleccionada?.pedido as any)?._forceSnapshotUpdate || 0
+    const needsSnapshotUpdate = currentSnapshotUpdate > lastSnapshotUpdateRef.current
+
+    const shouldSync = 
+      !isSameMesa || 
+      (!isSamePedido && !isLocalTransition) || 
+      // Force sync if the pedido just transitioned from 'nuevo-' to a real ID via 'Registrar'
+      (lastSyncRef.current.pedidoId.startsWith('nuevo-') && !nextPedidoId.startsWith('nuevo-') && nextPedidoId !== 'NUEVO') ||
+      // Or if it was explicitly updated via success callback
+      needsSnapshotUpdate
 
     if (shouldSync) {
       lastSyncRef.current = { mesaValue: nextMesaValue, pedidoId: nextPedidoId }
+      lastSnapshotUpdateRef.current = currentSnapshotUpdate
 
       if (mesaSeleccionada?.pedido) {
+        // When pedidoRetornado arrives, we update the initial snapshot to remove the dirty state
         const _tipo = (mesaSeleccionada.pedido.tipo as TipoPedido) || TIPO_PEDIDO.SALON
         const _nota = mesaSeleccionada.pedido.nota || ''
         const _cliente = mesaSeleccionada.pedido.cliente || null

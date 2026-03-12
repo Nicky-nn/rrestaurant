@@ -10,6 +10,7 @@ import { FunctionComponent, useMemo, useState } from 'react'
 import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto'
 import useAuth from '../../../../base/hooks/useAuth'
 import { MesaUI } from '../../interfaces/mesa.interface'
+import { useRestPedidoActualizar } from '../../mutations/useRestPedidoActualizar'
 import { useRestPedidoRegistrarCompletar } from '../../mutations/useRestPedidoRegistrarCompletar'
 import { RestPedidoExpressInput } from '../../types'
 
@@ -29,8 +30,10 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
   const [descuento, setDescuento] = useState<number>(0)
   const [giftcard, setGiftcard] = useState<number>(0)
 
-  const { mutateAsync: registrarPedido, isPending } = useRestPedidoRegistrarCompletar()
-  console.log(isPending)
+  const { mutateAsync: registrarPedido, isPending: isRegistrarPending } = useRestPedidoRegistrarCompletar()
+  const { mutateAsync: actualizarPedido, isPending: isActualizarPending } = useRestPedidoActualizar()
+  
+  const isPending = isRegistrarPending || isActualizarPending
 
   const handleRegistrar = async () => {
     if (!mesaSeleccionada?.pedido) return
@@ -94,7 +97,10 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
         espacioId: ubicacionId,
       } as any
 
-      const response = await registrarPedido({
+      const isNuevo = !pedido._id || pedido._id.startsWith('nuevo-')
+      let response
+
+      const basePayload = {
         entidad: {
           codigoSucursal: user.sucursal.codigo,
           codigoPuntoVenta: user.puntoVenta.codigo,
@@ -107,21 +113,16 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
           direccion: pedido.cliente?.direccion,
         },
         input,
-      })
-      console.log('Pedido registrado con datos', {
-        entidad: {
-          codigoSucursal: user.sucursal.codigo,
-          codigoPuntoVenta: user.puntoVenta.codigo,
-        },
-        cliente: {
-          codigoCliente: pedido.cliente?.codigoCliente || '00',
-          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
-          email: pedido.cliente?.email,
-          telefono: pedido.cliente?.telefono,
-          direccion: pedido.cliente?.direccion,
-        },
-        input,
-      })
+      }
+
+      if (isNuevo) {
+        response = await registrarPedido(basePayload)
+        console.log('Pedido registrado con datos', basePayload)
+      } else {
+        response = await actualizarPedido({ id: pedido._id!, ...basePayload })
+        console.log('Pedido actualizado con datos', basePayload)
+      }
+      
       if (onSuccess) onSuccess(response)
     } catch (error) {
       console.error('Error al registrar pedido', error)

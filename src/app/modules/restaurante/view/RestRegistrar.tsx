@@ -415,12 +415,14 @@ const RestRegistrar: FunctionComponent = () => {
                   valor: c.precio,
                   precio: c.precio,
                   monedaPrecio: { precio: c.precio },
+                  articuloUnidadMedida: baseComp?.articuloUnidadMedida ?? undefined,
                 },
                 articuloPrecio: {
                   cantidad: c.cantidad,
                   valor: c.precio,
                   precio: c.precio,
                   monedaPrecio: { precio: c.precio },
+                  articuloUnidadMedida: baseComp?.articuloUnidadMedida ?? undefined,
                 },
               } as any
             }),
@@ -468,7 +470,7 @@ const RestRegistrar: FunctionComponent = () => {
         ...prev,
         _id: pedidoRetornado?._id || prev._id,
         estado: ESTADO_MESA.OCUPADO,
-        pedido: pedidoRetornado || prev.pedido,
+        pedido: { ...(pedidoRetornado || prev.pedido), _forceSnapshotUpdate: Date.now() } as any,
       }
     })
     

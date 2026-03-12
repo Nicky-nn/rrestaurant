@@ -294,6 +294,20 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             descripcionProducto
           }
           articuloPrecioBase {
+            articuloUnidadMedida {
+              _id
+              codigoUnidadMedida
+              nombreUnidadMedida
+            }
+            monedaPrecio {
+              moneda {
+                _id
+                codigo
+                sigla
+              }
+              precioBase
+              precio
+            }
             # Datos simples (Tipo ya expandido previamente)
             tipoCambio
             tipoOperacion
@@ -310,6 +324,20 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             factorAjuste
           }
           articuloPrecio {
+            articuloUnidadMedida {
+              _id
+              codigoUnidadMedida
+              nombreUnidadMedida
+            }
+            monedaPrecio {
+              moneda {
+                _id
+                codigo
+                sigla
+              }
+              precioBase
+              precio
+            }
             # Datos simples (Tipo ya expandido previamente)
             tipoCambio
             tipoOperacion
