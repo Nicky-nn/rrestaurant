@@ -37,6 +37,27 @@ import {
 import { ArticuloOperacion } from '../../types'
 import RrOpciones from './RrOpciones'
 
+// Declaración del web component lord-icon para TypeScript
+declare module 'react' {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    interface IntrinsicElements {
+      'lord-icon': {
+        src?: string
+        trigger?: string
+        delay?: string | number
+        state?: string
+        colors?: string
+        stroke?: string | number
+        target?: string
+        style?: React.CSSProperties
+        className?: string
+        key?: React.Key | null
+      }
+    }
+  }
+}
+
 interface RrCarritoProps {
   mesaSeleccionada?: MesaUI | null
   onUpdateProduct?: (index: number, updatedItem: ArticuloOperacion) => void
@@ -326,14 +347,22 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
           <Box
             sx={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1 }}
           >
-            {mesaSeleccionada.pedido?.productos?.map((producto, index) => (
-              <CartItem
-                key={`${producto.articuloId || index}-${index}`}
-                item={producto}
-                onUpdate={(updated) => onUpdateProduct?.(index, updated)}
-                onRemove={() => onRemoveProduct?.(index)}
-              />
-            ))}
+            {mesaSeleccionada.pedido?.productos?.length ? (
+              mesaSeleccionada.pedido.productos.map((producto, index) => (
+                <CartItem
+                  key={`${producto.articuloId || index}-${index}`}
+                  item={producto}
+                  onUpdate={(updated) => onUpdateProduct?.(index, updated)}
+                  onRemove={() => onRemoveProduct?.(index)}
+                />
+              ))
+            ) : (
+              <Box
+                sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', py: 2 }}
+              >
+                <EmptyCartIcon label="Agrega productos al carrito" />
+              </Box>
+            )}
           </Box>
 
           {/* Notas generales del pedido */}
@@ -394,18 +423,64 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
           />
         </>
       ) : (
-        <>
-          <Typography variant="h6" gutterBottom>
-            Carrito
-          </Typography>
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              Selecciona una mesa
-            </Typography>
-          </Box>
-        </>
+        <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <EmptyCartIcon label="Selecciona una mesa" />
+        </Box>
       )}
     </Paper>
+  )
+}
+
+// ─── Íconos Lord Icon para carrito vacío ────────────────────────────────────
+
+const LORD_ICONS = [
+  'https://cdn.lordicon.com/njrwmskv.json',
+  'https://cdn.lordicon.com/iewbcboh.json',
+  'https://cdn.lordicon.com/bmafcihj.json',
+]
+
+const EmptyCartIcon = ({ label }: { label?: string }) => {
+  const [iconIndex, setIconIndex] = useState(0)
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    // Cada 7 segundos inicia el ciclo: fade-out → cambia ícono → fade-in
+    const timer = setInterval(() => {
+      setVisible(false)
+      setTimeout(() => {
+        setIconIndex((prev) => (prev + 1) % LORD_ICONS.length)
+        setVisible(true)
+      }, 900) // duración del fade-out antes de cambiar
+    }, 7000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+      <Box
+        sx={{
+          opacity: visible ? 1 : 0,
+          transition: 'opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <lord-icon
+          key={iconIndex}
+          src={LORD_ICONS[iconIndex]}
+          trigger="in"
+          delay="300"
+          state="in-unfold"
+          style={{ width: '250px', height: '250px' }}
+        />
+      </Box>
+      {label && (
+        <Typography variant="body2" color="text.secondary">
+          {label}
+        </Typography>
+      )}
+    </Box>
   )
 }
 

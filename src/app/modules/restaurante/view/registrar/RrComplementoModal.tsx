@@ -18,7 +18,7 @@ export interface RrComplementoModalProps {
   onClose: () => void
   articulo: Articulo
   listaComplemento: ArticuloComplemento[]
-  onAdd?: (payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number }> }) => void
+  onAdd?: (payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number, articulo?: Articulo }> }) => void
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -453,7 +453,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     _id: cId,
                     nombre: compData?.nombreArticulo || `Complemento ${cId}`,
                     precio: compData ? getPrecio(compData) : 0,
-                    cantidad: qty
+                    cantidad: qty,
+                    articulo: compData,
                   }
                 })
 

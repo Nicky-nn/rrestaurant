@@ -8,10 +8,14 @@ import { alpha, Box, Button, Divider, Stack, Typography, useTheme } from '@mui/m
 import { FunctionComponent, useMemo, useState } from 'react'
 
 import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto'
+import useAuth from '../../../../base/hooks/useAuth'
 import { MesaUI } from '../../interfaces/mesa.interface'
+import { useRestPedidoRegistrarCompletar } from '../../mutations/useRestPedidoRegistrarCompletar'
+import { RestPedidoExpressInput } from '../../types'
 
 interface RrAccionesProps {
   mesaSeleccionada?: MesaUI | null
+  onSuccess?: (pedidoRetornado?: any) => void
 }
 
 /**
@@ -19,10 +23,111 @@ interface RrAccionesProps {
  * Panel de acciones del pedido.
  * Contiene botones para confirmar, cancelar, imprimir u otras operaciones finales del pedido.
  */
-const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada }) => {
+const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSuccess }) => {
   const theme = useTheme()
+  const { user } = useAuth()
   const [descuento, setDescuento] = useState<number>(0)
   const [giftcard, setGiftcard] = useState<number>(0)
+
+  const { mutateAsync: registrarPedido, isPending } = useRestPedidoRegistrarCompletar()
+  console.log(isPending)
+
+  const handleRegistrar = async () => {
+    if (!mesaSeleccionada?.pedido) return
+
+    const { pedido, value: mesaNombre } = mesaSeleccionada
+
+    try {
+      const cachedUbicacion = localStorage.getItem('ubicacion')
+      const ubicacionId = cachedUbicacion ? JSON.parse(cachedUbicacion)._id : null
+
+      const input: RestPedidoExpressInput = {
+        mesa: {
+          nombre: mesaNombre,
+          ubicacion: ubicacionId,
+          nroComensales: 1,
+        },
+        productos: (pedido.productos ?? []).map((p) => ({
+          nroItem: p.nroItem,
+          codigoArticulo: p.codigoArticulo || '',
+          codigoAlmacen: p.almacen?.codigoAlmacen || '0',
+          ...(p.verificarStock && p.lote ? { codigoLote: p.lote?.codigoLote || '' } : {}),
+          articuloPrecio: {
+            codigoArticuloUnidadMedida:
+              (p as any).articuloUnidadMedida?.codigoUnidadMedida ??
+              p.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+              p.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
+              '',
+            cantidad: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
+            precio:
+              p.articuloPrecio?.valor ??
+              p.articuloPrecio?.monedaPrecio?.precio ??
+              p.articuloPrecioBase?.valor ??
+              0,
+            descuento: p.articuloPrecio?.descuento ?? 0,
+            impuesto: p.articuloPrecio?.impuesto ?? 0,
+          },
+          nota: p.nota ?? null,
+          notaRapida: p.notaRapida?.map((n) => ({ valor: n.valor, cantidad: n.cantidad })),
+          cortesia: p.cortesia ?? false,
+          complementos: p.complementos?.map((c) => ({
+            codigoArticulo: c.codigoArticulo || '',
+            codigoAlmacen: c.almacen?.codigoAlmacen || '0',
+            ...((c as any).verificarStock && c.lote ? { codigoLote: c.lote?.codigoLote || '' } : {}),
+            articuloPrecio: {
+              codigoArticuloUnidadMedida:
+                (c as any).articuloUnidadMedida?.codigoUnidadMedida ??
+                c.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                c.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
+                '',
+              cantidad: c.articuloPrecioBase?.cantidad ?? 1,
+              precio: c.articuloPrecioBase?.valor ?? c.articuloPrecioBase?.monedaPrecio?.precio ?? 0,
+              descuento: 0,
+              impuesto: 0,
+            },
+          })),
+        })),
+        codigoMoneda: user.moneda.codigo,
+        tipoCambio: user.moneda.tipoCambio || 1,
+        tipo: ['DELIVERY', 'LLEVAR'].includes(pedido.tipo ?? '') ? pedido.tipo : null,
+        nota: pedido.nota || '',
+        espacioId: ubicacionId,
+      } as any
+
+      const response = await registrarPedido({
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+          email: pedido.cliente?.email,
+          telefono: pedido.cliente?.telefono,
+          direccion: pedido.cliente?.direccion,
+        },
+        input,
+      })
+      console.log('Pedido registrado con datos', {
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+          email: pedido.cliente?.email,
+          telefono: pedido.cliente?.telefono,
+          direccion: pedido.cliente?.direccion,
+        },
+        input,
+      })
+      if (onSuccess) onSuccess(response)
+    } catch (error) {
+      console.error('Error al registrar pedido', error)
+      alert(error instanceof Error ? error.message : 'Error al registrar pedido')
+    }
+  }
 
   const subtotal = useMemo(() => {
     let sub = 0
@@ -230,9 +335,14 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada }) =>
                 bgcolor: 'action.disabledBackground',
               },
             }}
+            onClick={handleRegistrar}
           >
             <RoomServiceOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
-            {!mesaSeleccionada?.pedido || mesaSeleccionada.pedido._id?.startsWith('nuevo-') ? 'Registrar' : 'Actualizar'}
+            {isPending
+              ? 'Cargando...'
+              : !mesaSeleccionada?.pedido || mesaSeleccionada.pedido._id?.startsWith('nuevo-')
+                ? 'Registrar'
+                : 'Actualizar'}
           </Button>
           <Button
             variant="contained"

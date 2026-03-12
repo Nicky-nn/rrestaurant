@@ -280,7 +280,7 @@ const RrMesas: React.FC<RrMesasProps> = ({
     const current = selectedOptionRef.current
 
     if (current) {
-      const mesaActual = options.find((o) => o._id === current._id)
+      const mesaActual = options.find((o) => o.value === current.value)
       // Si la mesa sigue siendo mía o libre, no hacer nada
       if (mesaActual && mesaActual.estado !== ESTADO_MESA.OCUPADO_OTRO) return
 
@@ -330,7 +330,7 @@ const RrMesas: React.FC<RrMesasProps> = ({
   // Sincronizar focusedIndex cuando cambia selectedOption desde el padre
   useEffect(() => {
     if (!selectedOption || !options.length) return
-    const idx = options.findIndex((o) => o._id === selectedOption._id)
+    const idx = options.findIndex((o) => o.value === selectedOption.value)
     if (idx >= 0 && idx !== focusedIndex) setFocusedIndex(idx)
   }, [selectedOption, options, focusedIndex, setFocusedIndex])
 

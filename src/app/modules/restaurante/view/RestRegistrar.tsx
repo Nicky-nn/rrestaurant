@@ -2,6 +2,7 @@ import { Alert, Box, Grid, Snackbar } from '@mui/material'
 import { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import useAuth from '../../../base/hooks/useAuth'
+import { articuloToArticuloOperacionInputService } from '../../../base/services/articuloToArticuloOperacionInputService'
 import { ESTADO_MESA, MesaUI } from '../interfaces/mesa.interface'
 import { useRestEspacioPorSucursal } from '../queries/useRestEspacioPorSucursal'
 import { useRestPedidoListado } from '../queries/useRestPedidoListado'
@@ -176,7 +177,9 @@ const RestRegistrar: FunctionComponent = () => {
           const pedido = mesaOcupada.pedido || undefined
           const usuarioOcupante = mesaOcupada.usuario
 
-          if (usuarioOcupante === user.usuario) {
+          const esMio = (usuarioOcupante || '').toLowerCase() === (user.usuario || '').toLowerCase()
+
+          if (esMio) {
             mesas.push({
               _id: pedido?._id || `mesa-${i}`,
               value: nombreMesa,
@@ -238,7 +241,7 @@ const RestRegistrar: FunctionComponent = () => {
       articulo: Articulo
       cantidad: number
       notasIds: string[]
-      complementos: Array<{ _id: string; nombre: string; precio: number; cantidad: number }>
+      complementos: Array<{ _id: string; nombre: string; precio: number; cantidad: number; articulo?: Articulo }>
     }) => {
       if (!mesaSeleccionadaRef.current) {
         alert('Por favor selecciona una mesa (o pedido Para Llevar / Delivery) antes de agregar productos.')
@@ -362,14 +365,15 @@ const RestRegistrar: FunctionComponent = () => {
             articuloPrecioBase: { ...existing.articuloPrecioBase, cantidad: nextQty },
           }
         } else {
-          // Agregar uno completamente nuevo
+          // Usar el servicio para obtener lote, almacén y armar la base del producto
+          const baseProd = articuloToArticuloOperacionInputService(articulo as any, user.moneda, {
+            cantidad,
+            autoAlmacen: true,
+            autoLote: true,
+          })
+
           const nuevoProd: ArticuloOperacion = {
-            articuloId: articulo._id,
-            codigoArticulo: articulo.codigoArticulo,
-            nombreArticulo: articulo.nombreArticulo,
-            claseArticulo: articulo.claseArticulo,
-            tipoArticulo: articulo.tipoArticulo,
-            gestionArticulo: articulo.gestionArticulo,
+            ...(baseProd as unknown as ArticuloOperacion),
             articuloPrecioBase: {
               cantidad,
               valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
@@ -385,22 +389,41 @@ const RestRegistrar: FunctionComponent = () => {
             notaRapida: notasIds.map((n) => ({ valor: n })),
             nota: '', // vacias, luego el usuario las setea manual
             cortesia: false,
-            complementos: complementos.map((c) => ({
-              articuloId: c._id,
-              nombreArticulo: c.nombre,
-              articuloPrecioBase: {
-                cantidad: c.cantidad,
-                valor: c.precio,
-                precio: c.precio,
-                monedaPrecio: { precio: c.precio },
-              },
-              articuloPrecio: {
-                cantidad: c.cantidad,
-                valor: c.precio,
-                precio: c.precio,
-                monedaPrecio: { precio: c.precio },
-              },
-            })),
+            complementos: complementos.map((c) => {
+              const baseComp = c.articulo
+                ? articuloToArticuloOperacionInputService(c.articulo as any, user.moneda, {
+                    cantidad: c.cantidad,
+                    autoAlmacen: true,
+                    autoLote: true,
+                  })
+                : null
+
+              return {
+                articuloId: c._id,
+                nroItem: baseComp?.nroItem ?? undefined,
+                codigoArticulo: baseComp?.codigoArticulo || '',
+                nombreArticulo: c.nombre,
+                tipoArticulo: baseComp?.tipoArticulo ?? undefined,
+                claseArticulo: baseComp?.claseArticulo ?? undefined,
+                almacen: baseComp?.almacen ?? undefined,
+                lote: baseComp?.lote ?? undefined,
+                sinProductoServicio: baseComp?.sinProductoServicio ?? undefined,
+                articuloUnidadMedida: baseComp?.articuloUnidadMedida ?? undefined,
+                verificarStock: baseComp?.verificarStock ?? false,
+                articuloPrecioBase: {
+                  cantidad: c.cantidad,
+                  valor: c.precio,
+                  precio: c.precio,
+                  monedaPrecio: { precio: c.precio },
+                },
+                articuloPrecio: {
+                  cantidad: c.cantidad,
+                  valor: c.precio,
+                  precio: c.precio,
+                  monedaPrecio: { precio: c.precio },
+                },
+              } as any
+            }),
           }
           productos.push(nuevoProd)
         }
@@ -409,8 +432,8 @@ const RestRegistrar: FunctionComponent = () => {
         return { ...prev, pedido: nuevoPedido }
       })
     },
-    [],
-  ) // ✅ deps vacías – la ref se mantiene fresca sin recrear el callback
+    [user.moneda],
+  )
 
   const handleUpdateProduct = useCallback((index: number, updatedItem: ArticuloOperacion) => {
     setMesaSeleccionada((prev) => {
@@ -429,6 +452,28 @@ const RestRegistrar: FunctionComponent = () => {
       return { ...prev, pedido: { ...prev.pedido, productos } }
     })
   }, [])
+
+  const handleSuccess = useCallback((pedidoRetornado?: any) => {
+    setSnackbar((s) => ({
+      open: true,
+      message: `Pedido registrado con éxito`,
+      key: s.key + 1,
+    }))
+    
+    // En lugar de vaciar la selección, mantenemos al usuario en la misma mesa 
+    // pero actualizada con el objeto de pedido real que devuelve el Backend (para que tenga su _id verdadero de MongoDB)
+    setMesaSeleccionada((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        _id: pedidoRetornado?._id || prev._id,
+        estado: ESTADO_MESA.OCUPADO,
+        pedido: pedidoRetornado || prev.pedido,
+      }
+    })
+    
+    refetchPedidos()
+  }, [refetchPedidos])
 
   return (
     <>
@@ -487,7 +532,7 @@ const RestRegistrar: FunctionComponent = () => {
             />
           </Box>
           <Box sx={{ flexShrink: 0, mt: 'auto' }}>
-            <RrAcciones mesaSeleccionada={mesaSeleccionada} />
+            <RrAcciones mesaSeleccionada={mesaSeleccionada} onSuccess={handleSuccess} />
           </Box>
         </Grid>
       </Grid>

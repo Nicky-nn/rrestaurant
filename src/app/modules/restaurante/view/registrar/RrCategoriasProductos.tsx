@@ -161,7 +161,7 @@ interface ProductCardProps {
     articulo: Articulo
     cantidad: number
     notasIds: string[]
-    complementos: Array<{ _id: string; nombre: string; precio: number; cantidad: number }>
+    complementos: Array<{ _id: string; nombre: string; precio: number; cantidad: number; articulo?: Articulo }>
   }) => void
   /** Si true, oculta el área de imagen (modo compacto para filas sin imágenes) */
   compact?: boolean
@@ -445,7 +445,7 @@ interface RrCategoriasProductosProps {
     articulo: Articulo
     cantidad: number
     notasIds: string[]
-    complementos: Array<{ _id: string; nombre: string; precio: number; cantidad: number }>
+    complementos: Array<{ _id: string; nombre: string; precio: number; cantidad: number; articulo?: Articulo }>
   }) => void
 }
 

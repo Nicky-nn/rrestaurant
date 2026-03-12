@@ -500,6 +500,7 @@ export const RESTPEDIDOFRAGMENT = gql`
         cortesia
         state
       }
+      fecha
     }
     arqueoCajaId
   }
