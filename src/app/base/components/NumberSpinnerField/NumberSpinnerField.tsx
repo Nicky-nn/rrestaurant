@@ -154,7 +154,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
       : helperText
   // Si no hay texto de error, le pasamos un espacio en blanco (' ')
   // Esto obliga a Material-UI a mantener la altura del contenedor siempre fija.
-  const finalHelperText = dynamicHelperText || ' '
+  const finalHelperText = dynamicHelperText || ''
 
   // ===== HANDLERS DE INCREMENTO / DECREMENTO =====
   const executeIncrement = (isFinalChange: boolean) => {

@@ -140,7 +140,7 @@ const ArticuloRow = memo(
       almacenLoteProps,
       precioProps,
       descProps,
-      unidadMedidaProps,
+      unidadMedidaProps = { ocultar: true },
     } = props
 
     const isActive = indexActivo === index
@@ -183,7 +183,7 @@ const ArticuloRow = memo(
           </StyledTableCell>
         )}
 
-        {!unidadMedidaProps?.ocultar && (
+        {!unidadMedidaProps.ocultar && (
           <StyledTableCell align="left" width={100}>
             <Typography variant="caption" noWrap>
               {item.articuloUnidadMedida?.nombreUnidadMedida}
@@ -383,7 +383,7 @@ const CarritoArticulos: FunctionComponent<CarritoProps> = (props) => {
               {!cantidadProps?.ocultar && (
                 <StyledTableCell align="right">{cantidadProps?.label || 'Cant.'}</StyledTableCell>
               )}
-              {!unidadMedidaProps?.ocultar && (
+              {!unidadMedidaProps.ocultar && (
                 <StyledTableCell align="left">{unidadMedidaProps?.label || 'U.M.'}</StyledTableCell>
               )}
 

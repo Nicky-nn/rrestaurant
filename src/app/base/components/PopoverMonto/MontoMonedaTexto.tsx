@@ -15,9 +15,7 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 
 import { handleFocus } from '../../../utils/helper'
 import { numberWithCommasPlaces } from '../MyInputs/NumberInput'
-import NumberSpinnerField, {
-  type NumberInputProps,
-} from '../NumberSpinnerField/NumberSpinnerField'
+import NumberSpinnerField, { type NumberInputProps } from '../NumberSpinnerField/NumberSpinnerField'
 
 const StyleListItemButton = styled(ListItemButton)(({ theme }) => ({
   paddingRight: theme.spacing(0.5),
@@ -49,10 +47,7 @@ interface OwnProps {
   montoProps?: TypographyProps
   // Propiedades de Link button, se aplica cuando editar=true antes era LinkProps
   buttonProps?: ButtonProps
-  numberProps?: Omit<
-    NumberInputProps,
-    'onChange, min, max, step, unit, decimalScale, helperText'
-  > // Propiedades de NumberInput, se aplica cuando editar=true
+  numberProps?: Omit<NumberInputProps, 'onChange, min, max, step, unit, decimalScale, helperText'> // Propiedades de NumberInput, se aplica cuando editar=true
   onChange?: (value?: number) => void
   min?: number // Min de incremento, default 0
   max?: number // Max de incremento, default Infinity
@@ -117,12 +112,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
         {numberWithCommasPlaces(monto, decimales)}
       </Typography>
       {sigla && (
-        <Typography
-          fontSize={'smaller'}
-          sx={{ ml: 0.5 }}
-          display={'inline'}
-          {...siglaProps}
-        >
+        <Typography fontSize={'smaller'} sx={{ ml: 0.5 }} display={'inline'} {...siglaProps}>
           {sigla}
         </Typography>
       )}
@@ -205,7 +195,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
             setAnchorMonto(null)
           }}
         >
-          <Grid container rowSpacing={1} sx={{ width: 240, p: 1.5 }}>
+          <Grid container rowSpacing={1.3} sx={{ width: 240, p: 1.5 }}>
             <Grid size={12}>
               <NumberSpinnerField
                 fullWidth
