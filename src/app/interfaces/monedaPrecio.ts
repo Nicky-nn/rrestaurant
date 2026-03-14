@@ -58,6 +58,7 @@ export interface MonedaApiInputProps {
 /**
  * en operacion no ingresa precio 1, precio 2
  * @author isi-template
+ * @deprecated se elimina definitivamente
  */
 export interface MonedaPrecioOperacionProps {
   moneda: MonedaProps

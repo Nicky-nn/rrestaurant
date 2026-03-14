@@ -19,24 +19,33 @@ export const articuloPrecioOperacionFragment = gql`
     descuentoAdicional
     esDescuentoTotal
     estructuraValor {
+      tipoOperacion
+      valor
+      valorAnterior
       descuento
       descuentoAdicional
-      gastoAdicional
+      descuentoTotal
+      descuentoP
+      descuentoAdicionalP
+      descuentoTotalP
+      valorNeto
       impuestoUnitario
-      tipoOperacion
+      gastoAdicional
+      variacion
+      valorFinal
       totales {
         subtotalBruto
-        subtotalNeto
         totalDescuento
-        totalFinal
-        totalGasto
+        totalDescuentoAdicional
+        totalDescuentoGeneral
+        totalDescuentoP
+        totalDescuentoAdicionalP
+        totalDescuentoGeneralP
+        subtotalNeto
         totalImpuestos
+        totalGasto
+        totalFinal
       }
-      valorBase
-      valorBaseAnterior
-      valorFinal
-      valorNeto
-      variacion
     }
     factorAjuste
     impuesto
