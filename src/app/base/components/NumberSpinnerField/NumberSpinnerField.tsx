@@ -257,6 +257,8 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
           inputProps: {
             scale: decimalScale,
             style: { textAlign },
+            inputMode: decimalScale > 0 ? 'decimal' : 'numeric',
+            type: 'tel',
           },
           startAdornment: (!hideActionButtons || customStartAdornment) && (
             <InputAdornment position="start" sx={{ mr: 0.7 }}>
@@ -311,6 +313,8 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
           ...slotProps?.input,
         },
         htmlInput: {
+          inputMode: decimalScale > 0 ? 'decimal' : 'numeric',
+          pattern: decimalScale > 0 ? undefined : '[0-9]*',
           ...slotProps?.htmlInput,
         },
       }}

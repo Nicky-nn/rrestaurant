@@ -134,7 +134,7 @@ const ArticuloRow = memo(
       onDeleteArticulo,
       onChangeDetalleExtra,
       moneda,
-      opcionesProps,
+      opcionesProps = { mostrarNroItem: false },
       articuloProps,
       cantidadProps,
       almacenLoteProps,

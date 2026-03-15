@@ -73,6 +73,7 @@ export interface MonedaPrecioOperacionProps {
  */
 export interface MonedaPrecioProps {
   moneda: MonedaProps
+  /** Costo báse */
   precioBase: number // Precio base multiplicador por el factor de ajuste
   precio: number
   delivery: number
