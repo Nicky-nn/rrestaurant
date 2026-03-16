@@ -15,7 +15,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
-import { FunctionComponent, useMemo, useState } from 'react'
+import { FunctionComponent, useEffect, useMemo, useState } from 'react'
 
 import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto'
 import { useAppConfirm } from '../../../../base/contexts/AppConfirmProvider'
@@ -30,8 +30,9 @@ import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
 
 interface RrAccionesProps {
   mesaSeleccionada?: MesaUI | null
-  onSuccess?: (pedidoRetornado?: any) => void
+  onSuccess?: (pedidoRetornado?: any, isFinalizado?: boolean) => void
   onCancel?: () => void
+  onClear?: () => void
 }
 
 /**
@@ -39,7 +40,7 @@ interface RrAccionesProps {
  * Panel de acciones del pedido.
  * Contiene botones para confirmar, cancelar, imprimir u otras operaciones finales del pedido.
  */
-const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSuccess, onCancel }) => {
+const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSuccess, onCancel, onClear }) => {
   const theme = useTheme()
   const { user } = useAuth()
   const { requestConfirm } = useAppConfirm()
@@ -53,8 +54,17 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
 
   const isPending = isRegistrarPending || isActualizarPending || isCancelarPending || isFinalizarPending
 
+  const [loadingMessage, setLoadingMessage] = useState('Actualizando Pedido...')
+
+  useEffect(() => {
+    if (isRegistrarPending) setLoadingMessage('Registrando Pedido...')
+    else if (isCancelarPending) setLoadingMessage('Cancelando Pedido...')
+    else if (isFinalizarPending) setLoadingMessage('Finalizando Pedido...')
+    else if (isActualizarPending) setLoadingMessage('Actualizando Pedido...')
+  }, [isRegistrarPending, isCancelarPending, isFinalizarPending, isActualizarPending])
+
   const handleRegistrar = async () => {
-    if (!mesaSeleccionada?.pedido) return
+    if (!mesaSeleccionada?.pedido) return false
 
     const { pedido, value: mesaNombre } = mesaSeleccionada
 
@@ -142,9 +152,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
       }
 
       if (onSuccess) onSuccess(response)
+      return response
     } catch (error) {
       console.error('Error al registrar pedido', error)
       alert(error instanceof Error ? error.message : 'Error al registrar pedido')
+      return false
     }
   }
 
@@ -211,19 +223,21 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
 
   const [openCobroDialog, setOpenCobroDialog] = useState(false)
 
-  const handleOpenCobro = () => {
-    if (
-      mesaSeleccionada?.pedido &&
-      mesaSeleccionada.pedido._id &&
-      !mesaSeleccionada.pedido._id.startsWith('nuevo-')
-    ) {
-      setOpenCobroDialog(true)
+  const handleOpenCobro = async () => {
+    if (!mesaSeleccionada?.pedido) return
+
+    if (!mesaSeleccionada.pedido._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')) {
+      // Registrar automáticamente si el pedido es nuevo
+      const response = await handleRegistrar()
+      if (response) {
+        setOpenCobroDialog(true)
+      }
     } else {
-      alert('Primero debe registrar/guardar el pedido antes de proceder al cobro.')
+      setOpenCobroDialog(true)
     }
   }
 
-  const handleFinalizar = async () => {
+  const handleFinalizar = async (metodoDefectoId?: number, metodoDefectoNombre?: string) => {
     if (!mesaSeleccionada?.pedido || !mesaSeleccionada.pedido._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')) {
       alert('El pedido no está registrado.')
       return
@@ -231,11 +245,25 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
 
     const { pedido } = mesaSeleccionada
     const totalAPagar = Math.max(0, subtotal - descuento - giftcard)
-    const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
+    
+    let pagosFinales = pagosRealizados
 
-    if (totalPagado < totalAPagar) {
-      alert('El monto pagado es menor al total a pagar.')
-      return
+    // Si no ingresaron ningún pago, asumimos que pagaron completo y usan el método seleccionado por defecto en la UI (o Efectivo).
+    if (pagosFinales.length === 0) {
+      pagosFinales = [
+        {
+          id: 'pago-defecto',
+          metodoId: metodoDefectoId || 1, // 1 es típicamente Efectivo en SIAT si no hay seleccionado
+          metodoNombre: metodoDefectoNombre || 'Efectivo',
+          monto: totalAPagar,
+        }
+      ]
+    } else {
+      const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
+      if (totalPagado < totalAPagar) {
+        alert('El monto pagado es menor al total a pagar.')
+        return
+      }
     }
 
     try {
@@ -252,10 +280,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
         numeroPedido: pedido.numeroPedido || 0,
         input: {
           codigoMoneda: user.moneda?.codigo || 1,
+          codigoMetodoPago: pagosFinales[0].metodoId,
           montoTotal: totalAPagar,
           usuario: user.correo || '',
         } as any, 
-        metodoPagoVenta: pagosRealizados.map((p) => ({
+        metodoPagoVenta: pagosFinales.map((p) => ({
           codigoMetodoPago: p.metodoId,
           monto: p.monto,
         }))
@@ -263,7 +292,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
 
       console.log('Pedido finalizado exitosamente')
       setOpenCobroDialog(false)
-      if (onSuccess) onSuccess()
+      setPagosRealizados([])
+      if (onClear) onClear() // Limpia la mesa visualmente tras pagar
+      if (onSuccess) onSuccess(null, true) // isFinalizado = true
     } catch (error) {
       console.error('Error al finalizar pedido', error)
       alert(error instanceof Error ? error.message : 'Error al finalizar pedido')
@@ -278,13 +309,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
         <Stack spacing={2} alignItems="center">
           <CircularProgress color="inherit" size={48} />
           <Typography variant="h6" fontWeight={600}>
-            {isRegistrarPending
-              ? 'Registrando Pedido...'
-              : isCancelarPending
-                ? 'Cancelando Pedido...'
-                : isFinalizarPending
-                  ? 'Finalizando Pedido...'
-                  : 'Actualizando Pedido...'}
+            {loadingMessage}
           </Typography>
         </Stack>
       </Backdrop>

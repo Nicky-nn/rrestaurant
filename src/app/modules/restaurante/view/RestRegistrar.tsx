@@ -474,24 +474,25 @@ const RestRegistrar: FunctionComponent = () => {
   }, [])
 
   const handleSuccess = useCallback(
-    (pedidoRetornado?: any) => {
+    (pedidoRetornado?: any, isFinalizado?: boolean) => {
       setSnackbar((s) => ({
         open: true,
-        message: `Pedido registrado con éxito`,
+        message: isFinalizado ? 'Pedido finalizado exitosamente' : 'Pedido registrado con éxito',
         key: s.key + 1,
       }))
 
-      // En lugar de vaciar la selección, mantenemos al usuario en la misma mesa
-      // pero actualizada con el objeto de pedido real que devuelve el Backend (para que tenga su _id verdadero de MongoDB)
-      setMesaSeleccionada((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          _id: pedidoRetornado?._id || prev._id,
-          estado: ESTADO_MESA.OCUPADO,
-          pedido: { ...(pedidoRetornado || prev.pedido), _forceSnapshotUpdate: Date.now() } as any,
-        }
-      })
+      if (!isFinalizado) {
+        // Mantenemos al usuario en la misma mesa si solo fue un registro/guardado parcial.
+        setMesaSeleccionada((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            _id: pedidoRetornado?._id || prev._id,
+            estado: ESTADO_MESA.OCUPADO,
+            pedido: { ...(pedidoRetornado || prev.pedido), _forceSnapshotUpdate: Date.now() } as any,
+          }
+        })
+      }
 
       refetchPedidos()
     },
@@ -515,6 +516,19 @@ const RestRegistrar: FunctionComponent = () => {
       }
     })
 
+    refetchPedidos()
+    refetchMesas()
+  }, [refetchMesas, refetchPedidos])
+
+  const handleClear = useCallback(() => {
+    setMesaSeleccionada((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        estado: ESTADO_MESA.LIBRE,
+        pedido: undefined,
+      }
+    })
     refetchPedidos()
     refetchMesas()
   }, [refetchMesas, refetchPedidos])
@@ -580,6 +594,7 @@ const RestRegistrar: FunctionComponent = () => {
               mesaSeleccionada={mesaSeleccionada}
               onSuccess={handleSuccess}
               onCancel={handleCancel}
+              onClear={handleClear}
             />
           </Box>
         </Grid>

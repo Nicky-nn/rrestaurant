@@ -181,10 +181,14 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           tipoCambio
           estructuraValor {
             tipoOperacion
-            valorBase
-            valorBaseAnterior
+            valor
+            valorAnterior
             descuento
             descuentoAdicional
+            descuentoTotal
+            descuentoP
+            descuentoAdicionalP
+            descuentoTotalP
             valorNeto
             impuestoUnitario
             gastoAdicional
@@ -193,6 +197,11 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             totales {
               subtotalBruto
               totalDescuento
+              totalDescuentoP
+              totalDescuentoAdicional
+              totalDescuentoGeneral
+              totalDescuentoAdicionalP
+              totalDescuentoGeneralP
               subtotalNeto
               totalImpuestos
               totalGasto
@@ -294,20 +303,6 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             descripcionProducto
           }
           articuloPrecioBase {
-            articuloUnidadMedida {
-              _id
-              codigoUnidadMedida
-              nombreUnidadMedida
-            }
-            monedaPrecio {
-              moneda {
-                _id
-                codigo
-                sigla
-              }
-              precioBase
-              precio
-            }
             # Datos simples (Tipo ya expandido previamente)
             tipoCambio
             tipoOperacion
@@ -324,20 +319,6 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             factorAjuste
           }
           articuloPrecio {
-            articuloUnidadMedida {
-              _id
-              codigoUnidadMedida
-              nombreUnidadMedida
-            }
-            monedaPrecio {
-              moneda {
-                _id
-                codigo
-                sigla
-              }
-              precioBase
-              precio
-            }
             # Datos simples (Tipo ya expandido previamente)
             tipoCambio
             tipoOperacion
@@ -484,6 +465,36 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
       }
       montoTotal
       montoTotalBase
+      totales {
+        operacion {
+          # Datos simples (Tipo ya expandido previamente)
+          subtotalBruto
+          totalDescuento
+          totalDescuentoP
+          totalDescuentoAdicional
+          totalDescuentoGeneral
+          totalDescuentoAdicionalP
+          totalDescuentoGeneralP
+          subtotalNeto
+          totalImpuestos
+          totalGasto
+          totalFinal
+        }
+        sistema {
+          # Datos simples (Tipo ya expandido previamente)
+          subtotalBruto
+          totalDescuento
+          totalDescuentoP
+          totalDescuentoAdicional
+          totalDescuentoGeneral
+          totalDescuentoAdicionalP
+          totalDescuentoGeneralP
+          subtotalNeto
+          totalImpuestos
+          totalGasto
+          totalFinal
+        }
+      }
       fechaEntrega
       direccionEntrega
       detalleExtra
@@ -537,6 +548,7 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           cortesia
           state
         }
+        fecha
       }
       arqueoCajaId
     }

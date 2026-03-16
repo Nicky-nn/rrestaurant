@@ -39,8 +39,8 @@ export interface RrCobroDialogProps {
   pagosRealizados?: PagoRealizado[]
   onAddPago?: (metodoId: number, metodoNombre: string, monto: number) => void
   onRemovePago?: (id: string) => void
-  onFinalizar?: () => void
-  onFacturar?: () => void
+  onFinalizar?: (metodoDefectoId?: number, metodoDefectoNombre?: string) => void
+  onFacturar?: (metodoDefectoId?: number, metodoDefectoNombre?: string) => void
 }
 
 const formatPrice = (value: number): string => `BOB ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -418,7 +418,9 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
           <Button
             variant="contained"
             size="large"
-            onClick={onFinalizar}
+            onClick={() => {
+              if (onFinalizar) onFinalizar(metodoSeleccionado || 1, metodoSeleccionadoObj?.descripcion || 'Efectivo')
+            }}
             fullWidth
             sx={{
               p: 2,
@@ -432,12 +434,14 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
             }}
           >
             <ReceiptLongOutlinedIcon sx={{ mr: 1 }} />
-            Finalizar (Ticket)
+            Finalizar
           </Button>
           <Button
             variant="contained"
             size="large"
-            onClick={onFacturar}
+            onClick={() => {
+              if (onFacturar) onFacturar(metodoSeleccionado || 1, metodoSeleccionadoObj?.descripcion || 'Efectivo')
+            }}
             fullWidth
             sx={{
               p: 2,
