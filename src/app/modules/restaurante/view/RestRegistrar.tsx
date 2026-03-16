@@ -179,6 +179,18 @@ const RestRegistrar: FunctionComponent = () => {
 
           const esMio = (usuarioOcupante || '').toLowerCase() === (user.usuario || '').toLowerCase()
 
+          // Si el backend aún reporta la mesa como ocupada pero ya no existe pedido activo,
+          // evitar falsos positivos (mesa roja) y mostrarla como libre.
+          if (!pedido) {
+            mesas.push({
+              _id: `mesa-${i}`,
+              value: nombreMesa,
+              label: `Mesa ${nombreMesa}`,
+              estado: ESTADO_MESA.LIBRE,
+            })
+            continue
+          }
+
           if (esMio) {
             mesas.push({
               _id: pedido?._id || `mesa-${i}`,
@@ -241,7 +253,13 @@ const RestRegistrar: FunctionComponent = () => {
       articulo: Articulo
       cantidad: number
       notasIds: string[]
-      complementos: Array<{ _id: string; nombre: string; precio: number; cantidad: number; articulo?: Articulo }>
+      complementos: Array<{
+        _id: string
+        nombre: string
+        precio: number
+        cantidad: number
+        articulo?: Articulo
+      }>
     }) => {
       if (!mesaSeleccionadaRef.current) {
         alert('Por favor selecciona una mesa (o pedido Para Llevar / Delivery) antes de agregar productos.')
@@ -455,27 +473,51 @@ const RestRegistrar: FunctionComponent = () => {
     })
   }, [])
 
-  const handleSuccess = useCallback((pedidoRetornado?: any) => {
+  const handleSuccess = useCallback(
+    (pedidoRetornado?: any) => {
+      setSnackbar((s) => ({
+        open: true,
+        message: `Pedido registrado con éxito`,
+        key: s.key + 1,
+      }))
+
+      // En lugar de vaciar la selección, mantenemos al usuario en la misma mesa
+      // pero actualizada con el objeto de pedido real que devuelve el Backend (para que tenga su _id verdadero de MongoDB)
+      setMesaSeleccionada((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          _id: pedidoRetornado?._id || prev._id,
+          estado: ESTADO_MESA.OCUPADO,
+          pedido: { ...(pedidoRetornado || prev.pedido), _forceSnapshotUpdate: Date.now() } as any,
+        }
+      })
+
+      refetchPedidos()
+    },
+    [refetchPedidos],
+  )
+
+  const handleCancel = useCallback(() => {
     setSnackbar((s) => ({
       open: true,
-      message: `Pedido registrado con éxito`,
+      message: `Pedido cancelado exitosamente`,
       key: s.key + 1,
     }))
-    
-    // En lugar de vaciar la selección, mantenemos al usuario en la misma mesa 
-    // pero actualizada con el objeto de pedido real que devuelve el Backend (para que tenga su _id verdadero de MongoDB)
+
+    // Actualizar solo la mesa actual a estado LIBRE y limpiar el pedido
     setMesaSeleccionada((prev) => {
       if (!prev) return prev
       return {
         ...prev,
-        _id: pedidoRetornado?._id || prev._id,
-        estado: ESTADO_MESA.OCUPADO,
-        pedido: { ...(pedidoRetornado || prev.pedido), _forceSnapshotUpdate: Date.now() } as any,
+        estado: ESTADO_MESA.LIBRE,
+        pedido: undefined,
       }
     })
-    
+
     refetchPedidos()
-  }, [refetchPedidos])
+    refetchMesas()
+  }, [refetchMesas, refetchPedidos])
 
   return (
     <>
@@ -534,7 +576,11 @@ const RestRegistrar: FunctionComponent = () => {
             />
           </Box>
           <Box sx={{ flexShrink: 0, mt: 'auto' }}>
-            <RrAcciones mesaSeleccionada={mesaSeleccionada} onSuccess={handleSuccess} />
+            <RrAcciones
+              mesaSeleccionada={mesaSeleccionada}
+              onSuccess={handleSuccess}
+              onCancel={handleCancel}
+            />
           </Box>
         </Grid>
       </Grid>

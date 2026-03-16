@@ -156,11 +156,13 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
     const currentSnapshotUpdate = (mesaSeleccionada?.pedido as any)?._forceSnapshotUpdate || 0
     const needsSnapshotUpdate = currentSnapshotUpdate > lastSnapshotUpdateRef.current
 
-    const shouldSync = 
-      !isSameMesa || 
-      (!isSamePedido && !isLocalTransition) || 
+    const shouldSync =
+      !isSameMesa ||
+      (!isSamePedido && !isLocalTransition) ||
       // Force sync if the pedido just transitioned from 'nuevo-' to a real ID via 'Registrar'
-      (lastSyncRef.current.pedidoId.startsWith('nuevo-') && !nextPedidoId.startsWith('nuevo-') && nextPedidoId !== 'NUEVO') ||
+      (lastSyncRef.current.pedidoId.startsWith('nuevo-') &&
+        !nextPedidoId.startsWith('nuevo-') &&
+        nextPedidoId !== 'NUEVO') ||
       // Or if it was explicitly updated via success callback
       needsSnapshotUpdate
 
@@ -372,7 +374,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
               <Box
                 sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', py: 2 }}
               >
-                <EmptyCartIcon label="Agrega productos al carrito" />
+                <EmptyCartIcon label="Selecciona productos del menú para comenzar la orden." />
               </Box>
             )}
           </Box>

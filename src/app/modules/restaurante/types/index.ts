@@ -977,6 +977,14 @@ export interface ArticuloOperacionComplementoInput {
 }
 
 /**
+ * Métodos de pago adicionales} - Generalmente usada para registro de finalizacion de ventas
+ */
+export interface MetodoPagoVentaInput {
+  codigoMetodoPago: number;
+  monto: number;
+}
+
+/**
  * Metodo de pago segun la operacion
  */
 export interface MetodoPagoVenta {
@@ -1276,6 +1284,25 @@ export interface RestPedido {
   historial?: HistorialArticuloOperacion[];
   /** Relación con la apertura de caja */
   arqueoCajaId?: string;
+}
+
+/**
+ * Finaliza el pedido, se libera para la posterior emision de nota fiscal
+ */
+export interface RestPedidoFinalizarInput {
+  codigoMetodoPago: number;
+  numeroTarjeta?: string;
+  montoGiftCard?: number;
+  codigoMoneda: number;
+  descuentoAdicional?: number;
+  otrosCostos?: number;
+  descripcionOtrosCostos?: string;
+  montoTotal: number;
+  fechaEntrega?: DateDMYHHMM;
+  direccionEntrega?: string;
+  detalleExtra?: string;
+  terminos?: string;
+  usuario?: string;
 }
 
 /**

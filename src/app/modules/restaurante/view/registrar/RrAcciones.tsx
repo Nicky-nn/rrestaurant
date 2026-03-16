@@ -4,19 +4,34 @@ import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import RoomServiceOutlinedIcon from '@mui/icons-material/RoomServiceOutlined'
 import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
-import { alpha, Box, Button, Divider, Stack, Typography, useTheme } from '@mui/material'
+import {
+  alpha,
+  Backdrop,
+  Box,
+  Button,
+  CircularProgress,
+  Divider,
+  Stack,
+  Typography,
+  useTheme,
+} from '@mui/material'
 import { FunctionComponent, useMemo, useState } from 'react'
 
 import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto'
+import { useAppConfirm } from '../../../../base/contexts/AppConfirmProvider'
 import useAuth from '../../../../base/hooks/useAuth'
 import { MesaUI } from '../../interfaces/mesa.interface'
 import { useRestPedidoActualizar } from '../../mutations/useRestPedidoActualizar'
+import { useRestPedidoCancelar } from '../../mutations/useRestPedidoCancelar'
+import { useRestPedidoFinalizar } from '../../mutations/useRestPedidoFinalizar'
 import { useRestPedidoRegistrarCompletar } from '../../mutations/useRestPedidoRegistrarCompletar'
 import { RestPedidoExpressInput } from '../../types'
+import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
 
 interface RrAccionesProps {
   mesaSeleccionada?: MesaUI | null
   onSuccess?: (pedidoRetornado?: any) => void
+  onCancel?: () => void
 }
 
 /**
@@ -24,16 +39,19 @@ interface RrAccionesProps {
  * Panel de acciones del pedido.
  * Contiene botones para confirmar, cancelar, imprimir u otras operaciones finales del pedido.
  */
-const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSuccess }) => {
+const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSuccess, onCancel }) => {
   const theme = useTheme()
   const { user } = useAuth()
+  const { requestConfirm } = useAppConfirm()
   const [descuento, setDescuento] = useState<number>(0)
   const [giftcard, setGiftcard] = useState<number>(0)
 
   const { mutateAsync: registrarPedido, isPending: isRegistrarPending } = useRestPedidoRegistrarCompletar()
   const { mutateAsync: actualizarPedido, isPending: isActualizarPending } = useRestPedidoActualizar()
-  
-  const isPending = isRegistrarPending || isActualizarPending
+  const { mutateAsync: cancelarPedido, isPending: isCancelarPending } = useRestPedidoCancelar()
+  const { mutateAsync: finalizarPedido, isPending: isFinalizarPending } = useRestPedidoFinalizar()
+
+  const isPending = isRegistrarPending || isActualizarPending || isCancelarPending || isFinalizarPending
 
   const handleRegistrar = async () => {
     if (!mesaSeleccionada?.pedido) return
@@ -122,11 +140,49 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
         response = await actualizarPedido({ id: pedido._id!, ...basePayload })
         console.log('Pedido actualizado con datos', basePayload)
       }
-      
+
       if (onSuccess) onSuccess(response)
     } catch (error) {
       console.error('Error al registrar pedido', error)
       alert(error instanceof Error ? error.message : 'Error al registrar pedido')
+    }
+  }
+
+  const handleCancelar = async () => {
+    if (!mesaSeleccionada?.pedido) return
+
+    const { pedido, label: mesaLabel } = mesaSeleccionada
+
+    // Solicitar confirmación
+    const result = await requestConfirm({
+      title: '¿Cancelar pedido?',
+      description: `¿Está seguro que desea cancelar el pedido de ${mesaLabel}?\nEsta acción no se puede deshacer.`,
+      confirmationText: 'Sí, Cancelar',
+      cancellationText: 'No, Volver',
+      confirmButtonColor: 'error',
+    })
+
+    if (!result.confirmed) return
+
+    // Si es un pedido nuevo que no se ha guardado aún, no es necesario llamar a la API
+    if (!pedido._id || pedido._id.startsWith('nuevo-')) {
+      if (onCancel) onCancel()
+      return
+    }
+
+    try {
+      await cancelarPedido({
+        id: pedido._id,
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+      })
+      console.log('Pedido cancelado exitosamente')
+      if (onCancel) onCancel()
+    } catch (error) {
+      console.error('Error al cancelar pedido', error)
+      alert(error instanceof Error ? error.message : 'Error al cancelar pedido')
     }
   }
 
@@ -153,8 +209,86 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
     return sub
   }, [mesaSeleccionada])
 
+  const [openCobroDialog, setOpenCobroDialog] = useState(false)
+
+  const handleOpenCobro = () => {
+    if (
+      mesaSeleccionada?.pedido &&
+      mesaSeleccionada.pedido._id &&
+      !mesaSeleccionada.pedido._id.startsWith('nuevo-')
+    ) {
+      setOpenCobroDialog(true)
+    } else {
+      alert('Primero debe registrar/guardar el pedido antes de proceder al cobro.')
+    }
+  }
+
+  const handleFinalizar = async () => {
+    if (!mesaSeleccionada?.pedido || !mesaSeleccionada.pedido._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')) {
+      alert('El pedido no está registrado.')
+      return
+    }
+
+    const { pedido } = mesaSeleccionada
+    const totalAPagar = Math.max(0, subtotal - descuento - giftcard)
+    const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
+
+    if (totalPagado < totalAPagar) {
+      alert('El monto pagado es menor al total a pagar.')
+      return
+    }
+
+    try {
+      await finalizarPedido({
+        id: pedido._id,
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+        },
+        numeroPedido: pedido.numeroPedido || 0,
+        input: {
+          codigoMoneda: user.moneda?.codigo || 1,
+          montoTotal: totalAPagar,
+          usuario: user.correo || '',
+        } as any, 
+        metodoPagoVenta: pagosRealizados.map((p) => ({
+          codigoMetodoPago: p.metodoId,
+          monto: p.monto,
+        }))
+      })
+
+      console.log('Pedido finalizado exitosamente')
+      setOpenCobroDialog(false)
+      if (onSuccess) onSuccess()
+    } catch (error) {
+      console.error('Error al finalizar pedido', error)
+      alert(error instanceof Error ? error.message : 'Error al finalizar pedido')
+    }
+  }
+
+  const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Backdrop sx={{ color: '#fff', zIndex: (t) => t.zIndex.drawer + 1 }} open={isPending}>
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress color="inherit" size={48} />
+          <Typography variant="h6" fontWeight={600}>
+            {isRegistrarPending
+              ? 'Registrando Pedido...'
+              : isCancelarPending
+                ? 'Cancelando Pedido...'
+                : isFinalizarPending
+                  ? 'Finalizando Pedido...'
+                  : 'Actualizando Pedido...'}
+          </Typography>
+        </Stack>
+      </Backdrop>
+
       {/* Resumen Totales */}
       <Box sx={{ px: 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0 }}>
@@ -286,6 +420,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
             variant="contained"
             size="large"
             disabled={!mesaSeleccionada}
+            onClick={handleCancelar}
             sx={{
               flex: 1,
               flexDirection: 'column',
@@ -349,6 +484,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
             variant="contained"
             size="large"
             disabled={!mesaSeleccionada}
+            onClick={handleOpenCobro}
             sx={{
               flex: 1,
               flexDirection: 'column',
@@ -377,6 +513,23 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
           </Button>
         </Stack>
       </Stack>
+
+      {/* Dialogo de cobro */}
+      <RrCobroDialog
+        open={openCobroDialog}
+        onClose={() => setOpenCobroDialog(false)}
+        totalAPagar={Math.max(0, subtotal - descuento - giftcard)}
+        pagosRealizados={pagosRealizados}
+        onAddPago={(metodoId, metodoNombre, monto) =>
+          setPagosRealizados((prev) => [...prev, { id: Date.now().toString(), metodoId, metodoNombre, monto }])
+        }
+        onRemovePago={(id) => setPagosRealizados((prev) => prev.filter((p) => p.id !== id))}
+        onFinalizar={handleFinalizar}
+        onFacturar={() => {
+          console.log('Finalizando cobro y cerrando (Facturar)')
+          setOpenCobroDialog(false)
+        }}
+      />
     </Box>
   )
 }
