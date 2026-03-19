@@ -292,7 +292,7 @@ const RrMesas: React.FC<RrMesasProps> = ({
   // Auto-selección: cuando cambian las mesas (por espacio o por polling),
   // seleccionar la primera libre si no hay selección o si la actual fue tomada por otro.
   useEffect(() => {
-    if (!options.length) return
+    if (!options.length || isLoading) return
     const current = selectedOptionRef.current
 
     if (current) {
@@ -341,7 +341,7 @@ const RrMesas: React.FC<RrMesasProps> = ({
         severity: 'warning',
       })
     }
-  }, [options, setFocusedIndex, setSelectedOption]) // setters de useState son estables, no causan bucles
+  }, [options, setFocusedIndex, setSelectedOption, isLoading]) // setters de useState son estables, no causan bucles
 
   // Sincronizar focusedIndex cuando cambia selectedOption desde el padre
   useEffect(() => {

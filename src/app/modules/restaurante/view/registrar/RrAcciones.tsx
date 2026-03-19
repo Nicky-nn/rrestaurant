@@ -633,7 +633,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             <RoomServiceOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
             {isPending
               ? 'Cargando...'
-              : !mesaSeleccionada?.pedido || mesaSeleccionada.pedido._id?.startsWith('nuevo-')
+              : !mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')
                 ? 'Registrar'
                 : 'Actualizar'}
           </Button>
