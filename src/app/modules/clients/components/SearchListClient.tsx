@@ -25,10 +25,7 @@ interface SearcListClientProps {
 
 type Props = SearcListClientProps
 
-const SearcListClient: FunctionComponent<Props> = ({
-  onSelectedClient,
-  withCreditLine = false,
-}) => {
+const SearcListClient: FunctionComponent<Props> = ({ onSelectedClient, withCreditLine = false }) => {
   const columns = useMemo<MRT_ColumnDef<ClientProps>[]>(() => tableColumns, [])
 
   // DATA TABLE
@@ -45,13 +42,7 @@ const SearcListClient: FunctionComponent<Props> = ({
     isError,
     isLoading,
   } = useQuery<ClientProps[]>({
-    queryKey: [
-      'search_list_client',
-      columnFilters,
-      pagination.pageIndex,
-      pagination.pageSize,
-      sorting,
-    ],
+    queryKey: ['search_list_client', columnFilters, pagination.pageIndex, pagination.pageSize, sorting],
     queryFn: async () => {
       const query = genApiQuery(columnFilters, [`lineaCredito=${withCreditLine}`])
 

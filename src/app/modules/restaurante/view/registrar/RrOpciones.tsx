@@ -90,7 +90,8 @@ const ClienteDireccionPanel: FunctionComponent<ClienteDireccionPanelProps> = ({
       {cliente && cliente.codigoCliente === '00' && (
         <Box
           sx={{
-            mt: 2, p: 2,
+            mt: 2,
+            p: 2,
             bgcolor: alpha(theme.palette.text.disabled, 0.05),
             borderRadius: 2,
             border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
@@ -115,7 +116,8 @@ const ClienteDireccionPanel: FunctionComponent<ClienteDireccionPanelProps> = ({
       {cliente && cliente.codigoCliente !== '00' && (
         <Box
           sx={{
-            mt: 2, p: 2,
+            mt: 2,
+            p: 2,
             bgcolor: alpha(theme.palette.info.main, 0.04),
             borderRadius: 2,
             border: `1px solid ${alpha(theme.palette.divider, 0.4)}`,
@@ -134,35 +136,45 @@ const ClienteDireccionPanel: FunctionComponent<ClienteDireccionPanelProps> = ({
           <Grid container spacing={1.5}>
             <Grid size={{ xs: 8 }}>
               <TextField
-                fullWidth size="small" label="Calle/Avenida"
+                fullWidth
+                size="small"
+                label="Calle/Avenida"
                 value={direccionLocal.calle}
                 onChange={(e) => onDireccionFieldChange('calle', e.target.value)}
               />
             </Grid>
             <Grid size={{ xs: 4 }}>
               <TextField
-                fullWidth size="small" label="Número"
+                fullWidth
+                size="small"
+                label="Número"
                 value={direccionLocal.numero}
                 onChange={(e) => onDireccionFieldChange('numero', e.target.value)}
               />
             </Grid>
             <Grid size={{ xs: 6 }}>
               <TextField
-                fullWidth size="small" label="Barrio/Zona"
+                fullWidth
+                size="small"
+                label="Barrio/Zona"
                 value={direccionLocal.barrio}
                 onChange={(e) => onDireccionFieldChange('barrio', e.target.value)}
               />
             </Grid>
             <Grid size={{ xs: 6 }}>
               <TextField
-                fullWidth size="small" label="Piso/Apartamento"
+                fullWidth
+                size="small"
+                label="Piso/Apartamento"
                 value={direccionLocal.apartamento}
                 onChange={(e) => onDireccionFieldChange('apartamento', e.target.value)}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
               <TextField
-                fullWidth size="small" label="Referencias Adicionales"
+                fullWidth
+                size="small"
+                label="Referencias Adicionales"
                 value={direccionLocal.referenciasAdicionales}
                 onChange={(e) => onDireccionFieldChange('referenciasAdicionales', e.target.value)}
               />
@@ -264,7 +276,7 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
   // Sincronizar al abrir (incluye datos de delivery previos)
   useEffect(() => {
     if (open) {
-      setTipoPedidoLocal(tipoPedido)          // restaurar tipo al valor guardado del padre
+      setTipoPedidoLocal(tipoPedido) // restaurar tipo al valor guardado del padre
       setCliente(opcionesLlevar?.cliente || null)
       setHoraRecojo(opcionesLlevar?.horaRecojo || '')
       setSolicitarUtensilios(opcionesLlevar?.solicitarUtensilios || false)
@@ -311,7 +323,7 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
   // ── Handler principal ── propaga al padre solo al guardar ──
   const handleGuardar = async () => {
     if (tipoPedidoLocal === TIPO_PEDIDO.SALON) {
-      setTipoPedido(tipoPedidoLocal)   // propagar cambio al padre
+      setTipoPedido(tipoPedidoLocal) // propagar cambio al padre
       onClose()
       return
     }
@@ -351,20 +363,12 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
       }
     }
 
-    setTipoPedido(tipoPedidoLocal)   // propagar tipo al padre solo al guardar
+    setTipoPedido(tipoPedidoLocal) // propagar tipo al padre solo al guardar
     onClose()
   }
 
   // ── Tarjeta de selección de tipo de pedido ──
-  const OptionCard = ({
-    tipo,
-    titulo,
-    Icon,
-  }: {
-    tipo: TipoPedido
-    titulo: string
-    Icon: any
-  }) => {
+  const OptionCard = ({ tipo, titulo, Icon }: { tipo: TipoPedido; titulo: string; Icon: any }) => {
     const isSelected = tipoPedidoLocal === tipo
     return (
       <Paper
@@ -410,10 +414,15 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
   }
 
   return (
-    <Dialog open={open} onClose={(event, reason) => {
-    if (reason === 'backdropClick') return;
-    onClose();
-  }} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') return
+        onClose()
+      }}
+      maxWidth="sm"
+      fullWidth
+    >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography variant="h6" fontWeight="700">
           Detalles de la Orden
@@ -438,42 +447,68 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
         </Grid>
 
         {/* ── SALÓN ── */}
-        {tipoPedidoLocal === TIPO_PEDIDO.SALON && (() => {
-          const getAreaUbicacion = (): string => {
-            if (mesaSeleccionada?.pedido?.mesa?.ubicacion) {
-              return mesaSeleccionada.pedido.mesa.ubicacion
+        {tipoPedidoLocal === TIPO_PEDIDO.SALON &&
+          (() => {
+            const getAreaUbicacion = (): string => {
+              if (mesaSeleccionada?.pedido?.mesa?.ubicacion) {
+                return mesaSeleccionada.pedido.mesa.ubicacion
+              }
+              try {
+                const cached = localStorage.getItem('ubicacion')
+                if (cached) return JSON.parse(cached)?.descripcion || 'Principal'
+              } catch {
+                /* ignorar */
+              }
+              return 'Principal'
             }
-            try {
-              const cached = localStorage.getItem('ubicacion')
-              if (cached) return JSON.parse(cached)?.descripcion || 'Principal'
-            } catch { /* ignorar */ }
-            return 'Principal'
-          }
 
-          return (
-            <Stack spacing={2}>
-              <Typography variant="subtitle2" color="text.secondary" textTransform="uppercase">
-                Información de Mesa
-              </Typography>
-              <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.08), p: 2, borderRadius: 2, border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}` }}>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant="body2" color="text.secondary">Nombre</Typography>
-                    <Typography variant="body1" fontWeight="600">{mesaSeleccionada?.label || 'Ninguna'}</Typography>
+            return (
+              <Stack spacing={2}>
+                <Typography variant="subtitle2" color="text.secondary" textTransform="uppercase">
+                  Información de Mesa
+                </Typography>
+                <Box
+                  sx={{
+                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                    p: 2,
+                    borderRadius: 2,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+                  }}
+                >
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 6 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Nombre
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600">
+                        {mesaSeleccionada?.label || 'Ninguna'}
+                      </Typography>
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Estado
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600">
+                        {getEstadoTexto()}
+                      </Typography>
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        Área / Ubicación
+                      </Typography>
+                      <Chip
+                        label={getAreaUbicacion()}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                        sx={{ fontWeight: 700, fontSize: '0.8rem' }}
+                      />
+                    </Grid>
                   </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant="body2" color="text.secondary">Estado</Typography>
-                    <Typography variant="body1" fontWeight="600">{getEstadoTexto()}</Typography>
-                  </Grid>
-                  <Grid size={{ xs: 12 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Área / Ubicación</Typography>
-                    <Chip label={getAreaUbicacion()} size="small" color="primary" variant="outlined" sx={{ fontWeight: 700, fontSize: '0.8rem' }} />
-                  </Grid>
-                </Grid>
-              </Box>
-            </Stack>
-          )
-        })()}
+                </Box>
+              </Stack>
+            )
+          })()}
 
         {/* ── PARA LLEVAR ── */}
         {tipoPedidoLocal === TIPO_PEDIDO.LLEVAR && (
@@ -515,7 +550,13 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
           <Stack spacing={2.5}>
             {/* Selector de método */}
             <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight={700} textTransform="uppercase" sx={{ display: 'block', mb: 1 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={700}
+                textTransform="uppercase"
+                sx={{ display: 'block', mb: 1 }}
+              >
                 Método de Envío
               </Typography>
               <ButtonGroup fullWidth variant="outlined" size="medium">
@@ -573,7 +614,13 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
                 <Divider />
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <Typography variant="caption" color="text.secondary" fontWeight={700} textTransform="uppercase" sx={{ display: 'block', mb: 0.5 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={700}
+                      textTransform="uppercase"
+                      sx={{ display: 'block', mb: 0.5 }}
+                    >
                       Código de Orden (App)
                     </Typography>
                     <TextField
@@ -585,7 +632,13 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <Typography variant="caption" color="text.secondary" fontWeight={700} textTransform="uppercase" sx={{ display: 'block', mb: 0.5 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={700}
+                      textTransform="uppercase"
+                      sx={{ display: 'block', mb: 0.5 }}
+                    >
                       Nombre del Repartidor
                     </Typography>
                     <TextField
@@ -604,10 +657,19 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
       </DialogContent>
 
       <DialogActions sx={{ p: 2, px: 3, gap: 1 }}>
-        <Button onClick={onClose} color="inherit" sx={{ borderRadius: 8, textTransform: 'none', fontWeight: 600, px: 3 }}>
+        <Button
+          onClick={onClose}
+          color="inherit"
+          sx={{ borderRadius: 8, textTransform: 'none', fontWeight: 600, px: 3 }}
+        >
           Cancelar
         </Button>
-        <Button onClick={handleGuardar} variant="contained" color="primary" sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 4, boxShadow: 'none' }}>
+        <Button
+          onClick={handleGuardar}
+          variant="contained"
+          color="primary"
+          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 4, boxShadow: 'none' }}
+        >
           Guardar Detalles
         </Button>
       </DialogActions>

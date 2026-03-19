@@ -9,9 +9,7 @@ export const clienteInputValidator = object({
     .required()
     .nullable(),
   razonSocial: string().trim().required('Razon social es un campo requerido'),
-  numeroDocumento: string()
-    .trim()
-    .required('Número de documento es un campo obligatorio'),
+  numeroDocumento: string().trim().required('Número de documento es un campo obligatorio'),
   complemento: string(),
   email: string().trim().email('Ingrese email válido').required('Email es requerido'),
   telefono: string().nullable().optional(),

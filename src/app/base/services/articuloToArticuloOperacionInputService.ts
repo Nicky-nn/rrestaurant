@@ -231,7 +231,9 @@ const seleccionarAlmacen = (
 
   if (options.verificarStock) {
     // Buscar el primer almacén que no sea virtual
-    const almacenNoVirtual = detallesOrdenados.find((d) => d.almacen.prioridad !== apiAlmacenPrioridad.virtual)
+    const almacenNoVirtual = detallesOrdenados.find(
+      (d) => d.almacen.prioridad !== apiAlmacenPrioridad.virtual,
+    )
     return almacenNoVirtual?.almacen ?? detallesOrdenados[0]?.almacen ?? null
   } else {
     // Buscar el primer almacén virtual (o cualquiera como fallback)

@@ -23,10 +23,12 @@ import useAuth from '../../../../base/hooks/useAuth'
 import { MesaUI } from '../../interfaces/mesa.interface'
 import { useRestPedidoActualizar } from '../../mutations/useRestPedidoActualizar'
 import { useRestPedidoCancelar } from '../../mutations/useRestPedidoCancelar'
+import { useRestPedidoFacturaRegistro } from '../../mutations/useRestPedidoFacturaRegistro'
 import { useRestPedidoFinalizar } from '../../mutations/useRestPedidoFinalizar'
 import { useRestPedidoRegistrarCompletar } from '../../mutations/useRestPedidoRegistrarCompletar'
 import { RestPedidoExpressInput } from '../../types'
 import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
+import RrDividirCuentaDialog from './RrDividirCuentaDialog'
 
 interface RrAccionesProps {
   mesaSeleccionada?: MesaUI | null
@@ -40,7 +42,12 @@ interface RrAccionesProps {
  * Panel de acciones del pedido.
  * Contiene botones para confirmar, cancelar, imprimir u otras operaciones finales del pedido.
  */
-const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSuccess, onCancel, onClear }) => {
+const RrAcciones: FunctionComponent<RrAccionesProps> = ({
+  mesaSeleccionada,
+  onSuccess,
+  onCancel,
+  onClear,
+}) => {
   const theme = useTheme()
   const { user } = useAuth()
   const { requestConfirm } = useAppConfirm()
@@ -51,17 +58,20 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
   const { mutateAsync: actualizarPedido, isPending: isActualizarPending } = useRestPedidoActualizar()
   const { mutateAsync: cancelarPedido, isPending: isCancelarPending } = useRestPedidoCancelar()
   const { mutateAsync: finalizarPedido, isPending: isFinalizarPending } = useRestPedidoFinalizar()
+  const { mutateAsync: facturarPedido, isPending: isFacturarPending } = useRestPedidoFacturaRegistro()
 
-  const isPending = isRegistrarPending || isActualizarPending || isCancelarPending || isFinalizarPending
+  const isPending =
+    isRegistrarPending || isActualizarPending || isCancelarPending || isFinalizarPending || isFacturarPending
 
   const [loadingMessage, setLoadingMessage] = useState('Actualizando Pedido...')
 
   useEffect(() => {
     if (isRegistrarPending) setLoadingMessage('Registrando Pedido...')
     else if (isCancelarPending) setLoadingMessage('Cancelando Pedido...')
+    else if (isFacturarPending) setLoadingMessage('Facturando Pedido...')
     else if (isFinalizarPending) setLoadingMessage('Finalizando Pedido...')
     else if (isActualizarPending) setLoadingMessage('Actualizando Pedido...')
-  }, [isRegistrarPending, isCancelarPending, isFinalizarPending, isActualizarPending])
+  }, [isRegistrarPending, isCancelarPending, isFacturarPending, isFinalizarPending, isActualizarPending])
 
   const handleRegistrar = async () => {
     if (!mesaSeleccionada?.pedido) return false
@@ -222,6 +232,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
   }, [mesaSeleccionada])
 
   const [openCobroDialog, setOpenCobroDialog] = useState(false)
+  const [openDividirDialog, setOpenDividirDialog] = useState(false)
 
   const handleOpenCobro = async () => {
     if (!mesaSeleccionada?.pedido) return
@@ -237,15 +248,23 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
     }
   }
 
-  const handleFinalizar = async (metodoDefectoId?: number, metodoDefectoNombre?: string) => {
-    if (!mesaSeleccionada?.pedido || !mesaSeleccionada.pedido._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')) {
+  const handleFinalizar = async (
+    metodoDefectoId?: number,
+    metodoDefectoNombre?: string,
+    inputNumeroTarjeta?: string,
+  ) => {
+    if (
+      !mesaSeleccionada?.pedido ||
+      !mesaSeleccionada.pedido._id ||
+      mesaSeleccionada.pedido._id.startsWith('nuevo-')
+    ) {
       alert('El pedido no está registrado.')
       return
     }
 
     const { pedido } = mesaSeleccionada
     const totalAPagar = Math.max(0, subtotal - descuento - giftcard)
-    
+
     let pagosFinales = pagosRealizados
 
     // Si no ingresaron ningún pago, asumimos que pagaron completo y usan el método seleccionado por defecto en la UI (o Efectivo).
@@ -256,7 +275,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
           metodoId: metodoDefectoId || 1, // 1 es típicamente Efectivo en SIAT si no hay seleccionado
           metodoNombre: metodoDefectoNombre || 'Efectivo',
           monto: totalAPagar,
-        }
+          numeroTarjeta: inputNumeroTarjeta,
+        },
       ]
     } else {
       const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
@@ -283,11 +303,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
           codigoMetodoPago: pagosFinales[0].metodoId,
           montoTotal: totalAPagar,
           usuario: user.correo || '',
-        } as any, 
+        } as any,
         metodoPagoVenta: pagosFinales.map((p) => ({
           codigoMetodoPago: p.metodoId,
           monto: p.monto,
-        }))
+        })),
       })
 
       console.log('Pedido finalizado exitosamente')
@@ -301,11 +321,122 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
     }
   }
 
+  const formatTarjeta = (num?: string): string => {
+    if (!num) return '0000000000000000'
+    const clean = num.replace(/\D/g, '')
+    if (!clean) return '0000000000000000'
+    if (clean.length === 16) return clean
+    if (clean.length <= 4) return clean.padStart(16, '0')
+    const first4 = clean.substring(0, 4)
+    const last4 = clean.substring(clean.length - 4)
+    return first4 + '0'.repeat(8) + last4
+  }
+
+  const handleFacturar = async (
+    metodoDefectoId?: number,
+    metodoDefectoNombre?: string,
+    inputNumeroTarjeta?: string,
+  ) => {
+    if (
+      !mesaSeleccionada?.pedido ||
+      !mesaSeleccionada.pedido._id ||
+      mesaSeleccionada.pedido._id.startsWith('nuevo-')
+    ) {
+      alert('El pedido no está registrado.')
+      return
+    }
+
+    const { pedido } = mesaSeleccionada
+    const totalAPagar = Math.max(0, subtotal - descuento - giftcard)
+
+    let pagosFinales = pagosRealizados
+
+    // Si no ingresaron ningún pago, usamos método por defecto
+    if (pagosFinales.length === 0) {
+      pagosFinales = [
+        {
+          id: 'pago-defecto',
+          metodoId: metodoDefectoId || 1,
+          metodoNombre: metodoDefectoNombre || 'Efectivo',
+          monto: totalAPagar,
+          numeroTarjeta: inputNumeroTarjeta,
+        },
+      ]
+    } else {
+      const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
+      if (totalPagado < totalAPagar) {
+        alert('El monto pagado es menor al total a pagar.')
+        return
+      }
+    }
+
+    const metodoPrincipal = pagosFinales[0].metodoId
+
+    try {
+      // Primero, DEBEMOS finalizar el pedido (cambio de estado a FINALIZADO) localmente
+      await finalizarPedido({
+        id: pedido._id,
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+        },
+        numeroPedido: pedido.numeroPedido || 0,
+        input: {
+          codigoMoneda: user.moneda?.codigo || 1,
+          codigoMetodoPago: pagosFinales[0].metodoId,
+          numeroTarjeta:
+            pagosFinales[0].metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
+          montoTotal: totalAPagar,
+          usuario: user.correo || '',
+        } as any,
+        metodoPagoVenta: pagosFinales.map((p) => ({
+          codigoMetodoPago: p.metodoId,
+          monto: p.monto,
+        })),
+      })
+
+      // Una vez finalizado válidamente, solicitamos emitir la FACTURA al SIAT
+      await facturarPedido({
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+          email: pedido.cliente?.email,
+          telefono: pedido.cliente?.telefono,
+        },
+        numeroPedido: pedido.numeroPedido || 0,
+        input: {
+          codigoMoneda: user.moneda?.codigo || 1,
+          codigoMetodoPago: metodoPrincipal,
+          numeroTarjeta: metodoPrincipal === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
+          tipoCambio: user.moneda?.tipoCambio || 1,
+          usuario: user.correo || '',
+        },
+      })
+
+      console.log('Factura generada exitosamente')
+      setOpenCobroDialog(false)
+      setPagosRealizados([])
+      if (onClear) onClear()
+      if (onSuccess) onSuccess(null, true)
+    } catch (error) {
+      console.error('Error al facturar pedido', error)
+      alert(error instanceof Error ? error.message : 'Error al facturar pedido')
+    }
+  }
+
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <Backdrop sx={{ color: '#fff', zIndex: (t) => t.zIndex.drawer + 1 }} open={isPending}>
+      <Backdrop sx={{ color: '#fff', zIndex: (t) => t.zIndex.modal + 1 }} open={isPending}>
         <Stack spacing={2} alignItems="center">
           <CircularProgress color="inherit" size={48} />
           <Typography variant="h6" fontWeight={600}>
@@ -393,7 +524,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
           <Button
             variant="outlined"
             size="large"
-            disabled={!mesaSeleccionada}
+            disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+            onClick={() => setOpenDividirDialog(true)}
             sx={{
               flex: 1,
               flexDirection: 'column',
@@ -543,18 +675,49 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({ mesaSeleccionada, onSu
       <RrCobroDialog
         open={openCobroDialog}
         onClose={() => setOpenCobroDialog(false)}
+        isProcessing={isPending}
+        subtotal={subtotal}
+        descuento={descuento}
+        giftcard={giftcard}
+        clienteInfo={
+          mesaSeleccionada?.pedido?.cliente?.codigoCliente !== '00'
+            ? `${mesaSeleccionada?.pedido?.cliente?.razonSocial || ''} - ${mesaSeleccionada?.pedido?.cliente?.numeroDocumento || ''}`
+            : undefined
+        }
+        onDescuentoChange={(val) => setDescuento(val)}
+        onGiftcardChange={(val) => setGiftcard(val)}
         totalAPagar={Math.max(0, subtotal - descuento - giftcard)}
         pagosRealizados={pagosRealizados}
-        onAddPago={(metodoId, metodoNombre, monto) =>
-          setPagosRealizados((prev) => [...prev, { id: Date.now().toString(), metodoId, metodoNombre, monto }])
+        onAddPago={(metodoId, metodoNombre, monto, numeroTarjeta) =>
+          setPagosRealizados((prev) => [
+            ...prev,
+            { id: Date.now().toString(), metodoId, metodoNombre, monto, numeroTarjeta },
+          ])
         }
         onRemovePago={(id) => setPagosRealizados((prev) => prev.filter((p) => p.id !== id))}
         onFinalizar={handleFinalizar}
-        onFacturar={() => {
-          console.log('Finalizando cobro y cerrando (Facturar)')
-          setOpenCobroDialog(false)
-        }}
+        onFacturar={handleFacturar}
       />
+      {/* Dialogo Dividir Cuenta */}
+      {mesaSeleccionada?.pedido && (
+        <RrDividirCuentaDialog
+          open={openDividirDialog}
+          onClose={() => setOpenDividirDialog(false)}
+          mesaSeleccionada={mesaSeleccionada}
+          registrarPedido={registrarPedido}
+          actualizarPedido={actualizarPedido}
+          finalizarPedido={finalizarPedido}
+          facturarPedido={facturarPedido}
+          user={user}
+          isPending={isPending}
+          onDividido={(productosRestantes, pedidoActualizado) => {
+            setOpenDividirDialog(false)
+            // Pasar el pedido actualizado del servidor para que mesaSeleccionada
+            // se actualice con los productos correctos (sin los divididos).
+            if (onSuccess) onSuccess(pedidoActualizado)
+          }}
+        />
+      )}
     </Box>
   )
 }

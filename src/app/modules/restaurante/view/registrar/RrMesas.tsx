@@ -45,6 +45,10 @@ interface MesaCardProps {
   isFocused: boolean
   showAsGrid: boolean
   onClick: (mesa: MesaUI, index: number) => void
+  /** Pedido directo de mesaSeleccionada (solo para la tarjeta enfocada).
+   *  Permite reflejar cambios de cliente y otros datos locales de inmediato,
+   *  sin esperar el refetch del servidor. */
+  selectedPedido?: any
 }
 
 const areEqual = (prev: MesaCardProps, next: MesaCardProps) => {
@@ -57,12 +61,20 @@ const areEqual = (prev: MesaCardProps, next: MesaCardProps) => {
     prev.mesa.usuarioOcupante === next.mesa.usuarioOcupante &&
     prev.mesa.value === next.mesa.value &&
     prev.mesa.pedido?.numeroOrden === next.mesa.pedido?.numeroOrden &&
-    prev.mesa.pedido?.createdAt === next.mesa.pedido?.createdAt
+    prev.mesa.pedido?.createdAt === next.mesa.pedido?.createdAt &&
+    // Comparar por el cliente del pedido proveniente del servidor
+    prev.mesa.pedido?.cliente?.razonSocial === next.mesa.pedido?.cliente?.razonSocial &&
+    // Comparar por selectedPedido (estado local) para capturar cambios de cliente
+    // que aún no llegaron al refetch del servidor.
+    prev.selectedPedido?.cliente?.razonSocial === next.selectedPedido?.cliente?.razonSocial
   )
 }
 
-const MesaCard = memo(({ mesa, index, isFocused, showAsGrid, onClick }: MesaCardProps) => {
-  const { estado, pedido, usuarioOcupante } = mesa
+const MesaCard = memo(({ mesa, index, isFocused, showAsGrid, onClick, selectedPedido }: MesaCardProps) => {
+  const { estado, usuarioOcupante } = mesa
+  // Para la tarjeta enfocada usar selectedPedido (estado local más reciente).
+  // Para el resto, usar el pedido del options (datos del servidor).
+  const pedido = selectedPedido ?? mesa.pedido
   const isClickable = estado !== ESTADO_MESA.OCUPADO_OTRO
 
   const getBackgroundColor = () => {
@@ -240,6 +252,9 @@ interface RrMesasProps {
   dialogTitle?: string
   onManualSelection?: (option: MesaUI) => void
   bgColor?: string
+  /** Pedido confirmado (guardado en servidor). Solo se actualiza al hacer click en una
+   *  mesa o al guardar/actualizar el pedido. NO cambia con ediciones locales del input. */
+  confirmedPedido?: any
 }
 
 const RrMesas: React.FC<RrMesasProps> = ({
@@ -256,6 +271,7 @@ const RrMesas: React.FC<RrMesasProps> = ({
   dialogTitle = 'Seleccionar Mesa',
   onManualSelection,
   bgColor = 'transparent',
+  confirmedPedido,
 }) => {
   const { ref, handlers, style } = useHorizontalDragScroll()
   const [snackbar, setSnackbar] = useState<{
@@ -383,6 +399,7 @@ const RrMesas: React.FC<RrMesasProps> = ({
                     isFocused={focusedIndex === index}
                     showAsGrid={showAsGrid}
                     onClick={handleMesaClick}
+                    selectedPedido={focusedIndex === index ? confirmedPedido : undefined}
                   />
                 ))}
           </Box>
@@ -406,6 +423,7 @@ const RrMesas: React.FC<RrMesasProps> = ({
                     isFocused={focusedIndex === index}
                     showAsGrid={showAsGrid}
                     onClick={handleMesaClick}
+                    selectedPedido={focusedIndex === index ? confirmedPedido : undefined}
                   />
                 ))}
           </Box>

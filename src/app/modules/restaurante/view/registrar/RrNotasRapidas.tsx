@@ -35,7 +35,7 @@ export const guardarUsoNotasLocal = (notas: Set<string>, storageId?: string) => 
   }
 
   const nextStats = [...prevStats]
-  
+
   Array.from(notas).forEach((notaStr) => {
     const upper = notaStr.toUpperCase().trim()
     const existingIndex = nextStats.findIndex((s) => s.upper === upper)
@@ -168,7 +168,7 @@ const RrNotasRapidas: React.FC<RrNotasRapidasProps> = ({
           const originalText = notaStat.original
           // Chequeamos selección sin importar si predefinida fue cambiada levemente de case
           const selected = Array.from(selectedNotas).some((s) => s.toUpperCase().trim() === notaStat.upper)
-          
+
           return (
             <Chip
               key={notaStat.upper}
@@ -210,11 +210,7 @@ const RrNotasRapidas: React.FC<RrNotasRapidasProps> = ({
           slotProps={{
             input: {
               endAdornment: notaManual.trim() ? (
-                <Chip
-                  label="↵ Enter"
-                  size="small"
-                  sx={{ fontSize: '0.65rem', height: 20, mr: -0.5 }}
-                />
+                <Chip label="↵ Enter" size="small" sx={{ fontSize: '0.65rem', height: 20, mr: -0.5 }} />
               ) : undefined,
             },
           }}

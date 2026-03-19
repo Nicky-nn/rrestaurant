@@ -17,10 +17,7 @@ const updateClientMutation = gql`
   }
 `
 
-export const updateClient = async (
-  id: string,
-  input: ClientApiInputProps,
-): Promise<ClientUpdateResp> => {
+export const updateClient = async (id: string, input: ClientApiInputProps): Promise<ClientUpdateResp> => {
   try {
     const client = new GraphQLClient(import.meta.env.ISI_API_URL)
     const token = localStorage.getItem(AccessToken)

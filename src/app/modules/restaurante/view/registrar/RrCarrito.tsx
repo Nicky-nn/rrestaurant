@@ -62,12 +62,14 @@ interface RrCarritoProps {
   mesaSeleccionada?: MesaUI | null
   onUpdateProduct?: (index: number, updatedItem: ArticuloOperacion) => void
   onRemoveProduct?: (index: number) => void
+  onClientChange?: (cliente: any) => void
 }
 
 const RrCarrito: FunctionComponent<RrCarritoProps> = ({
   mesaSeleccionada,
   onUpdateProduct,
   onRemoveProduct,
+  onClientChange,
 }) => {
   const theme = useTheme()
   const [openOpciones, setOpenOpciones] = useState(false)
@@ -107,9 +109,9 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
     if (!c) return null
     return {
       _id: c._id,
-      codigo: c.codigo,
+      codigo: c.codigoCliente || c.codigo,
       razonSocial: c.razonSocial,
-      nit: c.nit,
+      nit: c.numeroDocumento || c.nit,
     }
   }
 
@@ -159,11 +161,9 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
     const shouldSync =
       !isSameMesa ||
       (!isSamePedido && !isLocalTransition) ||
-      // Force sync if the pedido just transitioned from 'nuevo-' to a real ID via 'Registrar'
       (lastSyncRef.current.pedidoId.startsWith('nuevo-') &&
         !nextPedidoId.startsWith('nuevo-') &&
         nextPedidoId !== 'NUEVO') ||
-      // Or if it was explicitly updated via success callback
       needsSnapshotUpdate
 
     if (shouldSync) {
@@ -190,10 +190,18 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
         setNotaGeneral(_nota)
 
         if (_cliente) {
-          setOpcionesLlevar({
-            cliente: _cliente,
-            horaRecojo: '',
-            solicitarUtensilios: false,
+          setOpcionesLlevar((prev) => {
+            const prevStr = JSON.stringify(extractClienteData(prev?.cliente))
+            const nextStr = JSON.stringify(extractClienteData(_cliente))
+
+            // SI COINCIDEN LOS DATOS DE CLIENTE, NO HACER NADA.
+            if (prevStr === nextStr) return prev
+
+            return {
+              cliente: _cliente,
+              horaRecojo: '',
+              solicitarUtensilios: false,
+            }
           })
         } else {
           setOpcionesLlevar(null)
@@ -211,10 +219,15 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
           }),
         )
         setTipoPedido(TIPO_PEDIDO.SALON)
-        setOpcionesLlevar(
-          clienteDefault ? { cliente: clienteDefault, horaRecojo: '', solicitarUtensilios: false } : null,
-        )
         setNotaGeneral('')
+        setOpcionesLlevar((prev) => {
+          const prevStr = JSON.stringify(extractClienteData(prev?.cliente))
+          const nextStr = JSON.stringify(extractClienteData(clienteDefault))
+          if (clienteDefault && prevStr === nextStr) return prev
+          return clienteDefault
+            ? { cliente: clienteDefault, horaRecojo: '', solicitarUtensilios: false }
+            : null
+        })
       }
     }
   }, [mesaSeleccionada])
@@ -339,6 +352,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
                   horaRecojo: prev?.horaRecojo || '',
                   solicitarUtensilios: prev?.solicitarUtensilios || false,
                 }))
+                if (onClientChange) onClientChange(c)
               }}
               onListShowed={() => {}}
               editable={true}
@@ -350,6 +364,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
                     if (JSON.stringify(prev.cliente) === JSON.stringify(nextCliente)) {
                       return prev
                     }
+                    if (onClientChange) onClientChange(nextCliente)
                     return { ...prev, cliente: nextCliente }
                   })
                 }

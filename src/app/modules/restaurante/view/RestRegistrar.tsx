@@ -30,6 +30,7 @@ const RestRegistrar: FunctionComponent = () => {
     message: '',
     key: 0,
   })
+  const [ultimoPedidoExitoso, setUltimoPedidoExitoso] = useState<any>(null)
 
   // Obtener la lista de espacios de la sucursal actual
   const { data: espaciosRaw = [] } = useRestEspacioPorSucursal({ codigoSucursal })
@@ -118,6 +119,11 @@ const RestRegistrar: FunctionComponent = () => {
     mesasOcupadasPrevRef.current = cantidadActual
   }, [mesasOcupadas, refetchPedidos])
 
+  // Limpiar el parche optimista tan pronto como lleguen nuevos datos del backend
+  useEffect(() => {
+    setUltimoPedidoExitoso(null)
+  }, [pedidosData])
+
   // Generar lista de mesas combinando disponibles con pedidos activos
   const mesas = useMemo<MesaUI[]>(() => {
     // Determinar la cantidad de mesas basada en el espacio actual
@@ -130,7 +136,17 @@ const RestRegistrar: FunctionComponent = () => {
     }
 
     const mesas: MesaUI[] = []
-    const pedidos = pedidosData?.docs || []
+    const pedidos = pedidosData?.docs ? [...pedidosData.docs] : []
+
+    // Parche optimista instantáneo para que la tarjeta cambie su nombre rápido sin esperar el refetch
+    if (ultimoPedidoExitoso && ultimoPedidoExitoso._id) {
+      const idx = pedidos.findIndex((p) => p._id === ultimoPedidoExitoso._id)
+      if (idx !== -1) {
+        pedidos[idx] = { ...pedidos[idx], ...ultimoPedidoExitoso }
+      } else {
+        pedidos.push(ultimoPedidoExitoso)
+      }
+    }
 
     // El backend ya filtra por espacio mediante queryParams, así que todos los pedidos
     // retornados pertenecen al espacio actual. Solo mapeamos por nombre de mesa.
@@ -221,7 +237,7 @@ const RestRegistrar: FunctionComponent = () => {
     }
 
     return mesas
-  }, [pedidosData, mesasOcupadas, user.usuario, espacio, espaciosData])
+  }, [pedidosData, mesasOcupadas, user.usuario, espacio, espaciosData, ultimoPedidoExitoso])
 
   // Generar un color de fondo pastel distinto por cada espacio usando hash del _id
   // Ref estable que siempre apunta al valor actual de mesaSeleccionada.
@@ -481,6 +497,10 @@ const RestRegistrar: FunctionComponent = () => {
         key: s.key + 1,
       }))
 
+      if (pedidoRetornado && !isFinalizado) {
+        setUltimoPedidoExitoso(pedidoRetornado)
+      }
+
       if (!isFinalizado) {
         // Mantenemos al usuario en la misma mesa si solo fue un registro/guardado parcial.
         setMesaSeleccionada((prev) => {
@@ -532,6 +552,36 @@ const RestRegistrar: FunctionComponent = () => {
     refetchPedidos()
     refetchMesas()
   }, [refetchMesas, refetchPedidos])
+
+  const handleClientChange = useCallback((cliente: any) => {
+    setMesaSeleccionada((prev) => {
+      if (!prev) return prev
+      // Si el pedido no existe, asumimos estructura base
+      const pedidoActual = prev.pedido || { productos: [] }
+
+      // Construimos el objeto cliente compatible con RestPedido['cliente']
+      // Nota: ClientProps tiene codigoCliente, razonSocial, nit, email, etc.
+      // RestPedido['cliente'] espera ClienteOperacion con codigoCliente, razonSocial...
+      const nuevoCliente = {
+        _id: cliente._id,
+        codigoCliente: cliente.codigoCliente || '0',
+        razonSocial: cliente.razonSocial || 'SN',
+        numeroDocumento: cliente.numeroDocumento || cliente.nit, // A veces viene como nit
+        nit: cliente.nit || cliente.numeroDocumento,
+        email: cliente.email,
+        telefono: cliente.telefono,
+        direccion: cliente.direccion,
+      }
+
+      return {
+        ...prev,
+        pedido: {
+          ...pedidoActual,
+          cliente: nuevoCliente,
+        } as any,
+      }
+    })
+  }, [])
 
   return (
     <>
@@ -587,6 +637,7 @@ const RestRegistrar: FunctionComponent = () => {
               mesaSeleccionada={mesaSeleccionada}
               onUpdateProduct={handleUpdateProduct}
               onRemoveProduct={handleRemoveProduct}
+              onClientChange={handleClientChange}
             />
           </Box>
           <Box sx={{ flexShrink: 0, mt: 'auto' }}>

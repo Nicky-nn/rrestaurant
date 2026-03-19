@@ -18,7 +18,18 @@ export interface RrComplementoModalProps {
   onClose: () => void
   articulo: Articulo
   listaComplemento: ArticuloComplemento[]
-  onAdd?: (payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number, articulo?: Articulo }> }) => void
+  onAdd?: (payload: {
+    articulo: Articulo
+    cantidad: number
+    notasIds: string[]
+    complementos: Array<{
+      _id: string
+      nombre: string
+      precio: number
+      cantidad: number
+      articulo?: Articulo
+    }>
+  }) => void
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -276,17 +287,15 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                       borderColor: !hasComplementosSelected ? 'primary.main' : 'divider',
                       borderRadius: 8, // Aspecto de Chip (pill)
                       cursor: 'pointer',
-                      bgcolor:
-                        !hasComplementosSelected
-                          ? (theme) => alpha(theme.palette.primary.main, 0.1)
-                          : 'transparent',
+                      bgcolor: !hasComplementosSelected
+                        ? (theme) => alpha(theme.palette.primary.main, 0.1)
+                        : 'transparent',
                       transition: 'all 0.15s ease',
                       '&:hover': {
                         borderColor: !hasComplementosSelected ? 'primary.main' : 'text.disabled',
-                        bgcolor:
-                          !hasComplementosSelected
-                            ? (theme) => alpha(theme.palette.primary.main, 0.15)
-                            : 'action.hover',
+                        bgcolor: !hasComplementosSelected
+                          ? (theme) => alpha(theme.palette.primary.main, 0.15)
+                          : 'action.hover',
                       },
                     }}
                   >
@@ -364,7 +373,10 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                           >
                             {comp.nombreArticulo}
                             {qty > 1 && (
-                              <Typography component="span" sx={{ color: 'primary.main', ml: 0.5, fontWeight: 900, fontSize: '0.8rem' }}>
+                              <Typography
+                                component="span"
+                                sx={{ color: 'primary.main', ml: 0.5, fontWeight: 900, fontSize: '0.8rem' }}
+                              >
                                 x{qty}
                               </Typography>
                             )}
@@ -448,7 +460,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
               guardarUsoNotasLocal(selectedNotas, articulo.tipoArticulo?._id ?? articulo._id)
               if (onAdd) {
                 const arrComps = Object.entries(selectedComplementos).map(([cId, qty]) => {
-                  const compData = complementos?.find(c => c._id === cId)
+                  const compData = complementos?.find((c) => c._id === cId)
                   return {
                     _id: cId,
                     nombre: compData?.nombreArticulo || `Complemento ${cId}`,
