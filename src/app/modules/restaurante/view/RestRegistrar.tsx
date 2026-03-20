@@ -43,8 +43,11 @@ const RestRegistrar: FunctionComponent = () => {
     return cachedData ? JSON.parse(cachedData)?._id : null
   })
 
+  const [loadingEspacio, setLoadingEspacio] = useState(false)
+
   // Función para cambiar de ubicación desde la UI
   const handleChangeEspacio = (nuevoEspacioId: string | null) => {
+    setLoadingEspacio(true)
     setEspacio(nuevoEspacioId)
     if (nuevoEspacioId) {
       const selected = espaciosData.find((e) => e._id === nuevoEspacioId)
@@ -68,6 +71,7 @@ const RestRegistrar: FunctionComponent = () => {
   const {
     data: pedidosData,
     isLoading: pedidosLoading,
+    isFetching: pedidosFetching,
     refetch: refetchPedidos,
   } = useRestPedidoListado(
     {
@@ -83,6 +87,15 @@ const RestRegistrar: FunctionComponent = () => {
       staleTime: 0,
     },
   )
+
+  // Apagar loadingEspacio cuando el fetch termina
+  useEffect(() => {
+    if (!pedidosFetching) {
+      // Pequeño timeout para evitar parpadeos visuales si la respuesta es instantánea (caché)
+      const t = setTimeout(() => setLoadingEspacio(false), 200)
+      return () => clearTimeout(t)
+    }
+  }, [pedidosFetching])
 
   // Obtener mesas ocupadas por otros usuarios (actualización cada 10s)
   const { data: mesasOcupadas = [], refetch: refetchMesas } = useRestPedidoMesasOcupadas(
@@ -190,12 +203,18 @@ const RestRegistrar: FunctionComponent = () => {
         const correspondeEspacio = mesaOcupada?.ubicacion === (espacio || null)
 
         if (mesaOcupada && correspondeEspacio) {
-          const pedido = mesaOcupada.pedido || undefined
+          let pedido = mesaOcupada.pedido || undefined
           const usuarioOcupante = mesaOcupada.usuario
+
+          // Validar coherencia: Si el pedido asociado dice estar en otra mesa (por transferencia reciente),
+          // ignorar la ocupación 'stale' de esta posición.
+          if (pedido?.mesa?.nombre && pedido.mesa.nombre !== nombreMesa) {
+            pedido = undefined
+          }
 
           const esMio = (usuarioOcupante || '').toLowerCase() === (user.usuario || '').toLowerCase()
 
-          // Si el backend aún reporta la mesa como ocupada pero ya no existe pedido activo,
+          // Si el backend aún reporta la mesa como ocupada pero ya no existe pedido activo (o se movió),
           // evitar falsos positivos (mesa roja) y mostrarla como libre.
           if (!pedido) {
             mesas.push({
@@ -606,13 +625,14 @@ const RestRegistrar: FunctionComponent = () => {
         >
           <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
             <RrMesas
+              key={espacio || 'salon-principal'}
               options={mesas}
               selectedOption={mesaSeleccionada}
               setSelectedOption={setMesaSeleccionada}
               focusedIndex={focusedIndex}
               setFocusedIndex={setFocusedIndex}
               codigoSucursal={codigoSucursal}
-              isLoading={pedidosLoading}
+              isLoading={pedidosLoading || loadingEspacio}
               bgColor={bgColor}
             />
           </Box>

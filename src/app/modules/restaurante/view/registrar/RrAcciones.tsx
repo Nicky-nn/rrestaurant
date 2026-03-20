@@ -29,6 +29,7 @@ import { useRestPedidoRegistrarCompletar } from '../../mutations/useRestPedidoRe
 import { RestPedidoExpressInput } from '../../types'
 import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
 import RrDividirCuentaDialog from './RrDividirCuentaDialog'
+import RrTransferirMesaDialog from './RrTransferirMesaDialog'
 
 interface RrAccionesProps {
   mesaSeleccionada?: MesaUI | null
@@ -233,6 +234,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
   const [openCobroDialog, setOpenCobroDialog] = useState(false)
   const [openDividirDialog, setOpenDividirDialog] = useState(false)
+  const [openTransferirDialog, setOpenTransferirDialog] = useState(false)
 
   const handleOpenCobro = async () => {
     if (!mesaSeleccionada?.pedido) return
@@ -245,6 +247,92 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       }
     } else {
       setOpenCobroDialog(true)
+    }
+  }
+
+  const handleTransferirSubmit = async (nuevoMesaNombre: string, nuevoUbicacionId: string | null) => {
+    if (!mesaSeleccionada?.pedido) return false
+    const { pedido } = mesaSeleccionada
+
+    try {
+      const input: RestPedidoExpressInput = {
+        mesa: {
+          nombre: nuevoMesaNombre,
+          ubicacion: nuevoUbicacionId,
+          nroComensales: 1,
+        },
+        productos: (pedido.productos ?? []).map((p) => ({
+          nroItem: p.nroItem,
+          codigoArticulo: p.codigoArticulo || '',
+          codigoAlmacen: p.almacen?.codigoAlmacen || '0',
+          ...(p.verificarStock && p.lote ? { codigoLote: p.lote?.codigoLote || '' } : {}),
+          articuloPrecio: {
+            codigoArticuloUnidadMedida:
+              (p as any).articuloUnidadMedida?.codigoUnidadMedida ??
+              p.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+              p.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
+              '',
+            cantidad: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
+            precio:
+              p.articuloPrecio?.valor ??
+              p.articuloPrecio?.monedaPrecio?.precio ??
+              p.articuloPrecioBase?.valor ??
+              0,
+            descuento: p.articuloPrecio?.descuento ?? 0,
+            impuesto: p.articuloPrecio?.impuesto ?? 0,
+          },
+          nota: p.nota ?? null,
+          notaRapida: p.notaRapida?.map((n) => ({ valor: n.valor, cantidad: n.cantidad })),
+          cortesia: p.cortesia ?? false,
+          complementos: p.complementos?.map((c) => ({
+            codigoArticulo: c.codigoArticulo || '',
+            codigoAlmacen: c.almacen?.codigoAlmacen || '0',
+            ...((c as any).verificarStock && c.lote ? { codigoLote: c.lote?.codigoLote || '' } : {}),
+            articuloPrecio: {
+              codigoArticuloUnidadMedida:
+                (c as any).articuloUnidadMedida?.codigoUnidadMedida ??
+                c.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                c.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
+                '',
+              cantidad: c.articuloPrecioBase?.cantidad ?? 1,
+              precio: c.articuloPrecioBase?.valor ?? c.articuloPrecioBase?.monedaPrecio?.precio ?? 0,
+              descuento: 0,
+              impuesto: 0,
+            },
+          })),
+        })),
+        codigoMoneda: user.moneda.codigo,
+        tipoCambio: user.moneda.tipoCambio || 1,
+        tipo: ['DELIVERY', 'LLEVAR'].includes(pedido.tipo ?? '') ? pedido.tipo : null,
+        nota: pedido.nota || '',
+        espacioId: nuevoUbicacionId,
+      } as any
+
+      const basePayload = {
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+          email: pedido.cliente?.email,
+          telefono: pedido.cliente?.telefono,
+          direccion: pedido.cliente?.direccion,
+        },
+        input,
+      }
+
+      const response = await actualizarPedido({ id: pedido._id!, ...basePayload })
+      console.log('Pedido transferido exitosamente', response)
+      setOpenTransferirDialog(false)
+      
+      if (onClear) onClear() // Limpiar selección para ver el refetch y salir de la mesa actual
+      return response
+    } catch (error) {
+      console.error('Error al transferir pedido', error)
+      alert(error instanceof Error ? error.message : 'Error al transferir pedido')
+      throw error // Re-throw to handle in the generic dialog level
     }
   }
 
@@ -549,7 +637,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <Button
             variant="outlined"
             size="large"
-            disabled={!mesaSeleccionada}
+            disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+            onClick={() => setOpenTransferirDialog(true)}
             sx={{
               flex: 1,
               flexDirection: 'column',
@@ -716,6 +805,18 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             // se actualice con los productos correctos (sin los divididos).
             if (onSuccess) onSuccess(pedidoActualizado)
           }}
+        />
+      )}
+
+      {/* Dialogo Transferir Mesa */}
+      {mesaSeleccionada?.pedido && openTransferirDialog && (
+        <RrTransferirMesaDialog
+          open={openTransferirDialog}
+          onClose={() => setOpenTransferirDialog(false)}
+          mesaSeleccionada={mesaSeleccionada}
+          onTransferir={handleTransferirSubmit}
+          user={user}
+          isPending={isActualizarPending}
         />
       )}
     </Box>

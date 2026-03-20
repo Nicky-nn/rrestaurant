@@ -426,7 +426,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
                 sx: {
                   fontSize: '0.85rem',
                   p: 0.5,
-                  bgcolor: '#fcfcfc',
+                  bgcolor: 'background.default',
                 },
               }}
               sx={{
