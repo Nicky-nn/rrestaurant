@@ -125,7 +125,6 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
   const [pedidoDivididoRegistrado, setPedidoDivididoRegistrado] = useState<any | null>(null)
   const [openCobro, setOpenCobro] = useState(false)
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
-  const [isProcessing, setIsProcessing] = useState(false)
   const [isCobroPending, setIsCobroPending] = useState(false)
   // Snapshot del subtotal al momento de iniciar el cobro.
   // Necesario porque cuando onDividido actualiza mesaSeleccionada los productos
@@ -200,97 +199,86 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
 
   // ── Acción principal: registrar nuevo pedido y actualizar original ────────
 
-  const handleCobrar = async () => {
+  const procesarDivisionBackend = async () => {
+    // Si ya creamos el pedido dividido (ej: un intento de cobro falló y lo reintenta), lo reutilizamos
+    if (pedidoDivididoRegistrado?._id) return pedidoDivididoRegistrado
+
+    if (!mesaSeleccionada.pedido?._id) throw new Error('La mesa no tiene un pedido abierto.')
+
+    const mesaNuevaNombre = `D-${mesaSeleccionada.value}`
+    const entidad = {
+      codigoSucursal: user.sucursal.codigo,
+      codigoPuntoVenta: user.puntoVenta.codigo,
+    }
+    const clienteInput = {
+      codigoCliente: clienteDividido?.codigoCliente || '00',
+      razonSocial: clienteDividido?.razonSocial || 'Sin Razón Social',
+      email: clienteDividido?.email,
+      telefono: clienteDividido?.telefono,
+      direccion: clienteDividido?.direccion,
+    }
+
+    // 1. Registrar NUEVO pedido
+    const nuevoPedido = await registrarPedido({
+      entidad,
+      cliente: clienteInput,
+      input: {
+        mesa: { nombre: mesaNuevaNombre, ubicacion: null, nroComensales: 1 },
+        productos: buildProductosInput(productosSeleccionados),
+        codigoMoneda: user.moneda.codigo,
+        tipoCambio: user.moneda.tipoCambio || 1,
+        tipo: null,
+        nota: `División de ${mesaSeleccionada.label}`,
+        espacioId: null,
+        atributo4: 'fromDivision:true',
+      },
+    })
+
+    // 2. Actualizar pedido ORIGINAL
+    const cachedUbicacion = localStorage.getItem('ubicacion')
+    const ubicacionId = cachedUbicacion ? JSON.parse(cachedUbicacion)._id : null
+
+    const pedidoActualizado = await actualizarPedido({
+      id: mesaSeleccionada.pedido._id,
+      entidad,
+      cliente: {
+        codigoCliente: mesaSeleccionada.pedido.cliente?.codigoCliente || '00',
+        razonSocial: mesaSeleccionada.pedido.cliente?.razonSocial || 'Sin Razón Social',
+        email: mesaSeleccionada.pedido.cliente?.email,
+        telefono: mesaSeleccionada.pedido.cliente?.telefono,
+        direccion: mesaSeleccionada.pedido.cliente?.direccion,
+      },
+      input: {
+        mesa: {
+          nombre: mesaSeleccionada.value,
+          ubicacion: ubicacionId,
+          nroComensales: 1,
+        },
+        productos: buildProductosInput(productosRestantes),
+        codigoMoneda: user.moneda.codigo,
+        tipoCambio: user.moneda.tipoCambio || 1,
+        tipo: mesaSeleccionada.pedido.tipo ?? null,
+        nota: mesaSeleccionada.pedido.nota || '',
+        espacioId: ubicacionId,
+        atributo4: 'fromDivision:true',
+      },
+    })
+
+    setPedidoDivididoRegistrado(nuevoPedido)
+    onDividido(productosRestantes, pedidoActualizado)
+    return nuevoPedido
+  }
+
+  const handleCobrar = () => {
     if (!puedeCobrar || !mesaSeleccionada.pedido?._id) return
 
     // Snapshot del subtotal antes de cualquier cambio de estado externo
     const subtotalActual = subtotalDividido
     setSubtotalSnap(subtotalActual)
-    setIsProcessing(true)
-    try {
-      // El pedido dividido usa un nombre corto tipo "D-7" para no colisionar
-      // con mesas reales validadas en el espacio. Se registra sin espacio (null)
-      // para evitar la validación "mesa no disponible en espacio X".
-      const mesaNuevaNombre = `D-${mesaSeleccionada.value}`
 
-      const entidad = {
-        codigoSucursal: user.sucursal.codigo,
-        codigoPuntoVenta: user.puntoVenta.codigo,
-      }
-
-      const clienteInput = {
-        codigoCliente: clienteDividido?.codigoCliente || '00',
-        razonSocial: clienteDividido?.razonSocial || 'Sin Razón Social',
-        email: clienteDividido?.email,
-        telefono: clienteDividido?.telefono,
-        direccion: clienteDividido?.direccion,
-      }
-
-      // 1. Registrar NUEVO pedido con los productos seleccionados
-      //    Sin espacio (ubicacion:null) para evitar validación de mesas del espacio
-      const nuevoPedido = await registrarPedido({
-        entidad,
-        cliente: clienteInput,
-        input: {
-          mesa: {
-            nombre: mesaNuevaNombre,
-            ubicacion: null, // sin espacio → evita validación de mesa disponible
-            nroComensales: 1,
-          },
-          productos: buildProductosInput(productosSeleccionados),
-          codigoMoneda: user.moneda.codigo,
-          tipoCambio: user.moneda.tipoCambio || 1,
-          tipo: null,
-          nota: `División de ${mesaSeleccionada.label}`,
-          espacioId: null, // no asignar espacio al pedido dividido
-          atributo4: 'fromDivision:true',
-        },
-      })
-
-      // 2. Actualizar pedido ORIGINAL quitándole los productos divididos
-      //    Este sí mantiene su espacio/ubicación original
-      const cachedUbicacion = localStorage.getItem('ubicacion')
-      const ubicacionId = cachedUbicacion ? JSON.parse(cachedUbicacion)._id : null
-
-      const pedidoActualizado = await actualizarPedido({
-        id: mesaSeleccionada.pedido._id,
-        entidad,
-        cliente: {
-          codigoCliente: mesaSeleccionada.pedido.cliente?.codigoCliente || '00',
-          razonSocial: mesaSeleccionada.pedido.cliente?.razonSocial || 'Sin Razón Social',
-          email: mesaSeleccionada.pedido.cliente?.email,
-          telefono: mesaSeleccionada.pedido.cliente?.telefono,
-          direccion: mesaSeleccionada.pedido.cliente?.direccion,
-        },
-        input: {
-          mesa: {
-            nombre: mesaSeleccionada.value,
-            ubicacion: ubicacionId,
-            nroComensales: 1,
-          },
-          productos: buildProductosInput(productosRestantes),
-          codigoMoneda: user.moneda.codigo,
-          tipoCambio: user.moneda.tipoCambio || 1,
-          tipo: mesaSeleccionada.pedido.tipo ?? null,
-          nota: mesaSeleccionada.pedido.nota || '',
-          espacioId: ubicacionId,
-          atributo4: 'fromDivision:true',
-        },
-      })
-
-      // 3. Guardar el pedido dividido y abrir RrCobroDialog
-      setPedidoDivididoRegistrado(nuevoPedido)
-      setOpenCobro(true)
-
-      // 4. Notificar al padre con los productos restantes Y el pedido original actualizado
-      //    para que RestRegistrar actualice mesaSeleccionada con los datos reales del servidor.
-      onDividido(productosRestantes, pedidoActualizado)
-    } catch (error) {
-      console.error('Error al dividir cuenta', error)
-      alert(error instanceof Error ? error.message : 'Error al dividir la cuenta')
-    } finally {
-      setIsProcessing(false)
-    }
+    // Solo abrimos el dialog de cobro. La división del pedido en el backend
+    // ocurrirá en el instante en que el usuario pulse Finalizar o Facturar.
+    setOpenCobro(true)
   }
 
   // ── Calcular subtotal del pedido dividido para RrCobroDialog ─────────────
@@ -320,9 +308,10 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
     metodoDefectoNombre?: string,
     inputNumeroTarjeta?: string,
   ) => {
-    if (!pedidoDivididoRegistrado?._id) return
     setIsCobroPending(true)
     try {
+      const pedidoReal = await procesarDivisionBackend()
+      if (!pedidoReal?._id) throw new Error('No se pudo crear el pedido dividido en el backend.')
       let pagosFinales = pagosRealizados
       if (pagosFinales.length === 0) {
         pagosFinales = [
@@ -330,13 +319,13 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
             id: 'pago-defecto',
             metodoId: metodoDefectoId || 1,
             metodoNombre: metodoDefectoNombre || 'Efectivo',
-            monto: subtotalDividido,
+            monto: subtotalSnap,
             numeroTarjeta: inputNumeroTarjeta,
           },
         ]
       }
       await finalizarPedido({
-        id: pedidoDivididoRegistrado._id,
+        id: pedidoReal._id,
         entidad: {
           codigoSucursal: user.sucursal.codigo,
           codigoPuntoVenta: user.puntoVenta.codigo,
@@ -345,11 +334,11 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
           codigoCliente: clienteDividido?.codigoCliente || '00',
           razonSocial: clienteDividido?.razonSocial || 'Sin Razón Social',
         },
-        numeroPedido: pedidoDivididoRegistrado.numeroPedido || 0,
+        numeroPedido: pedidoReal.numeroPedido || 0,
         input: {
           codigoMoneda: user.moneda?.codigo || 1,
           codigoMetodoPago: pagosFinales[0].metodoId,
-          montoTotal: subtotalDividido,
+          montoTotal: subtotalSnap,
           usuario: user.correo || '',
         } as any,
         metodoPagoVenta: pagosFinales.map((p) => ({
@@ -370,9 +359,10 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
     metodoDefectoNombre?: string,
     inputNumeroTarjeta?: string,
   ) => {
-    if (!pedidoDivididoRegistrado?._id) return
     setIsCobroPending(true)
     try {
+      const pedidoReal = await procesarDivisionBackend()
+      if (!pedidoReal?._id) throw new Error('No se pudo crear el pedido dividido en el backend.')
       let pagosFinales = pagosRealizados
       if (pagosFinales.length === 0) {
         pagosFinales = [
@@ -380,14 +370,14 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
             id: 'pago-defecto',
             metodoId: metodoDefectoId || 1,
             metodoNombre: metodoDefectoNombre || 'Efectivo',
-            monto: subtotalDividido,
+            monto: subtotalSnap,
             numeroTarjeta: inputNumeroTarjeta,
           },
         ]
       }
       const metodoPrincipal = pagosFinales[0].metodoId
       await finalizarPedido({
-        id: pedidoDivididoRegistrado._id,
+        id: pedidoReal._id,
         entidad: {
           codigoSucursal: user.sucursal.codigo,
           codigoPuntoVenta: user.puntoVenta.codigo,
@@ -396,12 +386,12 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
           codigoCliente: clienteDividido?.codigoCliente || '00',
           razonSocial: clienteDividido?.razonSocial || 'Sin Razón Social',
         },
-        numeroPedido: pedidoDivididoRegistrado.numeroPedido || 0,
+        numeroPedido: pedidoReal.numeroPedido || 0,
         input: {
           codigoMoneda: user.moneda?.codigo || 1,
           codigoMetodoPago: metodoPrincipal,
           numeroTarjeta: metodoPrincipal === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
-          montoTotal: subtotalDividido,
+          montoTotal: subtotalSnap,
           usuario: user.correo || '',
         } as any,
         metodoPagoVenta: pagosFinales.map((p) => ({
@@ -420,7 +410,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
           email: clienteDividido?.email,
           telefono: clienteDividido?.telefono,
         },
-        numeroPedido: pedidoDivididoRegistrado.numeroPedido || 0,
+        numeroPedido: pedidoReal.numeroPedido || 0,
         input: {
           codigoMoneda: user.moneda?.codigo || 1,
           codigoMetodoPago: metodoPrincipal,
@@ -464,7 +454,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
     }
   }, [])
 
-  const isPending = isProcessing || externalPending
+  const isPending = externalPending
 
   return (
     <>
@@ -728,7 +718,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
       </Dialog>
 
       {/* RrCobroDialog para el pedido dividido */}
-      {pedidoDivididoRegistrado && (
+      {openCobro && (
         <RrCobroDialog
           open={openCobro}
           onClose={handleCerrarTodo}
@@ -739,8 +729,8 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
           totalAPagar={subtotalSnap}
           clienteInfo={
             clienteDividido && clienteDividido.codigoCliente !== '00'
-              ? `Cobro al cliente: ${clienteDividido.razonSocial || clienteDividido.nombres || clienteDividido.codigoCliente}`
-              : undefined
+              ? `Cobro a: ${clienteDividido.razonSocial || clienteDividido.nombres || clienteDividido.codigoCliente}`
+              : 'Cobro a: Sin Razón Social'
           }
           pagosRealizados={pagosRealizados}
           onAddPago={(metodoId, metodoNombre, monto, numeroTarjeta) =>

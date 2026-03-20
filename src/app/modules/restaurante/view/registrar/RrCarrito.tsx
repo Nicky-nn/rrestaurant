@@ -17,6 +17,7 @@ import {
   Snackbar,
   Stack,
   TextField,
+  Tooltip,
   Typography,
   useTheme,
 } from '@mui/material'
@@ -357,16 +358,12 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
               onListShowed={() => {}}
               editable={true}
               onChangeEditable={(modifications) => {
-                if (modifications) {
-                  setOpcionesLlevar((prev) => {
-                    if (!prev?.cliente) return prev
-                    const nextCliente = { ...prev.cliente, ...modifications }
-                    if (JSON.stringify(prev.cliente) === JSON.stringify(nextCliente)) {
-                      return prev
-                    }
+                if (modifications && opcionesLlevar?.cliente) {
+                  const nextCliente = { ...opcionesLlevar.cliente, ...modifications }
+                  if (JSON.stringify(opcionesLlevar.cliente) !== JSON.stringify(nextCliente)) {
+                    setOpcionesLlevar((prev) => (prev ? { ...prev, cliente: nextCliente } : prev))
                     if (onClientChange) onClientChange(nextCliente)
-                    return { ...prev, cliente: nextCliente }
-                  })
+                  }
                 }
               }}
             />
@@ -663,66 +660,82 @@ const CartItem = ({
           <Box sx={{ display: 'flex', alignItems: 'center', height: 28 }}>
             {/* Controles de Cantidad */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 1 }}>
-              <IconButton
-                onClick={() => handleCantidadChange(Math.max(1, cantidad - 1))}
-                size="small"
-                sx={{ bgcolor: 'grey.100', '&:hover': { bgcolor: 'grey.200' }, width: 24, height: 24 }}
-              >
-                <RemoveIcon sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
-              </IconButton>
+              <Tooltip title="Disminuir cantidad" enterDelay={1000}>
+                <IconButton
+                  onClick={() => handleCantidadChange(Math.max(1, cantidad - 1))}
+                  size="small"
+                  sx={{
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
+                    width: 24,
+                    height: 24,
+                  }}
+                >
+                  <RemoveIcon sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
+                </IconButton>
+              </Tooltip>
               <Typography sx={{ fontSize: '0.95rem', fontWeight: 800, minWidth: 16, textAlign: 'center' }}>
                 {cantidad}
               </Typography>
-              <IconButton
-                onClick={() => handleCantidadChange(cantidad + 1)}
-                size="small"
-                sx={{
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                  color: 'primary.main',
-                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
-                  width: 24,
-                  height: 24,
-                }}
-              >
-                <AddIcon sx={{ fontSize: '0.9rem' }} />
-              </IconButton>
+              <Tooltip title="Aumentar cantidad" enterDelay={1000}>
+                <IconButton
+                  onClick={() => handleCantidadChange(cantidad + 1)}
+                  size="small"
+                  sx={{
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
+                    width: 24,
+                    height: 24,
+                  }}
+                >
+                  <AddIcon sx={{ fontSize: '0.9rem' }} />
+                </IconButton>
+              </Tooltip>
             </Box>
 
             {/* Acciones */}
             <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-              <IconButton
-                size="small"
-                onClick={() => setIsEditing(!isEditing)}
-                sx={{
-                  bgcolor: isEditing ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                  color: isEditing ? 'primary.main' : 'text.secondary',
-                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) },
-                }}
-              >
-                <EditOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={() => {
-                  const next = !isCortesia
-                  setIsCortesia(next)
-                  onUpdate({ ...item, cortesia: next })
-                }}
-                sx={{
-                  bgcolor: isCortesia ? alpha(theme.palette.success.main, 0.1) : 'transparent',
-                  color: isCortesia ? 'success.main' : 'text.secondary',
-                  '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.1) },
-                }}
-              >
-                <CardGiftcardOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={onRemove}
-                sx={{ color: 'text.secondary', '&:hover': { bgcolor: 'action.hover' } }}
-              >
-                <DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-              </IconButton>
+              <Tooltip title="Editar precio, descuento y nota personalizada" enterDelay={1000}>
+                <IconButton
+                  size="small"
+                  onClick={() => setIsEditing(!isEditing)}
+                  sx={{
+                    bgcolor: isEditing ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                    color: isEditing ? 'primary.main' : 'text.secondary',
+                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) },
+                  }}
+                >
+                  <EditOutlinedIcon sx={{ fontSize: '1.1rem' }} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Marcar como cortesía (gratis)" enterDelay={1000}>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    const next = !isCortesia
+                    setIsCortesia(next)
+                    onUpdate({ ...item, cortesia: next })
+                  }}
+                  sx={{
+                    bgcolor: isCortesia ? alpha(theme.palette.success.main, 0.1) : 'transparent',
+                    color: isCortesia ? 'success.main' : 'text.secondary',
+                    '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.1) },
+                  }}
+                >
+                  <CardGiftcardOutlinedIcon sx={{ fontSize: '1.1rem' }} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Eliminar producto del carrito" enterDelay={1000}>
+                <IconButton
+                  size="small"
+                  onClick={onRemove}
+                  sx={{ color: 'text.secondary', '&:hover': { bgcolor: 'action.hover' } }}
+                >
+                  <DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />
+                </IconButton>
+              </Tooltip>
             </Stack>
           </Box>
 

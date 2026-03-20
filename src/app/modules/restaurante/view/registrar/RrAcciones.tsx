@@ -680,9 +680,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         descuento={descuento}
         giftcard={giftcard}
         clienteInfo={
-          mesaSeleccionada?.pedido?.cliente?.codigoCliente !== '00'
-            ? `${mesaSeleccionada?.pedido?.cliente?.razonSocial || ''} - ${mesaSeleccionada?.pedido?.cliente?.numeroDocumento || ''}`
-            : undefined
+          mesaSeleccionada?.pedido?.cliente && mesaSeleccionada.pedido.cliente.codigoCliente !== '00'
+            ? `Cobro a: ${mesaSeleccionada.pedido.cliente.razonSocial || ''} - ${mesaSeleccionada.pedido.cliente.numeroDocumento || ''}`
+            : 'Cobro a: Sin Razón Social'
         }
         onDescuentoChange={(val) => setDescuento(val)}
         onGiftcardChange={(val) => setGiftcard(val)}
