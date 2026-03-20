@@ -326,7 +326,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       const response = await actualizarPedido({ id: pedido._id!, ...basePayload })
       console.log('Pedido transferido exitosamente', response)
       setOpenTransferirDialog(false)
-      
+
       if (onClear) onClear() // Limpiar selección para ver el refetch y salir de la mesa actual
       return response
     } catch (error) {
@@ -729,7 +729,12 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <Button
             variant="contained"
             size="large"
-            disabled={!mesaSeleccionada}
+            disabled={
+              !mesaSeleccionada ||
+              !mesaSeleccionada.pedido ||
+              !mesaSeleccionada.pedido.productos ||
+              mesaSeleccionada.pedido.productos.length === 0
+            }
             onClick={handleOpenCobro}
             sx={{
               flex: 1,
