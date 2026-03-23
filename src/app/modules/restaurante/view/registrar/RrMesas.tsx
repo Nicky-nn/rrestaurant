@@ -24,8 +24,10 @@ import {
 import dayjs from 'dayjs'
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
+import useAuth from '../../../../base/hooks/useAuth'
 import { useHorizontalDragScroll } from '../../../../base/hooks/useHorizontalDragScroll'
 import { ESTADO_MESA, MesaUI, TIPO_PEDIDO } from '../../interfaces/mesa.interface'
+import { useRestPedidoMesasOcupadas } from '../../queries/useRestPedidoMesasOcupadas'
 
 const COLORS = {
   focused: '#FFC107',
@@ -49,6 +51,7 @@ interface MesaCardProps {
    *  Permite reflejar cambios de cliente y otros datos locales de inmediato,
    *  sin esperar el refetch del servidor. */
   selectedPedido?: any
+  codigoSucursal?: number
 }
 
 const areEqual = (prev: MesaCardProps, next: MesaCardProps) => {
@@ -66,176 +69,192 @@ const areEqual = (prev: MesaCardProps, next: MesaCardProps) => {
     prev.mesa.pedido?.cliente?.razonSocial === next.mesa.pedido?.cliente?.razonSocial &&
     // Comparar por selectedPedido (estado local) para capturar cambios de cliente
     // que aún no llegaron al refetch del servidor.
-    prev.selectedPedido?.cliente?.razonSocial === next.selectedPedido?.cliente?.razonSocial
+    prev.selectedPedido?.cliente?.razonSocial === next.selectedPedido?.cliente?.razonSocial &&
+    prev.codigoSucursal === next.codigoSucursal
   )
 }
 
-const MesaCard = memo(({ mesa, index, isFocused, showAsGrid, onClick, selectedPedido }: MesaCardProps) => {
-  const { estado, usuarioOcupante } = mesa
-  // Para la tarjeta enfocada usar selectedPedido (estado local más reciente).
-  // Para el resto, usar el pedido del options (datos del servidor).
-  const pedido = selectedPedido ?? mesa.pedido
-  const isClickable = estado !== ESTADO_MESA.OCUPADO_OTRO
+const MesaCard = memo(
+  ({ mesa, index, isFocused, showAsGrid, onClick, selectedPedido, codigoSucursal }: MesaCardProps) => {
+    const { user } = useAuth()
+    const { data: mesasOcupadas = [] } = useRestPedidoMesasOcupadas(
+      { codigoSucursal: codigoSucursal || 0 },
+      { enabled: !!codigoSucursal },
+    )
 
-  const getBackgroundColor = () => {
-    if (isFocused) return COLORS.focused
-    if (estado === ESTADO_MESA.LIBRE) return COLORS.libre
-    if (estado === ESTADO_MESA.OCUPADO_OTRO) return COLORS.ocupadoOtro
-    return COLORS.ocupado
-  }
+    const hookMesaOcupada = mesasOcupadas.find((m) => m.mesa?.nombre === mesa.value)
+    // Si la mesa está ocupada por alguien más (no soy yo)
+    const isOcupadaPorOtro = hookMesaOcupada && hookMesaOcupada.usucre !== user?.usuario
 
-  const getHoverColor = () => {
-    if (estado === ESTADO_MESA.LIBRE) return COLORS.libreHover
-    if (estado === ESTADO_MESA.OCUPADO_OTRO) return COLORS.ocupadoOtroHover
-    return COLORS.ocupadoHover
-  }
+    const estado = isOcupadaPorOtro ? ESTADO_MESA.OCUPADO_OTRO : mesa.estado
+    const usuarioOcupante = isOcupadaPorOtro ? hookMesaOcupada.usucre : mesa.usuarioOcupante
 
-  let formattedTime = '--:--'
-  if (pedido?.createdAt) {
-    if (dayjs(pedido.createdAt).isValid()) {
-      formattedTime = dayjs(pedido.createdAt).format('HH:mm')
-    } else if (dayjs(pedido.createdAt, 'DD/MM/YYYY HH:mm:ss').isValid()) {
-      formattedTime = dayjs(pedido.createdAt, 'DD/MM/YYYY HH:mm:ss').format('HH:mm')
+    // Para la tarjeta enfocada usar selectedPedido (estado local más reciente).
+    // Para el resto, usar el pedido del options (datos del servidor).
+    const pedido = selectedPedido ?? mesa.pedido
+    const isClickable = estado !== ESTADO_MESA.OCUPADO_OTRO
+
+    const getBackgroundColor = () => {
+      if (isFocused) return COLORS.focused
+      if (estado === ESTADO_MESA.LIBRE) return COLORS.libre
+      if (estado === ESTADO_MESA.OCUPADO_OTRO) return COLORS.ocupadoOtro
+      return COLORS.ocupado
     }
-  }
 
-  return (
-    <Card
-      sx={{
-        width: showAsGrid ? 140 : 120,
-        height: showAsGrid ? 90 : 70,
-        flexShrink: showAsGrid ? 'initial' : 0,
-        cursor: isClickable ? 'pointer' : 'not-allowed',
-        opacity: estado === ESTADO_MESA.OCUPADO_OTRO ? 0.7 : 1,
-        backgroundColor: getBackgroundColor(),
-        position: 'relative',
-        transition: 'background-color 0.2s',
-        '&:hover': isClickable
-          ? {
-              backgroundColor: getHoverColor(),
-              transform: 'translateY(-2px)',
-              boxShadow: 2,
-            }
-          : {},
-      }}
-      onClick={() => isClickable && onClick(mesa, index)}
-    >
-      {/* Badges de tipo de pedido */}
-      {pedido?.tipo === TIPO_PEDIDO.DELIVERY && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 2,
-            right: 2,
-            backgroundColor: COLORS.deliveryTag,
-            borderRadius: '50%',
-            p: 0.5,
-            zIndex: 2,
-          }}
-        >
-          <DeliveryDiningIcon fontSize="small" />
-        </Box>
-      )}
-      {pedido?.tipo === TIPO_PEDIDO.LLEVAR && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 2,
-            left: estado === ESTADO_MESA.OCUPADO_OTRO ? 60 : 2,
-            backgroundColor: COLORS.llevarTag,
-            borderRadius: '50%',
-            p: 0.5,
-            zIndex: 2,
-          }}
-        >
-          <TakeoutDiningIcon fontSize="small" />
-        </Box>
-      )}
+    const getHoverColor = () => {
+      if (estado === ESTADO_MESA.LIBRE) return COLORS.libreHover
+      if (estado === ESTADO_MESA.OCUPADO_OTRO) return COLORS.ocupadoOtroHover
+      return COLORS.ocupadoHover
+    }
 
-      {/* Marca de agua - Número */}
-      <Typography
-        variant="h2"
+    let formattedTime = '--:--'
+    if (pedido?.createdAt) {
+      if (dayjs(pedido.createdAt).isValid()) {
+        formattedTime = dayjs(pedido.createdAt).format('HH:mm')
+      } else if (dayjs(pedido.createdAt, 'DD/MM/YYYY HH:mm:ss').isValid()) {
+        formattedTime = dayjs(pedido.createdAt, 'DD/MM/YYYY HH:mm:ss').format('HH:mm')
+      }
+    }
+
+    return (
+      <Card
         sx={{
-          position: 'absolute',
-          bottom: showAsGrid ? -15 : -10,
-          left: 5,
-          opacity: 0.1,
-          fontWeight: 'bold',
-          fontSize: showAsGrid ? 70 : 60,
-          color: estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000',
+          width: showAsGrid ? 140 : 120,
+          height: showAsGrid ? 90 : 70,
+          flexShrink: showAsGrid ? 'initial' : 0,
+          cursor: isClickable ? 'pointer' : 'not-allowed',
+          opacity: estado === ESTADO_MESA.OCUPADO_OTRO ? 0.7 : 1,
+          backgroundColor: getBackgroundColor(),
+          position: 'relative',
+          transition: 'background-color 0.2s',
+          '&:hover': isClickable
+            ? {
+                backgroundColor: getHoverColor(),
+                transform: 'translateY(-2px)',
+                boxShadow: 2,
+              }
+            : {},
         }}
+        onClick={() => isClickable && onClick(mesa, index)}
       >
-        {mesa.value}
-      </Typography>
-
-      {/* Marca de agua - Icono */}
-      <TableRestaurant
-        sx={{
-          position: 'absolute',
-          bottom: showAsGrid ? -8 : -5,
-          right: 5,
-          opacity: 0.1,
-          fontSize: showAsGrid ? 55 : 45,
-          color: estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000',
-        }}
-      />
-
-      <CardContent sx={{ p: '8px !important', height: '100%', zIndex: 2 }}>
-        {pedido && estado === ESTADO_MESA.OCUPADO ? (
-          <>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-              <Typography
-                variant="body2"
-                sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}
-              >
-                <ReceiptIcon fontSize="small" sx={{ mr: 0.5 }} />
-                {pedido.numeroOrden}
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}
-              >
-                <AccessTimeIcon fontSize="small" sx={{ mr: 0.5 }} />
-                {formattedTime}
-              </Typography>
-            </Box>
-            {pedido.cliente && (
-              <Tooltip title={pedido.cliente.razonSocial} placement="bottom" arrow>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    fontWeight: 'bold',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  <PersonIcon fontSize="small" sx={{ mr: 0.5 }} />
-                  {pedido.cliente.razonSocial}
-                </Typography>
-              </Tooltip>
-            )}
-          </>
-        ) : (
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-              {estado === ESTADO_MESA.OCUPADO_OTRO ? 'Ocupada' : 'Libre'}
-            </Typography>
-            {estado === ESTADO_MESA.OCUPADO_OTRO && usuarioOcupante && (
-              <Typography variant="body2" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
-                <PersonIcon fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                {usuarioOcupante}
-              </Typography>
-            )}
+        {/* Badges de tipo de pedido */}
+        {pedido?.tipo === TIPO_PEDIDO.DELIVERY && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 2,
+              right: 2,
+              backgroundColor: COLORS.deliveryTag,
+              borderRadius: '50%',
+              p: 0.5,
+              zIndex: 2,
+            }}
+          >
+            <DeliveryDiningIcon fontSize="small" />
           </Box>
         )}
-      </CardContent>
-    </Card>
-  )
-}, areEqual)
+        {pedido?.tipo === TIPO_PEDIDO.LLEVAR && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 2,
+              left: estado === ESTADO_MESA.OCUPADO_OTRO ? 60 : 2,
+              backgroundColor: COLORS.llevarTag,
+              borderRadius: '50%',
+              p: 0.5,
+              zIndex: 2,
+            }}
+          >
+            <TakeoutDiningIcon fontSize="small" />
+          </Box>
+        )}
+
+        {/* Marca de agua - Número */}
+        <Typography
+          variant="h2"
+          sx={{
+            position: 'absolute',
+            bottom: showAsGrid ? -15 : -10,
+            left: 5,
+            opacity: 0.1,
+            fontWeight: 'bold',
+            fontSize: showAsGrid ? 70 : 60,
+            color: estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000',
+          }}
+        >
+          {mesa.value}
+        </Typography>
+
+        {/* Marca de agua - Icono */}
+        <TableRestaurant
+          sx={{
+            position: 'absolute',
+            bottom: showAsGrid ? -8 : -5,
+            right: 5,
+            opacity: 0.1,
+            fontSize: showAsGrid ? 55 : 45,
+            color: estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000',
+          }}
+        />
+
+        <CardContent sx={{ p: '8px !important', height: '100%', zIndex: 2 }}>
+          {pedido && estado === ESTADO_MESA.OCUPADO ? (
+            <>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                <Typography
+                  variant="body2"
+                  sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}
+                >
+                  <ReceiptIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  {pedido.numeroOrden}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}
+                >
+                  <AccessTimeIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  {formattedTime}
+                </Typography>
+              </Box>
+              {pedido.cliente && (
+                <Tooltip title={pedido.cliente.razonSocial} placement="bottom" arrow>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      fontWeight: 'bold',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      fontSize: '0.8rem',
+                    }}
+                  >
+                    <PersonIcon fontSize="small" sx={{ mr: 0.5 }} />
+                    {pedido.cliente.razonSocial}
+                  </Typography>
+                </Tooltip>
+              )}
+            </>
+          ) : (
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                {estado === ESTADO_MESA.OCUPADO_OTRO ? 'Ocupada' : 'Libre'}
+              </Typography>
+              {estado === ESTADO_MESA.OCUPADO_OTRO && usuarioOcupante && (
+                <Typography variant="body2" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                  <PersonIcon fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+                  {usuarioOcupante}
+                </Typography>
+              )}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    )
+  },
+  areEqual,
+)
 
 interface RrMesasProps {
   isLoading?: boolean
@@ -288,6 +307,10 @@ const RrMesas: React.FC<RrMesasProps> = ({
     () => options.filter((m) => m.estado === ESTADO_MESA.OCUPADO).length,
     [options],
   )
+
+  const { user }: any = useAuth()
+
+  const codigoSucursal = user?.sucursal?.codigo
 
   // Auto-selección: cuando cambian las mesas (por espacio o por polling),
   // seleccionar la primera libre si no hay selección o si la actual fue tomada por otro.
@@ -394,12 +417,15 @@ const RrMesas: React.FC<RrMesasProps> = ({
               : options.map((mesa, index) => (
                   <MesaCard
                     key={mesa._id}
-                    mesa={mesa}
+                    mesa={
+                      focusedIndex === index && selectedOption?.value === mesa.value ? selectedOption : mesa
+                    }
                     index={index}
                     isFocused={focusedIndex === index}
                     showAsGrid={showAsGrid}
                     onClick={handleMesaClick}
                     selectedPedido={focusedIndex === index ? confirmedPedido : undefined}
+                    codigoSucursal={codigoSucursal}
                   />
                 ))}
           </Box>
@@ -418,12 +444,15 @@ const RrMesas: React.FC<RrMesasProps> = ({
               : options.map((mesa, index) => (
                   <MesaCard
                     key={mesa._id}
-                    mesa={mesa}
+                    mesa={
+                      focusedIndex === index && selectedOption?.value === mesa.value ? selectedOption : mesa
+                    }
                     index={index}
                     isFocused={focusedIndex === index}
                     showAsGrid={showAsGrid}
                     onClick={handleMesaClick}
                     selectedPedido={focusedIndex === index ? confirmedPedido : undefined}
+                    codigoSucursal={codigoSucursal}
                   />
                 ))}
           </Box>

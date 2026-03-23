@@ -12,7 +12,6 @@ import {
   CardMedia,
   Chip,
   Divider,
-  FormControl,
   FormControlLabel,
   IconButton,
   InputAdornment,
@@ -21,7 +20,6 @@ import {
   Popover,
   Radio,
   RadioGroup,
-  Select,
   Skeleton,
   TextField,
   Tooltip,
@@ -1117,32 +1115,37 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
         onClose={() => setMoreAnchorEl(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        slotProps={{ paper: { sx: { p: 1.5, minWidth: 200 } } }}
+        slotProps={{ paper: { sx: { p: 1, minWidth: 200 } } }}
       >
         <Typography
           variant="caption"
-          sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', mb: 0.5 }}
+          sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', px: 1, pt: 0.5, pb: 0.5 }}
         >
           Espacio
         </Typography>
-        <FormControl size="small" fullWidth variant="outlined">
-          <Select
-            value={espacioSeleccionado || ''}
-            onChange={(e) => {
-              onChangeEspacio?.(e.target.value === '' ? null : (e.target.value as string))
+        <MenuItem
+          selected={!espacioSeleccionado}
+          onClick={() => {
+            onChangeEspacio?.(null)
+            setMoreAnchorEl(null)
+          }}
+          sx={{ fontSize: '0.875rem', borderRadius: 1 }}
+        >
+          Salón Principal
+        </MenuItem>
+        {espacios.map((e) => (
+          <MenuItem
+            key={e._id}
+            selected={espacioSeleccionado === e._id}
+            onClick={() => {
+              onChangeEspacio?.(e._id as string)
               setMoreAnchorEl(null)
             }}
-            displayEmpty
-            sx={{ fontSize: '0.875rem' }}
+            sx={{ fontSize: '0.875rem', borderRadius: 1 }}
           >
-            <MenuItem value="">Salón Principal</MenuItem>
-            {espacios.map((e) => (
-              <MenuItem key={e._id} value={e._id}>
-                {e.descripcion || 'Sin nombre'}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            {e.descripcion || 'Sin nombre'}
+          </MenuItem>
+        ))}
       </Popover>
 
       {/* Popover de filtros */}
