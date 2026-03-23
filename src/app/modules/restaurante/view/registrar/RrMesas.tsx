@@ -20,6 +20,7 @@ import {
   Snackbar,
   Tooltip,
   Typography,
+  useTheme,
 } from '@mui/material'
 import dayjs from 'dayjs'
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
@@ -27,7 +28,6 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import useAuth from '../../../../base/hooks/useAuth'
 import { useHorizontalDragScroll } from '../../../../base/hooks/useHorizontalDragScroll'
 import { ESTADO_MESA, MesaUI, TIPO_PEDIDO } from '../../interfaces/mesa.interface'
-import { useRestPedidoMesasOcupadas } from '../../queries/useRestPedidoMesasOcupadas'
 
 const COLORS = {
   focused: '#FFC107',
@@ -77,17 +77,11 @@ const areEqual = (prev: MesaCardProps, next: MesaCardProps) => {
 const MesaCard = memo(
   ({ mesa, index, isFocused, showAsGrid, onClick, selectedPedido, codigoSucursal }: MesaCardProps) => {
     const { user } = useAuth()
-    const { data: mesasOcupadas = [] } = useRestPedidoMesasOcupadas(
-      { codigoSucursal: codigoSucursal || 0 },
-      { enabled: !!codigoSucursal },
-    )
+    const theme = useTheme()
+    const isDark = theme.palette.mode === 'dark'
 
-    const hookMesaOcupada = mesasOcupadas.find((m) => m.mesa?.nombre === mesa.value)
-    // Si la mesa está ocupada por alguien más (no soy yo)
-    const isOcupadaPorOtro = hookMesaOcupada && hookMesaOcupada.usucre !== user?.usuario
-
-    const estado = isOcupadaPorOtro ? ESTADO_MESA.OCUPADO_OTRO : mesa.estado
-    const usuarioOcupante = isOcupadaPorOtro ? hookMesaOcupada.usucre : mesa.usuarioOcupante
+    const estado = mesa.estado
+    const usuarioOcupante = mesa.usuarioOcupante
 
     // Para la tarjeta enfocada usar selectedPedido (estado local más reciente).
     // Para el resto, usar el pedido del options (datos del servidor).
@@ -96,15 +90,15 @@ const MesaCard = memo(
 
     const getBackgroundColor = () => {
       if (isFocused) return COLORS.focused
-      if (estado === ESTADO_MESA.LIBRE) return COLORS.libre
-      if (estado === ESTADO_MESA.OCUPADO_OTRO) return COLORS.ocupadoOtro
-      return COLORS.ocupado
+      if (estado === ESTADO_MESA.LIBRE) return isDark ? 'rgba(76, 175, 80, 0.15)' : '#BAE1BB'
+      if (estado === ESTADO_MESA.OCUPADO_OTRO) return isDark ? 'rgba(255, 152, 0, 0.15)' : '#F5DEB3'
+      return isDark ? 'rgba(244, 67, 54, 0.15)' : '#EF9999'
     }
 
     const getHoverColor = () => {
-      if (estado === ESTADO_MESA.LIBRE) return COLORS.libreHover
-      if (estado === ESTADO_MESA.OCUPADO_OTRO) return COLORS.ocupadoOtroHover
-      return COLORS.ocupadoHover
+      if (estado === ESTADO_MESA.LIBRE) return isDark ? 'rgba(76, 175, 80, 0.25)' : '#8CCF9B'
+      if (estado === ESTADO_MESA.OCUPADO_OTRO) return isDark ? 'rgba(255, 152, 0, 0.25)' : '#EEBC7B'
+      return isDark ? 'rgba(244, 67, 54, 0.25)' : '#E57373'
     }
 
     let formattedTime = '--:--'
@@ -126,10 +120,10 @@ const MesaCard = memo(
           opacity: estado === ESTADO_MESA.OCUPADO_OTRO ? 0.7 : 1,
           backgroundColor: getBackgroundColor(),
           position: 'relative',
-          transition: 'background-color 0.2s',
+          transition: 'all 0.2s',
           '&:hover': isClickable
             ? {
-                backgroundColor: getHoverColor(),
+                backgroundColor: isFocused ? COLORS.focused : getHoverColor(),
                 transform: 'translateY(-2px)',
                 boxShadow: 2,
               }
@@ -235,6 +229,14 @@ const MesaCard = memo(
                   </Typography>
                 </Tooltip>
               )}
+              {usuarioOcupante && usuarioOcupante.toLowerCase() !== (user?.usuario || '').toLowerCase() && (
+                <Typography
+                  variant="body2"
+                  sx={{ fontSize: '0.65rem', mt: 0.25, color: 'text.secondary', fontWeight: 'bold' }}
+                >
+                  Por: {usuarioOcupante}
+                </Typography>
+              )}
             </>
           ) : (
             <Box sx={{ textAlign: 'center' }}>
@@ -320,10 +322,10 @@ const RrMesas: React.FC<RrMesasProps> = ({
 
     if (current) {
       const mesaActual = options.find((o) => o.value === current.value)
-      // Si la mesa sigue siendo mía o libre, no hacer nada
+      // Si la mesa sigue siendo editable por nosotros (LIBRE o nuestro OCUPADO)
       if (mesaActual && mesaActual.estado !== ESTADO_MESA.OCUPADO_OTRO) return
 
-      // La mesa fue tomada por otro usuario durante el polling
+      // La mesa fue tomada por otro punto de venta durante el polling
       const primeraLibre = options.find((m) => m.estado === ESTADO_MESA.LIBRE)
       if (primeraLibre) {
         const idx = options.findIndex((m) => m._id === primeraLibre._id)
@@ -331,7 +333,7 @@ const RrMesas: React.FC<RrMesasProps> = ({
         setSelectedOption(primeraLibre)
         setSnackbar({
           open: true,
-          message: `Mesa ${current.value} fue ocupada. Se cambió automáticamente a Mesa ${primeraLibre.value}`,
+          message: `La mesa ${current.value} fue ocupada. Cambiando a Mesa ${primeraLibre.value}`,
           severity: 'warning',
         })
       } else {
@@ -339,24 +341,30 @@ const RrMesas: React.FC<RrMesasProps> = ({
         setFocusedIndex(-1)
         setSnackbar({
           open: true,
-          message: 'Su mesa fue ocupada y no hay mesas libres disponibles',
+          message: 'La mesa seleccionada fue ocupada por alguien más y no hay mesas libres.',
           severity: 'warning',
         })
       }
       return
     }
 
-    // Sin selección (entrada inicial o cambio de espacio): auto-seleccionar primera libre
+    // Sin selección (entrada inicial o cambio de espacio): auto-seleccionar primera editable
+    // Prioriza seleccionar una LIBRE, pero si no hay, permite seleccionar un OCUPADO tuyo.
     const primeraLibre = options.find((m) => m.estado === ESTADO_MESA.LIBRE)
-    if (primeraLibre) {
-      const idx = options.findIndex((m) => m._id === primeraLibre._id)
+    const primeraDisponible = primeraLibre || options.find((m) => m.estado !== ESTADO_MESA.OCUPADO_OTRO)
+
+    if (primeraDisponible) {
+      const idx = options.findIndex((m) => m._id === primeraDisponible._id)
       setFocusedIndex(idx)
-      setSelectedOption(primeraLibre)
-      setSnackbar({
-        open: true,
-        message: `Mesa ${primeraLibre.value} seleccionada automáticamente`,
-        severity: 'info',
-      })
+      setSelectedOption(primeraDisponible)
+      // Evitar mensaje cuando es tu propia mesa, pero avisar si es una libre
+      if (primeraDisponible.estado === ESTADO_MESA.LIBRE) {
+        setSnackbar({
+          open: true,
+          message: `Mesa ${primeraDisponible.value} seleccionada automáticamente`,
+          severity: 'info',
+        })
+      }
     } else {
       setSnackbar({
         open: true,

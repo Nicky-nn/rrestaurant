@@ -169,13 +169,14 @@ const RestRegistrar: FunctionComponent = () => {
 
     const mapaMesasOcupadas = new Map(
       mesasOcupadas
-        .filter((mo) => mo.mesa?.nombre)
+        .filter((mo) => mo.mesa?.nombre && (mo.mesa.ubicacion || null) === (espacio || null))
         .map((mo) => {
           const pedidoCompleto = mo.pedidoId ? pedidosById.get(mo.pedidoId) : null
           return [
             mo.mesa!.nombre,
             {
               usuario: mo.usucre || 'Usuario',
+              codigoPuntoVenta: mo.codigoPuntoVenta,
               pedidoId: mo.pedidoId,
               pedido: pedidoCompleto,
               ubicacion: mo.mesa!.ubicacion || null,
@@ -196,6 +197,7 @@ const RestRegistrar: FunctionComponent = () => {
           label: `Mesa ${nombreMesa}`,
           estado: ESTADO_MESA.OCUPADO,
           pedido: miPedido,
+          usuarioOcupante: miPedido.usucre,
         })
       } else {
         const mesaOcupada = mapaMesasOcupadas.get(nombreMesa)
@@ -205,6 +207,7 @@ const RestRegistrar: FunctionComponent = () => {
         if (mesaOcupada && correspondeEspacio) {
           let pedido = mesaOcupada.pedido || undefined
           const usuarioOcupante = mesaOcupada.usuario
+          const posOcupante = mesaOcupada.codigoPuntoVenta
 
           // Validar coherencia: Si el pedido asociado dice estar en otra mesa (por transferencia reciente),
           // ignorar la ocupación 'stale' de esta posición.
@@ -212,11 +215,12 @@ const RestRegistrar: FunctionComponent = () => {
             pedido = undefined
           }
 
-          const esMio = (usuarioOcupante || '').toLowerCase() === (user.usuario || '').toLowerCase()
+          // Es de mi punto de venta si el código coincide
+          const esMio = posOcupante === user.puntoVenta.codigo
 
-          // Si el backend aún reporta la mesa como ocupada pero ya no existe pedido activo (o se movió),
-          // evitar falsos positivos (mesa roja) y mostrarla como libre.
-          if (!pedido) {
+          // Si el backend reporta la mesa como ocupada por MI punto de venta,
+          // pero ya no existe pedido activo (o se movió), es un falso positivo (stale flag)
+          if (esMio && !pedido) {
             mesas.push({
               _id: `mesa-${i}`,
               value: nombreMesa,
@@ -233,6 +237,7 @@ const RestRegistrar: FunctionComponent = () => {
               label: `Mesa ${nombreMesa}`,
               estado: ESTADO_MESA.OCUPADO,
               pedido,
+              usuarioOcupante,
             })
           } else {
             mesas.push({
@@ -240,7 +245,7 @@ const RestRegistrar: FunctionComponent = () => {
               value: nombreMesa,
               label: `Mesa ${nombreMesa}`,
               estado: ESTADO_MESA.OCUPADO_OTRO,
-              pedido,
+              pedido: pedido || undefined, // A veces de otro punto de venta no tendremos los datos del pedido
               usuarioOcupante,
             })
           }
