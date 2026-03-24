@@ -229,26 +229,44 @@ const MesaCard = memo(
                   </Typography>
                 </Tooltip>
               )}
-              {usuarioOcupante && (pedido?.usumod || usuarioOcupante).toLowerCase() !== (user?.usuario || '').toLowerCase() && (
-                <Typography
-                  variant="body2"
-                  sx={{ fontSize: '0.65rem', mt: 0.25, color: 'text.secondary', fontWeight: 'bold', lineHeight: 1.2 }}
-                >
-                  {pedido?.usumod ? `Mod: ${pedido.usumod}` : `Por: ${usuarioOcupante}`}
-                </Typography>
-              )}
+              {usuarioOcupante &&
+                (pedido?.usumod || usuarioOcupante).toLowerCase() !== (user?.usuario || '').toLowerCase() && (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: '0.65rem',
+                      mt: 0.25,
+                      color: 'text.secondary',
+                      fontWeight: 'bold',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {pedido?.usumod ? `Mod: ${pedido.usumod}` : `Por: ${usuarioOcupante}`}
+                  </Typography>
+                )}
             </>
           ) : (
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                 {estado === ESTADO_MESA.OCUPADO_OTRO ? 'Ocupada' : 'Libre'}
               </Typography>
-              {estado === ESTADO_MESA.OCUPADO_OTRO && usuarioOcupante && (pedido?.usumod || usuarioOcupante).toLowerCase() !== (user?.usuario || '').toLowerCase() && (
-                <Typography variant="body2" sx={{ fontSize: '0.7rem', mt: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <PersonIcon fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                  {pedido?.usumod ? `Mod: ${pedido.usumod}` : usuarioOcupante}
-                </Typography>
-              )}
+              {estado === ESTADO_MESA.OCUPADO_OTRO &&
+                usuarioOcupante &&
+                (pedido?.usumod || usuarioOcupante).toLowerCase() !== (user?.usuario || '').toLowerCase() && (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: '0.7rem',
+                      mt: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <PersonIcon fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+                    {pedido?.usumod ? `Mod: ${pedido.usumod}` : usuarioOcupante}
+                  </Typography>
+                )}
             </Box>
           )}
         </CardContent>
@@ -322,17 +340,19 @@ const RrMesas: React.FC<RrMesasProps> = ({
 
     if (current) {
       const mesaActual = options.find((o) => o.value === current.value)
-      
+
       let tomadaPorOtro = false
       if (mesaActual) {
         if (mesaActual.estado === ESTADO_MESA.OCUPADO_OTRO) {
           tomadaPorOtro = true
         } else if (current.estado === ESTADO_MESA.LIBRE && mesaActual.estado === ESTADO_MESA.OCUPADO) {
-          // Si estaba libre localmente pero el polling (useRestPedidoMesasOcupadas) 
-          // nos dice que ya está OCUPADA (por otro dispositivo/usuario con el mismo POS),
-          // debemos ser expulsados. Si la hubiéramos ocupado nosotros mismos, 
-          // handleSuccess habría cambiado nuestro current.estado a OCUPADO.
-          tomadaPorOtro = true
+          // Si estaba libre localmente (porque acabamos de pagar/cancelar) pero el query
+          // todavía reporta OCUPADA (datos stale), verificamos de quién es:
+          // Si NO somos nosotros mismos, alguien más la tomó rápido y nos expulsa.
+          // Si somos NOSOTROS, es casi seguro el estado anterior que aún no desapareció.
+          if ((mesaActual.usuarioOcupante || '').toLowerCase() !== (user?.usuario || '').toLowerCase()) {
+            tomadaPorOtro = true
+          }
         }
       }
 
@@ -386,7 +406,7 @@ const RrMesas: React.FC<RrMesasProps> = ({
         severity: 'warning',
       })
     }
-  }, [options, setFocusedIndex, setSelectedOption, isLoading]) // setters de useState son estables, no causan bucles
+  }, [options, setFocusedIndex, setSelectedOption, isLoading, user?.usuario]) // setters de useState son estables, no causan bucles
 
   // Sincronizar focusedIndex cuando cambia selectedOption desde el padre
   useEffect(() => {

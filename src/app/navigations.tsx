@@ -1,5 +1,6 @@
 import { clientsRoutesMap } from './modules/clients/clientsRoutes'
 import { homeRoutesMap } from './modules/home/HomeRoutes'
+import { impresorasRoutesMap } from './modules/impresoras/impresorasRoutes'
 import { restauranteRoutesMap } from './modules/restaurante/restauranteRoutes'
 
 export interface NavigationProps {
@@ -49,6 +50,17 @@ export const navigations: NavigationProps[] = [
         icon: '',
         iconText: 'CL',
         path: clientsRoutesMap.clients.path,
+      },
+    ],
+  },
+  {
+    name: 'Impresoras',
+    icon: 'print',
+    children: [
+      {
+        name: impresorasRoutesMap.gestion.name,
+        iconText: 'IM',
+        path: impresorasRoutesMap.gestion.path,
       },
     ],
   },

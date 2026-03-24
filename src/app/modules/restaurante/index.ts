@@ -2,4 +2,4 @@
 
 export * from './client'
 export * from './types'
-export * from './mutations/useRestPedidoFacturaRegistro'
+export * from './queries/useArticuloComposicionVenta'

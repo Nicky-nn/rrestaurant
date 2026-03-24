@@ -33,6 +33,7 @@ import RrTransferirMesaDialog from './RrTransferirMesaDialog'
 
 interface RrAccionesProps {
   mesaSeleccionada?: MesaUI | null
+  isPedidoDirty?: boolean
   onSuccess?: (pedidoRetornado?: any, isFinalizado?: boolean) => void
   onCancel?: () => void
   onClear?: () => void
@@ -45,6 +46,7 @@ interface RrAccionesProps {
  */
 const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   mesaSeleccionada,
+  isPedidoDirty = false,
   onSuccess,
   onCancel,
   onClear,
@@ -238,6 +240,18 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
   const handleOpenCobro = async () => {
     if (!mesaSeleccionada?.pedido) return
+
+    const { pedido } = mesaSeleccionada
+    const isNuevo = !pedido._id || pedido._id.startsWith('nuevo-')
+
+    if (!isNuevo) {
+      // Si explícitamente no hay cambios locales sin guardar,
+      // omitimos la llamada redundante para ahorrar recursos e internet.
+      if (!isPedidoDirty) {
+        setOpenCobroDialog(true)
+        return
+      }
+    }
 
     // Registrar o actualizar automáticamente antes de cobrar
     // para evitar que el mesero olvide actualizar los últimos cambios

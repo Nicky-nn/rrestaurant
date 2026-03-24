@@ -707,6 +707,8 @@ export interface ArticuloPrecioOperacionInput {
  * Datos de entrada para el registro / actualización de articulo unidad de medida
  */
 export interface ArticuloPrecio {
+  /** Código interno de articulo Precio */
+  _id?: string
   /** Datos de la unidad de medida */
   articuloUnidadMedida?: ArticuloUnidadMedida
   /** Datos de la moneda principal */
@@ -848,6 +850,12 @@ export interface TipoArticulo {
   updatedAt?: DateDMYHHMMSS
 }
 
+export interface ArticuloComposicionVenta {
+  articulo?: Articulo
+  receta?: ArticuloRecetaOperacion
+  modificadores?: ArticuloModificadorOperacion[]
+}
+
 /**
  * Una conexión a una lista de elementos.
  */
@@ -922,8 +930,12 @@ export interface Articulo {
   activo?: boolean
   /** Si es true, el articulo se listará como complemento para otros articulos - Ej. Aderezos, articulos inventariados adicionales al articulo principal */
   complemento?: boolean
-  /** Lista de complementos del articulo - Ej. Aderezos, articulos inventariados adicionales al articulo principal - La lista se visualizará siempre y cuando el articulo tambien sea complemento */
+  /** Lista de complementos del articulo - Ej. Aderezos, articulos inventariados adicionales al articulo principal - La lista se visualizará siempre y cuando el articulo tambien sea complemento - @deprecated */
   listaComplemento?: ArticuloComplemento[]
+  /** Se despliega el modal si cuenta con modificadores de articulo */
+  tieneModificadores?: boolean
+  /** Si el articulo cuenta con receta asociada */
+  esReceta?: boolean
   /** Estado del registro */
   state?: string
   /** Usuario de creación del registro */
@@ -937,7 +949,7 @@ export interface Articulo {
 }
 
 /**
- * Resumen de un articulo complemento
+ * Resumen de un articulo complemento - Valor deprecado - @deprecated
  */
 export interface ArticuloComplemento {
   /** Identificador único del articulo */
@@ -1029,6 +1041,9 @@ export interface ArticuloOperacion {
   impresoras?: Impresora[]
   /** Si es un articulo para cortesía. - El precio del articulo se cambia a 0 solo cuando se finaliza el pedido. - Para otros estados, se mantiene el precio original */
   cortesia?: boolean
+  /** Datos operativos de receta */
+  variacionReceta?: ArticuloOperacionReceta[]
+  modificadores?: ArticuloOperacionModificador[]
   /** Estado del registro - ELABORADO: Articulo que no ha sufrido cambios en el ciclo de vida del item - ACTUALIZADO: Se ha modificado algún valor del item - ELIMINADO: Se ha eliminado el item - NUEVO: Nuevo ingreso de item */
   state?: string
 }
@@ -1069,6 +1084,8 @@ export interface ArticuloOperacionInput {
   codigoLote?: string
   articuloPrecio: ArticuloPrecioOperacionInput
   complementos?: ArticuloOperacionComplementoInput[]
+  variacionReceta?: ArticuloRecetaOperacionInput[]
+  modificadores?: ArticuloModificadorOperacionInput[]
   detalleExtra?: string
   nota?: string
   notaRapida?: NotaRapidaInput[]
@@ -1349,6 +1366,61 @@ export interface Impresora {
   usumod?: string
   /** Fecha de modificación del registro */
   updatedAt?: DateDMYHHMMSS
+}
+
+/**
+ * Estructura de datos usada para operaciones transaccionales, ejemplo venta, compra, etc
+ */
+export interface ArticuloModificadorOpcionOperacion {
+  /** Código interno del articulo */
+  articulo?: Articulo
+  /** Cantidad que se descontará del inventario al seleccionar esta opción (Ej: 1 porción) */
+  cantidadIncluida?: number
+  /** Determina si este insumo puede aplicar para promociones de gratuidad en este grupo */
+  elegibleParaGratis?: boolean
+}
+
+/**
+ * Estructura de datos usada para operaciones transaccionales, ejemplo venta, compra, etc
+ */
+export interface ArticuloModificadorOperacion {
+  /** Identificador interno */
+  _id?: string
+  /** Nombre único público de la lista de complementos (Ej: "Elige tu guarnición") */
+  nombre?: string
+  /** Mínima cantidad de selecciones requeridas (0 = Opcional, 1+ = Obligatorio) */
+  minSeleccion?: number
+  /** Máxima cantidad de selecciones permitidas (1 = Radio buttons, >1 = Checkboxes) */
+  maxSeleccion?: number
+  /** Cantidad de opciones que el sistema no cobrará (Regla de promoción) */
+  opcionesGratuitas?: number
+  /** Lista de artículos que conforman este grupo de selección */
+  opciones?: ArticuloModificadorOpcionOperacion[]
+}
+
+/**
+ * Estructura que se usa para exponer datos de transacción, ejemplo ventas
+ */
+export interface ArticuloRecetaIngredienteOperacion {
+  /** Código del articulo - Debe contener al menos precio */
+  articuloId?: string
+  /** Datos de inventario articulo */
+  articulo?: Articulo
+  /** Cantidad exacta que se descontará del inventario del ingrediente. Ej: Si la unidad de medida es "Porciones", y la hamburguesa lleva 3 porciones, esto es 3. */
+  cantidadBase?: number
+  /** Bandera de personalización: ¿El cliente puede pedir que le quiten este ingrediente? (Ej: "Sin Cebolla" -> true. "Sin Pan" -> false). */
+  esRemovible?: boolean
+  /** Bandera de personalización: ¿El cliente puede pedir extra de este ingrediente? Si es true, el POS permitirá cobrar una porción (unidad medida) adicional. */
+  permiteExtra?: boolean
+}
+
+export interface ArticuloRecetaOperacion {
+  /** Identificador interno */
+  _id?: string
+  /** Nombre único de la receta (Ej: "Hamburguesa primavera") */
+  nombre?: string
+  /** Lista de ingredientes que componen el articulo padre */
+  ingredientes?: ArticuloRecetaIngredienteOperacion[]
 }
 
 /**

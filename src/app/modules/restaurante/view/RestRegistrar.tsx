@@ -31,6 +31,12 @@ const RestRegistrar: FunctionComponent = () => {
     key: 0,
   })
   const [ultimoPedidoExitoso, setUltimoPedidoExitoso] = useState<any>(null)
+  const [isPedidoDirty, setIsPedidoDirty] = useState(false)
+
+  const handleMesaSeleccionada = useCallback((mesa: MesaUI | null) => {
+    setMesaSeleccionada(mesa)
+    setIsPedidoDirty(false)
+  }, [])
 
   // Obtener la lista de espacios de la sucursal actual
   const { data: espaciosRaw = [] } = useRestEspacioPorSucursal({ codigoSucursal })
@@ -58,7 +64,7 @@ const RestRegistrar: FunctionComponent = () => {
       localStorage.removeItem('ubicacion')
     }
     // Limpiar la selección actual
-    setMesaSeleccionada(null)
+    handleMesaSeleccionada(null)
     setFocusedIndex(-1)
   }
 
@@ -350,6 +356,8 @@ const RestRegistrar: FunctionComponent = () => {
         }))
       }
 
+      setIsPedidoDirty(true)
+
       setMesaSeleccionada((prev) => {
         if (!prev) return prev
 
@@ -496,6 +504,7 @@ const RestRegistrar: FunctionComponent = () => {
   )
 
   const handleUpdateProduct = useCallback((index: number, updatedItem: ArticuloOperacion) => {
+    setIsPedidoDirty(true)
     setMesaSeleccionada((prev) => {
       if (!prev || !prev.pedido || !prev.pedido.productos) return prev
       const productos = [...prev.pedido.productos]
@@ -505,6 +514,7 @@ const RestRegistrar: FunctionComponent = () => {
   }, [])
 
   const handleRemoveProduct = useCallback((index: number) => {
+    setIsPedidoDirty(true)
     setMesaSeleccionada((prev) => {
       if (!prev || !prev.pedido || !prev.pedido.productos) return prev
       const productos = [...prev.pedido.productos]
@@ -515,9 +525,17 @@ const RestRegistrar: FunctionComponent = () => {
 
   const handleSuccess = useCallback(
     (pedidoRetornado?: any, isFinalizado?: boolean) => {
+      const isNuevo =
+        !mesaSeleccionadaRef.current?.pedido?._id ||
+        mesaSeleccionadaRef.current.pedido._id.startsWith('nuevo-')
+
       setSnackbar((s) => ({
         open: true,
-        message: isFinalizado ? 'Pedido finalizado exitosamente' : 'Pedido registrado con éxito',
+        message: isFinalizado
+          ? 'Pedido finalizado exitosamente'
+          : isNuevo
+            ? 'Pedido registrado con éxito'
+            : 'Pedido actualizado con éxito',
         key: s.key + 1,
       }))
 
@@ -536,6 +554,7 @@ const RestRegistrar: FunctionComponent = () => {
             pedido: { ...(pedidoRetornado || prev.pedido), _forceSnapshotUpdate: Date.now() } as any,
           }
         })
+        setIsPedidoDirty(false)
       }
 
       refetchPedidos()
@@ -559,6 +578,7 @@ const RestRegistrar: FunctionComponent = () => {
         pedido: undefined,
       }
     })
+    setIsPedidoDirty(false)
 
     refetchPedidos()
     refetchMesas()
@@ -573,11 +593,13 @@ const RestRegistrar: FunctionComponent = () => {
         pedido: undefined,
       }
     })
+    setIsPedidoDirty(false)
     refetchPedidos()
     refetchMesas()
   }, [refetchMesas, refetchPedidos])
 
   const handleClientChange = useCallback((cliente: any) => {
+    setIsPedidoDirty(true)
     setMesaSeleccionada((prev) => {
       if (!prev) return prev
       // Si el pedido no existe, asumimos estructura base
@@ -633,7 +655,7 @@ const RestRegistrar: FunctionComponent = () => {
               key={espacio || 'salon-principal'}
               options={mesas}
               selectedOption={mesaSeleccionada}
-              setSelectedOption={setMesaSeleccionada}
+              setSelectedOption={handleMesaSeleccionada}
               focusedIndex={focusedIndex}
               setFocusedIndex={setFocusedIndex}
               codigoSucursal={codigoSucursal}
@@ -668,6 +690,7 @@ const RestRegistrar: FunctionComponent = () => {
           <Box sx={{ flexShrink: 0, mt: 'auto' }}>
             <RrAcciones
               mesaSeleccionada={mesaSeleccionada}
+              isPedidoDirty={isPedidoDirty}
               onSuccess={handleSuccess}
               onCancel={handleCancel}
               onClear={handleClear}
