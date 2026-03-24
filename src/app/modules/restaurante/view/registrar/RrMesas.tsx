@@ -322,8 +322,22 @@ const RrMesas: React.FC<RrMesasProps> = ({
 
     if (current) {
       const mesaActual = options.find((o) => o.value === current.value)
-      // Si la mesa sigue siendo editable por nosotros (LIBRE o nuestro OCUPADO)
-      if (mesaActual && mesaActual.estado !== ESTADO_MESA.OCUPADO_OTRO) return
+      
+      let tomadaPorOtro = false
+      if (mesaActual) {
+        if (mesaActual.estado === ESTADO_MESA.OCUPADO_OTRO) {
+          tomadaPorOtro = true
+        } else if (current.estado === ESTADO_MESA.LIBRE && mesaActual.estado === ESTADO_MESA.OCUPADO) {
+          // Si estaba libre localmente pero el polling (useRestPedidoMesasOcupadas) 
+          // nos dice que ya está OCUPADA (por otro dispositivo/usuario con el mismo POS),
+          // debemos ser expulsados. Si la hubiéramos ocupado nosotros mismos, 
+          // handleSuccess habría cambiado nuestro current.estado a OCUPADO.
+          tomadaPorOtro = true
+        }
+      }
+
+      // Si la mesa sigue siendo editable por nosotros y no fue tomada por otro
+      if (mesaActual && !tomadaPorOtro) return
 
       // La mesa fue tomada por otro punto de venta durante el polling
       const primeraLibre = options.find((m) => m.estado === ESTADO_MESA.LIBRE)
