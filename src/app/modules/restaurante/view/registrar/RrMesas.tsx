@@ -229,12 +229,12 @@ const MesaCard = memo(
                   </Typography>
                 </Tooltip>
               )}
-              {usuarioOcupante && usuarioOcupante.toLowerCase() !== (user?.usuario || '').toLowerCase() && (
+              {usuarioOcupante && (pedido?.usumod || usuarioOcupante).toLowerCase() !== (user?.usuario || '').toLowerCase() && (
                 <Typography
                   variant="body2"
-                  sx={{ fontSize: '0.65rem', mt: 0.25, color: 'text.secondary', fontWeight: 'bold' }}
+                  sx={{ fontSize: '0.65rem', mt: 0.25, color: 'text.secondary', fontWeight: 'bold', lineHeight: 1.2 }}
                 >
-                  Por: {usuarioOcupante}
+                  {pedido?.usumod ? `Mod: ${pedido.usumod}` : `Por: ${usuarioOcupante}`}
                 </Typography>
               )}
             </>
@@ -243,10 +243,10 @@ const MesaCard = memo(
               <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                 {estado === ESTADO_MESA.OCUPADO_OTRO ? 'Ocupada' : 'Libre'}
               </Typography>
-              {estado === ESTADO_MESA.OCUPADO_OTRO && usuarioOcupante && (
-                <Typography variant="body2" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+              {estado === ESTADO_MESA.OCUPADO_OTRO && usuarioOcupante && (pedido?.usumod || usuarioOcupante).toLowerCase() !== (user?.usuario || '').toLowerCase() && (
+                <Typography variant="body2" sx={{ fontSize: '0.7rem', mt: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <PersonIcon fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
-                  {usuarioOcupante}
+                  {pedido?.usumod ? `Mod: ${pedido.usumod}` : usuarioOcupante}
                 </Typography>
               )}
             </Box>

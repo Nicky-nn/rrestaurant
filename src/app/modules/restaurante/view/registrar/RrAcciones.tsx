@@ -239,13 +239,10 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   const handleOpenCobro = async () => {
     if (!mesaSeleccionada?.pedido) return
 
-    if (!mesaSeleccionada.pedido._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')) {
-      // Registrar automáticamente si el pedido es nuevo
-      const response = await handleRegistrar()
-      if (response) {
-        setOpenCobroDialog(true)
-      }
-    } else {
+    // Registrar o actualizar automáticamente antes de cobrar
+    // para evitar que el mesero olvide actualizar los últimos cambios
+    const response = await handleRegistrar()
+    if (response) {
       setOpenCobroDialog(true)
     }
   }
