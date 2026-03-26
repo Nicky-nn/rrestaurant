@@ -459,45 +459,20 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
 
 // ─── Íconos Lord Icon para carrito vacío ────────────────────────────────────
 
-const LORD_ICONS = [
-  'https://cdn.lordicon.com/njrwmskv.json',
-  'https://cdn.lordicon.com/iewbcboh.json',
-  'https://cdn.lordicon.com/bmafcihj.json',
-]
-
 const EmptyCartIcon = ({ label }: { label?: string }) => {
-  const [iconIndex, setIconIndex] = useState(0)
-  const [visible, setVisible] = useState(true)
-
-  useEffect(() => {
-    // Cada 7 segundos inicia el ciclo: fade-out → cambia ícono → fade-in
-    const timer = setInterval(() => {
-      setVisible(false)
-      setTimeout(() => {
-        setIconIndex((prev) => (prev + 1) % LORD_ICONS.length)
-        setVisible(true)
-      }, 900) // duración del fade-out antes de cambiar
-    }, 7000)
-    return () => clearInterval(timer)
-  }, [])
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
       <Box
         sx={{
-          opacity: visible ? 1 : 0,
-          transition: 'opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
         <lord-icon
-          key={iconIndex}
-          src={LORD_ICONS[iconIndex]}
-          trigger="in"
+          src="https://cdn.lordicon.com/pmawqxvu.json"
+          trigger="hover"
           delay="300"
-          state="in-unfold"
           style={{ width: '250px', height: '250px' }}
         />
       </Box>

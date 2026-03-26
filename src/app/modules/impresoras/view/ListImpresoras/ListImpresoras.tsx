@@ -15,6 +15,7 @@ import { useArticuloInventarioListado } from '../../../restaurante/queries/useAr
 import { Articulo } from '../../../restaurante/types'
 import { impresorasRoutesMap } from '../../impresorasRoutes'
 import AsociarImpresoraDialog from './AsociarImpresoraDialog'
+import ConfiguracionImpresorasDialog from './ConfiguracionImpresorasDialog'
 import GestionImpresorasDialog from './GestionImpresorasDialog'
 import { tableColumns } from './TableImpresorasHeaders'
 
@@ -28,6 +29,7 @@ const ListImpresoras: FunctionComponent<ListImpresorasProps> = () => {
   const [articuloSelected, setArticuloSelected] = useState<Articulo | null>(null)
 
   const [openGestionDialog, setOpenGestionDialog] = useState(false)
+  const [openConfigDialog, setOpenConfigDialog] = useState(false)
 
   const {
     data = [],
@@ -146,7 +148,7 @@ const ListImpresoras: FunctionComponent<ListImpresorasProps> = () => {
             variant="outlined"
             color="secondary"
             startIcon={<Settings />}
-            onClick={() => setOpenGestionDialog(true)}
+            onClick={() => setOpenConfigDialog(true)}
           >
             Configuración
           </Button>
@@ -175,6 +177,11 @@ const ListImpresoras: FunctionComponent<ListImpresorasProps> = () => {
         {/* Dialog centralizado para CRUD de las Impresoras (Sitios) */}
         {openGestionDialog && (
           <GestionImpresorasDialog open={openGestionDialog} onClose={() => setOpenGestionDialog(false)} />
+        )}
+
+        {/* Dialog local para configurar impresoras de comanda/recibos */}
+        {openConfigDialog && (
+          <ConfiguracionImpresorasDialog open={openConfigDialog} onClose={() => setOpenConfigDialog(false)} />
         )}
       </SimpleContainerBox>
     </>

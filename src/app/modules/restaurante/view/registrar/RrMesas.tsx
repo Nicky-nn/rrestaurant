@@ -89,16 +89,16 @@ const MesaCard = memo(
     const isClickable = estado !== ESTADO_MESA.OCUPADO_OTRO
 
     const getBackgroundColor = () => {
-      if (isFocused) return COLORS.focused
-      if (estado === ESTADO_MESA.LIBRE) return isDark ? 'rgba(76, 175, 80, 0.15)' : '#BAE1BB'
-      if (estado === ESTADO_MESA.OCUPADO_OTRO) return isDark ? 'rgba(255, 152, 0, 0.15)' : '#F5DEB3'
-      return isDark ? 'rgba(244, 67, 54, 0.15)' : '#EF9999'
+      if (isFocused) return isDark ? '#c79100' : COLORS.focused
+      if (estado === ESTADO_MESA.LIBRE) return isDark ? 'rgba(76, 175, 80, 0.4)' : '#BAE1BB'
+      if (estado === ESTADO_MESA.OCUPADO_OTRO) return isDark ? 'rgba(255, 152, 0, 0.4)' : '#F5DEB3'
+      return isDark ? 'rgba(244, 67, 54, 0.4)' : '#EF9999'
     }
 
     const getHoverColor = () => {
-      if (estado === ESTADO_MESA.LIBRE) return isDark ? 'rgba(76, 175, 80, 0.25)' : '#8CCF9B'
-      if (estado === ESTADO_MESA.OCUPADO_OTRO) return isDark ? 'rgba(255, 152, 0, 0.25)' : '#EEBC7B'
-      return isDark ? 'rgba(244, 67, 54, 0.25)' : '#E57373'
+      if (estado === ESTADO_MESA.LIBRE) return isDark ? 'rgba(76, 175, 80, 0.6)' : '#8CCF9B'
+      if (estado === ESTADO_MESA.OCUPADO_OTRO) return isDark ? 'rgba(255, 152, 0, 0.6)' : '#EEBC7B'
+      return isDark ? 'rgba(244, 67, 54, 0.6)' : '#E57373'
     }
 
     let formattedTime = '--:--'
@@ -119,11 +119,12 @@ const MesaCard = memo(
           cursor: isClickable ? 'pointer' : 'not-allowed',
           opacity: estado === ESTADO_MESA.OCUPADO_OTRO ? 0.7 : 1,
           backgroundColor: getBackgroundColor(),
+          border: isDark ? `1px solid ${getHoverColor()}` : '1px solid transparent',
           position: 'relative',
           transition: 'all 0.2s',
           '&:hover': isClickable
             ? {
-                backgroundColor: isFocused ? COLORS.focused : getHoverColor(),
+                backgroundColor: isFocused ? (isDark ? '#e6a800' : COLORS.focused) : getHoverColor(),
                 transform: 'translateY(-2px)',
                 boxShadow: 2,
               }
@@ -170,10 +171,10 @@ const MesaCard = memo(
             position: 'absolute',
             bottom: showAsGrid ? -15 : -10,
             left: 5,
-            opacity: 0.1,
+            opacity: isDark ? 0.2 : 0.1,
             fontWeight: 'bold',
             fontSize: showAsGrid ? 70 : 60,
-            color: estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000',
+            color: isDark ? '#ffffff' : (estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000'),
           }}
         >
           {mesa.value}
@@ -185,9 +186,9 @@ const MesaCard = memo(
             position: 'absolute',
             bottom: showAsGrid ? -8 : -5,
             right: 5,
-            opacity: 0.1,
+            opacity: isDark ? 0.2 : 0.1,
             fontSize: showAsGrid ? 55 : 45,
-            color: estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000',
+            color: isDark ? '#ffffff' : (estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000'),
           }}
         />
 

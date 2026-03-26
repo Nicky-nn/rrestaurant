@@ -28,5 +28,14 @@ export default ({ mode }) => {
       sourcemap: true,
       chunkSizeWarningLimit: 5000,
     },
+    server: {
+      proxy: {
+        '/local-printers': {
+          target: 'http://localhost:7777',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/local-printers/, '')
+        }
+      }
+    }
   })
 }

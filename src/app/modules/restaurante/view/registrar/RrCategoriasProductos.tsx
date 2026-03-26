@@ -7,10 +7,15 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import SearchIcon from '@mui/icons-material/Search'
 import {
   Box,
+  Button,
   Card,
   CardActionArea,
   CardMedia,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   FormControlLabel,
   IconButton,
@@ -25,6 +30,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
+import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import {
@@ -40,6 +46,7 @@ import {
 
 import useAuth from '../../../../base/hooks/useAuth'
 import { useHorizontalDragScroll } from '../../../../base/hooks/useHorizontalDragScroll'
+import { useRestEspacioRegistro } from '../../mutations/useRestEspacioRegistro'
 import { useArticuloInventarioListado } from '../../queries/useArticuloInventarioListado'
 import { Articulo } from '../../types'
 import RrComplementoModal from './RrComplementoModal'
@@ -249,7 +256,7 @@ const ProductCard: FunctionComponent<ProductCardProps> = memo(
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        bgcolor: 'grey.100',
+                        bgcolor: 'transparent',
                       }}
                     >
                       <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
@@ -489,6 +496,26 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
   const [sortConfig, setSortConfig] = useState<SortConfig>(SORT_DEFAULT)
   const [searchTerm, setSearchTerm] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const [errorMesas, setErrorMesas] = useState(false)
+  const [helperMesas, setHelperMesas] = useState('')
+
+  const [openEspacioModal, setOpenEspacioModal] = useState(false)
+  const [nuevoEspacioNombre, setNuevoEspacioNombre] = useState('')
+  const [nuevoEspacioMesas, setNuevoEspacioMesas] = useState<number | ''>(10)
+
+  const queryClient = useQueryClient()
+  const registrarEspacioMutation = useRestEspacioRegistro({
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['restEspacioPorSucursal'] })
+      setOpenEspacioModal(false)
+      setNuevoEspacioNombre('')
+      setNuevoEspacioMesas(10)
+      onChangeEspacio?.(data._id as string)
+    },
+    onError: (err) => {
+      alert('Error al crear espacio: ' + err.message)
+    },
+  })
 
   // ── Barra de categorías dinámica ──────────────────────────────────────────
   const [catBarMode, setCatBarMode] = useState<CatBarMode>('single')
@@ -1146,7 +1173,105 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
             {e.descripcion || 'Sin nombre'}
           </MenuItem>
         ))}
+        <Divider sx={{ my: 0.5 }} />
+        <MenuItem
+          onClick={() => {
+            setOpenEspacioModal(true)
+            setMoreAnchorEl(null)
+          }}
+          sx={{ fontSize: '0.875rem', borderRadius: 1, color: 'primary.main', fontWeight: 'bold' }}
+        >
+          + Crear Nuevo
+        </MenuItem>
       </Popover>
+
+      <Dialog open={openEspacioModal} onClose={() => setOpenEspacioModal(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Crear Nuevo Espacio</DialogTitle>
+
+        <DialogContent
+          dividers
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            pt: 2,
+          }}
+        >
+          <TextField
+            label="Nombre del Espacio"
+            variant="outlined"
+            size="small"
+            fullWidth
+            value={nuevoEspacioNombre}
+            onChange={(e) => setNuevoEspacioNombre(e.target.value)}
+            autoFocus
+          />
+
+          <TextField
+            label="Cantidad de Mesas"
+            variant="outlined"
+            size="small"
+            type="number"
+            fullWidth
+            inputProps={{ min: 1, max: 100 }}
+            value={nuevoEspacioMesas}
+            error={errorMesas}
+            helperText={helperMesas}
+            onChange={(e) => {
+              const valor = Number(e.target.value)
+
+              if (valor > 100) {
+                setErrorMesas(true)
+                setHelperMesas('Máximo 100 mesas por espacio. Cree otro piso o espacio.')
+              } else {
+                setErrorMesas(false)
+                setHelperMesas('')
+                setNuevoEspacioMesas(e.target.value ? valor : '')
+              }
+            }}
+          />
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={() => setOpenEspacioModal(false)}
+            color="inherit"
+            disabled={registrarEspacioMutation.isPending}
+          >
+            Cancelar
+          </Button>
+
+          <Button
+            onClick={() => {
+              if (!nuevoEspacioNombre.trim() || !nuevoEspacioMesas) return
+
+              if (nuevoEspacioMesas > 100) {
+                setErrorMesas(true)
+                setHelperMesas('Máximo 100 mesas por espacio. Cree otro piso o espacio.')
+                return
+              }
+
+              registrarEspacioMutation.mutate({
+                entidad: { codigoSucursal, codigoPuntoVenta },
+                input: {
+                  descripcion: nuevoEspacioNombre.trim(),
+                  nroMesas: Number(nuevoEspacioMesas),
+                },
+              })
+            }}
+            variant="contained"
+            color="primary"
+            disabled={
+              !nuevoEspacioNombre.trim() ||
+              !nuevoEspacioMesas ||
+              errorMesas ||
+              registrarEspacioMutation.isPending
+            }
+          >
+            {registrarEspacioMutation.isPending ? 'Creando...' : 'Crear'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Popover de filtros */}
       <Popover

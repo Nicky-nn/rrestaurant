@@ -3,47 +3,47 @@
 /**
  * Date in DD/MM/YYYY format
  */
-export type DateDMY = string
+export type DateDMY = string;
 /**
  * Date in DD/MM/YYYY HH:MM:SS format
  */
-export type DateDMYHHMMSS = string
+export type DateDMYHHMMSS = string;
 /**
  * Fecha en formato DD/MM/YYYY HH:MM (Dia/Mes/Anio Hora:Minuto)
  */
-export type DateDMYHHMM = string
+export type DateDMYHHMM = string;
 /**
- * Url de la representación para la obtencion de la representación impresa
+ * Url de la representación para la obtencion de la representación impresa 
  */
-export type UrlRepresentacionGrafica = string
+export type UrlRepresentacionGrafica = string;
 /**
- * Url de la representación Grafica V2, para la obtención de la representación impresa, uso de Buffer para la generacion de archivos
+ * Url de la representación Grafica V2, para la obtención de la representación impresa, uso de Buffer para la generacion de archivos 
  */
-export type UrlRepresentacionGraficaV2 = string
+export type UrlRepresentacionGraficaV2 = string;
 /**
- * Url de consulta documentos, para la obtención de la representación impresa, uso de Buffer para la generacion de archivos
+ * Url de consulta documentos, para la obtención de la representación impresa, uso de Buffer para la generacion de archivos 
  */
-export type UrlConsultaDocumento = string
+export type UrlConsultaDocumento = string;
 /**
- * Url de la representación S.I.N para la obtencion de la representación impresa
+ * Url de la representación S.I.N para la obtencion de la representación impresa 
  */
-export type UrlSinRepresentacionGrafica = string
+export type UrlSinRepresentacionGrafica = string;
 /**
  * Información para ayudar en la paginación.
  */
 export interface PageInfo {
   /** Al paginar hacia adelante, ¿hay más elementos? */
-  hasNextPage: boolean
+  hasNextPage: boolean;
   /** Al paginar hacia atrás, ¿hay más elementos? */
-  hasPrevPage: boolean
+  hasPrevPage: boolean;
   /** Número total de registros */
-  totalDocs?: number
+  totalDocs?: number;
   /** Agrupador de registros */
-  limit?: number
+  limit?: number;
   /** Pagina Actual de consulta */
-  page?: number
+  page?: number;
   /** Total de paginas */
-  totalPages?: number
+  totalPages?: number;
 }
 
 /**
@@ -51,11 +51,11 @@ export interface PageInfo {
  */
 export interface SinActividades {
   /** Código de Actividad Económica */
-  codigoCaeb: string
+  codigoCaeb: string;
   /** Descripción de Actividad Económica */
-  descripcion: string
+  descripcion: string;
   /** Tipo de actividad (Producto o Servicio) */
-  tipoActividad: string
+  tipoActividad: string;
 }
 
 /**
@@ -63,9 +63,9 @@ export interface SinActividades {
  */
 export interface SinMotivoAnulacion {
   /** Código de Motivo de Anulación */
-  codigoClasificador: string
+  codigoClasificador: string;
   /** Descripción del Motivo de Anulación */
-  descripcion: string
+  descripcion: string;
 }
 
 /**
@@ -73,11 +73,11 @@ export interface SinMotivoAnulacion {
  */
 export interface SinProductoServicio {
   /** Código de Actividad Económica */
-  codigoActividad: string
+  codigoActividad: string;
   /** Código de Producto o Servicio */
-  codigoProducto: string
+  codigoProducto: string;
   /** Descripción genérica del Producto o Servicio */
-  descripcionProducto: string
+  descripcionProducto: string;
 }
 
 /**
@@ -85,9 +85,9 @@ export interface SinProductoServicio {
  */
 export interface SinTipoDocumentoIdentidad {
   /** Código de Tipo de Documento */
-  codigoClasificador: string
+  codigoClasificador: string;
   /** Descripción del Tipo de Documento */
-  descripcion: string
+  descripcion: string;
 }
 
 /**
@@ -95,9 +95,9 @@ export interface SinTipoDocumentoIdentidad {
  */
 export interface SinTipoDocumentoSector {
   /** Código de Tipo de Documento Sector */
-  codigoClasificador?: string
+  codigoClasificador?: string;
   /** Descripción del Tipo de Documento Sector */
-  descripcion?: string
+  descripcion?: string;
 }
 
 /**
@@ -105,9 +105,9 @@ export interface SinTipoDocumentoSector {
  */
 export interface SinTipoEmision {
   /** Código de Tipo de Emisión */
-  codigoClasificador: string
+  codigoClasificador: string;
   /** Descripción del Tipo de Emisión */
-  descripcion: string
+  descripcion: string;
 }
 
 /**
@@ -115,9 +115,9 @@ export interface SinTipoEmision {
  */
 export interface SinTipoFactura {
   /** Código de Tipo de Factura */
-  codigoClasificador: string
+  codigoClasificador: string;
   /** Descripción del Tipo de Factura */
-  descripcion: string
+  descripcion: string;
 }
 
 /**
@@ -125,9 +125,9 @@ export interface SinTipoFactura {
  */
 export interface SinTipoMetodoPago {
   /** Código de Tipo de Método de Pago */
-  codigoClasificador: string
+  codigoClasificador: string;
   /** Descripción del Tipo de Método de Pago */
-  descripcion: string
+  descripcion: string;
 }
 
 /**
@@ -135,9 +135,9 @@ export interface SinTipoMetodoPago {
  */
 export interface SinTipoMoneda {
   /** Código de Tipo de Moneda */
-  codigoClasificador: number
+  codigoClasificador: number;
   /** Descripción del Tipo de Moneda */
-  descripcion: string
+  descripcion: string;
 }
 
 /**
@@ -145,9 +145,9 @@ export interface SinTipoMoneda {
  */
 export interface SinTipoPuntoVenta {
   /** Código de Tipo de Punto de Venta */
-  codigoClasificador: string
+  codigoClasificador: string;
   /** Descripción del Tipo de Punto de Venta */
-  descripcion: string
+  descripcion: string;
 }
 
 /**
@@ -155,9 +155,9 @@ export interface SinTipoPuntoVenta {
  */
 export interface SinUnidadMedida {
   /** Código de Unidad de Medida */
-  codigoClasificador?: number
+  codigoClasificador?: number;
   /** Descripción de Unidad de Medida */
-  descripcion?: string
+  descripcion?: string;
 }
 
 /**
@@ -165,9 +165,9 @@ export interface SinUnidadMedida {
  */
 export interface SinCuis {
   /** Código Único de Inicio de Sistema */
-  codigo?: string
+  codigo?: string;
   /** Fecha de vigencia del CUIS */
-  fechaVigencia?: DateDMYHHMMSS
+  fechaVigencia?: DateDMYHHMMSS;
 }
 
 /**
@@ -175,25 +175,25 @@ export interface SinCuis {
  */
 export interface SinCufD {
   /** Código Único de Facturación Diaria */
-  codigo?: string
+  codigo?: string;
   /** Código de control del CUFD */
-  codigoControl?: string
+  codigoControl?: string;
   /** Dirección de facturación del CUFD */
-  direccion?: string
+  direccion?: string;
   /** Fecha de vigencia del CUFD */
-  fechaVigencia?: DateDMYHHMMSS
+  fechaVigencia?: DateDMYHHMMSS;
   /** Fecha de inicio del CUFD */
-  fechaInicial?: DateDMYHHMMSS
+  fechaInicial?: DateDMYHHMMSS;
 }
 
 /**
  * Urls de consulta de documentos, impresiones boletos, etc
  */
 export interface UrlsConsultaDocumento {
-  pdf?: UrlConsultaDocumento
-  xml?: UrlConsultaDocumento
-  rollo?: UrlConsultaDocumento
-  sin?: UrlConsultaDocumento
+  pdf?: UrlConsultaDocumento;
+  xml?: UrlConsultaDocumento;
+  rollo?: UrlConsultaDocumento;
+  sin?: UrlConsultaDocumento;
 }
 
 /**
@@ -201,13 +201,13 @@ export interface UrlsConsultaDocumento {
  */
 export interface ImagenCloudVariant {
   /** Path Imagen pequeña, se usa para mostrar en los listados */
-  thumbnail?: string
+  thumbnail?: string;
   /** Path Imagen mediana */
-  medium?: string
+  medium?: string;
   /** Path Imagen cuadrada adaptativa */
-  square?: string
+  square?: string;
   /** Path Imagen original */
-  public?: string
+  public?: string;
 }
 
 /**
@@ -215,30 +215,30 @@ export interface ImagenCloudVariant {
  */
 export interface ImagenCloud {
   /** Identificador unico de la imagen - para realizar el proceso de eliminación se usa este campo */
-  id?: string
+  id?: string;
   /** Nombre del archivo que se usa */
-  filename?: string
+  filename?: string;
   /** Variantes de la imagen */
-  variants?: ImagenCloudVariant
+  variants?: ImagenCloudVariant;
 }
 
 /**
  * Entrada de datos paramétricos de la entidad como codigos de sucursal o codigos de puntos de venta - El código de sucursal y punto de venta enviado esta restringido a su la restriccion de sucursal y punto de venta - Para verificar las restricciones consulte el servicio usuarioRestriccion
  */
 export interface EntidadParamsInput {
-  codigoSucursal?: number
-  codigoPuntoVenta?: number
+  codigoSucursal?: number;
+  codigoPuntoVenta?: number;
 }
 
 /**
  * Datos de entrada de un cliente registrado en base de datos
  */
 export interface ClienteOperacionInput {
-  codigoCliente: string
-  razonSocial?: string
-  email?: string
-  telefono?: string
-  direccion?: string
+  codigoCliente: string;
+  razonSocial?: string;
+  email?: string;
+  telefono?: string;
+  direccion?: string;
 }
 
 /**
@@ -246,37 +246,37 @@ export interface ClienteOperacionInput {
  */
 export interface ClienteOperacion {
   /** Razon Social del cliente. */
-  razonSocial?: string
+  razonSocial?: string;
   /** Codigo unico que se asigna al cliente. */
-  codigoCliente?: string
+  codigoCliente?: string;
   /** Código del clasificador del tipo documento de identidad. */
-  tipoDocumentoIdentidad?: SinTipoDocumentoIdentidad
+  tipoDocumentoIdentidad?: SinTipoDocumentoIdentidad;
   /** Numero de documento del cliente */
-  numeroDocumento?: string
+  numeroDocumento?: string;
   /** Si es C.I., y contenga un numero de complemento */
-  complemento?: string
+  complemento?: string;
   /** Nombre del  titular de la cuenta. */
-  nombres?: string
+  nombres?: string;
   /** Apellidos del titular de la cuenta. */
-  apellidos?: string
+  apellidos?: string;
   /** Correo electrónico de la persona, este campo es unico en la organización. */
-  email?: string
+  email?: string;
   /** Telefono de referencia */
-  telefono?: string
+  telefono?: string;
   /** Si el cliente tiene linea de credito - true: El cliente puede acceder a una linea de credito - false: El cliente no puede acceder a una linea de credito */
-  lineaCredito?: boolean
+  lineaCredito?: boolean;
   /** Credito minimo para acceder a una linea de credito - 0 o nulo: No hay limite */
-  creditoMinimo?: number
+  creditoMinimo?: number;
   /** Credito maximo para acceder a una linea de credito - 0 o nulo: No hay limite */
-  creditoMaximo?: number
+  creditoMaximo?: number;
   /** Direccion de residencia del cliente */
-  direccion?: string
+  direccion?: string;
   /** Dirección en el cual el cliente desarrolla sus actividades económicas */
-  direccionLaboral?: string
+  direccionLaboral?: string;
   /** Nombre de la entidad donde el cliente desarrolla sus actividades económicas */
-  entidadLaboral?: string
+  entidadLaboral?: string;
   /** Máximo plazo (meses) de duración del un crédito - Se contabiliza en Nro de meses. */
-  maximoPlazo?: number
+  maximoPlazo?: number;
 }
 
 /**
@@ -284,13 +284,13 @@ export interface ClienteOperacion {
  */
 export interface PuntoVenta {
   /** Código único del punto de venta */
-  codigo?: number
+  codigo?: number;
   /** - Comisionistas de acuerdo a normativa vigente; - Ventanilla de Cobranza autorizada por la ASFI según normativa; - Puntos de Ventas Móviles para venta de bienes o prestación de servicios; - Puntos de Venta YPFB para la venta de combustible a precio internacional; - Puntos de Venta (Cajeros o similares) para la venta de otros bienes y/o prestación de servicios. - Puntos de Venta conjunta, habilitada para emisión conjunta de documentos fiscales. */
-  tipoPuntoVenta?: SinTipoPuntoVenta
+  tipoPuntoVenta?: SinTipoPuntoVenta;
   /** Nombre, Alias del punto de venta */
-  nombre?: string
+  nombre?: string;
   /** Descripción del punto de venta */
-  descripcion?: string
+  descripcion?: string;
 }
 
 /**
@@ -298,13 +298,13 @@ export interface PuntoVenta {
  */
 export interface OrgFacturaPuntoVenta {
   /** Codigo del punto de venta. */
-  codigo?: number
+  codigo?: number;
   /** Catalogo de Tipo de Punto de Venta. */
-  tipoPuntoVenta?: SinTipoPuntoVenta
+  tipoPuntoVenta?: SinTipoPuntoVenta;
   /** Nombre alias del punto de venta. */
-  nombre?: string
+  nombre?: string;
   /** Direccion del punto de venta. */
-  descripcion?: string
+  descripcion?: string;
 }
 
 /**
@@ -312,17 +312,17 @@ export interface OrgFacturaPuntoVenta {
  */
 export interface Sucursal {
   /** Codigo único de la sucursal */
-  codigo?: number
+  codigo?: number;
   /** Direccion de la sucursal */
-  direccion?: string
+  direccion?: string;
   /** Teléfono de referencia */
-  telefono?: string
+  telefono?: string;
   /** Datos del departamento */
-  departamento?: Departamento
+  departamento?: Departamento;
   /** Municipio donde se encuentra la sucursal */
-  municipio?: string
+  municipio?: string;
   /** Si cuenta con integracion SIAT */
-  integracionSiat?: boolean
+  integracionSiat?: boolean;
 }
 
 /**
@@ -330,13 +330,13 @@ export interface Sucursal {
  */
 export interface Departamento {
   /** Código segun INE */
-  codigo?: number
+  codigo?: number;
   /** Código de Pais segun ISO 3166-1 */
-  codigoPais?: number
+  codigoPais?: number;
   /** Sigla del departamento */
-  sigla?: string
+  sigla?: string;
   /** Nombre del departamento */
-  departamento?: string
+  departamento?: string;
 }
 
 /**
@@ -344,30 +344,30 @@ export interface Departamento {
  */
 export interface OrgFacturaSucursal {
   /** Codigo de la sucursal */
-  codigo?: number
+  codigo?: number;
   /** Direccion regitrada en cada sucursal */
-  direccion?: string
+  direccion?: string;
   /** Telefono de referencia de la sucursal */
-  telefono?: string
+  telefono?: string;
   /** Nombre de departamento de la sucursal */
-  departamento?: Departamento
+  departamento?: Departamento;
   /** Nombre de municipio de la sucursal */
-  municipio?: string
+  municipio?: string;
   /** Define si existe integración con SISTEMA DE ADMINISTRACIÓN TRIBUTARIA */
-  integracionSiat?: boolean
+  integracionSiat?: boolean;
 }
 
 /**
  * Urls para descargar los documentos en formato representacion gráfica
  */
 export interface UrlsRepresentacionGrafica {
-  pdf?: UrlRepresentacionGrafica
-  xml?: UrlRepresentacionGrafica
-  rollo?: UrlRepresentacionGrafica
-  rolloResumen?: UrlRepresentacionGrafica
+  pdf?: UrlRepresentacionGrafica;
+  xml?: UrlRepresentacionGrafica;
+  rollo?: UrlRepresentacionGrafica;
+  rolloResumen?: UrlRepresentacionGrafica;
   /** Formato rollo super reducido solo disponible para: - Factura Compra Venta */
-  rolloReducido?: UrlRepresentacionGraficaV2
-  sin?: UrlSinRepresentacionGrafica
+  rolloReducido?: UrlRepresentacionGraficaV2;
+  sin?: UrlSinRepresentacionGrafica;
 }
 
 /**
@@ -375,33 +375,33 @@ export interface UrlsRepresentacionGrafica {
  */
 export interface Proveedor {
   /** Identificador único del proveedor */
-  _id?: string
+  _id?: string;
   /** Codigo único del proveedor. */
-  codigo?: string
+  codigo?: string;
   /** Nombre del proveedor */
-  nombre?: string
+  nombre?: string;
   /** La descripción del producto, completa con formato HTML. */
-  direccion?: string
+  direccion?: string;
   /** Ciudad, Ubicación del proveedor */
-  ciudad?: string
+  ciudad?: string;
   /** Nombre del contacto */
-  contacto?: string
+  contacto?: string;
   /** Correo Electrónico del contacto */
-  correo?: string
+  correo?: string;
   /** Teléfonos */
-  telefono?: string
+  telefono?: string;
   /** Notas extra */
-  notas?: string
+  notas?: string;
   /** Estado del producto */
-  state?: string
+  state?: string;
   /** Usuario de creación del producto. */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del producto */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario modificación del producto */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del producto */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 /**
@@ -409,29 +409,29 @@ export interface Proveedor {
  */
 export interface Moneda {
   /** Identificador único interno del registro */
-  _id?: string
+  _id?: string;
   /** Codigo de moneda */
-  codigo?: number
+  codigo?: number;
   /** Descripcion de la nueva moneda a adicionar */
-  descripcion?: string
+  descripcion?: string;
   /** Sigla de la moneda BS, USD, etc */
-  sigla?: string
+  sigla?: string;
   /** Tipo de cambio de la moneda para la venta, BS: 1 */
-  tipoCambio?: number
+  tipoCambio?: number;
   /** Tipo de cambio de la moneda para la compra, BS: 1 */
-  tipoCambioCompra?: number
+  tipoCambioCompra?: number;
   /** 1 = activo 0 = inactivo */
-  activo?: number
+  activo?: number;
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Usuario que creo el registro */
-  usucre?: string
+  usucre?: string;
   /** Ultimo usuario que modificó el registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Ultima fecha de actualizacion del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 /**
@@ -439,17 +439,17 @@ export interface Moneda {
  */
 export interface MonedaPrecio {
   /** Clasificador sin tipo Moneda */
-  moneda?: Moneda
+  moneda?: Moneda;
   /** Precio base inicial - Se usa como base para calcular las variaciones de precio en función al factor de ajuste */
-  precioBase?: number
+  precioBase?: number;
   /** Precio calculado del articulo */
-  precio?: number
+  precio?: number;
   /** Precio de entrega para delivery */
-  delivery?: number
+  delivery?: number;
   /** Precio de comparacion según el argumento precio */
-  precioComparacion?: number
+  precioComparacion?: number;
   /** Si es true, cambia el precio segun el factor de ajuste - Si es false, el precio no cambia */
-  manual?: boolean
+  manual?: boolean;
 }
 
 /**
@@ -457,11 +457,11 @@ export interface MonedaPrecio {
  */
 export interface MonedaPrecioOperacion {
   /** Clasificador sin tipo Moneda */
-  moneda?: Moneda
+  moneda?: Moneda;
   /** Precio base inicial - Se usa como base para calcular las variaciones de precio en función al factor de ajuste */
-  precioBase?: number
+  precioBase?: number;
   /** Precio calculado del articulo */
-  precio?: number
+  precio?: number;
 }
 
 /**
@@ -469,9 +469,9 @@ export interface MonedaPrecioOperacion {
  */
 export interface MetodoPago {
   /** Razon Social del cliente. */
-  codigoClasificador?: number
+  codigoClasificador?: number;
   /** Codigo unico que se asigna al cliente. */
-  descripcion?: string
+  descripcion?: string;
 }
 
 /**
@@ -479,21 +479,21 @@ export interface MetodoPago {
  */
 export interface KardexPeriodo {
   /** Código */
-  codigo?: number
+  codigo?: number;
   /** Descripcioón del kardex periodo */
-  descripcion?: string
+  descripcion?: string;
   /** Documento sector del periodo */
-  documentoSector?: SinTipoDocumentoSector
+  documentoSector?: SinTipoDocumentoSector;
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 /**
@@ -501,37 +501,37 @@ export interface KardexPeriodo {
  */
 export interface Lote {
   /** Identificador único del registro */
-  _id?: string
+  _id?: string;
   /** Código o numero de lote */
-  codigoLote?: string
+  codigoLote?: string;
   /** Descripcion adicional del lote */
-  descripcion?: string
+  descripcion?: string;
   /** Código articulo global asociado al lote */
-  codigoArticulo?: string
+  codigoArticulo?: string;
   /** Datos de la sucursal asociado al lote */
-  sucursal?: OrgFacturaSucursal
+  sucursal?: OrgFacturaSucursal;
   /** Atributo adicional 1 */
-  atributo1?: string
+  atributo1?: string;
   /** Atributo adicional 2 */
-  atributo2?: string
+  atributo2?: string;
   /** Atributo adicional 3 */
-  atributo3?: string
+  atributo3?: string;
   /** Fecha de admisión del lote */
-  fechaAdmision?: DateDMYHHMMSS
+  fechaAdmision?: DateDMYHHMMSS;
   /** Fecha de fabricación */
-  fechaFabricacion?: DateDMY
+  fechaFabricacion?: DateDMY;
   /** Fecha de vencimiento del lote */
-  fechaVencimiento?: DateDMY
+  fechaVencimiento?: DateDMY;
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 /**
@@ -539,43 +539,43 @@ export interface Lote {
  */
 export interface Almacen {
   /** Codigo interno del almacen */
-  _id?: string
+  _id?: string;
   /** Código que identifica al almacen */
-  codigoAlmacen?: string
+  codigoAlmacen?: string;
   /** Nombre del almacen */
-  nombre?: string
+  nombre?: string;
   /** Ubicación física del almacen */
-  ubicacion?: string
+  ubicacion?: string;
   /** Definición del grupo de unidad de medida */
-  sucursal?: OrgFacturaSucursal
+  sucursal?: OrgFacturaSucursal;
   /** Tipo de almacen - 1:DESPACHO, 2:REPOSICION, 3:PRODUCCION, 50:NO_VENTA, 90:BLOQUEADO, 99:EXPIRADO, 999:VIRTUAL */
-  tipo?: string
+  tipo?: string;
   /** Si el almacen esta activo */
-  activo?: boolean
+  activo?: boolean;
   /** Prioridad del almacen - - 1:DESPACHO, 2:REPOSICION, 3:PRODUCCION, 50:NO_VENTA, 90:BLOQUEADO, 99:EXPIRADO, 999:VIRTUAL */
-  prioridad?: number
+  prioridad?: number;
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 export interface ArticuloDescuento {
-  fechaInicial?: DateDMYHHMM
-  fechaFinal?: DateDMYHHMM
-  porcentaje?: number
-  cantidad?: ArticuloDescuentoCantidad[]
+  fechaInicial?: DateDMYHHMM;
+  fechaFinal?: DateDMYHHMM;
+  porcentaje?: number;
+  cantidad?: ArticuloDescuentoCantidad[];
 }
 
 export interface ArticuloDescuentoCantidad {
-  nro?: number
-  porcentaje?: number
+  nro?: number;
+  porcentaje?: number;
 }
 
 /**
@@ -583,35 +583,35 @@ export interface ArticuloDescuentoCantidad {
  */
 export interface TotalesPrecioCostoOperacion {
   /** Importe Bruto (Si no hubiera descuentos), (cantidad * valorBase) */
-  subtotalBruto?: number
+  subtotalBruto?: number;
   /** Sumatoria de los descuentos - No se toma en cuenta el descuento adicional global */
-  totalDescuento?: number
+  totalDescuento?: number;
   /** Sumatoria de los descuentos calculado en porcentaje - No se toma en cuenta el descuento adicional global */
-  totalDescuentoP?: number
+  totalDescuentoP?: number;
   /** Descuento adicional Global */
-  totalDescuentoAdicional?: number
+  totalDescuentoAdicional?: number;
   /** Total final de descuentos - totalDescuento + totalDescuentoAdicional */
-  totalDescuentoGeneral?: number
+  totalDescuentoGeneral?: number;
   /** Descuento adicional Global en porcentaje */
-  totalDescuentoAdicionalP?: number
+  totalDescuentoAdicionalP?: number;
   /** Total final de descuentos en porcentaje - totalDescuento + totalDescuentoAdicional */
-  totalDescuentoGeneralP?: number
+  totalDescuentoGeneralP?: number;
   /** Base imponible  Cantidad * valorNeto (Valor total del inventario base o Ingreso total ventas) - incluye todos los descuentos - tasaIva = 1 + (iva / 100) */
-  subtotalNeto?: number
+  subtotalNeto?: number;
   /** Total Impuestos (Debito Fiscal generado por la línea), (cantidad * impuesto unitario) */
-  totalImpuestos?: number
+  totalImpuestos?: number;
   /** Cantidad * gastoAdicional */
-  totalGasto?: number
+  totalGasto?: number;
   /** Precio Final Unitario (Lo que paga el cliente por 1), incluye impuestos, y descuentos (cantidad * subtotalNeto) - Cantidad * valorFinal (Total Valor Entrada Stock o Total a Pagar Cliente) - Incluye todos los descuentos y gastos adicionales */
-  totalFinal?: number
+  totalFinal?: number;
 }
 
 /**
  * Resultados finales calculados para los detalles - Operacion es según la transacción entre cliente sistema. - Sistema = conversion de datos de operacion segpun moneda principal
  */
 export interface TotalesGenerales {
-  operacion?: TotalesPrecioCostoOperacion
-  sistema?: TotalesPrecioCostoOperacion
+  operacion?: TotalesPrecioCostoOperacion;
+  sistema?: TotalesPrecioCostoOperacion;
 }
 
 /**
@@ -619,35 +619,35 @@ export interface TotalesGenerales {
  */
 export interface PrecioCostoOperacion {
   /** Contexto de la operación: - 'costo': Operación de entrada (Compras, Producción). - 'precio': Operación de salida (Ventas, Cotizaciones). */
-  tipoOperacion?: string
+  tipoOperacion?: string;
   /** El valor nominal actual de la operación. - COSTO: Precio unitario en la Factura del Proveedor. - PRECIO: Precio de Lista / Catálogo actual. */
-  valor?: number
+  valor?: number;
   /** El valor de referencia histórico o estándar. - COSTO: Costo Promedio/Estándar anterior (Kardex). - PRECIO: Generalmente 0 (o Precio de Lista anterior para comparar subidas). */
-  valorAnterior?: number
+  valorAnterior?: number;
   /** Descuento directo unitario (Monto) */
-  descuento?: number
+  descuento?: number;
   /** Descuento adicional prorrateado (Monto). */
-  descuentoAdicional?: number
+  descuentoAdicional?: number;
   /** Suma del descuento unitario directo + adicional unitario */
-  descuentoTotal?: number
+  descuentoTotal?: number;
   /** Porcentaje de descuento directo unitario */
-  descuentoP?: number
+  descuentoP?: number;
   /** Porcentaje de descuento adicional unitario prorrateado */
-  descuentoAdicionalP?: number
+  descuentoAdicionalP?: number;
   /** Porcentaje de la suma de todos los descuentos (Directo + Adicional) */
-  descuentoTotalP?: number
+  descuentoTotalP?: number;
   /** Valor financiero real "limpio" de la mercancía. - COSTO: Base Imponible (Costo sin IVA ni gastos). - PRECIO: Revenue / Ingreso Neto Real (Precio de Venta sin IVA). */
-  valorNeto?: number
+  valorNeto?: number;
   /** Monto del impuesto unitario. - COSTO: Crédito Fiscal (Impuesto recuperable). - PRECIO: Débito Fiscal (Impuesto a pagar al fisco). */
-  impuestoUnitario?: number
+  impuestoUnitario?: number;
   /** Gastos vinculados (Fletes, Seguros, Aduanas). - COSTO: Se suma al valor del inventario. - PRECIO: 0 (Salvo casos especiales de envío). */
-  gastoAdicional?: number
+  gastoAdicional?: number;
   /** Desviación financiera. - COSTO: Diferencia entre (valorFinal - valorBaseAnterior). - PRECIO: 0. */
-  variacion?: number
+  variacion?: number;
   /** El monto final efectivo. - COSTO: Costo Landed (Neto + Gastos). Valor de entrada al Kardex. - PRECIO: Precio Final (Neto + IVA). Monto que paga el Cliente. */
-  valorFinal?: number
+  valorFinal?: number;
   /** Lista de totales calculados */
-  totales?: TotalesPrecioCostoOperacion
+  totales?: TotalesPrecioCostoOperacion;
 }
 
 /**
@@ -655,52 +655,52 @@ export interface PrecioCostoOperacion {
  */
 export interface ArticuloPrecioOperacion {
   /** Articulo Unidad de medida y sus respectivas homologaciones */
-  articuloUnidadMedida?: ArticuloUnidadMedida
+  articuloUnidadMedida?: ArticuloUnidadMedida;
   /** Moneda y precio segun la unidad de medida - Se depreca el objecto, los valores de "monedaPrecio" son parte el objeto "ArticuloPrecioOperacion" @deprecated */
-  monedaPrecio?: MonedaPrecioOperacion
+  monedaPrecio?: MonedaPrecioOperacion;
   /** Estructura de moneda que incluye el tipo de cambio segun moneda principal - implementada para version 2026.2.17 */
-  moneda?: Moneda
+  moneda?: Moneda;
   /** Tipo de cambio final, puede ser diferente al tipo de cambio de moneda - implementada para version 2026.2.17 */
-  tipoCambio?: number
+  tipoCambio?: number;
   /** Desglose de montos y totales para la linea de operacion - implementada para version 2026.2.17 */
-  estructuraValor?: PrecioCostoOperacion
+  estructuraValor?: PrecioCostoOperacion;
   /** Tipo de operacion, puede ser "precio" o "costo" - implementada para version 2026.2.17 */
-  tipoOperacion?: string
+  tipoOperacion?: string;
   /** monto final de operacion según sea de tipoOperacion = costo | precio - Valor que se ingresa de front-end - Reemplaza a valor precio del objeto "monedaPrecio" - Implementada para version 2026.2.17 */
-  valor?: number
+  valor?: number;
   /** Cantidad Base de venta, solo consultable por el usuario - Este valor es reemplazado por el nuevo argumento `cantidadFactor` - Ejemplo: 1 Caja = 12 Unidades por caja, entonces, `cantidadFactor` = 12 - Ya no se debe usar @deprecated */
-  cantidadBase?: number
+  cantidadBase?: number;
   /** Cantidad de operacion */
-  cantidad?: number
+  cantidad?: number;
   /** Equivalencia de la unidad (12 unidades por Caja) - Ejemplo: 1 Caja = 12 Unidades por caja, entonces, `cantidadFactor` = 12 */
-  cantidadFactor?: number
+  cantidadFactor?: number;
   /** Descuento de linea */
-  descuento?: number
+  descuento?: number;
   /** En caso de contar con descuento adicional - El valor prorrateado entre todos los articulos asociados a la transacción */
-  descuentoAdicional?: number
+  descuentoAdicional?: number;
   /** Otros costos asociados a la operación - El valor prorrateado entre todos los articulos asociados a la transacción */
-  otrosCostos?: number
+  otrosCostos?: number;
   /** Monto impuesto porcentual - El porcentaje del impuesto aplicado a la transacción - Para Bolivia = 13% */
-  impuesto?: number
+  impuesto?: number;
   /** - Si incluye impuestos, true o false - Default false */
-  incluyeImpuesto?: boolean
+  incluyeImpuesto?: boolean;
   /** ¿El descuento es global (true) o unitario (false)? - No confundir con descuento adicional */
-  esDescuentoTotal?: boolean
+  esDescuentoTotal?: boolean;
   /** Factor de ajuste para el calculo de precio, solo consultable por el usuario */
-  factorAjuste?: number
+  factorAjuste?: number;
 }
 
 /**
  * Datos de entrada de la unidad de medida montos monedas y precios
  */
 export interface ArticuloPrecioOperacionInput {
-  codigoArticuloUnidadMedida: string
-  cantidad: number
-  precio: number
-  descuento: number
-  esDescuentoTotal?: boolean
-  impuesto: number
-  incluyeImpuesto?: boolean
+  codigoArticuloUnidadMedida: string;
+  cantidad: number;
+  precio: number;
+  descuento: number;
+  esDescuentoTotal?: boolean;
+  impuesto: number;
+  incluyeImpuesto?: boolean;
 }
 
 /**
@@ -708,31 +708,31 @@ export interface ArticuloPrecioOperacionInput {
  */
 export interface ArticuloPrecio {
   /** Código interno de articulo Precio */
-  _id?: string
+  _id?: string;
   /** Datos de la unidad de medida */
-  articuloUnidadMedida?: ArticuloUnidadMedida
+  articuloUnidadMedida?: ArticuloUnidadMedida;
   /** Datos de la moneda principal */
-  monedaPrimaria?: MonedaPrecio
+  monedaPrimaria?: MonedaPrecio;
   /** Datos de la moneda adicional 1 */
-  monedaAdicional1?: MonedaPrecio
+  monedaAdicional1?: MonedaPrecio;
   /** Datos de la moneda adicional 2 */
-  monedaAdicional2?: MonedaPrecio
+  monedaAdicional2?: MonedaPrecio;
   /** Datos de la moneda adicional 3 */
-  monedaAdicional3?: MonedaPrecio
+  monedaAdicional3?: MonedaPrecio;
   /** Cantidad Base segun la Unidad de Medida Base */
-  cantidadBase?: number
+  cantidadBase?: number;
   /** Descuento Asociado al Articulo */
-  descuento?: ArticuloDescuento
+  descuento?: ArticuloDescuento;
   /** Path de la imagen asociada al documento sector En caso no exista, se asume la imagen del pariente superior */
-  imagen?: ImagenCloud
+  imagen?: ImagenCloud;
   /** Factor de ajuste que modifica el precio de venta */
-  factorAjuste?: number
+  factorAjuste?: number;
   /** Es un articulo de venta? */
-  umVenta?: boolean
+  umVenta?: boolean;
   /** Es articulo de inventario? */
-  umInventario?: boolean
+  umInventario?: boolean;
   /** articulo de compra? */
-  umCompra?: boolean
+  umCompra?: boolean;
 }
 
 /**
@@ -740,33 +740,33 @@ export interface ArticuloPrecio {
  */
 export interface ArticuloUnidadMedida {
   /** Identificador único interno del registro */
-  _id?: string
+  _id?: string;
   /** Código que identifica a la unidad de medida */
-  codigoUnidadMedida?: string
+  codigoUnidadMedida?: string;
   /** Nombre de la unidad de medida */
-  nombreUnidadMedida?: string
+  nombreUnidadMedida?: string;
   /** Nombre de la unidad de medida */
-  sinUnidadMedida?: SinUnidadMedida
+  sinUnidadMedida?: SinUnidadMedida;
   /** Longitud del articulo según la unidad de medida */
-  longitud?: number
+  longitud?: number;
   /** Ancho del articulo según la unidad de medida */
-  ancho?: number
+  ancho?: number;
   /** Altura del articulo según la unidad de medida */
-  altura?: number
+  altura?: number;
   /** Peso del articulo según la unidad de medida */
-  peso?: number
+  peso?: number;
   /** Volumen del articulo según la unidad de medida */
-  volumen?: number
+  volumen?: number;
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 /**
@@ -774,25 +774,25 @@ export interface ArticuloUnidadMedida {
  */
 export interface GrupoUnidadMedida {
   /** Identificador primario interno */
-  _id: string
+  _id: string;
   /** Código que identifica al grupo unidad de medida */
-  codigoGrupo?: number
+  codigoGrupo?: number;
   /** Nombre del grupo unidad de medida */
-  nombreGrupo?: string
+  nombreGrupo?: string;
   /** Longitud del articulo según la unidad de medida */
-  unidadMedidaBase?: ArticuloUnidadMedida
+  unidadMedidaBase?: ArticuloUnidadMedida;
   /** Definiciones de la unidad de medida */
-  definicion?: DefinicionGrupoUnidadMedida[]
+  definicion?: DefinicionGrupoUnidadMedida[];
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 /**
@@ -800,9 +800,9 @@ export interface GrupoUnidadMedida {
  */
 export interface DefinicionGrupoUnidadMedida {
   /** Articulo Unidad de medida */
-  unidadMedida?: ArticuloUnidadMedida
+  unidadMedida?: ArticuloUnidadMedida;
   /** Cantidad base de unidad de medida pariente */
-  cantidadBase?: number
+  cantidadBase?: number;
 }
 
 /**
@@ -810,9 +810,9 @@ export interface DefinicionGrupoUnidadMedida {
  */
 export interface TipoArticuloConnection {
   /** Lista de documentos. */
-  docs?: TipoArticulo[]
+  docs?: TipoArticulo[];
   /** Información para ayudar en la paginación. */
-  pageInfo: PageInfo
+  pageInfo: PageInfo;
 }
 
 /**
@@ -820,40 +820,40 @@ export interface TipoArticuloConnection {
  */
 export interface TipoArticuloOperacion {
   /** Código único que identifica al tipo de articulo. */
-  codigo?: string
+  codigo?: string;
   /** Descripción del tipo de articulo. */
-  descripcion?: string
+  descripcion?: string;
 }
 
 /**
  * Datos del tipo de articulo.
  */
 export interface TipoArticulo {
-  _id?: string
+  _id?: string;
   /** Código único que identifica al tipo de articulo. */
-  codigo?: string
+  codigo?: string;
   /** Descripción del tipo de articulo. */
-  descripcion?: string
+  descripcion?: string;
   /** Definición del grupo de unidad de medida */
-  grupoUnidadMedida?: GrupoUnidadMedida
+  grupoUnidadMedida?: GrupoUnidadMedida;
   /** Notas relacionados al agrupados de articulos - Ej: Articulos para restaurante, Término medio, 3/4, sin llajua, etc. */
-  notas?: string[]
+  notas?: string[];
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 export interface ArticuloComposicionVenta {
-  articulo?: Articulo
-  receta?: ArticuloRecetaOperacion
-  modificadores?: ArticuloModificadorOperacion[]
+  articulo?: Articulo;
+  receta?: ArticuloRecetaOperacion;
+  modificadores?: ArticuloModificadorOperacion[];
 }
 
 /**
@@ -861,9 +861,9 @@ export interface ArticuloComposicionVenta {
  */
 export interface ArticuloConnection {
   /** Información para ayudar en la paginación. */
-  pageInfo: PageInfo
+  pageInfo: PageInfo;
   /** Lista de documentos. */
-  docs?: Articulo[]
+  docs?: Articulo[];
 }
 
 /**
@@ -871,9 +871,9 @@ export interface ArticuloConnection {
  */
 export interface GrupoArticulo {
   /** Código único que identifica al grupo de articulo */
-  codigoGrupoArticulo?: string
+  codigoGrupoArticulo?: string;
   /** Nombre o descripcion */
-  nombreGrupoArticulo?: string
+  nombreGrupoArticulo?: string;
 }
 
 /**
@@ -881,71 +881,71 @@ export interface GrupoArticulo {
  */
 export interface Articulo {
   /** Identificador interno del articulo */
-  _id?: string
+  _id?: string;
   /** Código Único que identifica al articulo */
-  codigoArticulo?: string
+  codigoArticulo?: string;
   /** Referencia al Articulo Precio en caso se use para listado por entidad */
-  articuloPrecioId?: string
+  articuloPrecioId?: string;
   /** Nombre del articulo */
-  nombreArticulo?: string
+  nombreArticulo?: string;
   /** Descripción del articulo. */
-  descripcionArticulo?: string
+  descripcionArticulo?: string;
   /** Actividad económica según la entidad tributaria */
-  actividadEconomica?: SinActividades
+  actividadEconomica?: SinActividades;
   /** La Homologación de productos y servicios permite al Contribuyente relacionar los códigos utilizados para sus productos y servicios con los códigos genéricos proporcionados por la Administración Tributaria */
-  sinProductoServicio?: SinProductoServicio
+  sinProductoServicio?: SinProductoServicio;
   /** Datos del tipo de articulo. */
-  tipoArticulo?: TipoArticulo
+  tipoArticulo?: TipoArticulo;
   /** Datos del o los proveedores */
-  proveedor?: Proveedor[]
+  proveedor?: Proveedor[];
   /** Imagen de referencia */
-  imagen?: ImagenCloud
+  imagen?: ImagenCloud;
   /** Código del grupo de unidad de medida referencia */
-  codigoGrupoUnidadMedida?: number
+  codigoGrupoUnidadMedida?: number;
   /** Grupo Unidad de medida referencia */
-  grupoUnidadMedida?: GrupoUnidadMedida
+  grupoUnidadMedida?: GrupoUnidadMedida;
   /** Definición del precio x unidad de medida y por monedas */
-  articuloPrecioBase?: ArticuloPrecio
+  articuloPrecioBase?: ArticuloPrecio;
   /** Arrays de equivalencias entre precios, unidades de medida y monedas */
-  articuloPrecio?: ArticuloPrecio[]
+  articuloPrecio?: ArticuloPrecio[];
   /** Si es item solo para realización de ventas */
-  articuloVenta?: boolean
+  articuloVenta?: boolean;
   /** Si es item solo para realización de inventarios */
-  articuloInventario?: boolean
+  articuloInventario?: boolean;
   /** Si es item solo para realización de compras administrativas */
-  articuloCompra?: boolean
+  articuloCompra?: boolean;
   /** Datos de consulta del inventario */
-  inventario?: Inventario[]
+  inventario?: Inventario[];
   /** P = Producto, S = Servicio, C = Compra para gastos */
-  claseArticulo?: string
+  claseArticulo?: string;
   /** Asociacion de impresoras al articulo específico */
-  impresoras?: Impresora[]
+  impresoras?: Impresora[];
   /** Grupo de articulo Ejemplo impresora, cables, computadoras, etc */
-  grupoArticulo?: GrupoArticulo
+  grupoArticulo?: GrupoArticulo;
   /** Valores posibles - NULL - SERIE - LOTE */
-  gestionArticulo?: string
+  gestionArticulo?: string;
   /** TRUE = Se realiza el proceso de verificación de stock en inventarios FALSE = NO Se realiza el proceso de verificación de stock en inventarios */
-  verificarStock?: boolean
+  verificarStock?: boolean;
   /** si es true, el articulo esta activo para su uso */
-  activo?: boolean
+  activo?: boolean;
   /** Si es true, el articulo se listará como complemento para otros articulos - Ej. Aderezos, articulos inventariados adicionales al articulo principal */
-  complemento?: boolean
+  complemento?: boolean;
   /** Lista de complementos del articulo - Ej. Aderezos, articulos inventariados adicionales al articulo principal - La lista se visualizará siempre y cuando el articulo tambien sea complemento - @deprecated */
-  listaComplemento?: ArticuloComplemento[]
+  listaComplemento?: ArticuloComplemento[];
   /** Se despliega el modal si cuenta con modificadores de articulo */
-  tieneModificadores?: boolean
+  tieneModificadores?: boolean;
   /** Si el articulo cuenta con receta asociada */
-  esReceta?: boolean
+  esReceta?: boolean;
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 /**
@@ -953,46 +953,46 @@ export interface Articulo {
  */
 export interface ArticuloComplemento {
   /** Identificador único del articulo */
-  id?: string
+  id?: string;
   /** Código Único que identifica al articulo */
-  codigoArticulo?: string
+  codigoArticulo?: string;
   /** Nombre del articulo complemento */
-  nombreArticulo?: string
+  nombreArticulo?: string;
 }
 
 export interface ArticuloOperacionComplemento {
   /** Identificador interno del articulo - en algunos casos no se despliega */
-  articuloId?: string
+  articuloId?: string;
   /** Nro de item correlativo */
-  nroItem?: number
+  nroItem?: number;
   /** Tipo de articulo */
-  tipoArticulo?: TipoArticuloOperacion
+  tipoArticulo?: TipoArticuloOperacion;
   /** 'PRODUCTO' | 'SERVICIO' | 'COMPRA' */
-  claseArticulo?: string
+  claseArticulo?: string;
   /** Ejemplo impresora, poleras, etc */
-  grupoArticulo?: GrupoArticulo
+  grupoArticulo?: GrupoArticulo;
   /** Codigo del articulo / producto */
-  codigoArticulo?: string
+  codigoArticulo?: string;
   /** Nombre registrado del articulo */
-  nombreArticulo?: string
+  nombreArticulo?: string;
   /** Ubicacion del articulo */
-  almacen?: Almacen
+  almacen?: Almacen;
   /** En caso de ubicarlo en un determinado lote */
-  lote?: Lote
+  lote?: Lote;
   /** Código del grupo unidad de medida referenciado */
-  codigoGrupo?: string
+  codigoGrupo?: string;
   /** Homologación de productos */
-  sinProductoServicio?: SinProductoServicio
+  sinProductoServicio?: SinProductoServicio;
   /** Precio, unidad de medida y moneda segun la moneda principal */
-  articuloPrecioBase?: ArticuloPrecioOperacion
+  articuloPrecioBase?: ArticuloPrecioOperacion;
   /** Precio, unidad de medida y moneda segun la registrada por el usuario */
-  articuloPrecio?: ArticuloPrecioOperacion
+  articuloPrecio?: ArticuloPrecioOperacion;
   /** Detalle Extra para el item */
-  detalleExtra?: string
+  detalleExtra?: string;
   /** Nota asociada al item */
-  nota?: string
+  nota?: string;
   /** Si es un articulo que verifica existencia de stock */
-  verificarStock?: boolean
+  verificarStock?: boolean;
 }
 
 /**
@@ -1000,52 +1000,52 @@ export interface ArticuloOperacionComplemento {
  */
 export interface ArticuloOperacion {
   /** Identificador interno del articulo - en algunos casos no se depliega */
-  articuloId?: string
+  articuloId?: string;
   /** Nro de item correlativo */
-  nroItem?: number
+  nroItem?: number;
   /** Tipo de articulo */
-  tipoArticulo?: TipoArticuloOperacion
+  tipoArticulo?: TipoArticuloOperacion;
   /** 'PRODUCTO' | 'SERVICIO' | 'COMPRA' */
-  claseArticulo?: string
+  claseArticulo?: string;
   /** Gestionado por LOTES, SERIE, etc */
-  gestionArticulo?: string
+  gestionArticulo?: string;
   /** Ejemplo impresora, poleras, etc */
-  grupoArticulo?: GrupoArticulo
+  grupoArticulo?: GrupoArticulo;
   /** Codigo del articulo / producto */
-  codigoArticulo?: string
+  codigoArticulo?: string;
   /** Nombre registrado del articulo */
-  nombreArticulo?: string
+  nombreArticulo?: string;
   /** Ubicacion del articulo */
-  almacen?: Almacen
+  almacen?: Almacen;
   /** En caso de ubicarlo en un determinado lote */
-  lote?: Lote
+  lote?: Lote;
   /** Código del grupo unidad de medida referenciado */
-  codigoGrupo?: string
+  codigoGrupo?: string;
   /** Homologación de productos */
-  sinProductoServicio?: SinProductoServicio
+  sinProductoServicio?: SinProductoServicio;
   /** Precio, unidad de medida y moneda segun la moneda principal */
-  articuloPrecioBase?: ArticuloPrecioOperacion
+  articuloPrecioBase?: ArticuloPrecioOperacion;
   /** Precio, unidad de medida y moneda segun la registrada por el usuario */
-  articuloPrecio?: ArticuloPrecioOperacion
+  articuloPrecio?: ArticuloPrecioOperacion;
   /** Detalle Extra para el item */
-  detalleExtra?: string
+  detalleExtra?: string;
   /** Nota asociada al item */
-  nota?: string
+  nota?: string;
   /** Nota rapida asociada al item */
-  notaRapida?: NotaRapida[]
+  notaRapida?: NotaRapida[];
   /** Si es item que verfica existencia de stock */
-  verificarStock?: boolean
+  verificarStock?: boolean;
   /** Complementos de articulos que afectan al inventario - Ejemplos: Aderezos, etc */
-  complementos?: ArticuloOperacionComplemento[]
+  complementos?: ArticuloOperacionComplemento[];
   /** Traza de impresora/as asociadas al articulo - En caso se realice actualizacion de impresoras, estas no afectan al registro */
-  impresoras?: Impresora[]
+  impresoras?: Impresora[];
   /** Si es un articulo para cortesía. - El precio del articulo se cambia a 0 solo cuando se finaliza el pedido. - Para otros estados, se mantiene el precio original */
-  cortesia?: boolean
+  cortesia?: boolean;
   /** Datos operativos de receta */
-  variacionReceta?: ArticuloOperacionReceta[]
-  modificadores?: ArticuloOperacionModificador[]
+  variacionReceta?: ArticuloOperacionReceta[];
+  modificadores?: ArticuloOperacionModificador[];
   /** Estado del registro - ELABORADO: Articulo que no ha sufrido cambios en el ciclo de vida del item - ACTUALIZADO: Se ha modificado algún valor del item - ELIMINADO: Se ha eliminado el item - NUEVO: Nuevo ingreso de item */
-  state?: string
+  state?: string;
 }
 
 /**
@@ -1053,11 +1053,11 @@ export interface ArticuloOperacion {
  */
 export interface HistorialArticuloOperacion {
   /** Nro secuencial según en nro de actualizaciones que se haya realizado en el registro */
-  nro?: number
+  nro?: number;
   /** Historial de ArticuloOperacion hasta antes de realizar la ultima actualización */
-  articuloOperacion?: ArticuloOperacion[]
+  articuloOperacion?: ArticuloOperacion[];
   /** fecha de cambio de estado */
-  fecha?: DateDMYHHMMSS
+  fecha?: DateDMYHHMMSS;
 }
 
 /**
@@ -1065,58 +1065,58 @@ export interface HistorialArticuloOperacion {
  */
 export interface NotaRapida {
   /** Valor string que puede asociarse a cantidad */
-  cantidad?: number
+  cantidad?: number;
   /** Valor o descripcion de la nota */
-  valor?: string
+  valor?: string;
   /** Atributo 1 */
-  atributo1?: string
+  atributo1?: string;
   /** Atributo 2 */
-  atributo2?: string
+  atributo2?: string;
 }
 
 /**
  * Datos de entrada para asociar el articulo a las tablas relacionales
  */
 export interface ArticuloOperacionInput {
-  nroItem?: number
-  codigoArticulo: string
-  codigoAlmacen: string
-  codigoLote?: string
-  articuloPrecio: ArticuloPrecioOperacionInput
-  complementos?: ArticuloOperacionComplementoInput[]
-  variacionReceta?: ArticuloRecetaOperacionInput[]
-  modificadores?: ArticuloModificadorOperacionInput[]
-  detalleExtra?: string
-  nota?: string
-  notaRapida?: NotaRapidaInput[]
-  cortesia?: boolean
+  nroItem?: number;
+  codigoArticulo: string;
+  codigoAlmacen: string;
+  codigoLote?: string;
+  articuloPrecio: ArticuloPrecioOperacionInput;
+  complementos?: ArticuloOperacionComplementoInput[];
+  variacionReceta?: ArticuloRecetaOperacionInput[];
+  modificadores?: ArticuloModificadorOperacionInput[];
+  detalleExtra?: string;
+  nota?: string;
+  notaRapida?: NotaRapidaInput[];
+  cortesia?: boolean;
 }
 
 /**
  * Nota rapida asociadas al articulo
  */
 export interface NotaRapidaInput {
-  cantidad?: number
-  valor?: string
-  atributo1?: string
-  atributo2?: string
+  cantidad?: number;
+  valor?: string;
+  atributo1?: string;
+  atributo2?: string;
 }
 
 export interface ArticuloOperacionComplementoInput {
-  codigoArticulo: string
-  codigoAlmacen: string
-  codigoLote?: string
-  articuloPrecio: ArticuloPrecioOperacionInput
-  detalleExtra?: string
-  nota?: string
+  codigoArticulo: string;
+  codigoAlmacen: string;
+  codigoLote?: string;
+  articuloPrecio: ArticuloPrecioOperacionInput;
+  detalleExtra?: string;
+  nota?: string;
 }
 
 /**
  * Métodos de pago adicionales} - Generalmente usada para registro de finalizacion de ventas
  */
 export interface MetodoPagoVentaInput {
-  codigoMetodoPago: number
-  monto: number
+  codigoMetodoPago: number;
+  monto: number;
 }
 
 /**
@@ -1124,24 +1124,24 @@ export interface MetodoPagoVentaInput {
  */
 export interface MetodoPagoVenta {
   /** Según el clasificador de métodos de pago */
-  metodoPago?: MetodoPago
+  metodoPago?: MetodoPago;
   /** Monto de pago */
-  monto?: number
+  monto?: number;
 }
 
 export interface InventarioLote {
   /** Código del lote asociado al almacen */
-  codigoLote?: string
+  codigoLote?: string;
   /** Datos del lote */
-  lote?: Lote
+  lote?: Lote;
   /** Stock actual = disponible - comprometido */
-  stock?: number
+  stock?: number;
   /** Stock reservado o comprometido para pedidos */
-  comprometido?: number
+  comprometido?: number;
   /** Stock reservado para pedidos para ordenes de compra aprobadas */
-  solicitado?: number
+  solicitado?: number;
   /** Disponible para venta -> stock - comprometido */
-  disponible?: number
+  disponible?: number;
 }
 
 /**
@@ -1149,19 +1149,19 @@ export interface InventarioLote {
  */
 export interface InventarioDetalle {
   /** Datos del almacen */
-  almacen?: Almacen
+  almacen?: Almacen;
   /** Stock actual = disponible - comprometido */
-  stock?: number
+  stock?: number;
   /** Stock reservado o comprometido para pedidos */
-  comprometido?: number
+  comprometido?: number;
   /** Stock reservado para pedidos para ordenes de compra aprobadas */
-  solicitado?: number
+  solicitado?: number;
   /** Disponible para venta -> stock - comprometido */
-  disponible?: number
+  disponible?: number;
   /** orden de los almacenes, las busquedas se realizan por orden 1,2,3,4 */
-  orden?: number
+  orden?: number;
   /** En caso sea un articulo perecedero, se estable la gestion de lotes */
-  lotes?: InventarioLote[]
+  lotes?: InventarioLote[];
 }
 
 /**
@@ -1169,49 +1169,49 @@ export interface InventarioDetalle {
  */
 export interface Inventario {
   /** Codigo interno del inventario */
-  _id?: string
+  _id?: string;
   /** Código único que identifica al tipo de articulo. */
-  codigoArticulo?: string
+  codigoArticulo?: string;
   /** Nombre del articulo */
-  nombreArticulo?: string
+  nombreArticulo?: string;
   /** Código relacionado al tipo de articulo */
-  tipoArticulo?: string
+  tipoArticulo?: string;
   /** Datos de la sucursal */
-  sucursal?: OrgFacturaSucursal
+  sucursal?: OrgFacturaSucursal;
   /** Kardex Periodo */
-  kardexPeriodo?: KardexPeriodo
+  kardexPeriodo?: KardexPeriodo;
   /** Grupo unidades de medida asociados al producto */
-  grupoUnidadMedida?: GrupoUnidadMedida
+  grupoUnidadMedida?: GrupoUnidadMedida;
   /** Unidad de medida base del producto */
-  unidadMedida?: ArticuloUnidadMedida
+  unidadMedida?: ArticuloUnidadMedida;
   /** Unidad de medida de ventas */
-  unidadMedidaVentas?: ArticuloUnidadMedida
+  unidadMedidaVentas?: ArticuloUnidadMedida;
   /** Unidad de medida de inventario */
-  unidadMedidaInventario?: ArticuloUnidadMedida
+  unidadMedidaInventario?: ArticuloUnidadMedida;
   /** Unidad de medida de compras */
-  unidadMedidaCompras?: ArticuloUnidadMedida
+  unidadMedidaCompras?: ArticuloUnidadMedida;
   /** Detalle del inventario */
-  detalle?: InventarioDetalle[]
+  detalle?: InventarioDetalle[];
   /** Cantidad que se encuentra en stock segun cada uno de los almacenes */
-  totalStock?: number
+  totalStock?: number;
   /** Cantidad que ordena el cliente, se reserva hasta la fecha de caducidad de la cotización al cliente. */
-  totalComprometido?: number
+  totalComprometido?: number;
   /** Stock reservado para pedidos para ordenes de compra aprobadas */
-  totalSolicitado?: number
+  totalSolicitado?: number;
   /** Disponible para venta -> stock - comprometido */
-  totalDisponible?: number
+  totalDisponible?: number;
   /** Si se controla stock del articulo */
-  verificarStock?: boolean
+  verificarStock?: boolean;
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 /**
@@ -1219,33 +1219,33 @@ export interface Inventario {
  */
 export interface SalidaFacturaDetalle {
   /** Número de item iterativo del detalle la factura. */
-  nroItem?: number
+  nroItem?: number;
   /** Datos del clasificador de la Actividad Económica. */
-  actividadEconomica?: SinActividades
+  actividadEconomica?: SinActividades;
   /** Catálogo del Producto Servicio enviado por el SIN. */
-  productoServicio?: SinProductoServicio
+  productoServicio?: SinProductoServicio;
   /** Código que otorga el contribuyente a su servicio o producto. */
-  producto?: string
+  producto?: string;
   /** Descripción que otorga el contribuyente a su servicio o producto. */
-  descripcion?: string
+  descripcion?: string;
   /** Cantidad del producto o servicio otorgado. En caso de servicio este valor debe ser 1. */
-  cantidad?: number
+  cantidad?: number;
   /** Valor de la paramétrica que identifica la unidad de medida. */
-  unidadMedida?: SinUnidadMedida
+  unidadMedida?: SinUnidadMedida;
   /** Precio que otorga el contribuyente a su servicio o producto. */
-  precioUnitario?: number
+  precioUnitario?: number;
   /** Monto de descuento sobre el producto o servicio específico,  Si no aplica deberá ser nulo. */
-  montoDescuento?: number
+  montoDescuento?: number;
   /** El subtotal es igual a la (cantidad * precio unitario) – descuento. */
-  subTotal?: number
+  subTotal?: number;
   /** Número de serie correspondiente al producto vendido de línea blanca o negra. Nulo en otro caso. */
-  numeroSerie?: string
+  numeroSerie?: string;
   /** Número de Imei del celular vendido. Nulo en otro caso. */
-  numeroImei?: string
+  numeroImei?: string;
   /** Detalle extra asociado al item, texto plano. */
-  detalleExtra?: string
+  detalleExtra?: string;
   /** Mensaje de evento o acción que afecta al registro */
-  log?: string
+  log?: string;
 }
 
 /**
@@ -1253,89 +1253,89 @@ export interface SalidaFacturaDetalle {
  */
 export interface SalidaFactura {
   /** Identificador único interno */
-  _id?: string
+  _id?: string;
   /** Número de NIT registrado en el Padrón Nacional de Contribuyentes que corresponde a la persona o empresa que emite la factura. */
-  nitEmisor?: string
+  nitEmisor?: string;
   /** Razón Social o nombre registrado en el Padrón Nacional de Contribuyentes de la persona o empresa que emite la factura. */
-  razonSocialEmisor?: string
+  razonSocialEmisor?: string;
   /** Numeración propia que se le asigna a la Factura. */
-  numeroFactura?: number
+  numeroFactura?: number;
   /** Tipos de documentos fiscales */
-  tipoFactura?: SinTipoFactura
+  tipoFactura?: SinTipoFactura;
   /** Métodos de generación de documentos digitales */
-  tipoEmision?: SinTipoEmision
+  tipoEmision?: SinTipoEmision;
   /** Código único de facturación (CUF) debe ser generado por el emisor. */
-  cuf?: string
+  cuf?: string;
   /** Código Único de Facturación Diaria (CUFD) */
-  cufd?: SinCufD
+  cufd?: SinCufD;
   /** Codigo único de sistema */
-  cuis?: SinCuis
+  cuis?: SinCuis;
   /** Establecimientos secundarios donde se realiza alguna de las actividades económicas del Contribuyente, tienen una dirección física y están registradas en el Padrón Nacional de Contribuyentes */
-  sucursal?: OrgFacturaSucursal
+  sucursal?: OrgFacturaSucursal;
   /** Es un lugar, dispositivo o medio de venta que está asociado a una sucursal o casa matriz y que por su forma de trabajo puede ser fijo (en el caso de puntos de venta para ferias) o móvil (en el caso de camiones de repartidores o de distribución). Los Puntos de Venta no están registrados en el Padrón Nacional de Contribuyentes */
-  puntoVenta?: OrgFacturaPuntoVenta
+  puntoVenta?: OrgFacturaPuntoVenta;
   /** Fecha y hora en la cual se emite la factura. Expresada en formato UTC Extendido, por ejemplo: “2020-02-15T08:40:12.215”. */
-  fechaEmision?: DateDMYHHMMSS
+  fechaEmision?: DateDMYHHMMSS;
   /** Datos del cliente, El email puede variar segun el registro original. */
-  cliente?: ClienteOperacion
+  cliente?: ClienteOperacion;
   /** Identifica el método de pago utilizado para realizar la compra. Por ejemplo el codigo de clasificador 1 que representa a un pago en efectivo. */
-  metodoPago?: SinTipoMetodoPago
+  metodoPago?: SinTipoMetodoPago;
   /** Cuando el método de pago es 2 (Tarjeta), debe enviarse este valor pero ofuscado con los primeros y últimos 4 dígitos en claro y ceros al medio. Ej: 4797000000007896,. */
-  numeroTarjeta?: string
+  numeroTarjeta?: string;
   /** Monto total por el cual se realiza el hecho generador. */
-  montoTotal?: number
+  montoTotal?: number;
   /** Monto total en formato literal. */
-  montoTotalLiteral?: string
+  montoTotalLiteral?: string;
   /** Monto base para el cálculo del crédito fiscal. */
-  montoTotalSujetoIva?: number
+  montoTotalSujetoIva?: number;
   /** Valor de la paramétrica que identifica la moneda en la cual se realiza la transacción. */
-  moneda?: SinTipoMoneda
+  moneda?: SinTipoMoneda;
   /** Tipo de cambio de acuerdo a la moneda en la que se realiza el hecho generador, si el código de moneda es boliviano deberá ser igual a 1. */
-  tipoCambio?: number
+  tipoCambio?: number;
   /** Es el Monto Total expresado en el tipo de moneda, si el código de moneda es boliviano deberá ser igual al monto total. */
-  montoTotalMoneda?: number
+  montoTotalMoneda?: number;
   /** Monto a ser cancelado con una Gift Card */
-  montoGiftCard?: number
+  montoGiftCard?: number;
   /** Monto Adicional al descuento por item */
-  descuentoAdicional?: number
+  descuentoAdicional?: number;
   /** Código de Autorización de Facturas por Contingencia */
-  cafc?: string
+  cafc?: string;
   /** Leyenda asociada a la actividad económica. */
-  leyenda?: string
+  leyenda?: string;
   /** Mensajes conforme a la ley 453, donde se mencionan los derechos de los usuarios. */
-  subLeyenda?: string
+  subLeyenda?: string;
   /** Identifica al usuario que emite la factura, deberá ser descriptivo. Por ejemplo INTEGRATE */
-  usuario?: string
+  usuario?: string;
   /** Valor de la paramétrica que identifica el tipo de factura que se está emitiendo. Para este tipo de factura este valor es 1. */
-  documentoSector?: SinTipoDocumentoSector
+  documentoSector?: SinTipoDocumentoSector;
   /** Para la anulación de una Factura emitida, la mencionada factura deberá estar previamente registrada y validada por la Administración Tributaria. Dichos servicios previa validación de los parámetros enviados, registran la solicitud devolviendo un código de estado cuando la misma fue correcta o un código de error y advertencia en caso contrario */
-  motivoAnulacion?: SinMotivoAnulacion
+  motivoAnulacion?: SinMotivoAnulacion;
   /** Detalle extra, puede ser un HTML o un texto plano. la información registrada no se envia al servicio de impuestos nacionales */
-  detalleExtra?: string
+  detalleExtra?: string;
   /** Detalle de los items a ser facturados */
-  detalle?: SalidaFacturaDetalle[]
+  detalle?: SalidaFacturaDetalle[];
   /** Código del evento significativo Hechos inherentes al Sistema informático de Facturación que intervienen en su funcionamiento o que podrían afectar la emisión de las Facturas Digitales. Deben ser registrados hasta 48 horas posteriores de finalizada la contingencia, a través del sistema autorizado por la Administración Tributaria y enviados automáticamente a través del servicio Web correspondiente. */
-  eventoSignificativo?: string
+  eventoSignificativo?: string;
   /** Respuesta al consumo del servicio de Facturacion Compra Venta */
-  codigoRecepcion?: string
+  codigoRecepcion?: string;
   /** Representacion PDF, XML, ROLLO, ETC */
-  representacionGrafica?: UrlsRepresentacionGrafica
+  representacionGrafica?: UrlsRepresentacionGrafica;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Referencia con alguna tabla relacionada */
-  referencia?: string
+  referencia?: string;
   /** Tipo de referencia - Ej: CREDITO, VENTA, NORMAL, REST, etc - Si es null se asume venta normal por servicio de facturación */
-  tipoVenta?: string
+  tipoVenta?: string;
   /** Historial de eventos relacionados al registro - En caso de tener la factura en estado diferente a VALIDADA, ANULADA, se puede consultar el log del registro */
-  log?: string
+  log?: string;
 }
 
 /**
@@ -1343,29 +1343,29 @@ export interface SalidaFactura {
  */
 export interface Impresora {
   /** Identificador único del registro */
-  _id?: string
+  _id?: string;
   /** Ubicación de la impresora */
-  sucursal?: Sucursal
+  sucursal?: Sucursal;
   /** Rastro de punto de venta */
-  puntoVenta?: PuntoVenta
+  puntoVenta?: PuntoVenta;
   /** Nombre de la impresora */
-  nombre?: string
+  nombre?: string;
   /** Descripcion adicional de la impresora */
-  descripcion?: string
+  descripcion?: string;
   /** Atributo adicional 1 */
-  atributo1?: string
+  atributo1?: string;
   /** Atributo adicional 2 */
-  atributo2?: string
+  atributo2?: string;
   /** Estado del registro */
-  state?: string
+  state?: string;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
 }
 
 /**
@@ -1373,11 +1373,11 @@ export interface Impresora {
  */
 export interface ArticuloModificadorOpcionOperacion {
   /** Código interno del articulo */
-  articulo?: Articulo
+  articulo?: Articulo;
   /** Cantidad que se descontará del inventario al seleccionar esta opción (Ej: 1 porción) */
-  cantidadIncluida?: number
+  cantidadIncluida?: number;
   /** Determina si este insumo puede aplicar para promociones de gratuidad en este grupo */
-  elegibleParaGratis?: boolean
+  elegibleParaGratis?: boolean;
 }
 
 /**
@@ -1385,17 +1385,17 @@ export interface ArticuloModificadorOpcionOperacion {
  */
 export interface ArticuloModificadorOperacion {
   /** Identificador interno */
-  _id?: string
+  _id?: string;
   /** Nombre único público de la lista de complementos (Ej: "Elige tu guarnición") */
-  nombre?: string
+  nombre?: string;
   /** Mínima cantidad de selecciones requeridas (0 = Opcional, 1+ = Obligatorio) */
-  minSeleccion?: number
+  minSeleccion?: number;
   /** Máxima cantidad de selecciones permitidas (1 = Radio buttons, >1 = Checkboxes) */
-  maxSeleccion?: number
+  maxSeleccion?: number;
   /** Cantidad de opciones que el sistema no cobrará (Regla de promoción) */
-  opcionesGratuitas?: number
+  opcionesGratuitas?: number;
   /** Lista de artículos que conforman este grupo de selección */
-  opciones?: ArticuloModificadorOpcionOperacion[]
+  opciones?: ArticuloModificadorOpcionOperacion[];
 }
 
 /**
@@ -1403,24 +1403,24 @@ export interface ArticuloModificadorOperacion {
  */
 export interface ArticuloRecetaIngredienteOperacion {
   /** Código del articulo - Debe contener al menos precio */
-  articuloId?: string
+  articuloId?: string;
   /** Datos de inventario articulo */
-  articulo?: Articulo
+  articulo?: Articulo;
   /** Cantidad exacta que se descontará del inventario del ingrediente. Ej: Si la unidad de medida es "Porciones", y la hamburguesa lleva 3 porciones, esto es 3. */
-  cantidadBase?: number
+  cantidadBase?: number;
   /** Bandera de personalización: ¿El cliente puede pedir que le quiten este ingrediente? (Ej: "Sin Cebolla" -> true. "Sin Pan" -> false). */
-  esRemovible?: boolean
+  esRemovible?: boolean;
   /** Bandera de personalización: ¿El cliente puede pedir extra de este ingrediente? Si es true, el POS permitirá cobrar una porción (unidad medida) adicional. */
-  permiteExtra?: boolean
+  permiteExtra?: boolean;
 }
 
 export interface ArticuloRecetaOperacion {
   /** Identificador interno */
-  _id?: string
+  _id?: string;
   /** Nombre único de la receta (Ej: "Hamburguesa primavera") */
-  nombre?: string
+  nombre?: string;
   /** Lista de ingredientes que componen el articulo padre */
-  ingredientes?: ArticuloRecetaIngredienteOperacion[]
+  ingredientes?: ArticuloRecetaIngredienteOperacion[];
 }
 
 /**
@@ -1428,23 +1428,23 @@ export interface ArticuloRecetaOperacion {
  */
 export interface restPedidoMesasOcupadas {
   /** Identificador único interno del pedido */
-  _id?: string
+  _id?: string;
   /** Datos de la mesa ocupada */
-  mesa?: RestMesa
+  mesa?: RestMesa;
   /** Punto de Venta del pedido */
-  puntoVenta?: PuntoVenta
+  puntoVenta?: PuntoVenta;
   /** Número de pedido según kardex periodo */
-  numeroPedido?: number
+  numeroPedido?: number;
   /** Número de orden simple que se reinicia todos los dias */
-  numeroOrden?: number
+  numeroOrden?: number;
   /** Identificador interno del pedido */
-  pedidoId?: string
+  pedidoId?: string;
   /** Codigo de sucursal relacionado */
-  codigoSucursal?: number
+  codigoSucursal?: number;
   /** Código de punto de venta */
-  codigoPuntoVenta?: number
+  codigoPuntoVenta?: number;
   /** Usuario creación del pedido */
-  usucre?: string
+  usucre?: string;
 }
 
 /**
@@ -1452,18 +1452,18 @@ export interface restPedidoMesasOcupadas {
  */
 export interface RestPedidoConnection {
   /** Información para ayudar en la paginación. */
-  pageInfo: PageInfo
+  pageInfo: PageInfo;
   /** Lista de documentos. */
-  docs?: RestPedido[]
+  docs?: RestPedido[];
 }
 
 /**
  * Datos de entrada para registro de una mesa
  */
 export interface RestMesaInput {
-  nombre?: string
-  nroComensales?: number
-  ubicacion?: string
+  nombre?: string;
+  nroComensales?: number;
+  ubicacion?: string;
 }
 
 /**
@@ -1471,29 +1471,29 @@ export interface RestMesaInput {
  */
 export interface RestMesa {
   /** Nombre de mesa Ej. 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, m1, m2, 1_2, 1_2_3, etc, perez */
-  nombre?: string
+  nombre?: string;
   /** Posible cantidad de comenzales en la mesa */
-  nroComensales?: number
+  nroComensales?: number;
   /** Ubicación de la mesa */
-  ubicacion?: string
+  ubicacion?: string;
 }
 
 export interface RestPedidoExpressInput {
-  mesa: RestMesaInput
-  productos: ArticuloOperacionInput[]
-  codigoMoneda: number
-  tipoCambio: number
-  tipo?: string
-  nota?: string
-  notaRapida?: NotaRapidaInput[]
-  terminos?: string
-  fechaEntrega?: DateDMYHHMM
-  direccionEntrega?: string
-  espacioId?: string
-  atributo1?: string
-  atributo2?: string
-  atributo3?: string
-  atributo4?: string
+  mesa: RestMesaInput;
+  productos: ArticuloOperacionInput[];
+  codigoMoneda: number;
+  tipoCambio: number;
+  tipo?: string;
+  nota?: string;
+  notaRapida?: NotaRapidaInput[];
+  terminos?: string;
+  fechaEntrega?: DateDMYHHMM;
+  direccionEntrega?: string;
+  espacioId?: string;
+  atributo1?: string;
+  atributo2?: string;
+  atributo3?: string;
+  atributo4?: string;
 }
 
 /**
@@ -1501,124 +1501,124 @@ export interface RestPedidoExpressInput {
  */
 export interface RestPedido {
   /** Identificador único interno del pedido */
-  _id?: string
+  _id?: string;
   /** Código del pedido autoincrementable dependiendo de la sucursal donde se realiza la transacción */
-  numeroPedido?: number
+  numeroPedido?: number;
   /** Número de orden simple actualizable por periodo determinado - Ej. Primer dia del mes se reinicia a 1 - Ej. Segundo dia del mes se reinicia a 1 */
-  numeroOrden?: number
+  numeroOrden?: number;
   /** Marca Kardex relacionado Si es null, significa que aun no se realizó el movimiento de inventario */
-  marcaKardex?: string
+  marcaKardex?: string;
   /** Datos de la sucursal */
-  sucursal?: OrgFacturaSucursal
+  sucursal?: OrgFacturaSucursal;
   /** Datos del punto de venta */
-  puntoVenta?: OrgFacturaPuntoVenta
+  puntoVenta?: OrgFacturaPuntoVenta;
   /** Periodo al que corresponde el inventario */
-  kardexPeriodo?: KardexPeriodo
+  kardexPeriodo?: KardexPeriodo;
   /** Nombre Mesa. */
-  mesa?: RestMesa
+  mesa?: RestMesa;
   /** Productos que son añadidos al pedido, pueden ser articulos o kit de articulos */
-  productos?: ArticuloOperacion[]
+  productos?: ArticuloOperacion[];
   /** Productos o items que han sido eliminados de forma definitiva, pueden ser articulos o kit de articulos */
-  productosEliminados?: ArticuloOperacion[]
+  productosEliminados?: ArticuloOperacion[];
   /** Rastro o huella de la ultima transacción de registros / actualizacion del argumento Productos. - Si los datos de productos son iguales a ultima transaccion, entonces, no se realiza modificacion en el valor. - Si los datos de productos son diferentes, entonces, se sobre escribe el valor con los datos de productos anterior. */
-  ultimaTransaccionProductos?: ArticuloOperacion[]
+  ultimaTransaccionProductos?: ArticuloOperacion[];
   /** Moneda de transaccion */
-  moneda?: Moneda
+  moneda?: Moneda;
   /** Tipo de cambio de la transaccion */
-  tipoCambio?: number
+  tipoCambio?: number;
   /** Resuelve el tipo de pedido - null = pedido normal - 'DELIVERY' = pedido por delivery - 'LLEVAR' = pedido para llevar */
-  tipo?: string
+  tipo?: string;
   /** Descuento Adicional que afecta a todo el detalle */
-  descuentoAdicional?: number
+  descuentoAdicional?: number;
   /** Otros Costos de flete, alquiler, etc */
-  otrosCostos?: number
+  otrosCostos?: number;
   /** Descripcion de otros costos */
-  descripcionOtrosCostos?: string
+  descripcionOtrosCostos?: string;
   /** Fecha del documento - Generalmente es la fecha de inicio del pedido */
-  fechaDocumento?: DateDMYHHMM
+  fechaDocumento?: DateDMYHHMM;
   /** Fecha contable del documento - Generalmente es la fecha de finalización del pedido */
-  fechaContable?: DateDMYHHMM
+  fechaContable?: DateDMYHHMM;
   /** Cliente de la operación */
-  cliente?: ClienteOperacion
+  cliente?: ClienteOperacion;
   /** Método de pago utilizado para la finalización del pedido - No es incluyente al momento de generar la factura, pero si es referencial - Se depreca en la siguiente versión */
-  metodoPago?: MetodoPago
+  metodoPago?: MetodoPago;
   /** En caso el metodo de pago sea con tarjeta, debe enviar el nro de tarjeta - Se depreca en la siguiente versión */
-  numeroTarjeta?: string
+  numeroTarjeta?: string;
   /** Estructura de métodos de pago */
-  metodoPagoVenta?: MetodoPagoVenta[]
+  metodoPagoVenta?: MetodoPagoVenta[];
   /** Monto total del pedido - Sumatoria de los montos en metodoPagoVenta debe coincider con monto total */
-  montoTotal?: number
+  montoTotal?: number;
   /** Monto Total base según la moneda primaria */
-  montoTotalBase?: number
+  montoTotalBase?: number;
   /** Calculos de los totales según detalle de productos */
-  totales?: TotalesGenerales
+  totales?: TotalesGenerales;
   /** Fecha de entrega para nota de venta de pedido */
-  fechaEntrega?: DateDMYHHMM
+  fechaEntrega?: DateDMYHHMM;
   /** Dirección de entrega de la mercaderia */
-  direccionEntrega?: string
+  direccionEntrega?: string;
   /** Detalle Extra que afecta a todo el pedido */
-  detalleExtra?: string
+  detalleExtra?: string;
   /** Tipo de documento relacionado - FACTURA, NOTA_VENTA, NOTA_COMPRA */
-  tipoDocumento?: string
+  tipoDocumento?: string;
   /** En caso se haya generado la factura, se muestra el número de factura */
-  refNroDocumento?: string
+  refNroDocumento?: string;
   /** En caso se haya generado la factura, se muestra el cuf de la factura */
-  refDocumento?: string
+  refDocumento?: string;
   /** Nota del pedido */
-  nota?: string
+  nota?: string;
   /** Nota rapida alternativa a notas */
-  notaRapida?: NotaRapida[]
+  notaRapida?: NotaRapida[];
   /** Terminos de entrega del pedido */
-  terminos?: string
+  terminos?: string;
   /** Representación Gráfica de la nota de venta generada automaticamente */
-  representacionGrafica?: UrlsConsultaDocumento
+  representacionGrafica?: UrlsConsultaDocumento;
   /** Motivo de la anulación - Solo se usa cuando se realice la anulacion de la factura */
-  motivoAnulacion?: SinMotivoAnulacion
+  motivoAnulacion?: SinMotivoAnulacion;
   /** En caso se haya realizado la anulación, se muestra la descripción del motivo */
-  descripcionAnulacion?: string
+  descripcionAnulacion?: string;
   /** Atributos de tabla restaurante espacios */
-  espacio?: string
+  espacio?: string;
   /** Atributo auxiliar 1 */
-  atributo1?: string
+  atributo1?: string;
   /** Atributo auxiliar 2 */
-  atributo2?: string
+  atributo2?: string;
   /** Atributo auxiliar 3 */
-  atributo3?: string
+  atributo3?: string;
   /** Atributo auxiliar 4 */
-  atributo4?: string
+  atributo4?: string;
   /** Estado del registro **COMPLETADO** Mesa ya pidió la cuenta y se generar posterior a imprimir ticket de venta, pero si se siguen comandando productos la mesa cambiara nuevamente al OCUPADO. **FINALIZADO** Cuando ya finaliza el flujo o ser realiza el pago **ANULADO** Cuando se anula un pedido finalizado */
-  state?: string
+  state?: string;
   /** Usuario de creación del registro */
-  usucre?: string
+  usucre?: string;
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS
+  createdAt?: DateDMYHHMMSS;
   /** Usuario de modificación del registro */
-  usumod?: string
+  usumod?: string;
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS
+  updatedAt?: DateDMYHHMMSS;
   /** Historial de articulos según el ciclo de vida del pedido. - Historial se actualiza solo cuando el registro se encuentra en estado COMPLETADO */
-  historial?: HistorialArticuloOperacion[]
+  historial?: HistorialArticuloOperacion[];
   /** Relación con la apertura de caja */
-  arqueoCajaId?: string
+  arqueoCajaId?: string;
 }
 
 /**
  * Finaliza el pedido, se libera para la posterior emision de nota fiscal
  */
 export interface RestPedidoFinalizarInput {
-  codigoMetodoPago: number
-  numeroTarjeta?: string
-  montoGiftCard?: number
-  codigoMoneda: number
-  descuentoAdicional?: number
-  otrosCostos?: number
-  descripcionOtrosCostos?: string
-  montoTotal: number
-  fechaEntrega?: DateDMYHHMM
-  direccionEntrega?: string
-  detalleExtra?: string
-  terminos?: string
-  usuario?: string
+  codigoMetodoPago: number;
+  numeroTarjeta?: string;
+  montoGiftCard?: number;
+  codigoMoneda: number;
+  descuentoAdicional?: number;
+  otrosCostos?: number;
+  descripcionOtrosCostos?: string;
+  montoTotal: number;
+  fechaEntrega?: DateDMYHHMM;
+  direccionEntrega?: string;
+  detalleExtra?: string;
+  terminos?: string;
+  usuario?: string;
 }
 
 /**
@@ -1626,42 +1626,54 @@ export interface RestPedidoFinalizarInput {
  */
 export interface RestPedidoFactura {
   /** Datos de la factura de compra venta */
-  factura?: SalidaFactura
+  factura?: SalidaFactura;
   /** Datos del pedido, con relacion actualizada */
-  pedido?: RestPedido
+  pedido?: RestPedido;
 }
 
 /**
  * Datos de entrada para el registro de la salida (factura o nota de venta)
  */
 export interface RestPedidoFacturaInput {
-  codigoExcepcion?: number
-  usuario?: string
-  codigoMetodoPago: number
-  numeroTarjeta?: string
-  codigoMoneda: number
-  tipoCambio: number
-  detalleExtra?: string
+  codigoExcepcion?: number;
+  usuario?: string;
+  codigoMetodoPago: number;
+  numeroTarjeta?: string;
+  codigoMoneda: number;
+  tipoCambio: number;
+  detalleExtra?: string;
 }
 
 /**
  * Atributos de tabla restaurante espacios
  */
 export interface RestEspacio {
-  _id?: string
-  descripcion?: string
-  nroMesas?: number
-  sucursal?: Sucursal
-  puntoVenta?: PuntoVenta
-  atributo1?: string
-  atributo2?: string
-  atributo3?: string
-  atributo4?: string
+  _id?: string;
+  descripcion?: string;
+  nroMesas?: number;
+  sucursal?: Sucursal;
+  puntoVenta?: PuntoVenta;
+  atributo1?: string;
+  atributo2?: string;
+  atributo3?: string;
+  atributo4?: string;
   /** Si es 1, es el espacio del salón principal */
-  default?: number
-  state?: string
-  usucre?: string
-  createdAt?: DateDMYHHMMSS
-  usumod?: string
-  updatedAt?: DateDMYHHMMSS
+  default?: number;
+  state?: string;
+  usucre?: string;
+  createdAt?: DateDMYHHMMSS;
+  usumod?: string;
+  updatedAt?: DateDMYHHMMSS;
+}
+
+/**
+ * Datos de entrada para registro de un nuevo espacio
+ */
+export interface RestEspacioInput {
+  descripcion: string;
+  nroMesas: number;
+  atributo1?: string;
+  atributo2?: string;
+  atributo3?: string;
+  atributo4?: string;
 }

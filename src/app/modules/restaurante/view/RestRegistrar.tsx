@@ -53,6 +53,8 @@ const RestRegistrar: FunctionComponent = () => {
 
   // Función para cambiar de ubicación desde la UI
   const handleChangeEspacio = (nuevoEspacioId: string | null) => {
+    if (nuevoEspacioId === espacio) return // Fix bug: evitar re-reder e infinite loading
+
     setLoadingEspacio(true)
     setEspacio(nuevoEspacioId)
     if (nuevoEspacioId) {
