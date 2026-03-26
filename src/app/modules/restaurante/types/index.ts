@@ -1622,6 +1622,16 @@ export interface RestPedidoFinalizarInput {
 }
 
 /**
+ * Una conexión a una lista de elementos.
+ */
+export interface RestFacturaConnection {
+  /** Información para ayudar en la paginación. */
+  pageInfo: PageInfo;
+  /** Lista de documentos. */
+  docs?: SalidaFactura[];
+}
+
+/**
  * Datos de la transacción realizada, salida por factura
  */
 export interface RestPedidoFactura {

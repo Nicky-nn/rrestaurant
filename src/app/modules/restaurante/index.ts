@@ -2,4 +2,4 @@
 
 export * from './client';
 export * from './types';
-export * from './mutations/useRestEspacioRegistro';
+export * from './queries/useRestFacturaListado';

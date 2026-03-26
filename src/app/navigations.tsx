@@ -39,6 +39,11 @@ export const navigations: NavigationProps[] = [
         iconText: 'PG',
         path: restauranteRoutesMap.gestion.path,
       },
+      {
+        name: restauranteRoutesMap.facturas.name,
+        iconText: 'FA',
+        path: restauranteRoutesMap.facturas.path,
+      },
     ],
   },
   {
