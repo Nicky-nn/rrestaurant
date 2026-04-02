@@ -10,7 +10,7 @@ import { articuloUnidadMedidaFragment } from './articuloUnidadMedidaFragment.ts'
 import { grupoArticuloFragment } from './grupoArticuloFragment.ts'
 import { impresoraFragment } from './impresoraFragment.ts'
 import { loteFragment } from './loteFragment.ts'
-import { monedaFragment, monedaPrecioOperacionFragment } from './monedaPrecioOperacionFragment.ts'
+import { monedaFragment } from './monedaPrecioOperacionFragment.ts'
 import { notaRapidaFragment } from './notaRapidaFragment.ts'
 import { facturaSucursalFragment } from './sucursalFragment.ts'
 import { tipoArticuloOperacionFragment } from './tipoArticuloFragment.ts'
@@ -28,7 +28,6 @@ export const articuloOperacionFieldsFragment = gql`
   ${facturaSucursalFragment}
   ${articuloPrecioOperacionFragment}
   ${articuloUnidadMedidaFragment}
-  ${monedaPrecioOperacionFragment}
   ${monedaFragment}
   ${grupoArticuloFragment}
   ${loteFragment}

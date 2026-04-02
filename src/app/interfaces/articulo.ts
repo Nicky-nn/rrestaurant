@@ -47,6 +47,7 @@ export interface ArticuloOperacionProps {
 }
 /**
  * @author isi-template
+ * @deprecated
  */
 export interface ArticuloComplementoProps {
   id: string
@@ -70,11 +71,14 @@ export interface ArticuloProps extends AuditoriaProps {
   tipoArticulo: TipoArticuloOperacionProps // Clasificador de tipos de articulos articulos
   proveedor: ProveedorOperacionProps[] // Lista de proveedores del producto
   imagen: ImagenCloudProps | null
+  impresoras: any[]
   codigoGrupoUnidadMedida: number | null // grupo de unidad de medida del articulo, se realiza una relación de 1 a 1
   grupoUnidadMedida: GrupoUnidadMedidaProps | null // grupo de unidad de medida del articulo, se realiza una relación de 1 a 1
   articuloPrecioBase: ArticuloPrecioProps // Segun la unidad de medida principal o minima
+  /** Codigo relacional del articulo precio */
+  articuloPrecioId: string
   articuloPrecio: ArticuloPrecioProps[] // Todas las convinaciones de precios segun la unidad de medida
-  // codigos para compras, ventas, inventario
+  /** codigos para compras, ventas, inventario */
   articuloVenta: boolean // Si se usa solo para venta
   articuloInventario: boolean // Si se usa solo para inventarios
   articuloCompra: boolean // Si se usa solo para compras / o compras administrativas
@@ -82,10 +86,10 @@ export interface ArticuloProps extends AuditoriaProps {
   claseArticulo: ClaseArticuloProps // P = Producto, S = Servicio, C = Compra para gastos
   grupoArticulo: GrupoArticuloOperacionProps | null // Grupo de articulo ejemplo Impresora, comidas, etc
   gestionArticulo: GestionArticuloProps | null // No se gestiona, NULL, SERIE, LOTE
-  verificarStock: boolean // si es true, se verifica el stock del articulo
-  complemento: boolean
-  listaComplemento: ArticuloComplementoProps[]
   activo: boolean // si es true, el articulo esta activo para su uso
+  esReceta: boolean
+  tieneModificadores: boolean
+  verificarStock: boolean // si es true, se verifica el stock del articulo
   state?: string
 }
 
