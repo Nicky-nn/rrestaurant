@@ -12,8 +12,7 @@ export const articuloPrecioOperacionFragment = gql`
       ...articuloUnidadMedidaFields
     }
     cantidad
-    ## deprecado
-    cantidadBase
+    cantidadAnterior
     cantidadFactor
     descuento
     descuentoAdicional
@@ -52,10 +51,6 @@ export const articuloPrecioOperacionFragment = gql`
     incluyeImpuesto
     moneda {
       ...monedaFields
-    }
-    ## deprecado
-    monedaPrecio {
-      ...monedaPrecioOperacionFields
     }
     otrosCostos
     tipoCambio

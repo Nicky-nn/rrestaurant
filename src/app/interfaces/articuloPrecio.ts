@@ -1,12 +1,7 @@
 import { ArticuloUnidadMedidaProps } from './articuloUnidadMedida.ts'
 import { ImagenCloudProps } from './imagen.ts'
 import { InventarioProps } from './inventario.ts'
-import {
-  MonedaPrecioApiInputProps,
-  MonedaPrecioOperacionProps,
-  MonedaPrecioProps,
-  MonedaProps,
-} from './monedaPrecio.ts'
+import { MonedaPrecioApiInputProps, MonedaPrecioProps, MonedaProps } from './monedaPrecio.ts'
 import { ProveedorOperacionProps } from './proveedorOperacion.ts'
 import { TipoArticuloOperacionProps } from './tipoArticulo.ts'
 
@@ -190,8 +185,6 @@ export const TOTALES_GENERALES_DEFAULT: TotalesGeneralesProps = {
 export interface ArticuloPrecioOperacionProps {
   /** Datos unidad de medida */
   articuloUnidadMedida: ArticuloUnidadMedidaProps
-  /** @deprecated ya no es nesesario para front-end*/
-  monedaPrecio: MonedaPrecioOperacionProps
   /** Estructura de moneda que incluye el tipo de cambio segun moneda principal */
   moneda: MonedaProps
   /** Tipo de cambio final, puede ser diferente al tipo de cambio de moneda */
@@ -204,12 +197,14 @@ export interface ArticuloPrecioOperacionProps {
   tipoOperacion: TipoArtPrecioOperacion
   /** valor que se ingresa de front-end de operacion segun sea de tipoOperacion costo o precio */
   valor: number
+  /** costo báse heredado de tabla articuloPrecio, generalmente hace referencial al costo de operaciones, no se envia a front-end */
+  costo: number
   /** Cantidad neta heredada de cantidades */
   cantidad: number
-  /** @deprecated, se cambia por cantidadFactor */
-  cantidadBase: number
   /** Equivalencia de la unidad (12 unidades por Caja) */
   cantidadFactor: number
+  /** Historial del ultimo cambio de cantidad */
+  cantidadAnterior: number
   /** Descuento de linea */
   descuento: number
   /** Descuento prorrateado */
@@ -222,6 +217,7 @@ export interface ArticuloPrecioOperacionProps {
   incluyeImpuesto: boolean
   /** Si el descuento de linea aplica como descuento global o unitario, default: true */
   esDescuentoTotal: boolean
+  /** Factor de ajuste para modificaciones masivas de valor */
   factorAjuste: number
 }
 

@@ -10,19 +10,16 @@ export const precioCostoOperacionFragment = gql`
   fragment precioCostoOperacionFields on PrecioCostoOperacion {
     descuento
     descuentoAdicional
+    descuentoAdicionalP
+    descuentoP
+    descuentoTotal
+    descuentoTotalP
     gastoAdicional
     impuestoUnitario
     tipoOperacion
-    totales {
-      subtotalBruto
-      subtotalNeto
-      totalDescuento
-      totalFinal
-      totalGasto
-      totalImpuestos
-    }
-    valorBase
-    valorBaseAnterior
+    totales
+    valor
+    valorAnterior
     valorFinal
     valorNeto
     variacion

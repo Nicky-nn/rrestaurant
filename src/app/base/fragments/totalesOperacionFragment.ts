@@ -9,16 +9,16 @@ import { gql } from 'graphql-request'
 export const totalesOperacionFragment = gql`
   fragment totalesPrecioCostoOperacionFields on TotalesPrecioCostoOperacion {
     subtotalBruto
-    totalDescuento
-    totalDescuentoP
-    totalDescuentoAdicional
-    totalDescuentoGeneral
-    totalDescuentoAdicionalP
-    totalDescuentoGeneralP
     subtotalNeto
-    totalImpuestos
-    totalGasto
+    totalDescuento
+    totalDescuentoAdicional
+    totalDescuentoAdicionalP
+    totalDescuentoGeneral
+    totalDescuentoGeneralP
+    totalDescuentoP
     totalFinal
+    totalGasto
+    totalImpuestos
   }
 `
 
