@@ -1,6 +1,6 @@
-import { CancelOutlined, DescriptionOutlined, PrintOutlined } from '@mui/icons-material'
+import { AttachEmail, Delete, ForwardToInboxTwoTone, Preview } from '@mui/icons-material'
 import { Box, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
-import { FunctionComponent, useMemo } from 'react'
+import { FunctionComponent, useMemo, useState } from 'react'
 
 import { SimpleContainerBox } from '../../../base/components/Container/SimpleBox'
 import { FilterTypeMap } from '../../../base/components/Table/castMrtFilters.ts'
@@ -10,11 +10,14 @@ import { MrtTableConfig } from '../../../base/components/Table/mrtTypes.ts'
 import { useMrtQuery } from '../../../base/components/Table/useMrtQuery.tsx'
 import Breadcrumb from '../../../base/components/Template/Breadcrumb/Breadcrumb'
 import useAuth from '../../../base/hooks/useAuth'
+import { apiEstado } from '../../../interfaces/index.ts'
 import { client } from '../client'
 import { RESTFACTURALISTADO } from '../queries/useRestFacturaListado'
 import { restauranteRoutesMap } from '../restauranteRoutes'
 import { RestFacturaConnection, SalidaFactura, SalidaFacturaDetalle } from '../types'
 import { tableFacturaColumns } from './listado/TableRestFacturaHeaders.tsx'
+import RestConsultaFacturaDialog from './RestConsultaFacturaDialog.tsx'
+import RestReenviarFacturaDialog from './RestReenviarFacturaDialog.tsx'
 
 const ProductosDetalle = ({ productos }: { productos: SalidaFacturaDetalle[] }) => {
   if (!productos.length) return <Typography variant="body2">Sin productos</Typography>
@@ -62,6 +65,11 @@ type Props = RestFacturasComponentProps
 
 const RestFacturas: FunctionComponent<Props> = () => {
   const { user } = useAuth()
+  const [factura, setFactura] = useState<SalidaFactura | null>(null)
+  const [openReenviarFactura, setOpenReenviarFactura] = useState(false)
+  const [openEnviarWhats, setOpenEnviarWhats] = useState(false)
+  const [openAnularVenta, setOpenAnularVenta] = useState(false)
+  const [openConsultaFactura, setOpenConsultaFactura] = useState(false)
 
   const columns = useMemo(() => tableFacturaColumns, [])
 
@@ -74,20 +82,42 @@ const RestFacturas: FunctionComponent<Props> = () => {
       manualPagination: true,
       rowMenuActions: [
         {
-          label: 'Imprimir',
-          icon: <PrintOutlined />,
-          onClick: () => {},
+          label: 'Reenviar Factura',
+          icon: <AttachEmail />,
+          onClick: ({ row }) => {
+            setFactura(row)
+            setOpenReenviarFactura(true)
+          },
         },
         {
-          label: 'Detalle',
-          icon: <DescriptionOutlined />,
-          onClick: () => {},
+          label: 'Enviar por W. A.',
+          icon: <ForwardToInboxTwoTone fontSize="inherit" color="success" />,
+
+          onClick: ({ row }) => {
+            setFactura(row)
+            setOpenEnviarWhats(true)
+          },
         },
         {
-          label: 'Anular',
-          icon: <CancelOutlined />,
-          color: 'error' as const,
-          onClick: () => {},
+          label: 'Anular Venta / Factura',
+          icon: <Delete />,
+          color: 'error',
+          onClick: ({ row }) => {
+            setFactura(row || null)
+            setOpenAnularVenta(true)
+          },
+          hidden: (row) => [apiEstado.anulado, apiEstado.eliminado].includes(row.state as string),
+        },
+      ],
+      rowIconsActions: [
+        {
+          label: 'Consulta Venta / Factura',
+          color: 'primary',
+          onClick: ({ row }) => {
+            setFactura(row)
+            setOpenConsultaFactura(true)
+          },
+          icon: <Preview />,
         },
       ],
       renderDetailPanel: (row) => <ProductosDetalle productos={row.detalle ?? []} />,
@@ -148,6 +178,18 @@ const RestFacturas: FunctionComponent<Props> = () => {
       <Box>
         <MrtDynamicTable config={config} {...restFacturas} />
       </Box>
+
+      {/* Dialogos de Acciones */}
+      <RestConsultaFacturaDialog
+        open={openConsultaFactura}
+        onClose={() => setOpenConsultaFactura(false)}
+        factura={factura}
+      />
+      <RestReenviarFacturaDialog
+        open={openReenviarFactura}
+        onClose={() => setOpenReenviarFactura(false)}
+        factura={factura}
+      />
     </SimpleContainerBox>
   )
 }
