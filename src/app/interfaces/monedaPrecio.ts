@@ -56,22 +56,12 @@ export interface MonedaApiInputProps {
 }
 
 /**
- * en operacion no ingresa precio 1, precio 2
- * @author isi-template
- */
-export interface MonedaPrecioOperacionProps {
-  moneda: MonedaProps
-  precioBase: number // Precio base multiplicador por el factor de ajuste
-  precio: number
-  delivery: number
-}
-
-/**
  * Relacion entre moneda y precio
  * @author isi-template
  */
 export interface MonedaPrecioProps {
   moneda: MonedaProps
+  /** Costo báse */
   precioBase: number // Precio base multiplicador por el factor de ajuste
   precio: number
   delivery: number

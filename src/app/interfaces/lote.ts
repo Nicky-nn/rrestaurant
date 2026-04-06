@@ -1,5 +1,7 @@
 import dayjs, { Dayjs } from 'dayjs'
 
+import { ArticuloProps } from './articulo.ts'
+
 /**
  * @description Modelo de Lote
  * @author isi-template
@@ -26,15 +28,30 @@ export interface LoteBaseProps {
 
 export interface LoteProps extends LoteBaseProps {}
 /**
+ * @description Modelo de Lote para registro global, usado en carrito de articulos
  * @author isi-template
  */
-export interface LoteInputProps {
+export interface LoteGlobalInputProps {
   codigoLote: string
   codigoArticulo: string
   descripcion: string
   fechaAdmision: Date
   fechaFabricacion: Dayjs
   fechaVencimiento: Dayjs
+  atributo1: string
+  atributo2: string
+}
+
+/**
+ * @author isi-template
+ */
+export interface LoteInputProps {
+  codigoLote: string
+  articulo: ArticuloProps | null
+  descripcion: string
+  fechaAdmision: Date
+  fechaFabricacion: Date
+  fechaVencimiento: Date | null
   atributo1: string
   atributo2: string
 }
@@ -73,7 +90,7 @@ interface Sucursal {
 /**
  * @author isi-template
  */
-export const LOTE_INITIAL_VALUES: LoteInputProps = {
+export const LOTE_INITIAL_VALUES: LoteGlobalInputProps = {
   codigoLote: '',
   codigoArticulo: '',
   descripcion: '',

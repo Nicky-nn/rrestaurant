@@ -32,6 +32,7 @@ export interface ArticuloOperacionInputProps {
   cantidad: number
   descuento: number
   descuentoP: number // descuento porcentaje
+  /** Impuesto porcentual 0 - 100%, default 0 */
   impuesto: number
   precio: number
   moneda: MonedaProps | null

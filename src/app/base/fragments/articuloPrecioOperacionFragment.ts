@@ -12,36 +12,45 @@ export const articuloPrecioOperacionFragment = gql`
       ...articuloUnidadMedidaFields
     }
     cantidad
-    cantidadBase
+    cantidadAnterior
     cantidadFactor
     descuento
     descuentoAdicional
     esDescuentoTotal
     estructuraValor {
+      tipoOperacion
+      valor
+      valorAnterior
       descuento
       descuentoAdicional
-      gastoAdicional
+      descuentoTotal
+      descuentoP
+      descuentoAdicionalP
+      descuentoTotalP
+      valorNeto
       impuestoUnitario
-      tipoOperacion
+      gastoAdicional
+      variacion
+      valorFinal
       totales {
         subtotalBruto
-        subtotalNeto
         totalDescuento
-        totalFinal
-        totalGasto
+        totalDescuentoAdicional
+        totalDescuentoGeneral
+        totalDescuentoP
+        totalDescuentoAdicionalP
+        totalDescuentoGeneralP
+        subtotalNeto
         totalImpuestos
+        totalGasto
+        totalFinal
       }
-      valorBase
-      valorBaseAnterior
-      valorFinal
-      valorNeto
-      variacion
     }
     factorAjuste
     impuesto
     incluyeImpuesto
-    monedaPrecio {
-      ...monedaPrecioOperacionFields
+    moneda {
+      ...monedaFields
     }
     otrosCostos
     tipoCambio

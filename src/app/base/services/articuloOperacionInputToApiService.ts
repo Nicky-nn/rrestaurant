@@ -19,6 +19,8 @@ export const articuloOperacionInputToApiService = (
       descuento: input.descuento,
       impuesto: input.impuesto,
       precio: input.precio,
+      esDescuentoTotal: true,
+      incluyeImpuesto: false,
     },
     codigoAlmacen: input.almacen!.codigoAlmacen,
     codigoArticulo: input!.codigoArticulo,

@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 
-import SettingsContext from '../contexts/settingsContext.ts'
+import { SettingsContext } from '../contexts/SettingsContext.tsx'
 
 export default function useSettings() {
   const context = useContext(SettingsContext)

@@ -1,5 +1,5 @@
-import { Refresh } from '@mui/icons-material'
-import { alpha, Box, Divider, IconButton, Tooltip, Typography } from '@mui/material'
+import { KeyboardArrowDown, KeyboardDoubleArrowDown, Refresh } from '@mui/icons-material'
+import { alpha, Box, Divider, IconButton, Theme, Tooltip, Typography } from '@mui/material'
 import {
   MaterialReactTable,
   MRT_ColumnFiltersState,
@@ -11,6 +11,7 @@ import {
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { useMemo } from 'react'
 
+import { alphaByTheme, alphaNormal } from '../../../utils/colorUtils.ts'
 import { MuiToolbarAlertBannerProps } from '../../../utils/muiTable/materialReactTableUtils.ts'
 import { ActionIconButton } from './ActionIconButton.tsx'
 import { MrtFlatTable } from './MrtFlatTable.tsx'
@@ -91,6 +92,13 @@ interface Props<T extends Record<string, any>> {
     onRowSelectionChange?: (updater: any) => void
   }
 }
+
+const mrtRowExpandColor = (theme: Theme, props: { dark?: number; light?: number } = {}) =>
+  alphaByTheme(
+    theme.palette.primary.main,
+    theme,
+    theme.palette.mode === 'dark' ? (props.dark ?? 0.3) : (props.light ?? 0.1),
+  )
 
 /**
  * Componente de tabla dinámica completa reutilizable
@@ -234,6 +242,117 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
       },
     },
     displayColumnDefOptions: {
+      'mrt-row-expand': {
+        size: 45,
+        muiTableHeadCellProps: {
+          sx: {
+            padding: 0,
+            mt: -1,
+            position: 'relative', // asegurar contexto para el absolute del hijo
+            '& .Mui-TableHeadCell-Content': {
+              height: '100%',
+              width: '100%',
+            },
+            '& .Mui-TableHeadCell-Content-Wrapper': {
+              flex: 1,
+              height: '100%',
+              width: '100%',
+            },
+            '& .Mui-TableHeadCell-Content-Labels': {
+              flex: 1,
+              height: '100%',
+            },
+          },
+        },
+        Header: ({ table }) => {
+          const allExpanded = table.getIsAllRowsExpanded()
+          return (
+            <Box
+              onClick={table.getToggleAllRowsExpandedHandler()}
+              sx={(theme) => ({
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                '&:hover .expand-icon-wrapper': {
+                  borderColor: mrtRowExpandColor(theme),
+                  backgroundColor: allExpanded
+                    ? mrtRowExpandColor(theme)
+                    : mrtRowExpandColor(theme, { dark: 0.2, light: 0.5 }),
+                },
+              })}
+            >
+              <Box
+                className="expand-icon-wrapper"
+                sx={(theme) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '50%',
+                  backgroundColor: allExpanded ? mrtRowExpandColor(theme) : 'transparent',
+                  border: '2px solid',
+                  borderColor: allExpanded ? mrtRowExpandColor(theme) : 'transparent',
+                  transition: 'all 0.25s ease',
+                })}
+              >
+                <KeyboardDoubleArrowDown
+                  sx={(theme) => ({
+                    color: allExpanded ? 'white' : theme.palette.primary.main,
+                    transform: allExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.25s ease',
+                  })}
+                />
+              </Box>
+            </Box>
+          )
+        },
+        Cell: ({ row }) => (
+          <Box
+            onClick={() => row.toggleExpanded()}
+            sx={(theme) => ({
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s ease',
+              '&:hover': {
+                backgroundColor: alphaNormal(theme.palette.primary.main, 0.1),
+              },
+              '&:active': {
+                backgroundColor: alphaNormal(theme.palette.primary.main, 0.16),
+              },
+            })}
+          >
+            <Box
+              className="expand-icon-wrapper"
+              sx={(theme) => ({
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                backgroundColor: row.getIsExpanded()
+                  ? mrtRowExpandColor(theme, { dark: 0.15, light: 0.9 })
+                  : 'transparent',
+                border: '1px solid',
+                borderColor: row.getIsExpanded() ? 'primary.main' : 'transparent',
+                transition: 'all 0.25s ease',
+              })}
+            >
+              <KeyboardArrowDown
+                sx={{
+                  color: 'primary.main',
+                  transform: row.getIsExpanded() ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.25s ease',
+                }}
+              />
+            </Box>
+          </Box>
+        ),
+      },
       'mrt-row-actions': {
         header: 'Opciones',
         size: (() => {
@@ -246,7 +365,6 @@ export const MrtDynamicTable = <T extends Record<string, any>>({
           const customActionsWidth = Array.isArray(config.rowActions)
             ? config.rowActions.reduce((acc, curr) => acc + (curr.width || 90), 0)
             : 0
-
           // Retornamos la suma total + un pequeño margen de seguridad
           return iconWidth + auditWidth + menuWidth + customActionsWidth + 10
         })(),

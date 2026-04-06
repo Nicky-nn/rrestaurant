@@ -38,19 +38,60 @@ export const adaptColor = (color: string, theme: Theme, darknessFactor: number =
  * Asignamos el alpha dependiendo del tema
  * @param color
  * @param theme
- * @param darknessFactor
+ * @param darkFactor
+ * @param lightFactor
  */
 export const alphaByTheme = (color: string, theme: Theme, darknessFactor: number = 0.2) => {
   // 2. Generamos clave única para el caché
-  const cacheKey = `alpha-${color}-${theme.palette.mode}-${darknessFactor}`
+  const cacheKey = `alpha-theme-${color}-${theme.palette.mode}-${darkFactor}-${lightFactor ?? darkFactor}`
   if (colorCache.has(cacheKey)) {
     return colorCache.get(cacheKey)!
   }
 
   if (theme.palette.mode === 'light') {
-    const l = alpha(color, 1 - darknessFactor)
+    const l = alpha(color, lightFactor ?? darkFactor)
     colorCache.set(cacheKey, l)
     return l
+  }
+  const d = alpha(color, darkFactor + 0.01)
+  colorCache.set(cacheKey, d)
+  return d
+}
+
+/**
+ * Asignamos el alpha dependiendo del tema, solo aplica el alpha al modo dark
+ * @param color
+ * @param theme
+ * @param darkFactor
+ * @param lightFactor
+ */
+export const alphaDark = (color: string, theme: Theme, darkFactor: number = 0.3, lightFactor?: number) => {
+  // 2. Generamos clave única para el caché
+  const cacheKey = `alpha-dark-${color}-${theme.palette.mode}-${darkFactor}-${lightFactor ?? darkFactor}`
+  if (colorCache.has(cacheKey)) {
+    return colorCache.get(cacheKey)!
+  }
+
+  if (theme.palette.mode === 'light') {
+    const l = alpha(color, lightFactor ?? darkFactor)
+    colorCache.set(cacheKey, l)
+    return l
+  }
+  const d = alpha(color, darkFactor)
+  colorCache.set(cacheKey, d)
+  return d
+}
+
+/**
+ * Asignamos el alpha a un color, a diferencia de alpha, este cachea los colores
+ * @param color
+ * @param darknessFactor
+ */
+export const alphaNormal = (color: string, darknessFactor: number = 0.09) => {
+  // 2. Generamos clave única para el caché
+  const cacheKey = `alpha-normal-${color}-${darknessFactor}`
+  if (colorCache.has(cacheKey)) {
+    return colorCache.get(cacheKey)!
   }
   const d = alpha(color, darknessFactor)
   colorCache.set(cacheKey, d)
@@ -61,21 +102,22 @@ export const alphaByTheme = (color: string, theme: Theme, darknessFactor: number
  * Asignamos el alpha dependiendo del model light o dark
  * @param color
  * @param mode
- * @param darknessFactor
+ * @param darkFactor
+ * @param lightFactor
  */
 export const alphaByMode = (color: string, mode: 'light' | 'dark', darknessFactor: number = 0.2) => {
   // 2. Generamos clave única para el caché
-  const cacheKey = `alpha-${color}-${mode}-${darknessFactor}`
+  const cacheKey = `alpha-mode-${color}-${mode}-${darkFactor}-${lightFactor ?? darkFactor}`
   if (colorCache.has(cacheKey)) {
     return colorCache.get(cacheKey)!
   }
 
   if (mode === 'light') {
-    const l = alpha(color, 1 - darknessFactor)
+    const l = alpha(color, lightFactor ?? darkFactor)
     colorCache.set(cacheKey, l)
     return l
   }
-  const d = alpha(color, darknessFactor)
+  const d = alpha(color, darkFactor)
   colorCache.set(cacheKey, d)
   return d
 }

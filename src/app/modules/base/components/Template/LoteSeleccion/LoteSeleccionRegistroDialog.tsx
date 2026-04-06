@@ -51,6 +51,14 @@ interface NuevoLoteDialogProps {
   onClose: () => void
   codigoArticulo: string
 }
+const defaultForm = {
+  codigoArticulo: '',
+  codigoLote: '',
+  descripcion: '',
+  fechaAdmision: new Date(),
+  fechaFabricacion: dayjs(),
+  fechaVencimiento: dayjs(),
+}
 
 /**
  * Registro de un lote en modo dialog
@@ -67,21 +75,12 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
   onSubmit,
   codigoArticulo,
 }) => {
-  const defaultForm = {
-    codigoArticulo: '',
-    codigoLote: '',
-    descripcion: '',
-    fechaAdmision: new Date(),
-    fechaFabricacion: dayjs(),
-    fechaVencimiento: dayjs(),
-  }
-
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<LoteInputProps>({
+  } = useForm<LoteGlobalInputProps>({
     defaultValues: { ...defaultForm, codigoArticulo },
     resolver: yupResolver<any, any, any>(schema),
   })
@@ -92,7 +91,7 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
    * Guardamos los datos del lote
    * @param data
    */
-  const handleFormSubmit = async (data: LoteInputProps) => {
+  const handleFormSubmit = async (data: LoteGlobalInputProps) => {
     const input: LoteApiInputProps = {
       descripcion: data.descripcion,
       atributo1: data.atributo1,
@@ -133,7 +132,7 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
         codigoArticulo,
       })
     }
-  }, [open, codigoArticulo])
+  }, [open, codigoArticulo, reset])
   /*********************************************************************************/
   /*********************************************************************************/
   /*********************************************************************************/

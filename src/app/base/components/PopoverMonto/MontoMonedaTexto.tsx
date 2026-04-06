@@ -195,7 +195,7 @@ const MontoMonedaTexto: FunctionComponent<Props> = (props) => {
             setAnchorMonto(null)
           }}
         >
-          <Grid container rowSpacing={1} sx={{ width: 240, p: 1.5 }}>
+          <Grid container rowSpacing={1.3} sx={{ width: 240, p: 1.5 }}>
             <Grid size={12}>
               <NumberSpinnerField
                 fullWidth

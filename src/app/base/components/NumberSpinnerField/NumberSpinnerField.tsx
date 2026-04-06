@@ -7,7 +7,7 @@ import { IMaskInput } from 'react-imask'
 const StyledIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.text.secondary,
   '&:disabled': {
-    color: theme.palette.text.secondary,
+    color: theme.palette.action.disabled,
   },
   '&:hover': {
     color: theme.palette.primary.main,
@@ -19,6 +19,9 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
   padding: 4.5,
 }))
 
+// =========================================================================
+// ADAPTADOR PARA react-imask
+// =========================================================================
 interface CustomProps {
   onChange: (event: { target: { name: string; value: string } }) => void
   name: string
@@ -26,7 +29,7 @@ interface CustomProps {
 }
 
 /**
- * Control para validar datos numéricos.
+ * Aplicamos la mascara al tipo numeric en el input
  * @author isi-template
  */
 const NumericFormatCustom = React.forwardRef<HTMLInputElement, CustomProps>(
@@ -45,18 +48,16 @@ const NumericFormatCustom = React.forwardRef<HTMLInputElement, CustomProps>(
         mask={Number}
         unmask={true}
         onAccept={(value) => {
-          return onChange({
-            target: {
-              name: props.name,
-              value,
-            },
-          })
+          onChange({ target: { name: props.name, value: value.toString() } })
         }}
       />
     )
   },
 )
 
+// =========================================================================
+// INTERFACES
+// =========================================================================
 export type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
   value?: number | null
   min?: number
@@ -64,45 +65,18 @@ export type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
   step?: number
   decimalScale?: number
   unit?: string
-  helperText?: string
-  textAlign?:
-    | '-moz-initial'
-    | 'inherit'
-    | 'initial'
-    | 'revert'
-    | 'revert-layer'
-    | 'unset'
-    | '-webkit-match-parent'
-    | 'center'
-    | 'end'
-    | 'justify'
-    | 'left'
-    | 'match-parent'
-    | 'right'
-    | 'start'
+  textAlign?: 'left' | 'center' | 'right'
   hideActionButtons?: boolean
   onChange?: (value: number | null) => void
   spinnerTabIndex?: boolean
   mostrarMensajeError?: boolean
+  customEndAdornment?: React.ReactNode
+  customStartAdornment?: React.ReactNode
 }
 
 /**
- * Control para datos numericos
+ * Componente principal que nos permite generar un input de tipo number con funciones de validacion, decimales, y todas las propiedades adjuntas
  * @author isi-template
- * @param value
- * @param min Valor minimo aceptado, default 0
- * @param max Valor maximo aceptado, default Infinity
- * @param step Step de incremento, default 1
- * @param decimalScale Decimales a mostrar, default 0
- * @param unit Unidad a mostrar, default '', Ejemplo: 'BOB, Kg'
- * @param singleUnit Unidad a mostrar cuando solo hay un valor, default '', Ejemplo: 'BOB'
- * @param helperText Texto de ayuda, default ''
- * @param mostrarMensajeError Muestra los mensajes de error, maximo y minimo, default true
- * @param textAlign
- * @param hideActionButtons
- * @param onChange
- * @param props
- * @constructor
  */
 const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(function NumberSpinnerField(
   props,
@@ -308,6 +282,13 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
                   edge="end"
                   disabled={disabled || (Number(stateValue) || 0) + step > max}
                   tabIndex={spinnerTabIndex ? undefined : -1}
+                  onPointerDown={(e) => {
+                    e.preventDefault()
+                    startSpin('DOWN')
+                  }}
+                  onPointerUp={stopSpin}
+                  onPointerLeave={stopSpin}
+                  onPointerCancel={stopSpin}
                 >
                   <AddCircleOutlined />
                 </StyledIconButton>
@@ -326,11 +307,4 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
 
 export default NumberSpinnerField
 
-/**
- * Conversion y verificación de un valor a numérico
- * @param val
- */
-const clampNumber = (val: any): number | null => {
-  if (val === undefined) return null
-  return val
-}
+export default React.memo(NumberSpinnerField)

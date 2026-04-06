@@ -57,6 +57,11 @@ export const articuloOperacionDefinitionValidator = {
   articuloUnidadMedida: yupArticuloUnidadMedidaValidator.required(),
   cantidad: number().positive('Intro nro. positivo').required('Requerido'),
   descuento: number().min(0).required('Obligatorio'),
+  descuentoP: number()
+    .transform((value, originalValue) => (originalValue === '' || originalValue === null ? undefined : value))
+    .min(0, 'El porcentaje no puede ser negativo')
+    .max(100, 'El porcentaje no puede superar el 100%')
+    .required('Obligatorio'),
   impuesto: number().min(0).required('Obligatorio'),
   precio: number().positive('Debe ser nro. positivo').required('Obligatorio'),
   moneda: yupMonedaValidator.required(),

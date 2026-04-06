@@ -1,3 +1,4 @@
+import { AuditoriaProps } from './index.ts'
 import { SinUnidadMedidaProps } from './sin.interface.ts'
 
 /**
@@ -21,32 +22,41 @@ export interface ArticuloUnidadMedidaProps {
 /**
  * @author isi-template
  */
-export interface UnidadMedidaProps {
+export interface UnidadMedidaProps extends AuditoriaProps {
   codigoUnidadMedida: string
   nombreUnidadMedida: string
-  sinUnidadMedida: {
-    codigoClasificador: number
-    descripcion: string
-  }
+  sinUnidadMedida: SinUnidadMedidaProps
   state: string
 }
 /**
  * @author isi-template
  */
 export interface UnidadMedidaInputProps {
-  codigoSinUnidadMedida: string | null
   codigoUnidadMedida: string
   nombreUnidadMedida: string
   sinUnidadMedida: SinUnidadMedidaProps | null
-  unidadMedida: SinUnidadMedidaProps | null
 }
 /**
  * @author isi-template
  */
 export const UNIDAD_MEDIDA_INITIAL_VALUES: UnidadMedidaInputProps = {
-  codigoSinUnidadMedida: null,
   codigoUnidadMedida: '',
   nombreUnidadMedida: '',
   sinUnidadMedida: null,
-  unidadMedida: null,
+}
+/**
+ * @author isi-template
+ */
+export interface ArticuloUnidadMedidaInputProps {
+  codigoUnidadMedida: string
+  nombreUnidadMedida: string
+  sinUnidadMedida: SinUnidadMedidaProps | null
+}
+/**
+ * @author isi-template
+ */
+export const ARTICULO_UNIDAD_MEDIDA_INITIAL_VALUES: ArticuloUnidadMedidaInputProps = {
+  codigoUnidadMedida: '',
+  nombreUnidadMedida: '',
+  sinUnidadMedida: null,
 }

@@ -15,9 +15,9 @@ export interface ThemeOptionsProps extends ThemeOptions {
 const themeOptions: ThemeOptionsProps = {
   typography: {
     fontSize: 14,
-    body1: {
-      fontSize: '14px',
-    },
+    // body1: {
+    //   fontSize: '14px',
+    // },
   },
   // breakpoints: {
   //   values: {

@@ -2,7 +2,7 @@
  * @author isi-template
  */
 export interface SinUnidadMedidaProps {
-  codigoClasificador: string
+  codigoClasificador: number
   descripcion: string
 }
 

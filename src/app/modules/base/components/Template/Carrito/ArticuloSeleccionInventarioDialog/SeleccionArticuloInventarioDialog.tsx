@@ -15,7 +15,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
-import React, { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react'
+import React, { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { apiArticuloInventarioPorId } from '../../../../../../base/api/apiArticuloInventarioPorId.ts'
@@ -28,12 +28,16 @@ import { LoteSeleccionProps } from '../../LoteSeleccion/LoteSeleccionTypes.ts'
 import ArticuloInventarioFormularioCard from './ArticuloInventarioFormularioCard.tsx'
 import ArticuloInventarioInformacionCard from './ArticuloInventarioInformacionCard.tsx'
 import {
+  ActionButtonsProps,
   CantidadSeleccionProps,
   DescuentoSeleccionProps,
   PrecioSeleccionProps,
   SeleccionArticuloInventarioDialogProps,
 } from './ArticuloSeleccionInventarioTypes.ts'
 import { seleccionArticuloInventarioReglas } from './seleccionArticuloInventarioReglas.ts'
+
+const DEFAULT_LOTE_PROPS: LoteSeleccionProps = { metodoSeleccion: MetodoSeleccionLote.MANUAL }
+const DEFAULT_EMPTY_PROPS = {}
 
 /**
  * Diálogo de selección de artículo con inventario
@@ -63,15 +67,13 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInve
     verificarInventario = false,
     onClear, // Para limpiar los parametros de entrada, resuelve Blocked aria-hidden
     almacenProps,
-    loteProps = {
-      metodoSeleccion: MetodoSeleccionLote.MANUAL,
-    } as LoteSeleccionProps,
-    unidadMedidaProps = {} as UnidadMedidaSeleccionProps,
-    cantidadProps = {} as CantidadSeleccionProps,
-    precioProps = {} as PrecioSeleccionProps,
-    descuentoProps = {} as DescuentoSeleccionProps,
+    loteProps = DEFAULT_LOTE_PROPS,
+    unidadMedidaProps = DEFAULT_EMPTY_PROPS as UnidadMedidaSeleccionProps,
+    cantidadProps = DEFAULT_EMPTY_PROPS as CantidadSeleccionProps,
+    precioProps = DEFAULT_EMPTY_PROPS as PrecioSeleccionProps,
+    descuentoProps = DEFAULT_EMPTY_PROPS as DescuentoSeleccionProps,
     reglas,
-    actionButtons = {},
+    actionButtons = DEFAULT_EMPTY_PROPS as ActionButtonsProps,
     ...other
   } = props
 
@@ -109,7 +111,6 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInve
       return resp ?? null
     },
     refetchInterval: false,
-    refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   })
@@ -150,17 +151,33 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInve
   )
 
   const onError = useCallback((errors: any) => {
-    console.error('Errores de validación del formulario:', errors)
+    console.log('Errores de validación del formulario:', errors)
     setMensajes(['No se ha podido validar el formulario'])
   }, [])
 
+  const lotePropsCalculados = useMemo(
+    () => ({
+      fuente: loteProps?.fuente ?? almacenProps?.fuente ?? 'inv',
+      ...loteProps,
+    }),
+    [loteProps, almacenProps?.fuente],
+  )
+
   // ===== EFECTOS =====
+  const formularioInicializado = useRef(false)
+  useEffect(() => {
+    if (!open) formularioInicializado.current = false
+  }, [open])
+
   // Reset del formulario cuando cambian los datos
   useEffect(() => {
-    if (open && isSuccess && item && articulo) {
+    if (open && isSuccess && item && articulo && !formularioInicializado.current) {
       reset({ ...item })
+      formularioInicializado.current = true
+      setMensajes([])
     }
-  }, [open, isSuccess, item, articulo, reset])
+  }, [open, isSuccess, item, reset, articulo])
+
   /*###############################################################*/
   /*###############################################################*/
 
@@ -208,7 +225,7 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInve
     }
     // Contenido principal
     return (
-      <Grid container spacing={2} columns={12}>
+      <Grid container spacing={1} columns={12}>
         <Grid size={{ xs: 12, md: 5, lg: 4 }}>
           <ArticuloInventarioInformacionCard
             articulo={articulo}
@@ -226,12 +243,7 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInve
             inventario={inventario}
             entidad={entidad}
             almacenProps={almacenProps}
-            loteProps={{
-              // Heredar fuente de almacenProps si no se especifica en loteProps
-              fuente: loteProps?.fuente ?? almacenProps?.fuente ?? 'inv',
-              // Expandir el resto de propiedades de loteProps
-              ...loteProps,
-            }}
+            loteProps={lotePropsCalculados}
             unidadMedidaProps={unidadMedidaProps}
             cantidadProps={cantidadProps}
             precioProps={precioProps}
@@ -252,7 +264,6 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInve
     inventario,
     setValue,
     entidad,
-    loteProps,
     unidadMedidaProps,
     almacenProps,
     cantidadProps,
@@ -260,6 +271,7 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInve
     descuentoProps,
     reglas?.ocultarCalculos,
     open,
+    lotePropsCalculados,
   ])
 
   // ===== MANEJO DE CIERRE =====
@@ -312,17 +324,19 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInve
       >
         <Close />
       </IconButton>
-      <DialogContent dividers>{renderContent()}</DialogContent>
-      {mensajes.length > 0 && (
-        <Box>
-          <Alert severity={'error'}>
-            <AlertTitle>Se han detectado los siguientes errores:</AlertTitle>{' '}
-            {mensajes.map((m, index) => (
-              <Typography key={index}>- {m}</Typography>
-            ))}
-          </Alert>
-        </Box>
-      )}
+      <DialogContent>
+        {renderContent()}
+        {mensajes.length > 0 && (
+          <Box mt={1}>
+            <Alert severity={'error'}>
+              <AlertTitle>Se han detectado los siguientes errores:</AlertTitle>{' '}
+              {mensajes.map((m, index) => (
+                <Typography key={index}>- {m}</Typography>
+              ))}
+            </Alert>
+          </Box>
+        )}
+      </DialogContent>
       <DialogActions sx={{ justifyContent: 'center' }}>
         {actionButtons.mostrarBtnCerrar && (
           <Button color="error" variant={'text'} onClick={() => onClose()}>
@@ -345,4 +359,4 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInve
   )
 }
 
-export default SeleccionArticuloInventarioDialog
+export default React.memo(SeleccionArticuloInventarioDialog)

@@ -45,6 +45,7 @@ export const articuloFragment = gql`
   fragment ArticuloFields on Articulo {
     _id
     codigoArticulo
+    articuloPrecioId
     nombreArticulo
     descripcionArticulo
     claseArticulo
@@ -118,12 +119,8 @@ export const articuloFragment = gql`
         ...articuloUnidadMedidaFields
       }
     }
-    complemento
-    listaComplemento {
-      id
-      codigoArticulo
-      nombreArticulo
-    }
+    tieneModificadores
+    esReceta
     state
     usucre
     usumod
