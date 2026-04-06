@@ -41,7 +41,9 @@ export const RouteGuard: FC<RouteGuardProps> = ({
   const isAdmin = useMemo(() => {
     return (
       user?.rol &&
-      ['administrador', 'admin', 'adm'].some((adminRole) => user.rol.toLowerCase().includes(adminRole))
+      ['administrador', 'admin', 'adm'].some((adminRole) =>
+        user.rol.toLowerCase().includes(adminRole),
+      )
     )
   }, [user?.rol])
 
@@ -59,7 +61,9 @@ export const RouteGuard: FC<RouteGuardProps> = ({
 
     // Rutas públicas que SIEMPRE están accesibles
     const publicRoutes = ['/login', '/session', '/404', '/error']
-    const isPublicRoute = publicRoutes.some((route) => location.pathname.startsWith(route))
+    const isPublicRoute = publicRoutes.some((route) =>
+      location.pathname.startsWith(route),
+    )
 
     if (isPublicRoute) {
       setHasAccess(true)

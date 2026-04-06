@@ -12,7 +12,7 @@ import { AppConfirmProvider } from './app/base/contexts/AppConfirmProvider.tsx'
 import { BreadcrumbProvider } from './app/base/contexts/BreadcrumbContext'
 import { AuthProvider } from './app/base/contexts/JWTAuthContext'
 import { SecurityProvider } from './app/base/contexts/SecurityContext'
-import SettingsProvider from './app/base/contexts/SettingsContext.tsx'
+import { SettingsProvider } from './app/base/contexts/SettingsContext.tsx'
 import { appRoutes } from './app/routes/routes'
 
 /**

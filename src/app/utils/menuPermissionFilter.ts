@@ -124,7 +124,7 @@ export const hasAllPermissions = (userPermissions: string[], permissionsToCheck:
  */
 export const getDominioFromEnv = (): string => {
   // Proporciona un string vacío como fallback si la variable no existe
-  return import.meta.env.ISI_MODULO || ''
+  return import.meta.env.ISI_DOMINIO || import.meta.env.ISI_MODULO || ''
 }
 
 /**

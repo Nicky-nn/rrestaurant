@@ -175,6 +175,30 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
     }
   }
 
+  const startSpin = (direction: 'UP' | 'DOWN') => {
+    if (intervalRef.current !== null) return
+    if (direction === 'UP') increment(true)
+    else decrement(true)
+    
+    intervalRef.current = setInterval(() => {
+      if (direction === 'UP') increment(true)
+      else decrement(true)
+    }, 150) as any
+  }
+
+  const stopSpin = () => {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+  }
+
+  const clampNumber = (val: string): number | null => {
+    if (val === '' || val === null || val === undefined) return null
+    const n = Number(val)
+    return Number.isNaN(n) ? null : n
+  }
+
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       // Limpiar el intervalo cuando se suelta la tecla
@@ -304,7 +328,5 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
     />
   )
 })
-
-export default NumberSpinnerField
 
 export default React.memo(NumberSpinnerField)

@@ -118,10 +118,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const { applyMode } = useSettings()
 
   // Helper para aplicar tema (seguro contra nulos y mayúsculas)
-  const setTheme = (uxMode?: string | null) => {
+  const setTheme = useCallback((uxMode?: string | null) => {
     const mode = !uxMode || uxMode === 'SYSTEM' ? 'light' : (uxMode.toLowerCase() as 'light' | 'dark')
     applyMode(mode)
-  }
+  }, [applyMode])
 
   // Queremos resetear a thema por default light
   const resetTheme = () => {
@@ -140,28 +140,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
    * @param email
    * @param password
    */
-  const login = async (shop: string, email: string, password: string) => {
-    try {
-      const user: UserProps = await loginModel(shop, email, password)
-      // Validación temprana: si no hay token, fallar antes de llamar a otras APIs
-      if (!user?.token) throw new Error('Error al obtener credenciales, intente nuevamente')
-      const validarUsuario = await apiValidarUsuario(user.token)
-      const { lw, li } = await apiLicenciaProducto(user.token)
-      if (validarUsuario) {
-        setSession(user.token)
-        setTheme(user.perfil.uxModo)
-        dispatch({
-          type: 'LOGIN',
-          payload: {
-            user: user.perfil,
-            lw,
-            li,
-          },
-        })
-      } else {
-        throw new Error(
-          `No cuenta con permisos para acceder al sistema; verifique url Comercio o consulte los permisos con el administrador del sistema`,
-        )
+  const login = useCallback(
+    async (shop: string, email: string, password: string) => {
+      try {
+        const user: UserProps = await loginModel(shop, email, password)
+        // Validación temprana: si no hay token, fallar antes de llamar a otras APIs
+        if (!user?.token) throw new Error('Error al obtener credenciales, intente nuevamente')
+        const validarUsuario = await apiValidarUsuario(user.token)
+        const { lw, li } = await apiLicenciaProducto(user.token)
+        if (validarUsuario) {
+          setSession(user.token)
+          setTheme(user.perfil.uxModo)
+          dispatch({
+            type: 'LOGIN',
+            payload: {
+              user: user.perfil,
+              lw,
+              li,
+            },
+          })
+        } else {
+          throw new Error(
+            `No cuenta con permisos para acceder al sistema; verifique url Comercio o consulte los permisos con el administrador del sistema`,
+          )
+        }
+      } catch (error: any) {
+        handleSessionCleanUp()
+        throw error
       }
     },
     [handleSessionCleanUp, setTheme],
