@@ -1,5 +1,5 @@
-import { merge, isEqual } from 'lodash'
-import React, { createContext, ReactNode, useCallback, useMemo, useState } from 'react'
+import { isEqual, merge } from 'lodash'
+import { createContext, ReactNode, useCallback, useMemo, useState } from 'react'
 
 import { MatxLayoutSettings, MatxLayoutSettingsProps } from '../components/Template/MatxLayout/settings'
 

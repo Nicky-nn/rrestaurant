@@ -2,7 +2,7 @@
 
 import { PaletteMode } from '@mui/material'
 import { jwtDecode } from 'jwt-decode'
-import React, { createContext, ReactNode, useCallback, useEffect, useMemo, useReducer } from 'react'
+import { createContext, ReactNode, useCallback, useEffect, useMemo, useReducer } from 'react'
 
 import { swalException } from '../../utils/swal'
 import { apiCuentaCambiarUxModo } from '../api/apiCuentaCambiarUxModo.ts'
@@ -118,10 +118,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const { applyMode } = useSettings()
 
   // Helper para aplicar tema (seguro contra nulos y mayúsculas)
-  const setTheme = useCallback((uxMode?: string | null) => {
-    const mode = !uxMode || uxMode === 'SYSTEM' ? 'light' : (uxMode.toLowerCase() as 'light' | 'dark')
-    applyMode(mode)
-  }, [applyMode])
+  const setTheme = useCallback(
+    (uxMode?: string | null) => {
+      const mode = !uxMode || uxMode === 'SYSTEM' ? 'light' : (uxMode.toLowerCase() as 'light' | 'dark')
+      applyMode(mode)
+    },
+    [applyMode],
+  )
 
   // Queremos resetear a thema por default light
   const resetTheme = () => {

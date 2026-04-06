@@ -105,7 +105,12 @@ export const alphaNormal = (color: string, darknessFactor: number = 0.09) => {
  * @param darkFactor
  * @param lightFactor
  */
-export const alphaByMode = (color: string, mode: 'light' | 'dark', darkFactor: number = 0.2, lightFactor?: number) => {
+export const alphaByMode = (
+  color: string,
+  mode: 'light' | 'dark',
+  darkFactor: number = 0.2,
+  lightFactor?: number,
+) => {
   // 2. Generamos clave única para el caché
   const cacheKey = `alpha-mode-${color}-${mode}-${darkFactor}-${lightFactor ?? darkFactor}`
   if (colorCache.has(cacheKey)) {

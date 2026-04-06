@@ -179,7 +179,7 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
     if (intervalRef.current !== null) return
     if (direction === 'UP') increment(true)
     else decrement(true)
-    
+
     intervalRef.current = setInterval(() => {
       if (direction === 'UP') increment(true)
       else decrement(true)
