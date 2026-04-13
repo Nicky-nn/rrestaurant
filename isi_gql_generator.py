@@ -254,21 +254,35 @@ export { gql };'''
             self.update_file("client/index.ts", code)
 
     def collect_dependencies(self, queries, mutations):
-        """Genera un grafo estricto de los tipos usados (Tree Shaking) y los guarda en histórico."""
+        """Genera un grafo estricto de los tipos usados (Tree Shaking) y los guarda en histórico.
+           IMPORTANTE: también re-traversa los tipos acumulados de corridas anteriores para que
+           sus dependencias transitivas siempre estén incluidas en el types/index.ts generado.
+        """
         used = set()
         queue = []
+
+        def enqueue_name(name):
+            if name and name not in ["String", "Int", "Float", "Boolean", "ID", "any"]:
+                queue.append(name)
 
         def enqueue(type_ref):
             if type_ref:
                 base = self.get_base_type_name(type_ref)
-                if base and base not in ["String", "Int", "Float", "Boolean", "ID", "any"]:
-                    queue.append(base)
+                enqueue_name(base)
 
+        # 1. Agregar tipos de las operaciones seleccionadas en esta corrida
         for q in queries + mutations:
             for arg in q.get("args", []):
                 enqueue(arg["type"])
             enqueue(q["type"])
 
+        # 2. También arrancar desde los tipos acumulados de corridas anteriores
+        #    para que sus dependencias transitivas se incluyan correctamente
+        prev_used = set(self.meta_data.get("used_types", []))
+        for t_name in prev_used:
+            enqueue_name(t_name)
+
+        # 3. BFS completo sobre todo el grafo de dependencias
         while queue:
             t_name = queue.pop(0)
             if t_name in used:
@@ -287,8 +301,7 @@ export { gql };'''
                 for p in node.get("possibleTypes", []):
                     enqueue(p)
 
-        prev_used = set(self.meta_data.get("used_types", []))
-        all_used = list(used | prev_used)
+        all_used = list(used)
         self.meta_data["used_types"] = all_used
         self.save_meta()
         return set(all_used)
@@ -345,20 +358,62 @@ export { gql };'''
 
         self.update_file("types/index.ts", "\n".join(lines))
 
+    def get_safe_fallback_field(self, type_name):
+        """Retorna el primer campo escalar disponible del tipo, o None si no tiene ninguno.
+           Úsalo en lugar de asumir que existe 'id' en todos los tipos."""
+        node = next((t for t in self.schema_types if t.get("name") == type_name), None)
+        if not node or node.get("kind") not in ["OBJECT", "INTERFACE"]:
+            return None
+        for f in node.get("fields", []):
+            base = self.get_base_type_name(f["type"])
+            if not self.is_object_type(base):
+                return f["name"]
+        # El tipo tiene SOLO sub-objetos (raro pero posible): retornamos None para omitirlo
+        return None
+
     def get_scalar_fields(self, type_name, indent=""):
         """Retorna solo los campos escalares (id, strings, etc.) de un tipo, sin objetos anidados."""
         node = next((t for t in self.schema_types if t.get("name") == type_name), None)
-        if not node or node.get("kind") not in ["OBJECT", "INTERFACE"]: return "id"
+        if not node or node.get("kind") not in ["OBJECT", "INTERFACE"]:
+            return None
 
         scalars = []
         for f in node.get("fields", []):
             base = self.get_base_type_name(f["type"])
             if not self.is_object_type(base):
-                # Solo tomamos campos básicos, no pedimos recursión
                 scalars.append(f["name"])
 
-        if not scalars: return "id"
+        if not scalars:
+            return None
         return f"\n{indent}".join(scalars)
+
+    def get_shallow_expansion(self, type_name, indent=""):
+        """Genera una expansión superficial de un tipo para cuando ya fue visitado.
+           - Si tiene escalares: los retorna directamente.
+           - Si SOLO tiene sub-objetos (como TotalesGenerales): expande cada sub-objeto con SUS escalares.
+           - Garantiza nunca generar bloques vacíos ni usar 'id' hardcodeado.
+        """
+        node = next((t for t in self.schema_types if t.get("name") == type_name), None)
+        if not node or node.get("kind") not in ["OBJECT", "INTERFACE"]:
+            return None
+
+        lines = []
+        for f in node.get("fields", []):
+            base = self.get_base_type_name(f["type"])
+            if self.is_object_type(base):
+                # Sub-objeto: expandimos SUS escalares (un nivel más, sin recursión)
+                sub_scalars = self.get_scalar_fields(base, indent + "  ")
+                if sub_scalars:
+                    lines.append(f"{f['name']} {{\n{indent}  {sub_scalars}\n{indent}}}")
+                else:
+                    # El sub-objeto también solo tiene sub-objetos: omitir para no crashear
+                    pass
+            else:
+                lines.append(f["name"])
+
+        if not lines:
+            return None
+        return f"\n{indent}".join(lines)
 
     def build_fragment_fields(self, type_name, visited=None, depth=0, max_depth=5, indent=""):
         """Recursión inteligente y robusta.
@@ -374,20 +429,27 @@ export { gql };'''
             base = self.get_base_type_name(f["type"])
             if self.is_object_type(base):
                 if depth >= max_depth:
-                    # Límite máximo alcanzado: solo ID
-                    lines.append(f"# Límite de profundidad alcanzado")
-                    lines.append(f"{f['name']} {{ id }}")
+                    # Límite máximo: expansión superficial real del tipo
+                    shallow = self.get_shallow_expansion(base, indent + "  ")
+                    if shallow:
+                        lines.append(f"{f['name']} {{\n{indent}  {shallow.replace(chr(10), chr(10)+indent+'  ')}\n{indent}}}")
                 elif base in visited:
-                    # Tipo ya visto en otra rama: para no triplicar mil líneas, traemos de él solo datos escalares
-                    shallow = self.get_scalar_fields(base, indent + "  ")
-                    lines.append(f"{f['name']} {{\n{indent}  # Datos simples (Tipo ya expandido previamente)\n{indent}  {shallow}\n{indent}}}")
+                    # Tipo ya visto: expansión superficial para evitar ciclos infinitos
+                    shallow = self.get_shallow_expansion(base, indent + "  ")
+                    if shallow:
+                        lines.append(f"{f['name']} {{\n{indent}  # Datos simples (Tipo ya expandido previamente)\n{indent}  {shallow}\n{indent}}}")
+                    # Si no hay ningún campo válido, omitir el campo por completo
                 else:
                     # Nuevo objeto: Recursión profunda, pasamos el MISMO visited referenciado
                     sub_fields = self.build_fragment_fields(base, visited, depth + 1, max_depth, indent + "  ")
                     if sub_fields:
                         lines.append(f"{f['name']} {{\n{indent}  {sub_fields.replace(chr(10), chr(10)+indent+'  ')}\n{indent}}}")
                     else:
-                        lines.append(f"{f['name']} {{ id }}")
+                        # Recursión vacía: usar expansión superficial como fallback
+                        shallow = self.get_shallow_expansion(base, indent + "  ")
+                        if shallow:
+                            lines.append(f"{f['name']} {{\n{indent}  {shallow}\n{indent}}}")
+                        # Si sigue sin tener nada válido, omitir el campo
             else:
                 lines.append(f["name"])
 
