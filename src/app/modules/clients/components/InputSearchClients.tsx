@@ -100,10 +100,10 @@ const InputSearchClient: FunctionComponent<Props> = ({
         telefono: client.telefono || '',
       }
       setEditableClient(newVal)
-      if (onChangeEditable) onChangeEditable(newVal)
+      // if (onChangeEditable) onChangeEditable(newVal) // Evita disparo innecesario en mount
     } else {
       setEditableClient(null)
-      if (onChangeEditable) onChangeEditable(null)
+      // if (onChangeEditable) onChangeEditable(null) // Evita disparo innecesario en mount
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, editable])

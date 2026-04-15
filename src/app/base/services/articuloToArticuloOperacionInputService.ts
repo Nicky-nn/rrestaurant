@@ -364,7 +364,7 @@ export const articuloToArticuloOperacionInputService = (
 
   // Determinar precio según tipo de monto
   const { precio, moneda, precioBase, delivery } = transformarArticuloPrecioService(
-    articulo.articuloPrecioBase,
+    articulo?.articuloPrecioBase,
     monedaVenta,
   )
 
@@ -374,8 +374,8 @@ export const articuloToArticuloOperacionInputService = (
 
   // Procesar lote y almacén
   const { lote, almacen } =
-    articulo.inventario.length > 0
-      ? procesarLoteYAlmacen(articulo.inventario[0].detalle, {
+    (articulo?.inventario?.length || 0) > 0
+      ? procesarLoteYAlmacen(articulo?.inventario?.[0]?.detalle || [], {
           autoLote,
           codigoLote,
           metodoSeleccionLote,
@@ -383,27 +383,27 @@ export const articuloToArticuloOperacionInputService = (
           codigoAlmacen,
           mostrarAlmacenConStock,
           mostrarLoteConStock,
-          verificarStock: articulo.verificarStock,
+          verificarStock: articulo?.verificarStock,
         })
       : { lote: null, almacen: null }
 
   // Determinar unidad de medida
   const articuloUnidadMedida =
-    options?.articuloUnidadMedida ?? articulo.articuloPrecioBase.articuloUnidadMedida
+    options?.articuloUnidadMedida ?? articulo?.articuloPrecioBase?.articuloUnidadMedida
 
   // Construir el resultado
   return {
     id: `${marca}${genRandomString(10).toUpperCase()}`,
     nroItem,
-    nombreArticulo: articulo.nombreArticulo,
-    codigoArticulo: articulo.codigoArticulo,
-    articuloId: articulo._id,
-    tipoArticulo: articulo.tipoArticulo,
-    claseArticulo: articulo.claseArticulo,
-    gestionArticulo: genReplaceEmpty(articulo.gestionArticulo, null),
+    nombreArticulo: articulo?.nombreArticulo || '',
+    codigoArticulo: articulo?.codigoArticulo || '',
+    articuloId: articulo?._id || '',
+    tipoArticulo: articulo?.tipoArticulo,
+    claseArticulo: articulo?.claseArticulo,
+    gestionArticulo: genReplaceEmpty(articulo?.gestionArticulo, null),
     almacen,
     lote,
-    sinProductoServicio: articulo.sinProductoServicio,
+    sinProductoServicio: articulo?.sinProductoServicio,
     articuloUnidadMedida,
     cantidadOriginal: cantidad,
     cantidad,
@@ -414,6 +414,6 @@ export const articuloToArticuloOperacionInputService = (
     moneda,
     detalleExtra,
     nota,
-    verificarStock: articulo.verificarStock,
+    verificarStock: articulo?.verificarStock,
   }
 }

@@ -12,6 +12,7 @@ import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
 import {
   Box,
   Button,
+  ButtonBase,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -22,11 +23,12 @@ import {
   InputAdornment,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import { AnimatePresence, motion } from 'framer-motion'
-import { FunctionComponent, useEffect, useMemo, useState } from 'react'
+import { FunctionComponent, useEffect, useMemo, useRef, useState } from 'react'
 
 import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto'
 import { useMetodosPago } from '../../queries/useMetodosPago'
@@ -234,48 +236,76 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
 
   const MetodoButton = ({ metodo }: { metodo: MetodoPago }) => {
     const isSelected = metodoSeleccionado === metodo.codigoClasificador
-    const nombreDisplay = formateaNombreMetodo(metodo.descripcion)
+    const nombreDisplay = formateaNombreMetodo(metodo.descripcion || '')
+    const [tooltipOpen, setTooltipOpen] = useState(false)
+    const tooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    const handleTooltipOpen = () => {
+      setTooltipOpen(true)
+      if (tooltipTimer.current) clearTimeout(tooltipTimer.current)
+      tooltipTimer.current = setTimeout(() => setTooltipOpen(false), 2000)
+    }
+
+    const handleTooltipClose = () => {
+      setTooltipOpen(false)
+      if (tooltipTimer.current) clearTimeout(tooltipTimer.current)
+    }
 
     return (
-      <Button
-        variant="outlined"
-        onClick={() => handleMetodoClick(metodo)}
-        title={metodo.descripcion} // Para ver el nombre completo al hacer hover
-        sx={{
-          flex: '1 1 auto',
-          maxWidth: 140,
-          flexDirection: 'column',
-          p: 2,
-          minWidth: 90,
-          borderRadius: 3,
-          textTransform: 'none',
-          bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-          borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
-          color: isSelected ? theme.palette.primary.main : theme.palette.text.secondary,
-          '&:hover': {
-            bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.18) : theme.palette.action.hover,
-            borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
-          },
-        }}
+      <Tooltip
+        title={metodo.descripcion || ''}
+        open={tooltipOpen}
+        onClose={handleTooltipClose}
+        onOpen={handleTooltipOpen}
+        disableHoverListener={false}
+        disableFocusListener
+        disableTouchListener={false}
+        PopperProps={{ modifiers: [{ name: 'offset', options: { offset: [0, -4] } }] }}
+        componentsProps={{ tooltip: { sx: { fontSize: '0.75rem' } } }}
       >
-        {iconPorMetodo(metodo.descripcion)}
-        <Typography
-          variant="caption"
+        <ButtonBase
+          onClick={() => handleMetodoClick(metodo)}
           sx={{
-            mt: 1,
-            fontWeight: 700,
-            fontSize: '0.65rem',
-            letterSpacing: '0.05em',
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden',
-            width: '100%',
-            textAlign: 'center',
+            flex: '1 1 auto',
+            maxWidth: 140,
+            minWidth: 90,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 0.5,
+            p: 2,
+            borderRadius: 3,
+            border: '1px solid',
+            bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+            borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
+            color: isSelected ? theme.palette.primary.main : theme.palette.text.secondary,
+            transition: 'background-color 0.2s, border-color 0.2s',
+            '&:hover': {
+              bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.18) : theme.palette.action.hover,
+              borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
+            },
           }}
         >
-          {nombreDisplay.toUpperCase()}
-        </Typography>
-      </Button>
+          {iconPorMetodo(metodo.descripcion)}
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 700,
+              fontSize: '0.65rem',
+              lineHeight: 1.2,
+              letterSpacing: '0.02em',
+              textAlign: 'center',
+              color: 'inherit',
+              wordBreak: 'break-word',
+              whiteSpace: 'normal',
+              maxWidth: '100%',
+            }}
+          >
+            {nombreDisplay.toUpperCase()}
+          </Typography>
+        </ButtonBase>
+      </Tooltip>
     )
   }
 
@@ -351,7 +381,7 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
     handleCancelarTarjetaDialog()
   }
 
-  console.log('ClienteInfo:', clienteInfo)
+  // console.log('ClienteInfo:', clienteInfo)
 
   return (
     <>
@@ -361,6 +391,11 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
         disableEscapeKeyDown={isProcessing}
         maxWidth="md"
         fullWidth
+        slotProps={{
+          backdrop: {
+            sx: { backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' },
+          },
+        }}
         PaperProps={{
           sx: {
             borderRadius: 4,
@@ -699,6 +734,11 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
         disableEscapeKeyDown={isProcessing}
         maxWidth="xs"
         fullWidth
+        slotProps={{
+          backdrop: {
+            sx: { backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' },
+          },
+        }}
       >
         <DialogTitle
           sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}

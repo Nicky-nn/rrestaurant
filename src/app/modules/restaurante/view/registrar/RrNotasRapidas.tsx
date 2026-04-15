@@ -19,10 +19,15 @@ interface NotaStat {
 }
 
 // Función global que se llama SOLO cuando se confirma (ej. Clic en Agregar)
+// Las estadísticas de uso solo sirven para ORDENAR los chips por frecuencia,
+// NUNCA pre-seleccionan notas al abrir el modal.
 export const guardarUsoNotasLocal = (notas: Set<string>, storageId?: string) => {
   if (notas.size === 0) return
 
-  const lsKey = storageId ? `rr_notas_usage_stats_${storageId}` : 'rr_notas_usage_stats'
+  const lsKey =
+    storageId && storageId !== 'undefined'
+      ? `rr_notas_usage_stats_${storageId}`
+      : 'rr_notas_usage_stats_global'
   let prevStats: NotaStat[] = []
 
   try {
@@ -65,7 +70,10 @@ const RrNotasRapidas: React.FC<RrNotasRapidasProps> = ({
   const [notaManual, setNotaManual] = useState('')
   const [stats, setStats] = useState<NotaStat[]>([])
 
-  const lsKey = storageId ? `rr_notas_usage_stats_${storageId}` : 'rr_notas_usage_stats'
+  const lsKey =
+    storageId && storageId !== 'undefined'
+      ? `rr_notas_usage_stats_${storageId}`
+      : 'rr_notas_usage_stats_global'
 
   // Cargar estadísticas de LocalStorage al montar o cambiar de key (y cada vez que se abre)
   useEffect(() => {

@@ -33,7 +33,6 @@ import {
   ArticuloOperacionUI,
   ArticuloRecetaOperacionInput,
   RestPedidoExpressInput,
-  RestPedidoFinalizarInput,
 } from '../../types'
 import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
 import RrDividirCuentaDialog from './RrDividirCuentaDialog'
@@ -109,7 +108,6 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             codigoArticuloUnidadMedida:
               p.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
               p.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
-              (p as any).articuloUnidadMedida?.codigoUnidadMedida ??
               '',
             cantidad: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
             precio: p.articuloPrecio?.valor ?? p.articuloPrecioBase?.valor ?? 0,
@@ -139,18 +137,14 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                 ...(codigoLote ? { codigoLote } : {}),
                 articuloPrecio: {
                   codigoArticuloUnidadMedida:
-                    (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
-                      ?.codigoArticuloUnidadMedida ??
-                    asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
-                    '',
+                    (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)?.codigoArticuloUnidadMedida ??
+                    asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ?? '',
                   cantidad:
                     (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                    1,
+                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ?? 1,
                   precio:
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
-                    (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
-                    0,
+                    (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ?? 0,
                   descuento: v.articuloPrecio?.descuento ?? 0,
                   impuesto: v.articuloPrecio?.impuesto ?? 0,
                 },
@@ -166,38 +160,32 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             // Fallback: p.modificadores (datos que vienen del servidor en re-edición)
             const srcMods: (ArticuloModificadorOperacionInput | ArticuloOperacionModificador)[] =
               pUI._modificadoresInput ?? pUI.modificadores ?? []
-            const mapped = srcMods
-              .map((m) => {
-                const asInput = m as ArticuloModificadorOperacionInput
-                const asServer = m as ArticuloOperacionModificador
-                return {
-                  articuloModificadorId:
-                    asInput.articuloModificadorId || asServer.articuloModificadorId || '',
-                  nroItem: m.nroItem,
-                  codigoArticulo: m.codigoArticulo || '',
-                  codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
-                  ...(asInput.codigoLote || asServer.lote?.codigoLote
-                    ? { codigoLote: asInput.codigoLote ?? asServer.lote?.codigoLote ?? '' }
-                    : {}),
-                  articuloPrecio: {
-                    codigoArticuloUnidadMedida:
-                      (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
-                        ?.codigoArticuloUnidadMedida ??
-                      asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
-                      '',
-                    cantidad: m.articuloPrecio?.cantidad ?? 1,
-                    precio: asInput.esOpcionGratuita
-                      ? 0
-                      : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
-                        (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
-                        0),
-                    descuento: m.articuloPrecio?.descuento ?? 0,
-                    impuesto: m.articuloPrecio?.impuesto ?? 0,
-                  },
-                  esOpcionGratuita: asInput.esOpcionGratuita ?? false,
-                }
-              })
-              .filter((m) => Boolean(m.articuloModificadorId))
+            const mapped = srcMods.map((m) => {
+              const asInput = m as ArticuloModificadorOperacionInput
+              const asServer = m as ArticuloOperacionModificador
+              return {
+                articuloModificadorId: asInput.articuloModificadorId || asServer.articuloModificadorId || '',
+                nroItem: m.nroItem,
+                codigoArticulo: m.codigoArticulo || '',
+                codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
+                ...(asInput.codigoLote || asServer.lote?.codigoLote
+                  ? { codigoLote: asInput.codigoLote ?? asServer.lote?.codigoLote ?? '' }
+                  : {}),
+                articuloPrecio: {
+                  codigoArticuloUnidadMedida:
+                    (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)?.codigoArticuloUnidadMedida ??
+                    asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ?? '',
+                  cantidad: m.articuloPrecio?.cantidad ?? 1,
+                  precio: asInput.esOpcionGratuita
+                    ? 0
+                    : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                        (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ?? 0),
+                  descuento: m.articuloPrecio?.descuento ?? 0,
+                  impuesto: m.articuloPrecio?.impuesto ?? 0,
+                },
+                esOpcionGratuita: asInput.esOpcionGratuita ?? false,
+              }
+            }).filter((m) => Boolean(m.articuloModificadorId))
             return mapped.length > 0 ? mapped : undefined
           })(),
         })),
@@ -353,7 +341,6 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             codigoArticuloUnidadMedida:
               p.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
               p.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
-              (p as any).articuloUnidadMedida?.codigoUnidadMedida ??
               '',
             cantidad: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
             precio: p.articuloPrecio?.valor ?? p.articuloPrecioBase?.valor ?? 0,
@@ -382,18 +369,14 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                 ...(codigoLote ? { codigoLote } : {}),
                 articuloPrecio: {
                   codigoArticuloUnidadMedida:
-                    (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
-                      ?.codigoArticuloUnidadMedida ??
-                    asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
-                    '',
+                    (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)?.codigoArticuloUnidadMedida ??
+                    asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ?? '',
                   cantidad:
                     (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                    1,
+                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ?? 1,
                   precio:
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
-                    (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
-                    0,
+                    (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ?? 0,
                   descuento: v.articuloPrecio?.descuento ?? 0,
                   impuesto: v.articuloPrecio?.impuesto ?? 0,
                 },
@@ -407,38 +390,32 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             const pUI = p as ArticuloOperacionUI
             const srcMods: (ArticuloModificadorOperacionInput | ArticuloOperacionModificador)[] =
               pUI._modificadoresInput ?? pUI.modificadores ?? []
-            const mapped = srcMods
-              .map((m) => {
-                const asInput = m as ArticuloModificadorOperacionInput
-                const asServer = m as ArticuloOperacionModificador
-                return {
-                  articuloModificadorId:
-                    asInput.articuloModificadorId || asServer.articuloModificadorId || '',
-                  nroItem: m.nroItem,
-                  codigoArticulo: m.codigoArticulo || '',
-                  codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
-                  ...(asInput.codigoLote || asServer.lote?.codigoLote
-                    ? { codigoLote: asInput.codigoLote ?? asServer.lote?.codigoLote ?? '' }
-                    : {}),
-                  articuloPrecio: {
-                    codigoArticuloUnidadMedida:
-                      (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
-                        ?.codigoArticuloUnidadMedida ??
-                      asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
-                      '',
-                    cantidad: m.articuloPrecio?.cantidad ?? 1,
-                    precio: asInput.esOpcionGratuita
-                      ? 0
-                      : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
-                        (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
-                        0),
-                    descuento: m.articuloPrecio?.descuento ?? 0,
-                    impuesto: m.articuloPrecio?.impuesto ?? 0,
-                  },
-                  esOpcionGratuita: asInput.esOpcionGratuita ?? false,
-                }
-              })
-              .filter((m) => Boolean(m.articuloModificadorId))
+            const mapped = srcMods.map((m) => {
+              const asInput = m as ArticuloModificadorOperacionInput
+              const asServer = m as ArticuloOperacionModificador
+              return {
+                articuloModificadorId: asInput.articuloModificadorId || asServer.articuloModificadorId || '',
+                nroItem: m.nroItem,
+                codigoArticulo: m.codigoArticulo || '',
+                codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
+                ...(asInput.codigoLote || asServer.lote?.codigoLote
+                  ? { codigoLote: asInput.codigoLote ?? asServer.lote?.codigoLote ?? '' }
+                  : {}),
+                articuloPrecio: {
+                  codigoArticuloUnidadMedida:
+                    (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)?.codigoArticuloUnidadMedida ??
+                    asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ?? '',
+                  cantidad: m.articuloPrecio?.cantidad ?? 1,
+                  precio: asInput.esOpcionGratuita
+                    ? 0
+                    : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                        (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ?? 0),
+                  descuento: m.articuloPrecio?.descuento ?? 0,
+                  impuesto: m.articuloPrecio?.impuesto ?? 0,
+                },
+                esOpcionGratuita: asInput.esOpcionGratuita ?? false,
+              }
+            }).filter((m) => Boolean(m.articuloModificadorId))
             return mapped.length > 0 ? mapped : undefined
           })(),
         })),
@@ -531,9 +508,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           montoTotal: totalAPagar,
           usuario: user.correo || '',
           codigoMetodoPago: pagosFinales[0]?.metodoId || 1,
-          numeroTarjeta:
-            pagosFinales[0]?.metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
-        } as RestPedidoFinalizarInput & { codigoMetodoPago: number; numeroTarjeta?: string },
+          numeroTarjeta: pagosFinales[0]?.metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
+        } as any,
         metodoPagoVenta: pagosFinales.map((p) => ({
           codigoMetodoPago: p.metodoId,
           monto: p.monto,
@@ -619,9 +595,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           montoTotal: totalAPagar,
           usuario: user.correo || '',
           codigoMetodoPago: pagosFinales[0]?.metodoId || 1,
-          numeroTarjeta:
-            pagosFinales[0]?.metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
-        } as RestPedidoFinalizarInput & { codigoMetodoPago: number; numeroTarjeta?: string },
+          numeroTarjeta: pagosFinales[0]?.metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
+        } as any,
         metodoPagoVenta: pagosFinales.map((p) => ({
           codigoMetodoPago: p.metodoId,
           monto: p.monto,

@@ -2,4 +2,8 @@
 
 export * from './client';
 export * from './types';
-export * from './queries/useRestFacturaListado';
+export * from './mutations/useRestPedidoRegistro';
+export * from './mutations/useRestPedidoActualizar';
+export * from './mutations/useRestPedidoRegistrarCompletar';
+export * from './mutations/useRestPedidoFinalizar';
+export * from './mutations/useRestPedidoFacturaRegistro';

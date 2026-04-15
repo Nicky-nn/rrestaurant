@@ -48,7 +48,7 @@ import useAuth from '../../../../base/hooks/useAuth'
 import { useHorizontalDragScroll } from '../../../../base/hooks/useHorizontalDragScroll'
 import { useRestEspacioRegistro } from '../../mutations/useRestEspacioRegistro'
 import { useArticuloInventarioListado } from '../../queries/useArticuloInventarioListado'
-import { Articulo } from '../../types'
+import { Articulo, ArticuloModificadorOperacionInput, ArticuloRecetaOperacionInput } from '../../types'
 import RrComplementoModal from './RrComplementoModal'
 
 dayjs.extend(customParseFormat)
@@ -166,13 +166,8 @@ interface ProductCardProps {
     articulo: Articulo
     cantidad: number
     notasIds: string[]
-    complementos: Array<{
-      _id: string
-      nombre: string
-      precio: number
-      cantidad: number
-      articulo?: Articulo
-    }>
+    variacionReceta?: ArticuloRecetaOperacionInput[]
+    modificadoresInput?: ArticuloModificadorOperacionInput[]
   }) => void
   /** Si true, oculta el área de imagen (modo compacto para filas sin imágenes) */
   compact?: boolean
@@ -181,8 +176,7 @@ interface ProductCardProps {
 const ProductCard: FunctionComponent<ProductCardProps> = memo(
   ({ articulo, onClick, onAddProduct, compact = false }) => {
     const [complementoModalOpen, setComplementoModalOpen] = useState(false)
-    const listaComplemento = articulo.listaComplemento ?? []
-    const tieneComplementos = listaComplemento.length > 0
+    const tieneComplementos = Boolean(articulo.esReceta || articulo.tieneModificadores)
     const disponible = isDisponible(articulo)
     const imagenUrl = getImagenUrl(articulo)
     const precio = articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0
@@ -226,7 +220,6 @@ const ProductCard: FunctionComponent<ProductCardProps> = memo(
                     articulo,
                     cantidad: 1,
                     notasIds: [],
-                    complementos: [],
                   })
                 }
               }}
@@ -358,7 +351,7 @@ const ProductCard: FunctionComponent<ProductCardProps> = memo(
               </Box>
             </CardActionArea>
 
-            {/* Badge de complementos — fuera del CardActionArea para no interferir con el click del card */}
+            {/* Badge de modificadores/receta — fuera del CardActionArea para no interferir con el click del card */}
             {tieneComplementos && (
               <Box
                 sx={{
@@ -368,42 +361,36 @@ const ProductCard: FunctionComponent<ProductCardProps> = memo(
                   zIndex: 2,
                 }}
               >
-                <Tooltip
-                  title={`${listaComplemento.length} complemento${listaComplemento.length !== 1 ? 's' : ''} — click para ver detalles`}
-                  arrow
-                >
-                  <Chip
-                    icon={<ExtensionIcon sx={{ fontSize: '0.75rem !important' }} />}
-                    label={listaComplemento.length}
-                    size="small"
-                    color="secondary"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      setComplementoModalOpen(true)
-                    }}
-                    sx={{
-                      height: 20,
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      '& .MuiChip-icon': { ml: 0.5 },
-                      '& .MuiChip-label': { px: 0.75 },
-                    }}
-                  />
-                </Tooltip>
+                <Chip
+                  icon={<ExtensionIcon sx={{ fontSize: '0.75rem !important' }} />}
+                  label={articulo.esReceta ? 'R' : 'M'}
+                  size="small"
+                  color="secondary"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setComplementoModalOpen(true)
+                  }}
+                  sx={{
+                    height: 20,
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    '& .MuiChip-icon': { ml: 0.5 },
+                    '& .MuiChip-label': { px: 0.75 },
+                  }}
+                />
               </Box>
             )}
           </Card>
         </Tooltip>
 
-        {/* Modal en archivo separado RrComplementoModal.tsx */}
+        {/* Modal de receta / modificadores */}
         {tieneComplementos && (
           <RrComplementoModal
             open={complementoModalOpen}
             onClose={() => setComplementoModalOpen(false)}
             articulo={articulo}
-            listaComplemento={listaComplemento}
             onAdd={onAddProduct}
           />
         )}
@@ -456,13 +443,8 @@ interface RrCategoriasProductosProps {
     articulo: Articulo
     cantidad: number
     notasIds: string[]
-    complementos: Array<{
-      _id: string
-      nombre: string
-      precio: number
-      cantidad: number
-      articulo?: Articulo
-    }>
+    variacionReceta?: ArticuloRecetaOperacionInput[]
+    modificadoresInput?: ArticuloModificadorOperacionInput[]
   }) => void
 }
 
@@ -756,7 +738,7 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
         <TextField
           fullWidth
           size="small"
-          placeholder="Buscar producto... (Alt+A)"
+          placeholder="Buscar producto..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           inputRef={searchInputRef}
@@ -766,13 +748,61 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
                 <SearchIcon fontSize="small" />
               </InputAdornment>
             ),
-            endAdornment: searchTerm ? (
+            endAdornment: (
               <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setSearchTerm('')}>
-                  <ClearIcon fontSize="small" />
-                </IconButton>
+                {searchTerm ? (
+                  <IconButton size="small" onClick={() => setSearchTerm('')}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                ) : (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.4,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                      opacity: 0.7,
+                    }}
+                  >
+                    <Box
+                      component="kbd"
+                      sx={{
+                        bgcolor: 'background.default',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        px: 0.6,
+                        py: 0.2,
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        fontFamily: 'sans-serif',
+                      }}
+                    >
+                      Alt
+                    </Box>
+                    <Box
+                      component="kbd"
+                      sx={{
+                        bgcolor: 'background.default',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        px: 0.6,
+                        py: 0.2,
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        fontFamily: 'sans-serif',
+                      }}
+                    >
+                      A
+                    </Box>
+                  </Box>
+                )}
               </InputAdornment>
-            ) : null,
+            ),
           }}
           sx={{
             '& .MuiOutlinedInput-root': {
@@ -1013,11 +1043,11 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
                           key={articulo._id ?? articulo.codigoArticulo}
                           onClick={() => {
                             if (!disponible) return
-                            const tieneComps = (articulo.listaComplemento ?? []).length > 0
+                            const tieneComps = Boolean(articulo.esReceta || articulo.tieneModificadores)
                             if (tieneComps) {
                               setSearchModalArticulo(articulo)
                             } else {
-                              onAddProduct?.({ articulo, cantidad: 1, notasIds: [], complementos: [] })
+                              onAddProduct?.({ articulo, cantidad: 1, notasIds: [] })
                             }
                           }}
                           sx={{
@@ -1121,13 +1151,12 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
         )}
       </Box>
 
-      {/* Modal complementos para búsqueda */}
+      {/* Modal receta/modificadores para búsqueda */}
       {searchModalArticulo && (
         <RrComplementoModal
           open={Boolean(searchModalArticulo)}
           onClose={() => setSearchModalArticulo(null)}
           articulo={searchModalArticulo}
-          listaComplemento={searchModalArticulo.listaComplemento ?? []}
           onAdd={(payload) => {
             onAddProduct?.(payload)
             setSearchModalArticulo(null)

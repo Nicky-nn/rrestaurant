@@ -7,7 +7,14 @@ import { ESTADO_MESA, MesaUI } from '../interfaces/mesa.interface'
 import { useRestEspacioPorSucursal } from '../queries/useRestEspacioPorSucursal'
 import { useRestPedidoListado } from '../queries/useRestPedidoListado'
 import { useRestPedidoMesasOcupadas } from '../queries/useRestPedidoMesasOcupadas'
-import { Articulo, ArticuloOperacion, RestPedido } from '../types'
+import {
+  Articulo,
+  ArticuloModificadorOperacionInput,
+  ArticuloOperacion,
+  ArticuloOperacionModificador,
+  ArticuloPrecioOperacion,
+  RestPedido,
+} from '../types'
 import RrAcciones from './registrar/RrAcciones'
 import RrCarrito from './registrar/RrCarrito'
 import RrCategoriasProductos from './registrar/RrCategoriasProductos'
@@ -269,7 +276,7 @@ const RestRegistrar: FunctionComponent = () => {
     }
 
     return mesas
-  }, [pedidosData, mesasOcupadas, user.usuario, espacio, espaciosData, ultimoPedidoExitoso])
+  }, [pedidosData, mesasOcupadas, user.puntoVenta.codigo, espacio, espaciosData, ultimoPedidoExitoso])
 
   // Generar un color de fondo pastel distinto por cada espacio usando hash del _id
   // Ref estable que siempre apunta al valor actual de mesaSeleccionada.
@@ -301,26 +308,22 @@ const RestRegistrar: FunctionComponent = () => {
       articulo: Articulo
       cantidad: number
       notasIds: string[]
-      complementos: Array<{
-        _id: string
-        nombre: string
-        precio: number
-        cantidad: number
-        articulo?: Articulo
-      }>
+      modificadoresInput?: ArticuloModificadorOperacionInput[]
     }) => {
       if (!mesaSeleccionadaRef.current) {
         alert('Por favor selecciona una mesa (o pedido Para Llevar / Delivery) antes de agregar productos.')
         return
       }
 
-      const { articulo, cantidad, notasIds, complementos } = payload
+      const { articulo, cantidad, notasIds, modificadoresInput = [] } = payload
 
       // Calculamos si ya existe el item usando la ref (fuera del setState)
       // para poder mostrar el toast ANTES de actualizar el estado.
       const productosActuales = mesaSeleccionadaRef.current?.pedido?.productos || []
       const notasNuevasSorted = [...notasIds].sort()
-      const compsNuevosSorted = [...complementos].sort((a, b) => a._id.localeCompare(b._id))
+      const modsNuevosSorted = [...modificadoresInput].sort((a, b) =>
+        a.articuloModificadorId.localeCompare(b.articuloModificadorId),
+      )
 
       const yaExiste = productosActuales.some((p) => {
         const pId = p.articuloId || (p as any).articulo?._id || (p as any)._id
@@ -329,16 +332,15 @@ const RestRegistrar: FunctionComponent = () => {
         if (pNotas.join('|') !== notasNuevasSorted.join('|')) return false
         if ((p.nota || '').trim() !== '') return false
         const pCompsMap = new Map<string, number>()
-        for (const c of p.complementos || []) {
-          const cId = c.articuloId || (c as any).id || (c as any)._id
+        for (const c of p.modificadores || []) {
+          const cId = c.articuloModificadorId || (c as any).id || (c as any)._id
           if (!cId) continue
-          pCompsMap.set(
-            cId,
-            (pCompsMap.get(cId) || 0) + (c.articuloPrecio?.cantidad ?? c.articuloPrecioBase?.cantidad ?? 1),
-          )
+          pCompsMap.set(cId, (pCompsMap.get(cId) || 0) + (c.articuloPrecio?.cantidad ?? 1))
         }
-        if (pCompsMap.size !== compsNuevosSorted.length) return false
-        return compsNuevosSorted.every((cn) => pCompsMap.get(cn._id) === cn.cantidad)
+        if (pCompsMap.size !== modsNuevosSorted.length) return false
+        return modsNuevosSorted.every(
+          (cn) => pCompsMap.get(cn.articuloModificadorId) === (cn.articuloPrecio?.cantidad ?? 1), // Asegurar lógica de cantidad si existe en modificadores
+        )
       })
 
       if (yaExiste) {
@@ -380,7 +382,9 @@ const RestRegistrar: FunctionComponent = () => {
 
         // Ordenar IDs para comparar de forma estricta independientemente del orden de inserción
         const notasNuevasSorted = [...notasIds].sort()
-        const compsNuevosSorted = [...complementos].sort((a, b) => a._id.localeCompare(b._id))
+        const modsNuevosSorted = [...modificadoresInput].sort((a, b) =>
+          a.articuloModificadorId.localeCompare(b.articuloModificadorId),
+        )
 
         const existingIdx = productos.findIndex((p) => {
           // Misma base de articulo (manejar fallback a _id directo u originado de la prop)
@@ -398,24 +402,25 @@ const RestRegistrar: FunctionComponent = () => {
           // Mismos complementos: agrupar por articuloId sumando cantidades para manejar
           // tanto pedidos cargados del servidor (pueden tener varias entradas qty=1 por complemento)
           // como pedidos locales (una sola entrada con la cantidad acumulada).
-          const pComps = p.complementos || []
+          const pMods = p.modificadores || []
 
           // Construir mapa agrupado: articuloId → cantidad total
-          const pCompsMap = new Map<string, number>()
-          for (const c of pComps) {
-            const cId = c.articuloId || (c as any).id || (c as any)._id
+          const pModsMap = new Map<string, number>()
+          for (const c of pMods) {
+            const cId = c.articuloModificadorId || (c as any).id || (c as any)._id
             if (!cId) continue
-            const qty = c.articuloPrecio?.cantidad ?? c.articuloPrecioBase?.cantidad ?? 1
-            pCompsMap.set(cId, (pCompsMap.get(cId) || 0) + qty)
+            const qty = c.articuloPrecio?.cantidad ?? 1
+            pModsMap.set(cId, (pModsMap.get(cId) || 0) + qty)
           }
 
           // Debe haber exactamente los mismos articuloIds de complemento
-          if (pCompsMap.size !== compsNuevosSorted.length) return false
+          if (pModsMap.size !== modsNuevosSorted.length) return false
 
-          for (const compNuevo of compsNuevosSorted) {
-            const existingQty = pCompsMap.get(compNuevo._id)
+          for (const modNuevo of modsNuevosSorted) {
+            const existingQty = pModsMap.get(modNuevo.articuloModificadorId)
             if (existingQty === undefined) return false
-            if (existingQty !== compNuevo.cantidad) return false
+            const qtyNuevo = modNuevo.articuloPrecio?.cantidad ?? 1
+            if (existingQty !== qtyNuevo) return false
           }
 
           return true // ¡Match perfecto!
@@ -440,59 +445,40 @@ const RestRegistrar: FunctionComponent = () => {
             autoLote: true,
           })
 
-          const nuevoProd: ArticuloOperacion = {
+          const nuevoProd = {
             ...(baseProd as unknown as ArticuloOperacion),
             articuloPrecioBase: {
               cantidad,
               valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
+              precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
               moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
-              monedaPrecio: { precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0 },
+              articuloUnidadMedida: articulo.articuloPrecioBase?.articuloUnidadMedida,
             },
             articuloPrecio: {
               cantidad,
               valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
+              precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
               moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
-              monedaPrecio: { precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0 },
+              articuloUnidadMedida: articulo.articuloPrecioBase?.articuloUnidadMedida,
             },
             notaRapida: notasIds.map((n) => ({ valor: n })),
             nota: '', // vacias, luego el usuario las setea manual
             cortesia: false,
-            complementos: complementos.map((c) => {
-              const baseComp = c.articulo
-                ? articuloToArticuloOperacionInputService(c.articulo as any, user.moneda, {
-                    cantidad: c.cantidad,
-                    autoAlmacen: true,
-                    autoLote: true,
-                  })
-                : null
-
+            _modificadoresInput: modificadoresInput,
+            modificadores: modificadoresInput.map((m) => {
+              const qty = m.articuloPrecio?.cantidad ?? 1
               return {
-                articuloId: c._id,
-                nroItem: baseComp?.nroItem ?? undefined,
-                codigoArticulo: baseComp?.codigoArticulo || '',
-                nombreArticulo: c.nombre,
-                tipoArticulo: baseComp?.tipoArticulo ?? undefined,
-                claseArticulo: baseComp?.claseArticulo ?? undefined,
-                almacen: baseComp?.almacen ?? undefined,
-                lote: baseComp?.lote ?? undefined,
-                sinProductoServicio: baseComp?.sinProductoServicio ?? undefined,
-                articuloUnidadMedida: baseComp?.articuloUnidadMedida ?? undefined,
-                verificarStock: baseComp?.verificarStock ?? false,
-                articuloPrecioBase: {
-                  cantidad: c.cantidad,
-                  valor: c.precio,
-                  precio: c.precio,
-                  monedaPrecio: { precio: c.precio },
-                  articuloUnidadMedida: baseComp?.articuloUnidadMedida ?? undefined,
-                },
-                articuloPrecio: {
-                  cantidad: c.cantidad,
-                  valor: c.precio,
-                  precio: c.precio,
-                  monedaPrecio: { precio: c.precio },
-                  articuloUnidadMedida: baseComp?.articuloUnidadMedida ?? undefined,
-                },
-              } as any
+                articuloModificadorId: m.articuloModificadorId,
+                articuloId: m.codigoArticulo, // Fallback aproximado
+                nroItem: m.nroItem ?? undefined,
+                codigoArticulo: m.codigoArticulo || '',
+                nombreArticulo: (m as any).nombreArticulo || 'Modificador',
+                esOpcionGratuita: m.esOpcionGratuita,
+                elegibleParaGratis: (m as any).elegibleParaGratis,
+                cantidadIncluida: qty,
+                articuloPrecio: m.articuloPrecio as unknown as ArticuloPrecioOperacion,
+                state: 'NUEVO',
+              } as ArticuloOperacionModificador
             }),
           }
           productos.push(nuevoProd)

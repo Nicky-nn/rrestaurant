@@ -109,7 +109,6 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             codigoArticuloUnidadMedida:
               p.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
               p.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
-              (p as any).articuloUnidadMedida?.codigoUnidadMedida ??
               '',
             cantidad: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
             precio: p.articuloPrecio?.valor ?? p.articuloPrecioBase?.valor ?? 0,
@@ -353,7 +352,6 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             codigoArticuloUnidadMedida:
               p.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
               p.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
-              (p as any).articuloUnidadMedida?.codigoUnidadMedida ??
               '',
             cantidad: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
             precio: p.articuloPrecio?.valor ?? p.articuloPrecioBase?.valor ?? 0,

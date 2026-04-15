@@ -1,0 +1,72 @@
+{
+  "last_sync": "2026-04-13T13:19:40.709547",
+  "fragments": [
+    "fragments/RestPedidoFragments.ts"
+  ],
+  "queries": [],
+  "mutations": [
+    "mutations/useRestPedidoRegistrarCompletar.ts"
+  ],
+  "types": [
+    "types/index.ts"
+  ],
+  "client": [
+    "client/index.ts"
+  ],
+  "index": [
+    "index.ts"
+  ],
+  "saved_operations": [
+    "restPedidoRegistrarCompletar"
+  ],
+  "used_types": [
+    "KardexPeriodo",
+    "ClienteOperacion",
+    "ArticuloPrecioOperacionInput",
+    "Impresora",
+    "SinProductoServicio",
+    "RestPedido",
+    "OrgFacturaSucursal",
+    "ArticuloPrecioOperacion",
+    "ClienteOperacionInput",
+    "Moneda",
+    "ArticuloUnidadMedida",
+    "EntidadParamsInput",
+    "SinTipoPuntoVenta",
+    "ArticuloOperacionComplementoInput",
+    "Departamento",
+    "RestPedidoExpressInput",
+    "TotalesPrecioCostoOperacion",
+    "RestMesaInput",
+    "ArticuloRecetaOperacionInput",
+    "ArticuloOperacion",
+    "PuntoVenta",
+    "GrupoArticulo",
+    "UrlConsultaDocumento",
+    "Lote",
+    "DateDMY",
+    "SinTipoDocumentoIdentidad",
+    "Sucursal",
+    "RestMesa",
+    "SinUnidadMedida",
+    "ArticuloModificadorOperacionInput",
+    "MetodoPago",
+    "SinMotivoAnulacion",
+    "ArticuloOperacionReceta",
+    "Almacen",
+    "UltimaTransaccion",
+    "ArticuloOperacionInput",
+    "SinTipoDocumentoSector",
+    "OrgFacturaPuntoVenta",
+    "NotaRapidaInput",
+    "MetodoPagoVenta",
+    "NotaRapida",
+    "ArticuloOperacionModificador",
+    "PrecioCostoOperacion",
+    "UrlsConsultaDocumento",
+    "DateDMYHHMMSS",
+    "DateDMYHHMM",
+    "TotalesGenerales",
+    "TipoArticuloOperacion"
+  ]
+}

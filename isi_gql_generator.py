@@ -39,6 +39,7 @@ fragment FullType on __Type {
 }
 fragment InputValue on __InputValue {
   name
+  description
   type { ...TypeRef }
   defaultValue
 }
@@ -236,6 +237,10 @@ class GQLDeterministicGenerator:
         if kind == "LIST": return f"[{self.build_gql_type_str(type_ref.get('ofType'))}]"
         return type_ref.get("name")
 
+    def is_field_deprecated(self, f):
+        f_desc = f.get("description") or ""
+        return f.get("isDeprecated") or "deprecado" in f_desc.lower() or "deprecated" in f_desc.lower()
+
     # === GENERATORS ===
     def generate_client(self):
         code = '''import { GraphQLClient, gql } from 'graphql-request';
@@ -322,6 +327,9 @@ export { gql };'''
                     lines.append(f"/**\n * {description.replace(chr(10), ' ')}\n */")
                 lines.append(f"export enum {name} {{")
                 for val in t.get("enumValues", []):
+                    if self.is_field_deprecated(val):
+                        print(f"⚠️  Omitiendo valor enum deprecado en typescript: {name}.{val['name']}")
+                        continue
                     val_desc = val.get("description")
                     if val_desc:
                         lines.append(f"  /** {val_desc.replace(chr(10), ' ')} */")
@@ -333,6 +341,9 @@ export { gql };'''
                 lines.append(f"export interface {name} {{")
                 fields = t.get("fields") or t.get("inputFields") or []
                 for f in fields:
+                    if self.is_field_deprecated(f):
+                        print(f"⚠️  Omitiendo campo deprecado en interface typescript: {name}.{f['name']}")
+                        continue
                     f_desc = f.get("description")
                     if f_desc:
                         lines.append(f"  /** {f_desc.replace(chr(10), ' ')} */")
@@ -365,6 +376,7 @@ export { gql };'''
         if not node or node.get("kind") not in ["OBJECT", "INTERFACE"]:
             return None
         for f in node.get("fields", []):
+            if self.is_field_deprecated(f): continue
             base = self.get_base_type_name(f["type"])
             if not self.is_object_type(base):
                 return f["name"]
@@ -379,6 +391,7 @@ export { gql };'''
 
         scalars = []
         for f in node.get("fields", []):
+            if self.is_field_deprecated(f): continue
             base = self.get_base_type_name(f["type"])
             if not self.is_object_type(base):
                 scalars.append(f["name"])
@@ -399,6 +412,7 @@ export { gql };'''
 
         lines = []
         for f in node.get("fields", []):
+            if self.is_field_deprecated(f): continue
             base = self.get_base_type_name(f["type"])
             if self.is_object_type(base):
                 # Sub-objeto: expandimos SUS escalares (un nivel más, sin recursión)
@@ -426,6 +440,7 @@ export { gql };'''
         visited.add(type_name)
         lines = []
         for f in node.get("fields", []):
+            if self.is_field_deprecated(f): continue
             base = self.get_base_type_name(f["type"])
             if self.is_object_type(base):
                 if depth >= max_depth:
@@ -458,7 +473,14 @@ export { gql };'''
     def generate_operation(self, optype, field):
         op_name = field["name"]
         op_capitalized = op_name[0].upper() + op_name[1:]
-        args = field.get("args", [])
+        
+        # Filtramos argumentos que esten deprecados
+        args = []
+        for a in field.get("args", []):
+            if self.is_field_deprecated(a):
+                print(f"⚠️  Omitiendo argumento deprecado en operación: {op_name}({a['name']})")
+                continue
+            args.append(a)
 
         gql_args_def = ", ".join([f"${a['name']}: {self.build_gql_type_str(a['type'])}" for a in args])
         gql_args_pass = ", ".join([f"{a['name']}: ${a['name']}" for a in args])

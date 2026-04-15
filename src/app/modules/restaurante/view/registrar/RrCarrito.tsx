@@ -507,7 +507,7 @@ const CartItem = ({
   const [isEditing, setIsEditing] = useState(false)
 
   const originalCortesia = !!item.cortesia
-  const originalPrecio = item.articuloPrecio?.valor ?? item.articuloPrecio?.monedaPrecio?.precio ?? 0
+  const originalPrecio = item.articuloPrecio?.valor ?? 0
   const originalNota = item.nota || ''
 
   // Leemos la cantidad siempre desde el prop (estado global de RestRegistrar)
@@ -559,15 +559,12 @@ const CartItem = ({
     descuentoNum !== 0
 
   const extras =
-    item.complementos
-      ?.map((c) => {
-        const qty = c.articuloPrecio?.cantidad ?? c.articuloPrecioBase?.cantidad ?? 1
-        return {
-          nombre: c.nombreArticulo,
-          cantidad: qty,
-        }
-      })
-      .filter((extra) => Boolean(extra.nombre)) || []
+    item.modificadores
+      ?.map((m) => ({
+        nombre: m.nombreArticulo,
+        cantidad: m.articuloPrecio?.cantidad ?? 1,
+      }))
+      .filter((extra) => Boolean(extra.nombre)) ?? []
   const notaRapidas = item.notaRapida?.map((nr) => nr.valor).filter(Boolean) || []
 
   // Custom notes separated by comma or dot
@@ -857,7 +854,7 @@ const CartItem = ({
               <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', letterSpacing: 0.5 }}>
                 EXTRAS:
               </Typography>
-              {extras.map((extra, i) => (
+              {extras.map((extra: any, i: number) => (
                 <Box
                   key={`extra-${i}`}
                   sx={{
