@@ -13,6 +13,7 @@ import {
   ArticuloOperacion,
   ArticuloOperacionModificador,
   ArticuloPrecioOperacion,
+  ArticuloRecetaOperacionInput,
   RestPedido,
 } from '../types'
 import RrAcciones from './registrar/RrAcciones'
@@ -308,6 +309,7 @@ const RestRegistrar: FunctionComponent = () => {
       articulo: Articulo
       cantidad: number
       notasIds: string[]
+      variacionReceta?: ArticuloRecetaOperacionInput[]
       modificadoresInput?: ArticuloModificadorOperacionInput[]
     }) => {
       if (!mesaSeleccionadaRef.current) {
@@ -315,7 +317,7 @@ const RestRegistrar: FunctionComponent = () => {
         return
       }
 
-      const { articulo, cantidad, notasIds, modificadoresInput = [] } = payload
+      const { articulo, cantidad, notasIds, variacionReceta = [], modificadoresInput = [] } = payload
 
       // Calculamos si ya existe el item usando la ref (fuera del setState)
       // para poder mostrar el toast ANTES de actualizar el estado.
@@ -324,6 +326,11 @@ const RestRegistrar: FunctionComponent = () => {
       const modsNuevosSorted = [...modificadoresInput].sort((a, b) =>
         a.articuloModificadorId.localeCompare(b.articuloModificadorId),
       )
+      // Firma de variacionReceta: lista de codigoArticulo+removido+esExtra para comparar identidad
+      const vrNuevaFirma = [...variacionReceta]
+        .map((v) => `${v.codigoArticulo}:${v.removido ? 'R' : ''}${v.esExtra ? 'E' : ''}`)
+        .sort()
+        .join('|')
 
       const yaExiste = productosActuales.some((p) => {
         const pId = p.articuloId || (p as any).articulo?._id || (p as any)._id
@@ -331,6 +338,12 @@ const RestRegistrar: FunctionComponent = () => {
         const pNotas = [...(p.notaRapida?.map((n) => n.valor).filter(Boolean) || [])].sort()
         if (pNotas.join('|') !== notasNuevasSorted.join('|')) return false
         if ((p.nota || '').trim() !== '') return false
+        // Comparar variacionReceta
+        const pVrFirma = [...((p as any).variacionReceta ?? [])]
+          .map((v: any) => `${v.codigoArticulo}:${v.removido ? 'R' : ''}${v.esExtra ? 'E' : ''}`)
+          .sort()
+          .join('|')
+        if (pVrFirma !== vrNuevaFirma) return false
         const pCompsMap = new Map<string, number>()
         for (const c of p.modificadores || []) {
           const cId = c.articuloModificadorId || (c as any).id || (c as any)._id
@@ -399,6 +412,13 @@ const RestRegistrar: FunctionComponent = () => {
           // son productos distintos por defecto porque vienen limpios de la card.
           if ((p.nota || '').trim() !== '') return false
 
+          // Misma variacionReceta (sin cebolla != con cebolla)
+          const pVrFirma = [...((p as any).variacionReceta ?? [])]
+            .map((v: any) => `${v.codigoArticulo}:${v.removido ? 'R' : ''}${v.esExtra ? 'E' : ''}`)
+            .sort()
+            .join('|')
+          if (pVrFirma !== vrNuevaFirma) return false
+
           // Mismos complementos: agrupar por articuloId sumando cantidades para manejar
           // tanto pedidos cargados del servidor (pueden tener varias entradas qty=1 por complemento)
           // como pedidos locales (una sola entrada con la cantidad acumulada).
@@ -464,6 +484,7 @@ const RestRegistrar: FunctionComponent = () => {
             notaRapida: notasIds.map((n) => ({ valor: n })),
             nota: '', // vacias, luego el usuario las setea manual
             cortesia: false,
+            variacionReceta: variacionReceta.length > 0 ? variacionReceta : undefined,
             _modificadoresInput: modificadoresInput,
             modificadores: modificadoresInput.map((m) => {
               const qty = m.articuloPrecio?.cantidad ?? 1

@@ -198,6 +198,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
 
   // Para modificadores: mapa {articuloId: cantidad}
   const [modificadorSeleccion, setModificadorSeleccion] = useState<ModificadorSeleccion>({})
+  // Orden de selección: el primero en este array consume el cupo gratuito
+  const [modificadorOrden, setModificadorOrden] = useState<string[]>([])
 
   // Notas: siempre vacío al abrir; LS solo ordena por uso
   const [selectedNotas, setSelectedNotas] = useState<Set<string>>(new Set())
@@ -210,6 +212,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
       setIngredientesRemovidos(new Set())
       setIngredientesExtra({})
       setModificadorSeleccion({})
+      setModificadorOrden([])
       setSelectedNotas(new Set()) // notas siempre vacías al abrir, LS solo ordena
       setCantidad(1)
     }
@@ -255,21 +258,22 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   const sigla = getSigla(articulo)
 
   // ── Precio adicional de modificadores con costo ───────────────────────────
-  // Regla del backend:
-  //   - Solo opciones con elegibleParaGratis=true pueden consumir cupos gratuitos
-  //   - Los cupos se asignan a los artículos elegibles más baratos primero
-  //     (así el cliente obtiene el mayor beneficio monetario al revés del más caro)
-  //   - Las opciones sin elegibleParaGratis siempre pagan, incluso si hay cupos libres
-  const precioModificadoresExtra = (composicion?.modificadores ?? []).reduce((accGrupo, grupo) => {
+  // Regla:
+  //   - elegibleParaGratis: false → siempre paga, nunca consume cupo
+  //   - elegibleParaGratis: true → puede consumir cupos gratuitos del grupo
+  //     (el campo siempre llega como boolean desde el servidor)
+  //   - Los cupos se asignan según el orden de selección (primero en marcar = primero en gratis)
+  const precioModificadoresExtra = (composicion?.modificadores ?? []).reduce((accGrupo, grupo, gIdx) => {
     const cuposGratis = grupo.opcionesGratuitas ?? 0
 
     // Separar opciones elegibles y no elegibles seleccionadas
     const opcionesSeleccionadas = (grupo.opciones ?? [])
-      .map((op) => ({
-        artId: op.articulo?._id ?? '',
+      .map((op, oIdx) => ({
+        artId: op.articulo?._id ?? `op-${gIdx}-${oIdx}`,
         precio: op.articulo ? getPrecio(op.articulo) : 0,
-        qty: modificadorSeleccion[op.articulo?._id ?? ''] ?? 0,
-        elegible: op.elegibleParaGratis ?? false,
+        qty: modificadorSeleccion[op.articulo?._id ?? `op-${gIdx}-${oIdx}`] ?? 0,
+        // elegibleParaGratis siempre es boolean (nunca null/undefined)
+        elegible: op.elegibleParaGratis === true,
       }))
       .filter((o) => o.qty > 0)
 
@@ -278,10 +282,10 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
       .filter((o) => !o.elegible)
       .reduce((s, o) => s + o.precio * o.qty, 0)
 
-    // Las elegibles: asignar cupos de gratuidad (más baratas primero = mayor beneficio para el cliente)
+    // Las elegibles: asignar cupos según orden de selección (primero en marcar = primero en gratis)
     const elegiblesOrdenadas = opcionesSeleccionadas
       .filter((o) => o.elegible)
-      .sort((a, b) => a.precio - b.precio) // más barata primero para maximizar beneficio
+      .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId))
 
     let cuposRestantes = cuposGratis
     for (const op of elegiblesOrdenadas) {
@@ -302,11 +306,17 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   }, 0)
 
   // ── Precio adicional de ingredientes EXTRA de la receta ────────────────────
-  const precioRecetaExtra = (composicion?.receta?.ingredientes ?? []).reduce((acc, ing) => {
-    const artId = ing.articulo?._id ?? ''
+  // cantidadBase = porciones ya incluidas en la receta base.
+  // Las primeras `cantidadBase` unidades extra NO se cobran (ya están en el precio del plato),
+  // a partir de cantidadBase+1 en adelante SÍ se cobra.
+  const precioRecetaExtra = (composicion?.receta?.ingredientes ?? []).reduce((acc, ing, idx) => {
+    // Misma clave que usa setExtraQty y el render (ing-${idx} como fallback si _id es undefined)
+    const artId = ing.articulo?._id ?? `ing-${idx}`
     const qty = ingredientesExtra[artId] ?? 0
     if (qty > 0 && ing.permiteExtra && ing.articulo) {
-      acc += getPrecio(ing.articulo) * qty
+      const cantidadBase = ing.cantidadBase ?? 0
+      const qtyCobrable = Math.max(0, qty - cantidadBase)
+      acc += getPrecio(ing.articulo) * qtyCobrable
     }
     return acc
   }, 0)
@@ -351,6 +361,15 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
       if (delta > 0 && maxSeleccion > 0) {
         const totalGrupo = grupoOpciones.reduce((s, op) => s + (prev[op.articulo?._id ?? ''] ?? 0), 0)
         if (totalGrupo >= maxSeleccion) return prev
+      }
+
+      // Actualizar orden de selección
+      if (current === 0 && next > 0) {
+        // Recién seleccionado: añadir al final del orden
+        setModificadorOrden((ord) => (ord.includes(artId) ? ord : [...ord, artId]))
+      } else if (next === 0) {
+        // Deseleccionado: quitar del orden
+        setModificadorOrden((ord) => ord.filter((id) => id !== artId))
       }
 
       if (next === 0) {
@@ -618,11 +637,34 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     const maxSel = grupo.maxSeleccion ?? 0
                     const grupoOpciones = grupo.opciones ?? []
                     const totalSelGrupo = grupoOpciones.reduce(
-                      (s, op) => s + (modificadorSeleccion[op.articulo?._id ?? ''] ?? 0),
+                      (s, op, oIdx) =>
+                        s + (modificadorSeleccion[op.articulo?._id ?? `op-${gIdx}-${oIdx}`] ?? 0),
                       0,
                     )
                     const grupoLleno = maxSel > 0 && totalSelGrupo >= maxSel
                     const minAlcanzado = totalSelGrupo >= (grupo.minSeleccion ?? 0)
+
+                    // Calcular cuántas unidades de cada opción son cubiertas por los cupos gratuitos
+                    const cuposGratisDisplay = grupo.opcionesGratuitas ?? 0
+                    const freeQtyPerArt: Record<string, number> = {}
+                    if (cuposGratisDisplay > 0) {
+                      const candidatas = grupoOpciones
+                        .map((op, oIdx) => ({
+                          artId: op.articulo?._id ?? `op-${gIdx}-${oIdx}`,
+                          qty: modificadorSeleccion[op.articulo?._id ?? `op-${gIdx}-${oIdx}`] ?? 0,
+                          precio: op.articulo ? getPrecio(op.articulo) : 0,
+                          elegible: op.elegibleParaGratis === true,
+                        }))
+                        .filter((o) => o.qty > 0 && o.elegible)
+                        .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId)) // primer seleccionado = primero en gratis
+                      let restantes = cuposGratisDisplay
+                      for (const o of candidatas) {
+                        if (restantes <= 0) break
+                        const gratisQty = Math.min(restantes, o.qty)
+                        freeQtyPerArt[o.artId] = gratisQty
+                        restantes -= gratisQty
+                      }
+                    }
 
                     return (
                       <Box
@@ -675,7 +717,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         <Box
                           sx={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
                             gap: 1,
                           }}
                         >
@@ -686,67 +728,138 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             const selected = qty > 0
                             const precio = op.articulo ? getPrecio(op.articulo) : 0
                             const opSigla = op.articulo ? getSigla(op.articulo) : sigla
+                            // Verificar disponibilidad de stock para artículos gestionados por lotes
+                            const stockCheck =
+                              op.articulo?.verificarStock === true
+                                ? articuloToArticuloOperacionInputService(
+                                    op.articulo as unknown as Parameters<
+                                      typeof articuloToArticuloOperacionInputService
+                                    >[0],
+                                    user.moneda,
+                                    {
+                                      cantidad: 1,
+                                      autoAlmacen: true,
+                                      autoLote: true,
+                                      mostrarLoteConStock: true,
+                                    },
+                                  )
+                                : null
+                            const sinStock =
+                              op.articulo?.verificarStock === true && stockCheck?.almacen === null
                             // Max del grupo alcanzado Y esta opción ya tiene 0 → deshabilitado
                             const maxAlcanzado = grupoLleno && !selected
+                            const disabled = maxAlcanzado || sinStock
+                            // Cuántas unidades cubiertas por el cupo gratuito del grupo
+                            const cubiertoPorGratis = freeQtyPerArt[artId] ?? 0
+                            const esCompletamenteGratis = selected && cubiertoPorGratis >= qty
+                            const esParcialmenteGratis =
+                              selected && cubiertoPorGratis > 0 && cubiertoPorGratis < qty
 
                             return (
                               <Box
                                 key={artId}
                                 sx={{
                                   display: 'flex',
-                                  alignItems: 'center',
+                                  flexDirection: 'column',
                                   justifyContent: 'space-between',
+                                  height: 72,
                                   p: 1.5,
-                                  border: '1px solid',
-                                  borderColor: selected ? 'primary.main' : 'divider',
+                                  border: '2px solid',
+                                  borderColor: sinStock
+                                    ? 'error.light'
+                                    : selected
+                                      ? esCompletamenteGratis
+                                        ? 'success.main'
+                                        : 'primary.main'
+                                      : 'divider',
                                   borderRadius: 3,
-                                  bgcolor: selected
-                                    ? (theme) => alpha(theme.palette.primary.main, 0.04)
-                                    : 'transparent',
+                                  bgcolor: sinStock
+                                    ? (theme) => alpha(theme.palette.error.main, 0.04)
+                                    : selected
+                                      ? esCompletamenteGratis
+                                        ? (theme) => alpha(theme.palette.success.main, 0.08)
+                                        : (theme) => alpha(theme.palette.primary.main, 0.06)
+                                      : 'background.paper',
                                   transition: 'all 0.15s ease',
-                                  opacity: maxAlcanzado ? 0.6 : 1,
-                                  cursor: maxAlcanzado ? 'not-allowed' : 'pointer',
+                                  opacity: disabled ? 0.5 : 1,
+                                  cursor: disabled ? 'not-allowed' : 'pointer',
+                                  userSelect: 'none',
                                 }}
                                 onClick={() => {
-                                  if (!maxAlcanzado)
-                                    setOpcionQty(artId, 1, grupoOpciones, maxSel)
+                                  if (!disabled) setOpcionQty(artId, 1, grupoOpciones, maxSel)
                                 }}
                               >
-                                {/* Izquierda: nombre + precio (sin imagen) */}
+                                {/* Fila superior: nombre (máx 2 líneas, altura fija) */}
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={selected ? 700 : 500}
+                                  color={
+                                    selected
+                                      ? esCompletamenteGratis
+                                        ? 'success.main'
+                                        : 'primary.main'
+                                      : 'text.primary'
+                                  }
+                                  sx={{
+                                    lineHeight: 1.25,
+                                    overflow: 'hidden',
+                                    display: '-webkit-box',
+                                    WebkitBoxOrient: 'vertical',
+                                    WebkitLineClamp: 2,
+                                  }}
+                                >
+                                  {nombre}
+                                </Typography>
+
+                                {/* Fila inferior: precio a la izquierda, stepper a la derecha */}
                                 <Box
                                   sx={{
                                     display: 'flex',
-                                    flexDirection: 'column',
-                                    flex: 1,
-                                    minWidth: 0,
-                                    mr: 1.5,
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: 0.5,
                                   }}
                                 >
-                                  <Typography
-                                    variant="body2"
-                                    fontWeight={selected ? 600 : 400}
-                                    color={selected ? 'primary.main' : 'text.primary'}
-                                    sx={{ lineHeight: 1.2, mb: 0.25 }}
-                                  >
-                                    {nombre}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    color={selected ? 'primary.main' : 'text.secondary'}
-                                    fontWeight={selected ? 600 : 400}
-                                    sx={{ mt: 0.5 }}
-                                  >
-                                    {precio > 0 ? `+${opSigla}${precio.toFixed(2)}` : ''}
-                                  </Typography>
-                                </Box>
+                                  {/* Precio / badge GRATIS / badge SIN STOCK */}
+                                  {sinStock ? (
+                                    <Chip
+                                      label="Sin stock"
+                                      size="small"
+                                      color="error"
+                                      sx={{ height: 18, fontSize: '0.6rem' }}
+                                    />
+                                  ) : precio > 0 ? (
+                                    esCompletamenteGratis ? (
+                                      <Chip
+                                        label="GRATIS"
+                                        size="small"
+                                        color="success"
+                                        sx={{ height: 18, fontSize: '0.6rem' }}
+                                      />
+                                    ) : (
+                                      <Typography
+                                        variant="caption"
+                                        fontWeight={600}
+                                        color={selected ? 'primary.main' : 'text.secondary'}
+                                        sx={{ whiteSpace: 'nowrap' }}
+                                      >
+                                        {esParcialmenteGratis
+                                          ? `+${opSigla}${precio.toFixed(2)} (${cubiertoPorGratis} gratis)`
+                                          : `+${opSigla}${precio.toFixed(2)}`}
+                                      </Typography>
+                                    )
+                                  ) : (
+                                    <Box />
+                                  )}
 
-                                {/* Derecha: stepper */}
-                                <QtyStepperInline
-                                  qty={qty}
-                                  maxReached={grupoLleno}
-                                  onIncrement={() => setOpcionQty(artId, 1, grupoOpciones, maxSel)}
-                                  onDecrement={() => setOpcionQty(artId, -1, grupoOpciones, maxSel)}
-                                />
+                                  {/* Stepper compacto */}
+                                  <QtyStepperInline
+                                    qty={qty}
+                                    maxReached={grupoLleno || sinStock}
+                                    onIncrement={() => setOpcionQty(artId, 1, grupoOpciones, maxSel)}
+                                    onDecrement={() => setOpcionQty(artId, -1, grupoOpciones, maxSel)}
+                                  />
+                                </Box>
                               </Box>
                             )
                           })}
@@ -841,8 +954,9 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
 
                 // ── 2. variacionReceta: un item por ingrediente modificado (removido o extra) ──
                 const variacionReceta: ArticuloRecetaOperacionInput[] = []
-                ;(composicion?.receta?.ingredientes ?? []).forEach((ing) => {
-                  const artId = ing.articulo?._id ?? ''
+                ;(composicion?.receta?.ingredientes ?? []).forEach((ing, idx) => {
+                  // Misma clave que usa setExtraQty: ing._id con fallback a ing-${idx}
+                  const artId = ing.articulo?._id ?? `ing-${idx}`
                   const extraQty = ing.permiteExtra ? (ingredientesExtra[artId] ?? 0) : 0
                   const isRemovido = ing.esRemovible ? ingredientesRemovidos.has(artId) : false
 
@@ -851,9 +965,11 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                   if (isRemovido) {
                     const baseComp = ing.articulo
                       ? articuloToArticuloOperacionInputService(
-                          ing.articulo as unknown as Parameters<typeof articuloToArticuloOperacionInputService>[0],
+                          ing.articulo as unknown as Parameters<
+                            typeof articuloToArticuloOperacionInputService
+                          >[0],
                           user.moneda,
-                          { cantidad: 0, autoAlmacen: true, autoLote: true, mostrarLoteConStock: true },
+                          { cantidad: 1, autoAlmacen: true, autoLote: true, mostrarLoteConStock: true },
                         )
                       : null
 
@@ -865,9 +981,11 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         codigoArticuloUnidadMedida:
                           baseComp?.articuloUnidadMedida?.codigoUnidadMedida ??
                           ing.articulo?.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
-                          ing.articulo?.articuloPrecio?.find((ap) => ap.articuloUnidadMedida?.codigoUnidadMedida)?.articuloUnidadMedida?.codigoUnidadMedida ??
+                          ing.articulo?.articuloPrecio?.find(
+                            (ap) => ap.articuloUnidadMedida?.codigoUnidadMedida,
+                          )?.articuloUnidadMedida?.codigoUnidadMedida ??
                           '',
-                        cantidad: 0,
+                        cantidad: 1, // backend requiere cantidad > 0; removido:true indica que se elimina
                         precio: 0,
                         descuento: 0,
                         impuesto: 0,
@@ -880,11 +998,24 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                   if (extraQty > 0) {
                     const baseComp = ing.articulo
                       ? articuloToArticuloOperacionInputService(
-                          ing.articulo as unknown as Parameters<typeof articuloToArticuloOperacionInputService>[0],
+                          ing.articulo as unknown as Parameters<
+                            typeof articuloToArticuloOperacionInputService
+                          >[0],
                           user.moneda,
-                          { cantidad: extraQty, autoAlmacen: true, autoLote: true, mostrarLoteConStock: true },
+                          {
+                            cantidad: extraQty,
+                            autoAlmacen: true,
+                            autoLote: true,
+                            mostrarLoteConStock: true,
+                          },
                         )
                       : null
+
+                    // Las primeras `cantidadBase` porciones ya están en el precio del plato → precio=0.
+                    // A partir de cantidadBase+1 en adelante se cobra el precio unitario.
+                    const cantidadBase = ing.cantidadBase ?? 0
+                    const precioPorExtra =
+                      Math.max(0, extraQty - cantidadBase) > 0 ? getPrecio(ing.articulo!) : 0
 
                     variacionReceta.push({
                       codigoArticulo: baseComp?.codigoArticulo || ing.articulo?.codigoArticulo || '',
@@ -894,10 +1025,12 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         codigoArticuloUnidadMedida:
                           baseComp?.articuloUnidadMedida?.codigoUnidadMedida ??
                           ing.articulo?.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
-                          ing.articulo?.articuloPrecio?.find((ap) => ap.articuloUnidadMedida?.codigoUnidadMedida)?.articuloUnidadMedida?.codigoUnidadMedida ??
+                          ing.articulo?.articuloPrecio?.find(
+                            (ap) => ap.articuloUnidadMedida?.codigoUnidadMedida,
+                          )?.articuloUnidadMedida?.codigoUnidadMedida ??
                           '',
                         cantidad: extraQty,
-                        precio: getPrecio(ing.articulo!),
+                        precio: precioPorExtra,
                         descuento: 0,
                         impuesto: 0,
                       },
@@ -918,7 +1051,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                   const elegiblesOrdenadas = (grupo.opciones ?? [])
                     .filter(
                       (o) =>
-                        (o.elegibleParaGratis ?? false) &&
+                        // elegibleParaGratis siempre es boolean (nunca null/undefined)
+                        o.elegibleParaGratis === true &&
                         (modificadorSeleccion[o.articulo?._id ?? ''] ?? 0) > 0,
                     )
                     .map((o) => ({
@@ -926,7 +1060,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                       precio: o.articulo ? getPrecio(o.articulo) : 0,
                       qty: modificadorSeleccion[o.articulo?._id ?? ''] ?? 0,
                     }))
-                    .sort((a, b) => a.precio - b.precio) // más barata primero = mayor beneficio
+                    .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId)) // primer seleccionado = primero en gratis
 
                   const cuposAsignados = new Map<string, number>()
                   let cuposRestantes = cuposGratis
@@ -954,25 +1088,25 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     const qty = modificadorSeleccion[artId] ?? 0
                     if (qty === 0 || !op.articulo) return
 
-
                     const baseComp = articuloToArticuloOperacionInputService(
                       op.articulo as unknown as Parameters<typeof articuloToArticuloOperacionInputService>[0],
                       user.moneda,
-                      { cantidad: qty, autoAlmacen: true, autoLote: true, mostrarLoteConStock: true },
+                      // autoLote:false — el backend de RestPedido.modificadores no acepta codigoLote
+                      // (el schema de Mongoose requiere lote.codigoArticulo completo).
+                      // El check de sinStock en el render ya impide seleccionar opciones sin stock.
+                      { cantidad: qty, autoAlmacen: true, autoLote: false, mostrarLoteConStock: false },
                     )
 
                     const codigoUm =
                       baseComp?.articuloUnidadMedida?.codigoUnidadMedida ??
                       op.articulo.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
-                      op.articulo.articuloPrecio?.find(
-                        (ap) => ap.articuloUnidadMedida?.codigoUnidadMedida,
-                      )?.articuloUnidadMedida?.codigoUnidadMedida ??
+                      op.articulo.articuloPrecio?.find((ap) => ap.articuloUnidadMedida?.codigoUnidadMedida)
+                        ?.articuloUnidadMedida?.codigoUnidadMedida ??
                       ''
                     const codigoArt = baseComp?.codigoArticulo || op.articulo.codigoArticulo || ''
                     const codigoAlm = baseComp?.almacen?.codigoAlmacen || '0'
-                    const codigoLote = baseComp?.lote?.codigoLote
 
-                    const esElegible = op.elegibleParaGratis ?? false
+                    const esElegible = op.elegibleParaGratis === true
                     const cantGratuita = esElegible ? (cuposAsignados.get(artId) ?? 0) : 0
                     const cantPaga = qty - cantGratuita
 
@@ -981,15 +1115,19 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         articuloModificadorId: grupo._id ?? '',
                         codigoArticulo: codigoArt,
                         codigoAlmacen: codigoAlm,
-                        codigoLote,
+                        // codigoLote omitido: el backend falla cuando lote.codigoArticulo no existe
                         articuloPrecio: {
                           codigoArticuloUnidadMedida: codigoUm,
                           cantidad: cantGratuita,
+                          // precio=0: unidades cubiertas por cupo gratis del grupo
+                          // esOpcionGratuita=false: no reclamamos el cupo formalmente;
+                          // el backend valida elegibleParaGratis en mutación y puede
+                          // diferir del dato de composición, causando "no aplica para gratuidad".
                           precio: 0,
                           descuento: 0,
                           impuesto: 0,
                         },
-                        esOpcionGratuita: true,
+                        esOpcionGratuita: false,
                       })
                     }
 
@@ -998,7 +1136,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         articuloModificadorId: grupo._id ?? '',
                         codigoArticulo: codigoArt,
                         codigoAlmacen: codigoAlm,
-                        codigoLote,
+                        // codigoLote omitido: el backend falla cuando lote.codigoArticulo no existe
                         articuloPrecio: {
                           codigoArticuloUnidadMedida: codigoUm,
                           cantidad: cantPaga,

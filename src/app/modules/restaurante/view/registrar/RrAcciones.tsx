@@ -134,7 +134,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
               const codigoLote = asInput.codigoLote ?? asServer.lote?.codigoLote
               return {
                 nroItem: v.nroItem,
-                codigoArticulo: v.codigoArticulo ?? asServer.codigoArticulo ?? '',
+                // codigoArticulo: asServer.codigoArticulo era redundante (asServer = v)
+                codigoArticulo: v.codigoArticulo ?? '',
                 codigoAlmacen,
                 ...(codigoLote ? { codigoLote } : {}),
                 articuloPrecio: {
@@ -143,10 +144,13 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                       ?.codigoArticuloUnidadMedida ??
                     asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
                     '',
-                  cantidad:
-                    (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                  // Prioridad INPUT primero (consistente con el resto de campos de precio)
+                  cantidad: Math.max(
                     1,
+                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      1,
+                  ),
                   precio:
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
                     (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
@@ -176,9 +180,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                   nroItem: m.nroItem,
                   codigoArticulo: m.codigoArticulo || '',
                   codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
-                  ...(asInput.codigoLote || asServer.lote?.codigoLote
-                    ? { codigoLote: asInput.codigoLote ?? asServer.lote?.codigoLote ?? '' }
-                    : {}),
+                  // codigoLote omitido: el backend de RestPedido falla con lote.codigoArticulo requerido
                   articuloPrecio: {
                     codigoArticuloUnidadMedida:
                       (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
@@ -194,7 +196,14 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                     descuento: m.articuloPrecio?.descuento ?? 0,
                     impuesto: m.articuloPrecio?.impuesto ?? 0,
                   },
-                  esOpcionGratuita: asInput.esOpcionGratuita ?? false,
+                  // Guard: si el dato viene del servidor (re-edición sin reabrir modal),
+                  // sólo re-enviar esOpcionGratuita:true si elegibleParaGratis lo confirma.
+                  // Evita error cuando el backend cambió la elegibilidad después de la creación.
+                  esOpcionGratuita:
+                    (asInput.esOpcionGratuita ?? false) && asServer.elegibleParaGratis !== false,
+                  notaRapida: m.notaRapida
+                    ? m.notaRapida.map((n) => ({ valor: n.valor, cantidad: n.cantidad }))
+                    : undefined,
                 }
               })
               .filter((m) => Boolean(m.articuloModificadorId))
@@ -377,7 +386,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
               const codigoLote = asInput.codigoLote ?? asServer.lote?.codigoLote
               return {
                 nroItem: v.nroItem,
-                codigoArticulo: v.codigoArticulo ?? asServer.codigoArticulo ?? '',
+                codigoArticulo: v.codigoArticulo ?? '',
                 codigoAlmacen,
                 ...(codigoLote ? { codigoLote } : {}),
                 articuloPrecio: {
@@ -386,10 +395,12 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                       ?.codigoArticuloUnidadMedida ??
                     asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
                     '',
-                  cantidad:
-                    (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                  cantidad: Math.max(
                     1,
+                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      1,
+                  ),
                   precio:
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
                     (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
@@ -435,7 +446,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                     descuento: m.articuloPrecio?.descuento ?? 0,
                     impuesto: m.articuloPrecio?.impuesto ?? 0,
                   },
-                  esOpcionGratuita: asInput.esOpcionGratuita ?? false,
+                  esOpcionGratuita:
+                    (asInput.esOpcionGratuita ?? false) && asServer.elegibleParaGratis !== false,
+                  notaRapida: m.notaRapida
+                    ? m.notaRapida.map((n) => ({ valor: n.valor, cantidad: n.cantidad }))
+                    : undefined,
                 }
               })
               .filter((m) => Boolean(m.articuloModificadorId))
