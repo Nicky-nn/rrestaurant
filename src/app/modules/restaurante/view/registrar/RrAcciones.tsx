@@ -144,13 +144,15 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                       ?.codigoArticuloUnidadMedida ??
                     asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
                     '',
-                  // Prioridad INPUT primero (consistente con el resto de campos de precio)
-                  cantidad: Math.max(
-                    1,
-                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                      (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                      1,
-                  ),
+                  // removido:true → backend exige cantidad 0; caso contrario mínimo 1
+                  cantidad: v.removido
+                    ? 0
+                    : Math.max(
+                        1,
+                        (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                          (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                          1,
+                      ),
                   precio:
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
                     (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
@@ -428,9 +430,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                   nroItem: m.nroItem,
                   codigoArticulo: m.codigoArticulo || '',
                   codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
-                  ...(asInput.codigoLote || asServer.lote?.codigoLote
-                    ? { codigoLote: asInput.codigoLote ?? asServer.lote?.codigoLote ?? '' }
-                    : {}),
+                  // codigoLote omitido: el backend de RestPedido falla con lote.codigoArticulo requerido
                   articuloPrecio: {
                     codigoArticuloUnidadMedida:
                       (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
