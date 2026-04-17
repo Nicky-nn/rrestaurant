@@ -1,6 +1,5 @@
 // src/api/graphql/client.ts
 import { GraphQLClient } from 'graphql-request'
-
 import { AccessToken } from '../../../base/models/paramsModel'
 
 export const getClient = (tokenOverride?: string) => {

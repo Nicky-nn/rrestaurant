@@ -1,5 +1,7 @@
 import { clientsRoutesMap } from './modules/clients/clientsRoutes'
 import { homeRoutesMap } from './modules/home/HomeRoutes'
+import { ncdGestionRoutesMap } from './modules/notaCreditoDebito/notaCreditoDebitoRoutes'
+import { reporteRoutesMap } from './modules/reportes/reporteRoutes'
 import { restauranteRoutesMap } from './modules/restaurante/restauranteRoutes'
 
 export interface NavigationProps {
@@ -38,6 +40,22 @@ export const navigations: NavigationProps[] = [
         iconText: 'PG',
         path: restauranteRoutesMap.gestion.path,
       },
+      {
+        name: restauranteRoutesMap.facturas.name,
+        iconText: 'PF',
+        path: restauranteRoutesMap.facturas.path,
+      },
+    ],
+  },
+  {
+    name: 'Nota Crédito Débito',
+    icon: 'receipt',
+    children: [
+      {
+        name: ncdGestionRoutesMap.ncdGestion.name,
+        iconText: 'NCD',
+        path: ncdGestionRoutesMap.ncdGestion.path,
+      },
     ],
   },
   {
@@ -52,6 +70,27 @@ export const navigations: NavigationProps[] = [
       },
     ],
   },
+  {
+    name: 'Reportes',
+    icon: 'receipt',
+    children: [
+      {
+        name: reporteRoutesMap.articuloPorPuntoVenta.name,
+        iconText: 'APPV',
+        path: reporteRoutesMap.articuloPorPuntoVenta.path,
+      },
+      {
+        name: reporteRoutesMap.articuloPorComercio.name,
+        iconText: 'APC',
+        path: reporteRoutesMap.articuloPorComercio.path,
+      },
+      {
+        name: reporteRoutesMap.pedidosSospechosos.name,
+        iconText: 'PPS',
+        path: reporteRoutesMap.pedidosSospechosos.path,
+      },
+    ],
+  }
 ]
 
 /*

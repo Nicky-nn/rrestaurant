@@ -1,0 +1,55 @@
+{
+  "last_sync": "2026-03-16T16:00:46.636649",
+  "fragments": [
+    "fragments/RestFacturaConnectionFragments.ts",
+    "fragments/SalidaFacturaFragments.ts"
+  ],
+  "queries": [
+    "queries/useRestFacturaListado.ts"
+  ],
+  "mutations": [
+    "mutations/useRestFacturaAnular.ts"
+  ],
+  "types": [
+    "types/index.ts"
+  ],
+  "client": [
+    "client/index.ts"
+  ],
+  "index": [
+    "index.ts"
+  ],
+  "saved_operations": [
+    "restFacturaListado",
+    "restFacturaAnular"
+  ],
+  "used_types": [
+    "UrlRepresentacionGrafica",
+    "ClienteOperacion",
+    "SinTipoMoneda",
+    "SinProductoServicio",
+    "SinMotivoAnulacion",
+    "SinTipoPuntoVenta",
+    "PageInfo",
+    "SinTipoDocumentoSector",
+    "SinActividades",
+    "SinTipoEmision",
+    "UrlsRepresentacionGrafica",
+    "SinTipoMetodoPago",
+    "SinCuis",
+    "DateDMYHHMMSS",
+    "OrgFacturaPuntoVenta",
+    "EntidadParamsInput",
+    "RestFacturaConnection",
+    "SinTipoFactura",
+    "SinTipoDocumentoIdentidad",
+    "SalidaFactura",
+    "SinUnidadMedida",
+    "SinCufD",
+    "SalidaFacturaDetalle",
+    "Departamento",
+    "UrlSinRepresentacionGrafica",
+    "UrlRepresentacionGraficaV2",
+    "OrgFacturaSucursal"
+  ]
+}

@@ -4,6 +4,7 @@ import { authRoles } from '../../../auth/authRoles'
 
 const RestRegistroApp = lazy(() => import('./view/RestRegistrar'))
 const RestGestionApp = lazy(() => import('./view/RestGestion'))
+const RestFacturasApp = lazy(() => import('./view/RestFacturas'))
 
 export const restauranteRoutesMap = {
   registro: {
@@ -16,6 +17,11 @@ export const restauranteRoutesMap = {
     name: 'Gestión de Pedidos',
     action: 'GESTION_DE_PEDIDOS',
   },
+  facturas: {
+    path: '/pedidos/facturas',
+    name: 'Gestión de Facturas',
+    action: 'GESTION_DE_FACTURAS',
+  },
 }
 
 const restaurantRoutes = [
@@ -27,6 +33,11 @@ const restaurantRoutes = [
   {
     path: restauranteRoutesMap.gestion.path,
     element: <RestGestionApp />,
+    auth: authRoles.admin,
+  },
+  {
+    path: restauranteRoutesMap.facturas.path,
+    element: <RestFacturasApp />,
     auth: authRoles.admin,
   },
 ]

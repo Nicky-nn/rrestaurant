@@ -181,8 +181,8 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           tipoCambio
           estructuraValor {
             tipoOperacion
-            valorBase
-            valorBaseAnterior
+            valor
+            valorAnterior
             descuento
             descuentoAdicional
             valorNeto
@@ -227,6 +227,23 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           incluyeImpuesto
           esDescuentoTotal
           factorAjuste
+          monedaPrecio{
+            moneda{
+              codigo
+              descripcion
+              sigla
+              tipoCambio
+              tipoCambioCompra
+              activo
+              state
+              usucre
+              usumod
+              createdAt
+              updatedAt
+            }
+            precio
+            precioBase
+          }
         }
         detalleExtra
         nota
@@ -324,6 +341,23 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             incluyeImpuesto
             esDescuentoTotal
             factorAjuste
+            monedaPrecio{
+              moneda{
+                codigo
+                descripcion
+                sigla
+                tipoCambio
+                tipoCambioCompra
+                activo
+                state
+                usucre
+                usumod
+                createdAt
+                updatedAt
+              }
+              precio
+              precioBase
+            }
           }
           detalleExtra
           nota
@@ -494,6 +528,7 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
       updatedAt
       historial {
         nro
+        fecha
         articuloOperacion {
           # Datos simples (Tipo ya expandido previamente)
           articuloId
@@ -502,6 +537,9 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           gestionArticulo
           codigoArticulo
           nombreArticulo
+          articuloPrecio {
+            cantidad
+          }
           codigoGrupo
           detalleExtra
           nota

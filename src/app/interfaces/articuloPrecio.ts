@@ -59,13 +59,13 @@ export interface PrecioCostoOperacionProps {
    * - COSTO: Precio unitario en la Factura del Proveedor.
    * - PRECIO: Precio de Lista / Catálogo actual.
    */
-  valorBase: number
+  valor: number
   /**
    * El valor de referencia histórico o estándar.
    * - COSTO: Costo Promedio/Estándar anterior (Kardex).
    * - PRECIO: Generalmente 0 (o Precio de Lista anterior para comparar subidas).
    */
-  valorBaseAnterior: number
+  valorAnterior: number
 
   // --- 2. AJUSTES DIRECTOS ---
   /** Descuento directo unitario (Monto). */
