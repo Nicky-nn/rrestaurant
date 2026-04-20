@@ -42,6 +42,8 @@ export interface RrComplementoModalProps {
     variacionReceta: ArticuloRecetaOperacionInput[]
     /** Modificadores seleccionados para enviar al servidor */
     modificadoresInput: ArticuloModificadorOperacionInput[]
+    /** Precio unitario con modificadores y receta extra incluidos */
+    precioUnitario: number
   }) => void
 }
 
@@ -399,6 +401,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     articulo.imagen?.variants?.thumbnail ??
     null
 
+  console.log('Composición venta:', { composicion, precioBase, precioModificadoresExtra, precioRecetaExtra })
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <Dialog
@@ -1170,6 +1173,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                           impuesto: 0,
                         },
                         esOpcionGratuita: false,
+                        // Extra para mostrar el nombre en el carrito (no se envía al backend)
+                        ...({ nombreArticulo: op.articulo.nombreArticulo ?? '' } as any),
                       })
                     }
 
@@ -1187,6 +1192,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                           impuesto: 0,
                         },
                         esOpcionGratuita: false,
+                        // Extra para mostrar el nombre en el carrito (no se envía al backend)
+                        ...({ nombreArticulo: op.articulo.nombreArticulo ?? '' } as any),
                       })
                     }
                   })
@@ -1198,6 +1205,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                   notasIds: notasIdsFinales,
                   variacionReceta,
                   modificadoresInput,
+                  precioUnitario: precioBase + precioModificadoresExtra + precioRecetaExtra,
                 })
               }
               onClose()

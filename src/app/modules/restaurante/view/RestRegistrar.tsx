@@ -311,26 +311,46 @@ const RestRegistrar: FunctionComponent = () => {
       notasIds: string[]
       variacionReceta?: ArticuloRecetaOperacionInput[]
       modificadoresInput?: ArticuloModificadorOperacionInput[]
+      precioUnitario?: number
     }) => {
       if (!mesaSeleccionadaRef.current) {
         alert('Por favor selecciona una mesa (o pedido Para Llevar / Delivery) antes de agregar productos.')
         return
       }
 
-      const { articulo, cantidad, notasIds, variacionReceta = [], modificadoresInput = [] } = payload
+      const {
+        articulo,
+        cantidad,
+        notasIds,
+        variacionReceta = [],
+        modificadoresInput = [],
+        precioUnitario,
+      } = payload
 
       // Calculamos si ya existe el item usando la ref (fuera del setState)
       // para poder mostrar el toast ANTES de actualizar el estado.
       const productosActuales = mesaSeleccionadaRef.current?.pedido?.productos || []
       const notasNuevasSorted = [...notasIds].sort()
-      const modsNuevosSorted = [...modificadoresInput].sort((a, b) =>
-        a.articuloModificadorId.localeCompare(b.articuloModificadorId),
-      )
+
       // Firma de variacionReceta: lista de codigoArticulo+removido+esExtra para comparar identidad
       const vrNuevaFirma = [...variacionReceta]
         .map((v) => `${v.codigoArticulo}:${v.removido ? 'R' : ''}${v.esExtra ? 'E' : ''}`)
         .sort()
         .join('|')
+
+      // Firma de modificadores usando codigoArticulo:cantidad como clave estable.
+      // - articuloModificadorId (ID de grupo) difiere entre servidor y local → no sirve.
+      // - precio no sirve porque servidor lo guarda en `valor` y el modal en `precio`.
+      // - codigoArticulo identifica unívocamente la opción elegida.
+      const buildModsFirma = (
+        mods: Array<{ codigoArticulo?: string | null; articuloPrecio?: { cantidad?: number } | null }>,
+      ) =>
+        mods
+          .map((m) => `${m.codigoArticulo ?? ''}:${m.articuloPrecio?.cantidad ?? 1}`)
+          .sort()
+          .join('|')
+
+      const modsNuevaFirma = buildModsFirma(modificadoresInput)
 
       const yaExiste = productosActuales.some((p) => {
         const pId = p.articuloId || (p as any).articulo?._id || (p as any)._id
@@ -344,16 +364,8 @@ const RestRegistrar: FunctionComponent = () => {
           .sort()
           .join('|')
         if (pVrFirma !== vrNuevaFirma) return false
-        const pCompsMap = new Map<string, number>()
-        for (const c of p.modificadores || []) {
-          const cId = c.articuloModificadorId || (c as any).id || (c as any)._id
-          if (!cId) continue
-          pCompsMap.set(cId, (pCompsMap.get(cId) || 0) + (c.articuloPrecio?.cantidad ?? 1))
-        }
-        if (pCompsMap.size !== modsNuevosSorted.length) return false
-        return modsNuevosSorted.every(
-          (cn) => pCompsMap.get(cn.articuloModificadorId) === (cn.articuloPrecio?.cantidad ?? 1), // Asegurar lógica de cantidad si existe en modificadores
-        )
+        // Comparar modificadores por codigoArticulo:precio (no por articuloModificadorId que puede variar)
+        return buildModsFirma(p.modificadores ?? []) === modsNuevaFirma
       })
 
       if (yaExiste) {
@@ -393,11 +405,8 @@ const RestRegistrar: FunctionComponent = () => {
 
         const productos = [...(nuevoPedido.productos || [])]
 
-        // Ordenar IDs para comparar de forma estricta independientemente del orden de inserción
+        // Firma de notas para la búsqueda dentro del setState (misma lógica que la de arriba)
         const notasNuevasSorted = [...notasIds].sort()
-        const modsNuevosSorted = [...modificadoresInput].sort((a, b) =>
-          a.articuloModificadorId.localeCompare(b.articuloModificadorId),
-        )
 
         const existingIdx = productos.findIndex((p) => {
           // Misma base de articulo (manejar fallback a _id directo u originado de la prop)
@@ -419,31 +428,9 @@ const RestRegistrar: FunctionComponent = () => {
             .join('|')
           if (pVrFirma !== vrNuevaFirma) return false
 
-          // Mismos complementos: agrupar por articuloId sumando cantidades para manejar
-          // tanto pedidos cargados del servidor (pueden tener varias entradas qty=1 por complemento)
-          // como pedidos locales (una sola entrada con la cantidad acumulada).
-          const pMods = p.modificadores || []
-
-          // Construir mapa agrupado: articuloId → cantidad total
-          const pModsMap = new Map<string, number>()
-          for (const c of pMods) {
-            const cId = c.articuloModificadorId || (c as any).id || (c as any)._id
-            if (!cId) continue
-            const qty = c.articuloPrecio?.cantidad ?? 1
-            pModsMap.set(cId, (pModsMap.get(cId) || 0) + qty)
-          }
-
-          // Debe haber exactamente los mismos articuloIds de complemento
-          if (pModsMap.size !== modsNuevosSorted.length) return false
-
-          for (const modNuevo of modsNuevosSorted) {
-            const existingQty = pModsMap.get(modNuevo.articuloModificadorId)
-            if (existingQty === undefined) return false
-            const qtyNuevo = modNuevo.articuloPrecio?.cantidad ?? 1
-            if (existingQty !== qtyNuevo) return false
-          }
-
-          return true // ¡Match perfecto!
+          // Comparar modificadores por codigoArticulo:precio (clave estable).
+          // articuloModificadorId cambia entre server y local, no sirve como clave.
+          return buildModsFirma(p.modificadores ?? []) === modsNuevaFirma
         })
 
         if (existingIdx >= 0) {
@@ -469,15 +456,15 @@ const RestRegistrar: FunctionComponent = () => {
             ...(baseProd as unknown as ArticuloOperacion),
             articuloPrecioBase: {
               cantidad,
-              valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
-              precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
+              valor: precioUnitario ?? articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0,
+              precio: precioUnitario ?? articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0,
               moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
               articuloUnidadMedida: articulo.articuloPrecioBase?.articuloUnidadMedida,
             },
             articuloPrecio: {
               cantidad,
-              valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
-              precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
+              valor: precioUnitario ?? articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0,
+              precio: precioUnitario ?? articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0,
               moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
               articuloUnidadMedida: articulo.articuloPrecioBase?.articuloUnidadMedida,
             },
@@ -556,11 +543,52 @@ const RestRegistrar: FunctionComponent = () => {
         // Mantenemos al usuario en la misma mesa si solo fue un registro/guardado parcial.
         setMesaSeleccionada((prev) => {
           if (!prev) return prev
+
+          // El backend no siempre devuelve nombreArticulo en modificadores porque el input
+          // solo lleva codigoArticulo. Enriquecemos los productos del servidor con el
+          // nombreArticulo que teníamos en el estado local (_modificadoresInput o modificadores).
+          const localProductos: any[] = prev.pedido?.productos ?? []
+          const pedidoEnriquecido = pedidoRetornado
+            ? {
+                ...pedidoRetornado,
+                productos: (pedidoRetornado.productos ?? []).map((serverProd: any) => {
+                  if (!serverProd.modificadores?.length) return serverProd
+
+                  // Buscar el producto local correspondiente (mismo artículo)
+                  const localProd = localProductos.find(
+                    (lp: any) =>
+                      lp.codigoArticulo === serverProd.codigoArticulo &&
+                      (lp.articuloId === serverProd.articuloId || !lp.articuloId || !serverProd.articuloId),
+                  ) as any
+
+                  if (!localProd) return serverProd
+
+                  const localMods: any[] = localProd._modificadoresInput ?? localProd.modificadores ?? []
+
+                  const modsEnriquecidos = serverProd.modificadores.map((m: any) => {
+                    if (m.nombreArticulo) return m // el servidor ya lo trae
+                    const localMod = localMods.find((lm: any) => lm.codigoArticulo === m.codigoArticulo)
+                    return {
+                      ...m,
+                      nombreArticulo: (localMod as any)?.nombreArticulo || m.codigoArticulo || '',
+                    }
+                  })
+
+                  return {
+                    ...serverProd,
+                    modificadores: modsEnriquecidos,
+                    // Preservar _modificadoresInput para futuras comparaciones de deduplicación
+                    _modificadoresInput: localProd._modificadoresInput,
+                  }
+                }),
+              }
+            : prev.pedido
+
           return {
             ...prev,
             _id: pedidoRetornado?._id || prev._id,
             estado: ESTADO_MESA.OCUPADO,
-            pedido: { ...(pedidoRetornado || prev.pedido), _forceSnapshotUpdate: Date.now() } as any,
+            pedido: { ...pedidoEnriquecido, _forceSnapshotUpdate: Date.now() } as any,
           }
         })
         setIsPedidoDirty(false)

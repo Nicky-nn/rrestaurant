@@ -39,23 +39,42 @@ const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => 
             const precio = p.articuloPrecio?.valor ?? 0
             const descuento = p.articuloPrecio?.descuento ?? 0
             const total = cantidad * precio - descuento
+            const mods = (p as any).modificadores ?? []
             return (
-              <TableRow key={p.articuloId ?? idx} hover>
-                <TableCell>{p.nroItem ?? idx + 1}</TableCell>
-                <TableCell>{p.codigoArticulo ?? '-'}</TableCell>
-                <TableCell>{p.nombreArticulo ?? '-'}</TableCell>
-                <TableCell align="right">{cantidad}</TableCell>
-                <TableCell align="right">{precio.toFixed(2)}</TableCell>
-                <TableCell align="right">{descuento.toFixed(2)}</TableCell>
-                <TableCell align="center">
-                  {p.cortesia ? (
-                    <Chip size="small" label="Sí" color="success" />
-                  ) : (
-                    <Chip size="small" label="No" variant="outlined" />
-                  )}
-                </TableCell>
-                <TableCell align="right">{total.toFixed(2)}</TableCell>
-              </TableRow>
+              <>
+                <TableRow key={p.articuloId ?? idx} hover>
+                  <TableCell>{p.nroItem ?? idx + 1}</TableCell>
+                  <TableCell>{p.codigoArticulo ?? '-'}</TableCell>
+                  <TableCell>
+                    <Box sx={{ fontWeight: 600 }}>{p.nombreArticulo ?? '-'}</Box>
+                    {mods.length > 0 && (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                        {mods.map((m: any, mi: number) => (
+                          <Chip
+                            key={mi}
+                            label={`${m.articuloPrecio?.cantidad > 1 ? `${m.articuloPrecio.cantidad}x ` : ''}${m.nombreArticulo ?? m.codigoArticulo ?? '?'}`}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            sx={{ height: 18, fontSize: '0.68rem' }}
+                          />
+                        ))}
+                      </Box>
+                    )}
+                  </TableCell>
+                  <TableCell align="right">{cantidad}</TableCell>
+                  <TableCell align="right">{precio.toFixed(2)}</TableCell>
+                  <TableCell align="right">{descuento.toFixed(2)}</TableCell>
+                  <TableCell align="center">
+                    {p.cortesia ? (
+                      <Chip size="small" label="Sí" color="success" />
+                    ) : (
+                      <Chip size="small" label="No" variant="outlined" />
+                    )}
+                  </TableCell>
+                  <TableCell align="right">{total.toFixed(2)}</TableCell>
+                </TableRow>
+              </>
             )
           })}
         </TableBody>
