@@ -1,0 +1,58 @@
+{
+  "last_sync": "2026-03-11T15:28:43.101534",
+  "fragments": [
+    "fragments/RestNotaCreditoDebitoConnectionFragments.ts",
+    "fragments/NotaCreditoDebitoFragments.ts"
+  ],
+  "queries": [
+    "queries/useRestNotaCreditoDebitoListado.ts",
+    "queries/useRestNotaCreditoDebito.ts"
+  ],
+  "mutations": [
+    "mutations/useRestNotaCreditoDebitoRegistro.ts",
+    "mutations/useRestNotaCreditoDebitoAnular.ts"
+  ],
+  "types": [
+    "types/index.ts"
+  ],
+  "client": [
+    "client/index.ts"
+  ],
+  "index": [
+    "index.ts"
+  ],
+  "saved_operations": [
+    "restNotaCreditoDebitoListado",
+    "restNotaCreditoDebito",
+    "restNotaCreditoDebitoRegistro",
+    "restNotaCreditoDebitoAnular"
+  ],
+  "used_types": [
+    "NotaDebitoCreditoDetalle",
+    "SinTipoDocumentoSector",
+    "RestNotaCreditoDebitoConnection",
+    "SinTipoEmision",
+    "SinActividades",
+    "SinCuis",
+    "SinUnidadMedida",
+    "Departamento",
+    "Cliente",
+    "SinTipoDocumentoIdentidad",
+    "NotaCreditoDebito",
+    "SinMotivoAnulacion",
+    "OrgFacturaPuntoVenta",
+    "UrlRepresentacionGraficaV2",
+    "UrlSinRepresentacionGrafica",
+    "RestNotaCreditoDebitoInput",
+    "SinTipoFactura",
+    "PageInfo",
+    "EntidadParamsInput",
+    "UrlsRepresentacionGraficaV2",
+    "SinCufD",
+    "SinTipoPuntoVenta",
+    "OrgFacturaSucursal",
+    "NotaDebitoCreditoDetalleInput",
+    "SinProductoServicio",
+    "DateDMYHHMMSS"
+  ]
+}

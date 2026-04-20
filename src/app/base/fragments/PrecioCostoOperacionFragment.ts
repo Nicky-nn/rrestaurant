@@ -17,7 +17,14 @@ export const precioCostoOperacionFragment = gql`
     gastoAdicional
     impuestoUnitario
     tipoOperacion
-    totales
+    totales {
+      subtotalBruto
+      subtotalNeto
+      totalDescuento
+      totalFinal
+      totalGasto
+      totalImpuestos
+    }
     valor
     valorAnterior
     valorFinal

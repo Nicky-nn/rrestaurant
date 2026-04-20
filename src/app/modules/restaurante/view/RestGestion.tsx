@@ -1,6 +1,6 @@
 import { CancelOutlined, DescriptionOutlined, PrintOutlined, ReceiptOutlined } from '@mui/icons-material'
-import { Box, Chip, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
-import { FunctionComponent, useMemo } from 'react'
+import { Box, Button, Chip, Typography, Modal, TextField, Grid, FormControlLabel, Checkbox } from '@mui/material'
+import { FunctionComponent, useMemo, useState } from 'react'
 
 import { SimpleContainerBox } from '../../../base/components/Container/SimpleBox'
 import { FilterTypeMap } from '../../../base/components/Table/castMrtFilters.ts'
@@ -15,6 +15,10 @@ import { RESTPEDIDOLISTADO } from '../queries/useRestPedidoListado'
 import { restauranteRoutesMap } from '../restauranteRoutes'
 import { ArticuloOperacion, RestPedido, RestPedidoConnection } from '../types'
 import { tableColumns } from './listado/TableRestPedidoHeaders.tsx'
+import { MRT_ColumnDef } from 'material-react-table'
+import { HistorialPedido } from './listado/historialPedido.tsx'
+import { ModalAnularPedido } from './gestion/ModalAnularPedido.tsx'
+import ModalPedidoFacturar from './gestion/ModalPedidoFacturar.tsx'
 
 const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => {
   if (!productos.length) return <Typography variant="body2">Sin productos</Typography>
@@ -87,8 +91,23 @@ interface RestGestionComponentProps {}
 
 type Props = RestGestionComponentProps
 
+type ItemAnular = ArticuloOperacion & { selected: boolean; restoreStock: boolean }
+
 const RestGestion: FunctionComponent<Props> = () => {
   const { user } = useAuth()
+
+  const [pedidoAAnular, setPedidoAAnular] = useState<RestPedido | null>(null)
+  const [openAnularModal, setOpenAnularModal] = useState(false)
+
+  const [pedidoAFacturar, setPedidoAFacturar] = useState<RestPedido | null>(null)
+  const [openFacturarModal, setOpenFacturarModal] = useState(false)
+
+  const handleCloseAnularModal = () => {
+    setOpenAnularModal(false)
+    setPedidoAAnular(null)
+  }
+
+
 
   const columns = useMemo(() => tableColumns, [])
 
@@ -103,7 +122,10 @@ const RestGestion: FunctionComponent<Props> = () => {
         {
           label: 'Facturar',
           icon: <ReceiptOutlined />,
-          onClick: () => {},
+          onClick: ({ row }) => {
+            setPedidoAFacturar(row)
+            setOpenFacturarModal(true)
+          },
         },
         {
           label: 'Generar Comanda',
@@ -119,10 +141,13 @@ const RestGestion: FunctionComponent<Props> = () => {
           label: 'Anular',
           icon: <CancelOutlined />,
           color: 'error' as const,
-          onClick: () => {},
+          onClick: ({ row }) => {
+            setPedidoAAnular(row)
+            setOpenAnularModal(true)
+          },
         },
       ],
-      renderDetailPanel: (row) => <ProductosDetalle productos={row.productos ?? []} />,
+      renderDetailPanel: (row) => <DetallePedidoWrapper row={row} />,
     }),
     [columns],
   )
@@ -136,7 +161,7 @@ const RestGestion: FunctionComponent<Props> = () => {
   }
 
   const restGestion = useMrtQuery({
-    queryKey: ['rest-gestion'],
+    queryKey: ['gestionFacturas'],
     queryFn: async (ctx) => {
       // Separar el filtro de fecha del resto para construirlo manualmente
       const dateFilter = ctx.columnFilters.find((f) => f.id === 'fechaDocumento')
@@ -162,7 +187,6 @@ const RestGestion: FunctionComponent<Props> = () => {
         codigoSucursal: user.sucursal.codigo,
         codigoPuntoVenta: user.puntoVenta.codigo,
       }
-      console.log('Query params:', { entidad, limit, page, reverse, query })
       const data = await client.request<{ restPedidoListado: RestPedidoConnection }>(RESTPEDIDOLISTADO, {
         entidad,
         limit,
@@ -177,13 +201,32 @@ const RestGestion: FunctionComponent<Props> = () => {
   })
 
   return (
-    <SimpleContainerBox>
-      <Breadcrumb routeSegments={[restauranteRoutesMap.gestion]} />
-      <Box>
-        <MrtDynamicTable config={config} {...restGestion} />
-      </Box>
-    </SimpleContainerBox>
+    <>
+      <SimpleContainerBox>
+        <Breadcrumb routeSegments={[restauranteRoutesMap.gestion]} />
+        <Box>
+          <MrtDynamicTable config={config} {...restGestion} />
+        </Box>
+      </SimpleContainerBox>
+
+      <ModalAnularPedido
+        open={openAnularModal}
+        pedido={pedidoAAnular}
+        onClose={handleCloseAnularModal}
+        onSuccess={() => restGestion.refetch()}
+      />
+      <ModalPedidoFacturar
+        open={openFacturarModal}
+        pedido={pedidoAFacturar}
+        onClose={() => {
+          setOpenFacturarModal(false)
+          setPedidoAFacturar(null)
+        }}
+        onSuccess={() => restGestion.refetch()}
+      />
+    </>
   )
 }
 
 export default RestGestion
+

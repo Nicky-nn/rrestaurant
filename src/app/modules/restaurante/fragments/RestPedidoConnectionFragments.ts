@@ -277,6 +277,23 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           incluyeImpuesto
           esDescuentoTotal
           factorAjuste
+          monedaPrecio{
+            moneda{
+              codigo
+              descripcion
+              sigla
+              tipoCambio
+              tipoCambioCompra
+              activo
+              state
+              usucre
+              usumod
+              createdAt
+              updatedAt
+            }
+            precio
+            precioBase
+          }
         }
         detalleExtra
         nota

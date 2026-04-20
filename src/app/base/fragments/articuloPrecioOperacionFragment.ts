@@ -45,6 +45,11 @@ export const articuloPrecioOperacionFragment = gql`
         totalGasto
         totalFinal
       }
+      valor
+      valorAnterior
+      valorFinal
+      valorNeto
+      variacion
     }
     factorAjuste
     impuesto

@@ -1,6 +1,7 @@
 import { clientsRoutesMap } from './modules/clients/clientsRoutes'
 import { homeRoutesMap } from './modules/home/HomeRoutes'
 import { impresorasRoutesMap } from './modules/impresoras/impresorasRoutes'
+import { ncdGestionRoutesMap } from './modules/notaCreditoDebito/notaCreditoDebitoRoutes'
 import { restauranteRoutesMap } from './modules/restaurante/restauranteRoutes'
 
 export interface NavigationProps {
@@ -43,6 +44,17 @@ export const navigations: NavigationProps[] = [
         name: restauranteRoutesMap.facturas.name,
         iconText: 'FA',
         path: restauranteRoutesMap.facturas.path,
+      },
+    ],
+  },
+  {
+    name: 'Nota Crédito Débito',
+    icon: 'receipt',
+    children: [
+      {
+        name: ncdGestionRoutesMap.ncdGestion.name,
+        iconText: 'NCD',
+        path: ncdGestionRoutesMap.ncdGestion.path,
       },
     ],
   },

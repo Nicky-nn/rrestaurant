@@ -1,25 +1,27 @@
 // =======================================
 // Query para arqueo activo de usuario
 // =======================================
-// noinspection GraphQLUnresolvedReference
 
 import { gql, GraphQLClient } from 'graphql-request'
-
-import { AccessToken } from '../../../base/models/paramsModel'
+import { getClient } from './client'
 import { MyGraphQlError } from '../../../base/services/GraphqlError'
 import { AperturaCajaActivo } from '../interfaces/arqueoCaja'
-import { getClient } from './client.ts'
+import { AccessToken } from '../../../base/models/paramsModel'
 
 const APERTURA_CAJA_ACTIVO = gql`
   query APERTURA_CAJA_ACTIVO(
     $usuario: String!
     $codigoSucursal: Int = 0
     $codigoPuntoVenta: Int = 0
-    $modulo: String = "POS"
+    $modulo: String = "REST"
   ) {
     aperturaCajaActivo(
       usuario: $usuario
-      input: { codigoPuntoVenta: $codigoPuntoVenta, codigoSucursal: $codigoSucursal, modulo: $modulo }
+      input: {
+        codigoPuntoVenta: $codigoPuntoVenta
+        codigoSucursal: $codigoSucursal
+        modulo: $modulo
+      }
     ) {
       _id
       cajaId
@@ -36,10 +38,10 @@ const APERTURA_CAJA_ACTIVO = gql`
         horaInicio
         horaCierre
       }
-      moneda {
+      moneda{
         codigo
-        descripcion
         sigla
+        descripcion
       }
       usuario
       usuariosCaja

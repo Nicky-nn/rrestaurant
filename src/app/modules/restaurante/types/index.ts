@@ -253,37 +253,37 @@ export interface ClienteOperacionInput {
  */
 export interface ClienteOperacion {
   /** Razon Social del cliente. */
-  razonSocial?: string;
+  razonSocial: string;
   /** Codigo unico que se asigna al cliente. */
-  codigoCliente?: string;
+  codigoCliente: string;
   /** Código del clasificador del tipo documento de identidad. */
-  tipoDocumentoIdentidad?: SinTipoDocumentoIdentidad;
+  tipoDocumentoIdentidad: SinTipoDocumentoIdentidad;
   /** Numero de documento del cliente */
-  numeroDocumento?: string;
+  numeroDocumento: string;
   /** Si es C.I., y contenga un numero de complemento */
-  complemento?: string;
+  complemento: string;
   /** Nombre del  titular de la cuenta. */
-  nombres?: string;
+  nombres: string;
   /** Apellidos del titular de la cuenta. */
-  apellidos?: string;
+  apellidos: string;
   /** Correo electrónico de la persona, este campo es unico en la organización. */
-  email?: string;
+  email: string;
   /** Telefono de referencia */
-  telefono?: string;
+  telefono: string;
   /** Si el cliente tiene linea de credito - true: El cliente puede acceder a una linea de credito - false: El cliente no puede acceder a una linea de credito */
-  lineaCredito?: boolean;
+  lineaCredito: boolean;
   /** Credito minimo para acceder a una linea de credito - 0 o nulo: No hay limite */
-  creditoMinimo?: number;
+  creditoMinimo: number;
   /** Credito maximo para acceder a una linea de credito - 0 o nulo: No hay limite */
-  creditoMaximo?: number;
+  creditoMaximo: number;
   /** Direccion de residencia del cliente */
-  direccion?: string;
+  direccion: string;
   /** Dirección en el cual el cliente desarrolla sus actividades económicas */
-  direccionLaboral?: string;
+  direccionLaboral: string;
   /** Nombre de la entidad donde el cliente desarrolla sus actividades económicas */
-  entidadLaboral?: string;
+  entidadLaboral: string;
   /** Máximo plazo (meses) de duración del un crédito - Se contabiliza en Nro de meses. */
-  maximoPlazo?: number;
+  maximoPlazo: number;
 }
 
 /**
@@ -476,9 +476,9 @@ export interface MonedaPrecioOperacion {
  */
 export interface MetodoPago {
   /** Razon Social del cliente. */
-  codigoClasificador?: number;
+  codigoClasificador: number;
   /** Codigo unico que se asigna al cliente. */
-  descripcion?: string;
+  descripcion: string;
 }
 
 /**
@@ -606,13 +606,33 @@ export interface TotalesPrecioCostoOperacion {
   /** Total final de descuentos en porcentaje - totalDescuento + totalDescuentoAdicional */
   totalDescuentoGeneralP?: number;
   /** Base imponible  Cantidad * valorNeto (Valor total del inventario base o Ingreso total ventas) - incluye todos los descuentos - tasaIva = 1 + (iva / 100) */
+  /** Sumatoria de los descuentos calculado en porcentaje - No se toma en cuenta el descuento adicional global */
+  totalDescuentoP?: number;
+  /** Descuento adicional Global */
+  totalDescuentoAdicional?: number;
+  /** Total final de descuentos - totalDescuento + totalDescuentoAdicional */
+  totalDescuentoGeneral?: number;
+  /** Descuento adicional Global en porcentaje */
+  totalDescuentoAdicionalP?: number;
+  /** Total final de descuentos en porcentaje - totalDescuento + totalDescuentoAdicional */
+  totalDescuentoGeneralP?: number;
+  /** Base imponible  Cantidad * valorNeto (Valor total del inventario base o Ingreso total ventas) - incluye todos los descuentos - tasaIva = 1 + (iva / 100) */
   subtotalNeto?: number;
   /** Total Impuestos (Debito Fiscal generado por la línea), (cantidad * impuesto unitario) */
   totalImpuestos?: number;
   /** Cantidad * gastoAdicional */
   totalGasto?: number;
   /** Precio Final Unitario (Lo que paga el cliente por 1), incluye impuestos, y descuentos (cantidad * subtotalNeto) - Cantidad * valorFinal (Total Valor Entrada Stock o Total a Pagar Cliente) - Incluye todos los descuentos y gastos adicionales */
+  /** Precio Final Unitario (Lo que paga el cliente por 1), incluye impuestos, y descuentos (cantidad * subtotalNeto) - Cantidad * valorFinal (Total Valor Entrada Stock o Total a Pagar Cliente) - Incluye todos los descuentos y gastos adicionales */
   totalFinal?: number;
+}
+
+/**
+ * Resultados finales calculados para los detalles - Operacion es según la transacción entre cliente sistema. - Sistema = conversion de datos de operacion segpun moneda principal
+ */
+export interface TotalesGenerales {
+  operacion?: TotalesPrecioCostoOperacion;
+  sistema?: TotalesPrecioCostoOperacion;
 }
 
 /**
@@ -631,6 +651,7 @@ export interface PrecioCostoOperacion {
   tipoOperacion?: string;
   /** El valor nominal actual de la operación. - COSTO: Precio unitario en la Factura del Proveedor. - PRECIO: Precio de Lista / Catálogo actual. */
   valor?: number;
+  valor?: number;
   /** El valor de referencia histórico o estándar. - COSTO: Costo Promedio/Estándar anterior (Kardex). - PRECIO: Generalmente 0 (o Precio de Lista anterior para comparar subidas). */
   valorAnterior?: number;
   /** Precio unitario visual con el impuesto incluido. Ideal para la columna "Precio Unitario" en el carrito. Fórmula (Si incluye impuesto): = valor Fórmula (Si NO incluye impuesto): = valor * (1 + tasaIva) */
@@ -639,6 +660,14 @@ export interface PrecioCostoOperacion {
   descuento?: number;
   /** Descuento adicional prorrateado (Monto). */
   descuentoAdicional?: number;
+  /** Suma del descuento unitario directo + adicional unitario */
+  descuentoTotal?: number;
+  /** Porcentaje de descuento directo unitario */
+  descuentoP?: number;
+  /** Porcentaje de descuento adicional unitario prorrateado */
+  descuentoAdicionalP?: number;
+  /** Porcentaje de la suma de todos los descuentos (Directo + Adicional) */
+  descuentoTotalP?: number;
   /** Suma del descuento unitario directo + adicional unitario */
   descuentoTotal?: number;
   /** Porcentaje de descuento directo unitario */
@@ -725,6 +754,8 @@ export interface ArticuloPrecioOperacionInput {
  * Datos de entrada para el registro / actualización de articulo unidad de medida
  */
 export interface ArticuloPrecio {
+  /** Código interno de articulo Precio */
+  _id?: string;
   /** Código interno de articulo Precio */
   _id?: string;
   /** Datos de la unidad de medida */
@@ -1082,6 +1113,8 @@ export interface HistorialArticuloOperacion {
   articuloOperacion?: ArticuloOperacion[];
   /** fecha de cambio de estado */
   fecha?: DateDMYHHMMSS;
+  /** fecha de cambio de estado */
+  fecha?: DateDMYHHMMSS;
 }
 
 /**
@@ -1168,9 +1201,9 @@ export interface MetodoPagoVentaInput {
  */
 export interface MetodoPagoVenta {
   /** Según el clasificador de métodos de pago */
-  metodoPago?: MetodoPago;
+  metodoPago: MetodoPago;
   /** Monto de pago */
-  monto?: number;
+  monto: number;
 }
 
 export interface InventarioLote {
@@ -1584,6 +1617,14 @@ export interface restPedidoMesasOcupadas {
 }
 
 /**
+ * Eliminar item de un pedido - Se puede solicitar si debe restablecer el stock comprometido, siempre y cuando verificarStock = true
+ */
+export interface RestPedidoEliminarItemInput {
+  nroItem: number;
+  restablecerStock?: boolean;
+}
+
+/**
  * Una conexión a una lista de elementos.
  */
 export interface RestPedidoConnection {
@@ -1695,7 +1736,7 @@ export interface RestPedido {
   fechaCancelacion?: DateDMYHHMMSS;
   fechaAnulacion?: DateDMYHHMMSS;
   /** Cliente de la operación */
-  cliente?: ClienteOperacion;
+  cliente: ClienteOperacion;
   /** Método de pago utilizado para la finalización del pedido - No es incluyente al momento de generar la factura, pero si es referencial - Se depreca en la siguiente versión */
   metodoPago?: MetodoPago;
   /** En caso el metodo de pago sea con tarjeta, debe enviar el nro de tarjeta - Se depreca en la siguiente versión */
@@ -1706,6 +1747,8 @@ export interface RestPedido {
   montoTotal?: number;
   /** Monto Total base según la moneda primaria */
   montoTotalBase?: number;
+  /** Calculos de los totales según detalle de productos */
+  totales?: TotalesGenerales;
   /** Calculos de los totales según detalle de productos */
   totales?: TotalesGenerales;
   /** Fecha de entrega para nota de venta de pedido */
