@@ -1,22 +1,18 @@
-/* eslint-disable no-unused-vars */
 import { Box, Divider, Stack, useTheme } from '@mui/material'
 import Grid from '@mui/material/Grid'
 import { format, lastDayOfMonth, startOfMonth } from 'date-fns'
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import { FunctionComponent, useEffect, useState } from 'react'
 
+import { SimpleBox, SimpleContainerBox } from '../../../base/components/Container/SimpleBox'
 import MyDateRangePickerField from '../../../base/components/MyInputs/MyDateRangePickerField'
 import Breadcrumb from '../../../base/components/Template/Breadcrumb/Breadcrumb'
-import {
-  SimpleBox,
-  SimpleContainerBox,
-} from '../../../base/components/Template/Cards/SimpleBox'
 import useAuth from '../../../base/hooks/useAuth'
 import PuntoVentaRestriccionField from '../../base/components/PuntoVentaRestriccionField'
 import { reporteRoutesMap } from '../reporteRoutes'
 import VapvGraficoListado from './ventasArticuloPuntoVenta/VapvGraficoListado'
 import VapvListado from './ventasArticuloPuntoVenta/VapvListado'
 
-interface OwnProps { }
+interface OwnProps {}
 
 type Props = OwnProps
 
@@ -34,62 +30,60 @@ const VentasArticuloPuntoVenta: FunctionComponent<Props> = (props) => {
   const [startDate, endDate] = dateRange
 
   useEffect(() => {
-    setPuntosVenta([
-      { key: puntoVenta.codigo, value: `S ${sucursal.codigo} - PV ${puntoVenta.codigo}` },
-    ])
+    setPuntosVenta([{ key: puntoVenta.codigo, value: `S ${sucursal.codigo} - PV ${puntoVenta.codigo}` }])
   }, [sucursal, puntoVenta])
 
   return (
-    <SimpleContainerBox maxWidth={'xl'}>
+    <SimpleContainerBox maxWidth="xl">
       <Breadcrumb routeSegments={[reporteRoutesMap.articuloPorPuntoVenta]} />
+
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Stack
-            direction={{ xs: 'column', sm: 'column', md: 'row', lg: 'row' }}
+            direction={{ xs: 'column', md: 'row' }}
             divider={<Divider orientation="vertical" flexItem />}
-            spacing={1}
+            spacing={2}
           >
             <Box sx={{ minWidth: 250 }}>
               <MyDateRangePickerField
-                startDate={startDate ?? undefined}
-                endDate={endDate ?? undefined}
-                onChange={(date) => {
-                  setDateRange(date)
-                }}
+                startDate={startDate || undefined}
+                endDate={endDate || undefined}
+                onChange={setDateRange}
               />
             </Box>
+
             <Box
               sx={{
-                [theme.breakpoints.up('md')]: {
-                  minWidth: 400,
-                  maxWidth: 700,
-                },
+                minWidth: { md: 400 },
+                maxWidth: { md: 700 },
+                width: '100%',
               }}
             >
               <PuntoVentaRestriccionField
                 codigoSucursal={sucursal.codigo}
                 puntosVenta={puntosVenta}
                 onChange={(value) => {
-                  if (value) {
-                    setPuntosVenta(value)
-                  }
+                  if (value) setPuntosVenta(value)
                 }}
               />
             </Box>
           </Stack>
         </Grid>
-        <Grid item xs={12} md={8}>
+
+        <Grid size={{ xs: 12, md: 8 }}>
           <VapvListado
-            fechaInicial={startDate ?? new Date()}
-            fechaFinal={endDate ?? new Date()}
+            fechaInicial={startDate || new Date()}
+            fechaFinal={endDate || new Date()}
             codigoSucursal={sucursal.codigo}
             codigoPuntoVenta={puntosVenta.map((item) => item.key)}
             mostrarTodos={false}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+
+        <Grid size={{ xs: 12, md: 4 }}>
           <SimpleBox>
             <Divider sx={{ mb: 2 }}>Top 10</Divider>
+
             <VapvGraficoListado
               fechaInicial={startDate ? format(new Date(startDate), 'dd/MM/yyyy') : ''}
               fechaFinal={endDate ? format(new Date(endDate), 'dd/MM/yyyy') : ''}

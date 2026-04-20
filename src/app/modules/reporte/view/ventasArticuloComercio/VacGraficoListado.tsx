@@ -1,4 +1,4 @@
-import { Alert } from '@mui/material'
+import { Alert, useTheme } from '@mui/material'
 import { deepPurple } from '@mui/material/colors'
 import { useQuery } from '@tanstack/react-query'
 import { orderBy } from 'lodash'
@@ -35,6 +35,7 @@ type Props = OwnProps
  */
 const VacGraficoListado: FunctionComponent<Props> = (props) => {
   const { fechaInicial, fechaFinal, codigoSucursal, height } = props
+  const theme = useTheme()
 
   const fi = fechaInicial
   const ff = fechaFinal
@@ -56,8 +57,7 @@ const VacGraficoListado: FunctionComponent<Props> = (props) => {
 
   if (!respData) return <Alert>No se ha cargado datos</Alert>
 
-  if (respData.length === 0)
-    return <Alert severity="info">No se ha realizado ninguna venta</Alert>
+  if (respData.length === 0) return <Alert severity="info">No se ha realizado ninguna venta</Alert>
 
   return (
     <ResponsiveContainer width="100%" height={height ? height : 460}>
@@ -76,16 +76,19 @@ const VacGraficoListado: FunctionComponent<Props> = (props) => {
         <XAxis type={'number'} dataKey={'totalFinal'} />
         <YAxis type={'category'} dataKey={'codigoArticulo'} fontSize={11} />
         <Tooltip
+          contentStyle={{
+            backgroundColor: theme.palette.background.paper,
+            borderColor: theme.palette.divider,
+            borderRadius: 8,
+          }}
+          itemStyle={{ color: theme.palette.text.primary }}
+          labelStyle={{ color: theme.palette.text.secondary, fontWeight: 700 }}
           formatter={(value, name, item) => {
             return `${numberWithCommasPlaces(value)} ${item.payload.moneda}`
           }}
           isAnimationActive={false}
           labelFormatter={(label, payload) => {
-            return (
-              <>
-                {label} - {payload[0]?.payload?.nombreArticulo}
-              </>
-            )
+            return `${label} - ${payload[0]?.payload?.nombreArticulo ?? ''}`
           }}
         />
         <Legend />

@@ -1,6 +1,7 @@
 import { clientsRoutesMap } from './modules/clients/clientsRoutes'
 import { homeRoutesMap } from './modules/home/HomeRoutes'
 import { impresorasRoutesMap } from './modules/impresoras/impresorasRoutes'
+import { reporteRoutesMap } from './modules/reporte/reporteRoutes'
 import { restauranteRoutesMap } from './modules/restaurante/restauranteRoutes'
 
 export interface NavigationProps {
@@ -55,6 +56,27 @@ export const navigations: NavigationProps[] = [
         icon: '',
         iconText: 'CL',
         path: clientsRoutesMap.clients.path,
+      },
+    ],
+  },
+  {
+    name: 'Reportes',
+    icon: 'bar_chart',
+    children: [
+      {
+        name: 'Artículos por PV',
+        iconText: 'APV',
+        path: reporteRoutesMap.articuloPorPuntoVenta.path,
+      },
+      {
+        name: 'Artículos por Sucursal',
+        iconText: 'APS',
+        path: reporteRoutesMap.articuloPorComercio.path,
+      },
+      {
+        name: 'Pedidos Observados',
+        iconText: 'PO',
+        path: reporteRoutesMap.pedidosSospechosos.path,
       },
     ],
   },

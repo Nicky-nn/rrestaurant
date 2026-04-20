@@ -1,18 +1,55 @@
-// noinspection GraphQLUnresolvedReference
-
 import { gql, GraphQLClient } from 'graphql-request'
+import Swal from 'sweetalert2'
 
 import { AccessToken } from '../../../base/models/paramsModel'
 import { MyGraphQlError } from '../../../base/services/GraphqlError'
 
-const query = gql`
+export interface ReportePedidoVentasPorArticuloPuntoVenta {
+  codigoArticulo: string
+  moneda: string
+  montoDescuento: number
+  montoVentas: number
+  nombreArticulo: string
+  nroVentas: number
+  otrosCostos?: number
+  sucursal: string
+  totalFinal: number
+  tipoArticulo: string
+  tuvoVariacionPrecio?: boolean
+  unidadMedida: string
+  preciosRegistrados?: Array<{
+    precio: number
+    cantidad: number
+  }>
+}
+
+export interface ReportePedidoVentasPorArticuloComercio {
+  codigoArticulo: string
+  moneda: string
+  montoDescuento: number
+  montoVentas: number
+  nombreArticulo: string
+  nroVentas: number
+  otrosCostos?: number
+  puntoVenta: string
+  sucursal: string
+  totalFinal: number
+  tipoArticulo: string
+  tuvoVariacionPrecio?: boolean
+  unidadMedida: string
+  preciosRegistrados?: Array<{
+    precio: number
+    cantidad: number
+  }>
+}
+
+const queryReporteVentasPorArticuloPuntoVenta = gql`
   query REPORTE_VENTAS_ARTICULO_PUNTO_VENTA(
     $fechaInicial: DateDMY!
     $fechaFinal: DateDMY!
     $codigoSucursal: Int!
     $codigoPuntoVenta: [Int] = []
     $mostrarTodos: Boolean = true
-    $limit: Int = 1000
   ) {
     restReportePedidoVentasPorArticuloPuntoVenta(
       fechaInicial: $fechaInicial
@@ -20,65 +57,123 @@ const query = gql`
       codigoSucursal: $codigoSucursal
       codigoPuntoVenta: $codigoPuntoVenta
       mostrarTodos: $mostrarTodos
-      limit: $limit
     ) {
       tipoArticulo
-      sucursal
       codigoArticulo
       nombreArticulo
-      unidadMedida
-      moneda
+      sucursal
       nroVentas
+      unidadMedida
       montoVentas
       montoDescuento
-      montoDescuentoAdicional
+      otrosCostos
+      moneda
+      totalFinal
+      tuvoVariacionPrecio
+      preciosRegistrados {
+        precio
+        cantidad
+      }
     }
   }
 `
 
-export interface ReporteArticuloPorPuntoVentaProp {
-  tipoArticulo: string
-  sucursal: number
-  codigoArticulo: string
-  nombreArticulo: string
-  unidadMedida: string
-  moneda: string
-  nroVentas: number
-  montoVentas: number
-  montoDescuento: number
-  montoDescuentoAdicional: number
-}
+const queryReporteVentasPorArticuloComercio = gql`
+  query REPORTE_VENTAS_ARTICULO_COMERCIO(
+    $fechaInicial: DateDMY!
+    $fechaFinal: DateDMY!
+    $codigoSucursal: [Int]!
+  ) {
+    restReportePedidoVentasPorArticuloComercio(
+      fechaInicial: $fechaInicial
+      fechaFinal: $fechaFinal
+      codigoSucursal: $codigoSucursal
+    ) {
+      tipoArticulo
+      codigoArticulo
+      nombreArticulo
+      sucursal
+      nroVentas
+      unidadMedida
+      montoVentas
+      montoDescuento
+      otrosCostos
+      moneda
+      totalFinal
+      tuvoVariacionPrecio
+      preciosRegistrados {
+        precio
+        cantidad
+      }
+    }
+  }
+`
 
-/**
- * Reporte top ventas de articulos
- * @param args
- */
-export const apiReporteArticuloPorPuntoVenta = async (args: {
-  fechaInicial: string
-  fechaFinal: string
-  codigoSucursal: number
-  codigoPuntoVenta: number[]
-  mostrarTodos: boolean
-  limit: number
-}): Promise<ReporteArticuloPorPuntoVentaProp[]> => {
+export const obtenerReporteVentasPorArticuloPuntoVenta = async (
+  fechaInicial: string,
+  fechaFinal: string,
+  codigoSucursal: number,
+  codigoPuntoVenta: number[],
+  mostrarTodos: boolean,
+): Promise<ReportePedidoVentasPorArticuloPuntoVenta[]> => {
   try {
-    const { fechaInicial, fechaFinal, codigoSucursal, codigoPuntoVenta, mostrarTodos, limit } = args
     const client = new GraphQLClient(import.meta.env.ISI_API_URL)
     const token = localStorage.getItem(AccessToken)
-
-    // Set a single header
     client.setHeader('authorization', `Bearer ${token}`)
 
-    const data: any = await client.request(query, {
+    const data: {
+      restReportePedidoVentasPorArticuloPuntoVenta: ReportePedidoVentasPorArticuloPuntoVenta[]
+    } = await client.request(queryReporteVentasPorArticuloPuntoVenta, {
       fechaInicial,
       fechaFinal,
       codigoSucursal,
       codigoPuntoVenta,
       mostrarTodos,
-      limit,
     })
     return data.restReportePedidoVentasPorArticuloPuntoVenta
-  } catch (e: any) {
-    throw new MyGraphQlError(e)
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.errors?.[0]?.message || 'Ocurrió un error inesperado, por favor intente de nuevo'
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: errorMessage,
+      confirmButtonText: 'Entendido',
+    })
+    console.error('Error en obtenerReporteVentasPorArticuloPuntoVenta', error)
+    throw new MyGraphQlError(error)
+  }
+}
+
+export const obtenerReporteVentasPorArticuloComercio = async (
+  fechaInicial: string,
+  fechaFinal: string,
+  codigoSucursal: number[],
+): Promise<ReportePedidoVentasPorArticuloComercio[]> => {
+  try {
+    const client = new GraphQLClient(import.meta.env.ISI_API_URL)
+    const token = localStorage.getItem(AccessToken)
+    client.setHeader('authorization', `Bearer ${token}`)
+
+    const data: {
+      restReportePedidoVentasPorArticuloComercio: ReportePedidoVentasPorArticuloComercio[]
+    } = await client.request(queryReporteVentasPorArticuloComercio, {
+      fechaInicial,
+      fechaFinal,
+      codigoSucursal,
+    })
+
+    return data.restReportePedidoVentasPorArticuloComercio
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.errors?.[0]?.message || 'Ocurrió un error inesperado, por favor intente de nuevo'
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: errorMessage,
+      confirmButtonText: 'Entendido',
+    })
+    console.error('Error en obtenerReporteVentasPorArticuloComercio', error)
+    throw new MyGraphQlError(error)
   }
 }

@@ -1,4 +1,4 @@
-import { Alert } from '@mui/material'
+import { Alert, useTheme } from '@mui/material'
 import { deepPurple } from '@mui/material/colors'
 import { useQuery } from '@tanstack/react-query'
 import { orderBy } from 'lodash'
@@ -37,6 +37,7 @@ type Props = OwnProps
  */
 const VapvGraficoListado: FunctionComponent<Props> = (props) => {
   const { fechaInicial, fechaFinal, codigoPuntoVenta, codigoSucursal, mostrarTodos, height } = props
+  const theme = useTheme()
 
   // API FETCH
   const { data: respData, isLoading } = useQuery({
@@ -88,16 +89,19 @@ const VapvGraficoListado: FunctionComponent<Props> = (props) => {
         <XAxis type={'number'} dataKey={'montoVentas'} />
         <YAxis type={'category'} dataKey={'codigoArticulo'} fontSize={11} />
         <Tooltip
+          contentStyle={{
+            backgroundColor: theme.palette.background.paper,
+            borderColor: theme.palette.divider,
+            borderRadius: 8,
+          }}
+          itemStyle={{ color: theme.palette.text.primary }}
+          labelStyle={{ color: theme.palette.text.secondary, fontWeight: 700 }}
           formatter={(value, name, item) => {
             return `${numberWithCommasPlaces(value)} ${item.payload.moneda}`
           }}
           isAnimationActive={false}
           labelFormatter={(label, payload) => {
-            return (
-              <>
-                {label} - {payload[0]?.payload?.nombreArticulo}
-              </>
-            )
+            return `${label} - ${payload[0]?.payload?.nombreArticulo ?? ''}`
           }}
         />
         <Legend />

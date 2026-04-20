@@ -1,21 +1,32 @@
-import { Close, Download, PictureAsPdf } from '@mui/icons-material'
-import { Box, Button, IconButton, Modal } from '@mui/material'
+import {
+  ArticleOutlined,
+  CheckCircle,
+  Close,
+  Download,
+  PictureAsPdf,
+  ReceiptLongOutlined,
+} from '@mui/icons-material'
+import {
+  alpha,
+  AppBar,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  IconButton,
+  Stack,
+  Toolbar,
+  Typography,
+  useTheme,
+} from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import exportFromJSON from 'export-from-json'
-import {
-  MaterialReactTable,
-  MRT_TableOptions,
-  useMaterialReactTable,
-} from 'material-react-table'
+import { MaterialReactTable, MRT_TableOptions, useMaterialReactTable } from 'material-react-table'
 import pdfMake from 'pdfmake/build/pdfmake'
 import { FunctionComponent, useMemo, useState } from 'react'
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
 
 import MuiRenderTopToolbarCustomActions from '../../../../base/components/MuiTable/MuiRenderTopToolbarCustomActions'
-// Configure pdfMake fonts
-import TipoDeDescarga from '../../../../base/components/RepresentacionGrafica/TipoDeDescarga'
 import useAuth from '../../../../base/hooks/useAuth'
 import { MuiToolbarAlertBannerProps } from '../../../../utils/muiTable/materialReactTableUtils'
 import { MuiTableNormalOptionsProps } from '../../../../utils/muiTable/muiTableNormalOptionsProps'
@@ -25,16 +36,90 @@ import {
   obtenerReporteVentasPorArticuloPuntoVenta,
   ReportePedidoVentasPorArticuloPuntoVenta,
 } from '../../../pos/api/reporteVentasArticulo'
+import PdfViewerDialog from '../../components/PdfViewerDialog'
 import { VapvListadoColumns } from './VapvListadoColumns'
+
+const opciones = [
+  {
+    value: 'pdf' as const,
+    label: 'PDF Carta',
+    icon: <ArticleOutlined sx={{ fontSize: 36 }} />,
+    size: 'Tamaño carta (Letter)',
+    detail: 'Ideal para imprimir en papel A4 o carta. Incluye encabezados y pie de página.',
+    color: 'primary' as const,
+  },
+  {
+    value: 'rollo' as const,
+    label: 'Rollo 80mm',
+    icon: <ReceiptLongOutlined sx={{ fontSize: 36 }} />,
+    size: 'Ancho 80mm (térmica)',
+    detail: 'Para impresoras térmicas de punto de venta. Formato compacto y optimizado.',
+    color: 'secondary' as const,
+  },
+]
+
+const TipoDescargaContent: FunctionComponent<{
+  onChange: (v: 'pdf' | 'rollo') => void
+  defaultValue: 'pdf' | 'rollo'
+}> = ({ onChange, defaultValue }) => {
+  const theme = useTheme()
+  const [tipo, setTipo] = useState<'pdf' | 'rollo'>(defaultValue)
+  return (
+    <Stack spacing={1.5} sx={{ pt: 0.5 }}>
+      {opciones.map((op) => {
+        const selected = tipo === op.value
+        const color = theme.palette[op.color].main
+        return (
+          <Box
+            key={op.value}
+            onClick={() => {
+              setTipo(op.value)
+              onChange(op.value)
+            }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              p: 2,
+              borderRadius: 2,
+              border: '2px solid',
+              borderColor: selected ? color : alpha(theme.palette.divider, 0.6),
+              bgcolor: selected ? alpha(color, 0.06) : 'background.paper',
+              cursor: 'pointer',
+              transition: 'all 0.18s ease',
+              '&:hover': {
+                borderColor: color,
+                bgcolor: alpha(color, 0.04),
+              },
+            }}
+          >
+            <Box sx={{ color: selected ? color : 'text.secondary', display: 'flex', alignItems: 'center' }}>
+              {op.icon}
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.3 }}>
+                <Typography variant="subtitle1" fontWeight={700} color={selected ? color : 'text.primary'}>
+                  {op.label}
+                </Typography>
+                <Chip label={op.size} size="small" sx={{ fontSize: 10, height: 20 }} />
+              </Stack>
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.4 }}>
+                {op.detail}
+              </Typography>
+            </Box>
+            {selected && <CheckCircle sx={{ color, fontSize: 22, flexShrink: 0 }} />}
+          </Box>
+        )
+      })}
+    </Stack>
+  )
+}
 ;(pdfMake as any).fonts = {
   Roboto: {
-    normal:
-      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
+    normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
     bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf',
-    italics:
-      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf',
-    bolditalics:
-      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf',
+    italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf',
+    bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf',
   },
 }
 
@@ -54,13 +139,13 @@ type Props = OwnProps
  * @constructor
  */
 const VapvListado: FunctionComponent<Props> = (props) => {
-  const { fechaInicial, fechaFinal, codigoPuntoVenta, codigoSucursal, mostrarTodos } =
-    props
+  const { fechaInicial, fechaFinal, codigoPuntoVenta, codigoSucursal, mostrarTodos } = props
   const {
     user: { usuario, razonSocial },
   } = useAuth()
-  const mySwal = withReactContent(Swal)
 
+  const [tipoDescarga, setTipoDescarga] = useState<'pdf' | 'rollo'>('pdf')
+  const [openFormatoDialog, setOpenFormatoDialog] = useState(false)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [openModal, setOpenModal] = useState(false)
 
@@ -76,14 +161,7 @@ const VapvListado: FunctionComponent<Props> = (props) => {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: [
-      'vapvListado',
-      fechaInicial,
-      fechaFinal,
-      codigoPuntoVenta,
-      codigoSucursal,
-      mostrarTodos,
-    ],
+    queryKey: ['vapvListado', fechaInicial, fechaFinal, codigoPuntoVenta, codigoSucursal, mostrarTodos],
     queryFn: async () => {
       if (!fechaInicial || !fechaFinal) return []
       return await obtenerReporteVentasPorArticuloPuntoVenta(
@@ -123,9 +201,7 @@ const VapvListado: FunctionComponent<Props> = (props) => {
         tuvoVariacionPrecio: item.tuvoVariacionPrecio ? 'SI' : 'NO',
         preciosRegistrados: !item.preciosRegistrados?.length
           ? '--'
-          : item.preciosRegistrados
-              .map((p) => `${p.precio.toFixed(2)} x ${p.cantidad}`)
-              .join(' | '),
+          : item.preciosRegistrados.map((p) => `${p.precio.toFixed(2)} x ${p.cantidad}`).join(' | '),
         moneda: item.moneda,
       })),
       fileName: `rep_articulos_punto_venta_${fi}_${ff}`,
@@ -136,47 +212,27 @@ const VapvListado: FunctionComponent<Props> = (props) => {
     swalClose()
   }
 
-  const generarPdf = async () => {
-    let tipoDescarga: string | undefined
-
-    // Mostrar el SweetAlert
-    await mySwal.fire({
-      title: 'Selecciona el formato del PDF',
-      html: (
-        <TipoDeDescarga
-          onSelected={(value) => {
-            tipoDescarga = value
-            mySwal.close() // Cierra el modal una vez seleccionado
-          }}
-        />
-      ),
-      showCancelButton: false,
-      showCloseButton: true,
-      showConfirmButton: false,
-      didOpen: () => {
-        // Importante para manejar eventos React dentro del modal
-        mySwal.getHtmlContainer()?.addEventListener('click', () => {})
-      },
-    })
-
-    if (!tipoDescarga) return
-
+  const generarPdf = () => {
     if (!respData || respData.length === 0) {
       notDanger('No hay datos para generar el PDF.')
       return
     }
+    setTipoDescarga('pdf')
+    setOpenFormatoDialog(true)
+  }
 
-    // Genera el documento según el formato seleccionado
-    const pdfDefinition =
-      tipoDescarga === 'pdf' ? generateLetterPDF(respData) : generateRolloPDF(respData)
+  const handleGenerarConfirmado = async () => {
+    setOpenFormatoDialog(false)
+    if (!respData || respData.length === 0) return
 
-    // Mostrar el PDF en un modal con iframe
+    const pdfDefinition = tipoDescarga === 'pdf' ? generateLetterPDF(respData) : generateRolloPDF(respData)
+
     const pdfDocGenerator = pdfMake.createPdf(pdfDefinition as any)
-    pdfDocGenerator.getBlob((blob) => {
-      const url = URL.createObjectURL(blob)
-      setPdfUrl(url)
-      setOpenModal(true)
-    })
+    const blob = await pdfDocGenerator.getBlob()
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl)
+    const url = URL.createObjectURL(blob)
+    setPdfUrl(url)
+    setOpenModal(true)
   }
 
   const formatAmount = (monto: number) => {
@@ -194,9 +250,7 @@ const VapvListado: FunctionComponent<Props> = (props) => {
     return precios.map((p) => `${formatAmount(p.precio)} x ${p.cantidad}`).join(' | ')
   }
 
-  const formatPreciosRollo = (
-    precios: ReportePedidoVentasPorArticuloPuntoVenta['preciosRegistrados'],
-  ) => {
+  const formatPreciosRollo = (precios: ReportePedidoVentasPorArticuloPuntoVenta['preciosRegistrados']) => {
     if (!precios || precios.length === 0) return '--'
     return precios.map((p) => `${formatAmount(p.precio)}x${p.cantidad}`).join(' - ')
   }
@@ -213,55 +267,51 @@ const VapvListado: FunctionComponent<Props> = (props) => {
       {} as Record<string, ReportePedidoVentasPorArticuloPuntoVenta[]>,
     )
 
-    const rollBodyRows = Object.entries(groupedByTipoArticulo).flatMap(
-      ([tipoArticulo, items]) => [
+    const rollBodyRows = Object.entries(groupedByTipoArticulo).flatMap(([tipoArticulo, items]) => [
+      [
+        {
+          text: `Tipo Articulo: ${tipoArticulo}`,
+          colSpan: 4,
+          style: 'rollTipoCell',
+        },
+        {},
+        {},
+        {},
+      ],
+      ...items.flatMap((item) => [
         [
           {
-            text: `Tipo Articulo: ${tipoArticulo}`,
+            text: `${item.codigoArticulo}-${item.nombreArticulo}`,
+            style: 'rollCell',
+          },
+          { text: `${item.nroVentas}`, style: 'rollCellRight' },
+          { text: formatAmount(item.montoVentas), style: 'rollCellRight' },
+          { text: formatAmount(item.montoDescuento), style: 'rollCellRight' },
+        ],
+        [
+          {
+            text: [
+              { text: 'Total: ', bold: true },
+              {
+                text: `${formatAmount(item.totalFinal)}`,
+                bold: true,
+                background: '#d1d5db',
+              },
+              ' | ',
+              { text: 'Var: ', bold: true },
+              `${formatVariacionPrecio(item.tuvoVariacionPrecio)} | `,
+              { text: 'Precios: ', bold: true },
+              item.tuvoVariacionPrecio ? formatPreciosRollo(item.preciosRegistrados) : '--',
+            ],
             colSpan: 4,
-            style: 'rollTipoCell',
+            style: 'rollDetailCell',
           },
           {},
           {},
           {},
         ],
-        ...items.flatMap((item) => [
-          [
-            {
-              text: `${item.codigoArticulo}-${item.nombreArticulo}`,
-              style: 'rollCell',
-            },
-            { text: `${item.nroVentas}`, style: 'rollCellRight' },
-            { text: formatAmount(item.montoVentas), style: 'rollCellRight' },
-            { text: formatAmount(item.montoDescuento), style: 'rollCellRight' },
-          ],
-          [
-            {
-              text: [
-                { text: 'Total: ', bold: true },
-                {
-                  text: `${formatAmount(item.totalFinal)}`,
-                  bold: true,
-                  background: '#d1d5db',
-                },
-                ' | ',
-                { text: 'Var: ', bold: true },
-                `${formatVariacionPrecio(item.tuvoVariacionPrecio)} | `,
-                { text: 'Precios: ', bold: true },
-                item.tuvoVariacionPrecio
-                  ? formatPreciosRollo(item.preciosRegistrados)
-                  : '--',
-              ],
-              colSpan: 4,
-              style: 'rollDetailCell',
-            },
-            {},
-            {},
-            {},
-          ],
-        ]),
-      ],
-    )
+      ]),
+    ])
 
     return {
       pageSize: { width: 227, height: 'auto' },
@@ -387,10 +437,7 @@ const VapvListado: FunctionComponent<Props> = (props) => {
           style: 'subheader',
         },
         {
-          text: `Período: ${format(fechaInicial, 'dd/MM/yyyy')} - ${format(
-            fechaFinal,
-            'dd/MM/yyyy',
-          )}`,
+          text: `Período: ${format(fechaInicial, 'dd/MM/yyyy')} - ${format(fechaFinal, 'dd/MM/yyyy')}`,
           style: 'subheader',
         },
         {
@@ -451,9 +498,7 @@ const VapvListado: FunctionComponent<Props> = (props) => {
                   text: formatVariacionPrecio(item.tuvoVariacionPrecio),
                   alignment: 'center',
                 },
-                item.tuvoVariacionPrecio
-                  ? formatPreciosRegistrados(item.preciosRegistrados)
-                  : '--',
+                item.tuvoVariacionPrecio ? formatPreciosRegistrados(item.preciosRegistrados) : '--',
               ]),
             ],
           },
@@ -522,20 +567,10 @@ const VapvListado: FunctionComponent<Props> = (props) => {
     enableRowActions: false,
     renderTopToolbarCustomActions: () => (
       <MuiRenderTopToolbarCustomActions refetch={refetch}>
-        <Button
-          variant={'outlined'}
-          size={'small'}
-          startIcon={<Download />}
-          onClick={() => onExportar()}
-        >
+        <Button variant={'outlined'} size={'small'} startIcon={<Download />} onClick={() => onExportar()}>
           Exportar
         </Button>
-        <Button
-          variant={'outlined'}
-          size={'small'}
-          startIcon={<PictureAsPdf />}
-          onClick={() => generarPdf()}
-        >
+        <Button variant={'outlined'} size={'small'} startIcon={<PictureAsPdf />} onClick={() => generarPdf()}>
           Generar PDF
         </Button>
       </MuiRenderTopToolbarCustomActions>
@@ -545,54 +580,42 @@ const VapvListado: FunctionComponent<Props> = (props) => {
   return (
     <>
       <MaterialReactTable table={table} />
-      <Modal
+
+      {/* Dialog selector de formato */}
+      <Dialog open={openFormatoDialog} onClose={() => setOpenFormatoDialog(false)} fullWidth maxWidth="sm">
+        <AppBar position="relative" color="default" elevation={1}>
+          <Toolbar variant="dense" sx={{ justifyContent: 'space-between' }}>
+            <Typography variant="subtitle1" fontWeight={700}>
+              Seleccionar formato de descarga
+            </Typography>
+            <IconButton edge="end" onClick={() => setOpenFormatoDialog(false)}>
+              <Close />
+            </IconButton>
+          </Toolbar>
+        </AppBar>
+        <Box sx={{ p: 2 }}>
+          <TipoDescargaContent defaultValue={tipoDescarga} onChange={(v) => setTipoDescarga(v)} />
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, px: 2, pb: 2 }}>
+          <Button onClick={() => setOpenFormatoDialog(false)} color="inherit">
+            Cancelar
+          </Button>
+          <Button variant="contained" startIcon={<PictureAsPdf />} onClick={handleGenerarConfirmado}>
+            Generar PDF
+          </Button>
+        </Box>
+      </Dialog>
+
+      {/* Dialog vista previa PDF */}
+      <PdfViewerDialog
         open={openModal}
+        pdfUrl={pdfUrl}
         onClose={() => {
           setOpenModal(false)
-          if (pdfUrl) {
-            URL.revokeObjectURL(pdfUrl)
-            setPdfUrl(null)
-          }
+          if (pdfUrl) URL.revokeObjectURL(pdfUrl)
+          setPdfUrl(null)
         }}
-        aria-labelledby="pdf-modal-title"
-        aria-describedby="pdf-modal-description"
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '80%',
-            height: '80%',
-            bgcolor: 'background.paper',
-            boxShadow: 24,
-            p: 4,
-          }}
-        >
-          <IconButton
-            onClick={() => {
-              setOpenModal(false)
-              if (pdfUrl) {
-                URL.revokeObjectURL(pdfUrl)
-                setPdfUrl(null)
-              }
-            }}
-            sx={{ position: 'absolute', top: 8, right: 8 }}
-          >
-            <Close />
-          </IconButton>
-          {pdfUrl && (
-            <iframe
-              src={pdfUrl}
-              width="100%"
-              height="100%"
-              style={{ border: 'none' }}
-              title="PDF Viewer"
-            />
-          )}
-        </Box>
-      </Modal>
+      />
     </>
   )
 }

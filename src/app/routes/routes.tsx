@@ -8,6 +8,7 @@ import sessionRoutes from '../modules/base/sessions/SessionRoutes'
 import clientsRoutes from '../modules/clients/clientsRoutes'
 import homeRoutes, { homeRoutesMap } from '../modules/home/HomeRoutes'
 import impresorasRoutes from '../modules/impresoras/impresorasRoutes'
+import reporteRoutes from '../modules/reporte/reporteRoutes'
 import restaurantRoutes from '../modules/restaurante/restauranteRoutes'
 
 export const appRoutes = [
@@ -17,7 +18,14 @@ export const appRoutes = [
         <MatxLayout />
       </AuthGuard>
     ),
-    children: [...homeRoutes, ...cuentaRoutes, ...clientsRoutes, ...restaurantRoutes, ...impresorasRoutes],
+    children: [
+      ...homeRoutes,
+      ...cuentaRoutes,
+      ...clientsRoutes,
+      ...restaurantRoutes,
+      ...impresorasRoutes,
+      ...reporteRoutes,
+    ],
   },
   ...sessionRoutes,
   { path: '/', element: <Navigate to={homeRoutesMap.home.path} /> },
