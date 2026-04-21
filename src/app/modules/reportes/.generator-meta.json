@@ -1,0 +1,69 @@
+{
+  "last_sync": "2026-04-20T17:34:23.277491",
+  "fragments": [
+    "fragments/RestReportePedidoVentasPorArticuloPuntoVentaFragments.ts",
+    "fragments/RestReportePedidoVentasPorArticuloFragments.ts",
+    "fragments/RestPedidoAuditoriaFragments.ts",
+    "fragments/RestAnomaliaFragments.ts",
+    "fragments/RestPedidoAuditoriaConnectionFragments.ts"
+  ],
+  "queries": [
+    "queries/useRestReportePedidoVentasPorArticuloPuntoVenta.ts",
+    "queries/useRestReportePedidoVentasPorArticuloComercio.ts",
+    "queries/useRestPedidoAuditoriaReporteAnomalia.ts",
+    "queries/useRestAnomaliaPorSucursal.ts",
+    "queries/useRestPedidoAuditoriaListado.ts"
+  ],
+  "mutations": [
+    "mutations/useRestAnomaliaGenerarStats.ts"
+  ],
+  "types": [
+    "types/index.ts"
+  ],
+  "client": [
+    "client/index.ts"
+  ],
+  "index": [
+    "index.ts"
+  ],
+  "saved_operations": [
+    "restPedidoAuditoriaListado"
+  ],
+  "used_types": [
+    "NotaRapida",
+    "Departamento",
+    "RestPedidoAuditoriaConnection",
+    "ArticuloUnidadMedida",
+    "Moneda",
+    "RestAnomalia",
+    "OrgFacturaSucursal",
+    "RestReportePedidoVentasPorArticulo",
+    "ArticuloPrecioOperacion",
+    "TotalesPrecioCostoOperacion",
+    "RestPedidoAuditoria",
+    "Impresora",
+    "RestAnomaliaMontoTotal",
+    "RestReportePedidoVentasPorArticuloPreciosRegistrado",
+    "Almacen",
+    "Lote",
+    "ArticuloOperacion",
+    "PageInfo",
+    "SinTipoPuntoVenta",
+    "PuntoVenta",
+    "ArticuloOperacionModificador",
+    "SinProductoServicio",
+    "EntidadParamsInput",
+    "Sucursal",
+    "TipoArticuloOperacion",
+    "RestReportePedidoVentasPorArticuloPuntoVenta",
+    "DateDMY",
+    "TotalesGenerales",
+    "SinTipoDocumentoSector",
+    "SinUnidadMedida",
+    "ArticuloOperacionReceta",
+    "KardexPeriodo",
+    "DateDMYHHMMSS",
+    "PrecioCostoOperacion",
+    "GrupoArticulo"
+  ]
+}

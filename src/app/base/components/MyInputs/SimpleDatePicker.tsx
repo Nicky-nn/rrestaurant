@@ -42,14 +42,13 @@ const SimpleDatePicker: React.FC<BaseDatePickerProps> = ({
         value={value}
         onChange={(newValue) => onChange(newValue)}
         format="DD/MM/YYYY"
-        // SlotProps es vital en v8 para pasar estilos y errores al TextField interno
         slotProps={{
           textField: {
             fullWidth: true,
-            variant: 'outlined',
             error: error,
             helperText: helperText,
             size: 'small',
+            ...(props.slotProps?.textField || { variant: 'outlined' }),
           },
         }}
       />

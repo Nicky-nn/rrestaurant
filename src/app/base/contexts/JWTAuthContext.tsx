@@ -1,6 +1,8 @@
+// noinspection ExceptionCaughtLocallyJS
+
 import { PaletteMode } from '@mui/material'
 import { jwtDecode } from 'jwt-decode'
-import React, { createContext, ReactNode, useEffect, useReducer } from 'react'
+import { createContext, ReactNode, useCallback, useEffect, useMemo, useReducer } from 'react'
 
 import { swalException } from '../../utils/swal'
 import { apiCuentaCambiarUxModo } from '../api/apiCuentaCambiarUxModo.ts'
@@ -56,7 +58,7 @@ const setSession = (accessToken: string | null) => {
   }
 }
 
-// Configuracion de reducr con acciones
+// Configuracion de reducer con acciones
 const reducer = (state: any, action: any) => {
   switch (action.type) {
     case 'INIT':
@@ -77,20 +79,14 @@ const reducer = (state: any, action: any) => {
         ...state,
         isAuthenticated: false,
         isInitialised: true,
-        user: {},
-        lw: {},
-        li: {},
+        user: initialState.user,
+        lw: initialState.lw,
+        li: initialState.li,
       }
     }
     case 'UPDATE_THEME': {
       const { theme } = action.payload
-      return {
-        ...state,
-        user: {
-          ...state.user,
-          uxModo: theme,
-        },
-      }
+      return { ...state, user: { ...state.user, uxModo: theme as any } }
     }
     default: {
       return { ...state }
@@ -98,7 +94,7 @@ const reducer = (state: any, action: any) => {
   }
 }
 
-const AuthContext = createContext({
+export const AuthContext = createContext({
   ...initialState,
   method: 'JWT',
   login: (shop: string, email: string, password: string) => Promise.resolve(),
@@ -122,22 +118,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const { applyMode } = useSettings()
 
   // Helper para aplicar tema (seguro contra nulos y mayúsculas)
-  const setTheme = (uxMode?: string | null) => {
-    const mode = !uxMode || uxMode === 'SYSTEM' ? 'light' : (uxMode.toLowerCase() as 'light' | 'dark')
-    applyMode(mode)
-  }
+  const setTheme = useCallback(
+    (uxMode?: string | null) => {
+      const mode = !uxMode || uxMode === 'SYSTEM' ? 'light' : (uxMode.toLowerCase() as 'light' | 'dark')
+      applyMode(mode)
+    },
+    [applyMode],
+  )
 
   // Queremos resetear a thema por default light
   const resetTheme = () => {
     applyMode('light')
   }
 
-  // Helper interno para limpiar sesión
-  const handleSessionCleanUp = () => {
+  const handleSessionCleanUp = useCallback(() => {
     setSession(null)
-    resetTheme()
+    applyMode('light')
     dispatch({ type: 'LOGOUT' })
-  }
+  }, [applyMode])
 
   /**
    * @description login de usuario
@@ -145,42 +143,46 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
    * @param email
    * @param password
    */
-  const login = async (shop: string, email: string, password: string) => {
-    try {
-      const user: UserProps = await loginModel(shop, email, password)
-      // Validación temprana: si no hay token, fallar antes de llamar a otras APIs
-      if (!user?.token) throw new Error('Error al obtener credenciales, intente nuevamente')
-      const validarUsuario = await apiValidarUsuario(user.token)
-      const { lw, li } = await apiLicenciaProducto(user.token)
-      if (validarUsuario) {
-        setSession(user.token)
-        setTheme(user.perfil.uxModo)
-        dispatch({
-          type: 'LOGIN',
-          payload: {
-            user: user.perfil,
-            lw,
-            li,
-          },
-        })
-      } else {
-        throw new Error(
-          `No cuenta con permisos para acceder al sistema; verifique url Comercio o consulte los permisos con el administrador del sistema`,
-        )
+  const login = useCallback(
+    async (shop: string, email: string, password: string) => {
+      try {
+        const user: UserProps = await loginModel(shop, email, password)
+        // Validación temprana: si no hay token, fallar antes de llamar a otras APIs
+        if (!user?.token) throw new Error('Error al obtener credenciales, intente nuevamente')
+        const validarUsuario = await apiValidarUsuario(user.token)
+        const { lw, li } = await apiLicenciaProducto(user.token)
+        if (validarUsuario) {
+          setSession(user.token)
+          setTheme(user.perfil.uxModo)
+          dispatch({
+            type: 'LOGIN',
+            payload: {
+              user: user.perfil,
+              lw,
+              li,
+            },
+          })
+        } else {
+          throw new Error(
+            `No cuenta con permisos para acceder al sistema; verifique url Comercio o consulte los permisos con el administrador del sistema`,
+          )
+        }
+      } catch (error: any) {
+        handleSessionCleanUp()
+        throw error
       }
-    } catch (e: any) {
-      handleSessionCleanUp()
-      throw e // Re-lanzar para que el componente Login maneje la UI (alerts)
-    }
-  }
+    },
+    [handleSessionCleanUp, setTheme],
+  )
+
   const register = async (email: string, username: string, password: string) => {
     // Implementacion pendiente
   }
 
   // Cuando se cierra la sesión
-  const logout = () => {
+  const logout = useCallback(() => {
     handleSessionCleanUp()
-  }
+  }, [handleSessionCleanUp])
 
   /**
    * @description refresca el usuario
@@ -201,20 +203,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }
 
   // Actualizamos el thema uxModo
-  const updateTheme = async (mode: PaletteMode) => {
-    applyMode(mode)
-    try {
-      await apiCuentaCambiarUxModo(mode.toUpperCase())
-      dispatch({
-        type: 'UPDATE_THEME',
-        payload: {
-          theme: mode.toUpperCase(),
-        },
-      })
-    } catch (err) {
-      swalException(err)
-    }
-  }
+  const updateTheme = useCallback(
+    async (mode: PaletteMode) => {
+      applyMode(mode)
+      try {
+        await apiCuentaCambiarUxModo(mode.toUpperCase())
+        dispatch({
+          type: 'UPDATE_THEME',
+          payload: {
+            theme: mode.toUpperCase(),
+          },
+        })
+      } catch (err) {
+        swalException(err)
+      }
+    },
+    [applyMode],
+  )
 
   // Inicio del sistema
   useEffect(() => {
@@ -223,9 +228,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const accessToken = window.localStorage.getItem(AccessToken)
         if (accessToken && isValidToken(accessToken)) {
           setSession(accessToken)
-          // const user = await perfilModel()
-          // const validarUsuario = await apiValidarUsuario(accessToken)
-          // const { lw, li } = await apiLicenciaProducto(accessToken)
           const [user, validarUsuario, licencias] = await Promise.all([
             perfilModel(),
             apiValidarUsuario(accessToken),
@@ -257,27 +259,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         handleSessionCleanUp()
       }
     })()
-  }, [])
+  }, [handleSessionCleanUp, setTheme])
+
+  // Memorizamos el value
+  const contextValue = useMemo(
+    () => ({
+      ...state,
+      method: 'JWT',
+      login,
+      logout,
+      register,
+      refreshUser,
+      updateTheme,
+    }),
+    [state, login, logout, register, refreshUser, updateTheme],
+  )
 
   if (!state.isInitialised) {
     return <MatxLoading />
   }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        ...state,
-        method: 'JWT',
-        login,
-        logout,
-        register,
-        refreshUser,
-        updateTheme,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
 }
-
-export default AuthContext

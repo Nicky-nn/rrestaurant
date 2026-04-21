@@ -1,12 +1,987 @@
-import { FunctionComponent } from 'react'
+import CallSplitOutlinedIcon from '@mui/icons-material/CallSplitOutlined'
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
+import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined'
+import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
+import RoomServiceOutlinedIcon from '@mui/icons-material/RoomServiceOutlined'
+import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
+import {
+  alpha,
+  Backdrop,
+  Box,
+  Button,
+  CircularProgress,
+  Divider,
+  Stack,
+  Typography,
+  useTheme,
+} from '@mui/material'
+import { FunctionComponent, useEffect, useMemo, useState } from 'react'
+
+import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto'
+import { useAppConfirm } from '../../../../base/contexts/AppConfirmProvider'
+import useAuth from '../../../../base/hooks/useAuth'
+import { MesaUI } from '../../interfaces/mesa.interface'
+import { useRestPedidoActualizar } from '../../mutations/useRestPedidoActualizar'
+import { useRestPedidoCancelar } from '../../mutations/useRestPedidoCancelar'
+import { useRestPedidoFacturaRegistro } from '../../mutations/useRestPedidoFacturaRegistro'
+import { useRestPedidoFinalizar } from '../../mutations/useRestPedidoFinalizar'
+import { useRestPedidoRegistrarCompletar } from '../../mutations/useRestPedidoRegistrarCompletar'
+import {
+  ArticuloModificadorOperacionInput,
+  ArticuloOperacionModificador,
+  ArticuloOperacionReceta,
+  ArticuloOperacionUI,
+  ArticuloRecetaOperacionInput,
+  RestPedidoExpressInput,
+  RestPedidoFinalizarInput,
+} from '../../types'
+import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
+import RrDividirCuentaDialog from './RrDividirCuentaDialog'
+import RrTransferirMesaDialog from './RrTransferirMesaDialog'
+
+interface RrAccionesProps {
+  mesaSeleccionada?: MesaUI | null
+  isPedidoDirty?: boolean
+  onSuccess?: (pedidoRetornado?: any, isFinalizado?: boolean) => void
+  onCancel?: () => void
+  onClear?: () => void
+}
 
 /**
  * RrAcciones
  * Panel de acciones del pedido.
  * Contiene botones para confirmar, cancelar, imprimir u otras operaciones finales del pedido.
  */
-const RrAcciones: FunctionComponent = () => {
-  return <div>RrAcciones</div>
+const RrAcciones: FunctionComponent<RrAccionesProps> = ({
+  mesaSeleccionada,
+  isPedidoDirty = false,
+  onSuccess,
+  onCancel,
+  onClear,
+}) => {
+  const theme = useTheme()
+  const { user } = useAuth()
+  const { requestConfirm } = useAppConfirm()
+  const [descuento, setDescuento] = useState<number>(0)
+  const [giftcard, setGiftcard] = useState<number>(0)
+
+  const { mutateAsync: registrarPedido, isPending: isRegistrarPending } = useRestPedidoRegistrarCompletar()
+  const { mutateAsync: actualizarPedido, isPending: isActualizarPending } = useRestPedidoActualizar()
+  const { mutateAsync: cancelarPedido, isPending: isCancelarPending } = useRestPedidoCancelar()
+  const { mutateAsync: finalizarPedido, isPending: isFinalizarPending } = useRestPedidoFinalizar()
+  const { mutateAsync: facturarPedido, isPending: isFacturarPending } = useRestPedidoFacturaRegistro()
+
+  const isPending =
+    isRegistrarPending || isActualizarPending || isCancelarPending || isFinalizarPending || isFacturarPending
+
+  const [loadingMessage, setLoadingMessage] = useState('Actualizando Pedido...')
+
+  useEffect(() => {
+    if (isRegistrarPending) setLoadingMessage('Registrando Pedido...')
+    else if (isCancelarPending) setLoadingMessage('Cancelando Pedido...')
+    else if (isFacturarPending) setLoadingMessage('Facturando Pedido...')
+    else if (isFinalizarPending) setLoadingMessage('Finalizando Pedido...')
+    else if (isActualizarPending) setLoadingMessage('Actualizando Pedido...')
+  }, [isRegistrarPending, isCancelarPending, isFacturarPending, isFinalizarPending, isActualizarPending])
+
+  const handleRegistrar = async () => {
+    if (!mesaSeleccionada?.pedido) return false
+
+    const { pedido, value: mesaNombre } = mesaSeleccionada
+
+    console.log('Preparando datos para registrar/actualizar pedido', { pedido })
+    try {
+      const cachedUbicacion = localStorage.getItem('ubicacion')
+      const ubicacionId = cachedUbicacion ? JSON.parse(cachedUbicacion)._id : null
+
+      const input: RestPedidoExpressInput = {
+        mesa: {
+          nombre: mesaNombre,
+          ubicacion: ubicacionId ?? undefined,
+          nroComensales: 1,
+        },
+        productos: (pedido.productos ?? []).map((p) => ({
+          nroItem: p.nroItem ?? undefined,
+          codigoArticulo: p.codigoArticulo || '',
+          codigoAlmacen: p.almacen?.codigoAlmacen || '0',
+          ...(p.verificarStock && p.lote ? { codigoLote: p.lote?.codigoLote || '' } : {}),
+          articuloPrecio: {
+            codigoArticuloUnidadMedida:
+              p.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+              p.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
+              (p as any).articuloUnidadMedida?.codigoUnidadMedida ??
+              '',
+            cantidad: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
+            precio: p.articuloPrecio?.valor ?? p.articuloPrecioBase?.valor ?? 0,
+            descuento: p.articuloPrecio?.descuento ?? 0,
+            impuesto: p.articuloPrecio?.impuesto ?? 0,
+          },
+          detalleExtra: p.nota || undefined,
+          notaRapida:
+            (p.notaRapida?.length ?? 0) > 0
+              ? p.notaRapida!.map((n) => ({ valor: n.valor, cantidad: n.cantidad }))
+              : undefined,
+          cortesia: p.cortesia ?? false,
+          variacionReceta: (() => {
+            const pUI = p as ArticuloOperacionUI
+            const vrArr = pUI.variacionReceta ?? []
+            if (vrArr.length === 0) return undefined
+            return vrArr.map((v) => {
+              // Items locales (de UI) son ArticuloRecetaOperacionInput; items del servidor son ArticuloOperacionReceta
+              const asInput = v as ArticuloRecetaOperacionInput
+              const asServer = v as ArticuloOperacionReceta
+              const codigoAlmacen = asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0'
+              const codigoLote = asInput.codigoLote ?? asServer.lote?.codigoLote
+              return {
+                nroItem: v.nroItem,
+                // codigoArticulo: asServer.codigoArticulo era redundante (asServer = v)
+                codigoArticulo: v.codigoArticulo ?? '',
+                codigoAlmacen,
+                ...(codigoLote ? { codigoLote } : {}),
+                articuloPrecio: {
+                  codigoArticuloUnidadMedida:
+                    (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
+                      ?.codigoArticuloUnidadMedida ??
+                    asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                    '',
+                  // Prioridad INPUT primero (consistente con el resto de campos de precio)
+                  cantidad: Math.max(
+                    1,
+                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      1,
+                  ),
+                  precio:
+                    (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                    (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
+                    0,
+                  descuento: v.articuloPrecio?.descuento ?? 0,
+                  impuesto: v.articuloPrecio?.impuesto ?? 0,
+                },
+                notaRapida: v.notaRapida,
+                removido: v.removido ?? false,
+                esExtra: v.esExtra ?? false,
+              }
+            })
+          })(),
+          modificadores: (() => {
+            const pUI = p as ArticuloOperacionUI
+            // Prioridad: _modificadoresInput (del modal, tiene articuloModificadorId correcto)
+            // Fallback: p.modificadores (datos que vienen del servidor en re-edición)
+            const srcMods: (ArticuloModificadorOperacionInput | ArticuloOperacionModificador)[] =
+              pUI._modificadoresInput ?? pUI.modificadores ?? []
+            const mapped = srcMods
+              .map((m) => {
+                const asInput = m as ArticuloModificadorOperacionInput
+                const asServer = m as ArticuloOperacionModificador
+                return {
+                  articuloModificadorId:
+                    asInput.articuloModificadorId || asServer.articuloModificadorId || '',
+                  nroItem: m.nroItem,
+                  codigoArticulo: m.codigoArticulo || '',
+                  codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
+                  // codigoLote omitido: el backend de RestPedido falla con lote.codigoArticulo requerido
+                  articuloPrecio: {
+                    codigoArticuloUnidadMedida:
+                      (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
+                        ?.codigoArticuloUnidadMedida ??
+                      asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                      '',
+                    cantidad: m.articuloPrecio?.cantidad ?? 1,
+                    precio: asInput.esOpcionGratuita
+                      ? 0
+                      : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                        (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
+                        0),
+                    descuento: m.articuloPrecio?.descuento ?? 0,
+                    impuesto: m.articuloPrecio?.impuesto ?? 0,
+                  },
+                  // Guard: si el dato viene del servidor (re-edición sin reabrir modal),
+                  // sólo re-enviar esOpcionGratuita:true si elegibleParaGratis lo confirma.
+                  // Evita error cuando el backend cambió la elegibilidad después de la creación.
+                  esOpcionGratuita:
+                    (asInput.esOpcionGratuita ?? false) && asServer.elegibleParaGratis !== false,
+                  notaRapida: m.notaRapida
+                    ? m.notaRapida.map((n) => ({ valor: n.valor, cantidad: n.cantidad }))
+                    : undefined,
+                }
+              })
+              .filter((m) => Boolean(m.articuloModificadorId))
+            return mapped.length > 0 ? mapped : undefined
+          })(),
+        })),
+        codigoMoneda: user.moneda.codigo,
+        tipoCambio: user.moneda.tipoCambio || 1,
+        tipo: ['DELIVERY', 'LLEVAR'].includes(pedido.tipo ?? '') ? pedido.tipo : undefined,
+        nota: pedido.nota || '',
+        espacioId: ubicacionId ?? undefined,
+      }
+
+      const isNuevo = !pedido._id || pedido._id.startsWith('nuevo-')
+      let response
+
+      const basePayload = {
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+          email: pedido.cliente?.email,
+          telefono: pedido.cliente?.telefono,
+          direccion: pedido.cliente?.direccion,
+        },
+        input,
+      }
+
+      if (isNuevo) {
+        console.log('Registrando nuevo pedido con datos', basePayload)
+        response = await registrarPedido(basePayload)
+        console.log('Pedido registrado con datos', response)
+      } else {
+        response = await actualizarPedido({ id: pedido._id!, ...basePayload })
+        console.log('Pedido actualizado con datos', basePayload)
+      }
+
+      if (onSuccess) onSuccess(response)
+      return response
+    } catch (error) {
+      console.error('Error al registrar pedido', error)
+      alert(error instanceof Error ? error.message : 'Error al registrar pedido')
+      return false
+    }
+  }
+
+  const handleCancelar = async () => {
+    if (!mesaSeleccionada?.pedido) return
+
+    const { pedido, label: mesaLabel } = mesaSeleccionada
+
+    // Solicitar confirmación
+    const result = await requestConfirm({
+      title: '¿Cancelar pedido?',
+      description: `¿Está seguro que desea cancelar el pedido de ${mesaLabel}?\nEsta acción no se puede deshacer.`,
+      confirmationText: 'Sí, Cancelar',
+      cancellationText: 'No, Volver',
+      confirmButtonColor: 'error',
+    })
+
+    if (!result.confirmed) return
+
+    // Si es un pedido nuevo que no se ha guardado aún, no es necesario llamar a la API
+    if (!pedido._id || pedido._id.startsWith('nuevo-')) {
+      if (onCancel) onCancel()
+      return
+    }
+
+    try {
+      await cancelarPedido({
+        id: pedido._id,
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+      })
+      console.log('Pedido cancelado exitosamente')
+      if (onCancel) onCancel()
+    } catch (error) {
+      console.error('Error al cancelar pedido', error)
+      alert(error instanceof Error ? error.message : 'Error al cancelar pedido')
+    }
+  }
+
+  const subtotal = useMemo(() => {
+    let sub = 0
+    if (mesaSeleccionada?.pedido?.productos) {
+      mesaSeleccionada.pedido.productos.forEach((p) => {
+        const isCortesia = p.cortesia || false
+        if (isCortesia) return
+
+        const precio = p.articuloPrecio?.valor ?? 0
+        const cantidad = p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1
+        sub += Number(precio) * Number(cantidad)
+
+        if (p.modificadores && Array.isArray(p.modificadores)) {
+          p.modificadores.forEach((m) => {
+            const mPrecio = m.articuloPrecio?.valor ?? 0
+            const mQty = m.articuloPrecio?.cantidad ?? 1
+            sub += Number(mPrecio) * Number(mQty)
+          })
+        }
+      })
+    }
+    return sub
+  }, [mesaSeleccionada])
+
+  const [openCobroDialog, setOpenCobroDialog] = useState(false)
+  const [openDividirDialog, setOpenDividirDialog] = useState(false)
+  const [openTransferirDialog, setOpenTransferirDialog] = useState(false)
+
+  const handleOpenCobro = async () => {
+    if (!mesaSeleccionada?.pedido) return
+
+    const { pedido } = mesaSeleccionada
+    const isNuevo = !pedido._id || pedido._id.startsWith('nuevo-')
+
+    if (!isNuevo) {
+      // Si explícitamente no hay cambios locales sin guardar,
+      // omitimos la llamada redundante para ahorrar recursos e internet.
+      if (!isPedidoDirty) {
+        setOpenCobroDialog(true)
+        return
+      }
+    }
+
+    // Registrar o actualizar automáticamente antes de cobrar
+    // para evitar que el mesero olvide actualizar los últimos cambios
+    const response = await handleRegistrar()
+    if (response) {
+      setOpenCobroDialog(true)
+    }
+  }
+
+  const handleTransferirSubmit = async (nuevoMesaNombre: string, nuevoUbicacionId: string | null) => {
+    if (!mesaSeleccionada?.pedido) return false
+    const { pedido } = mesaSeleccionada
+
+    try {
+      const input: RestPedidoExpressInput = {
+        mesa: {
+          nombre: nuevoMesaNombre,
+          ubicacion: nuevoUbicacionId ?? undefined,
+          nroComensales: 1,
+        },
+        productos: (pedido.productos ?? []).map((p) => ({
+          nroItem: p.nroItem ?? undefined,
+
+          codigoArticulo: p.codigoArticulo || '',
+          codigoAlmacen: p.almacen?.codigoAlmacen || '0',
+          ...(p.verificarStock && p.lote ? { codigoLote: p.lote?.codigoLote || '' } : {}),
+          articuloPrecio: {
+            codigoArticuloUnidadMedida:
+              p.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+              p.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
+              (p as any).articuloUnidadMedida?.codigoUnidadMedida ??
+              '',
+            cantidad: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
+            precio: p.articuloPrecio?.valor ?? p.articuloPrecioBase?.valor ?? 0,
+            descuento: p.articuloPrecio?.descuento ?? 0,
+            impuesto: p.articuloPrecio?.impuesto ?? 0,
+          },
+          detalleExtra: p.nota || undefined,
+          notaRapida:
+            (p.notaRapida?.length ?? 0) > 0
+              ? p.notaRapida!.map((n) => ({ valor: n.valor, cantidad: n.cantidad }))
+              : undefined,
+          cortesia: p.cortesia ?? false,
+          variacionReceta: (() => {
+            const pUI = p as ArticuloOperacionUI
+            const vrArr = pUI.variacionReceta ?? []
+            if (vrArr.length === 0) return undefined
+            return vrArr.map((v) => {
+              const asInput = v as ArticuloRecetaOperacionInput
+              const asServer = v as ArticuloOperacionReceta
+              const codigoAlmacen = asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0'
+              const codigoLote = asInput.codigoLote ?? asServer.lote?.codigoLote
+              return {
+                nroItem: v.nroItem,
+                codigoArticulo: v.codigoArticulo ?? '',
+                codigoAlmacen,
+                ...(codigoLote ? { codigoLote } : {}),
+                articuloPrecio: {
+                  codigoArticuloUnidadMedida:
+                    (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
+                      ?.codigoArticuloUnidadMedida ??
+                    asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                    '',
+                  cantidad: Math.max(
+                    1,
+                    (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      1,
+                  ),
+                  precio:
+                    (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                    (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
+                    0,
+                  descuento: v.articuloPrecio?.descuento ?? 0,
+                  impuesto: v.articuloPrecio?.impuesto ?? 0,
+                },
+                notaRapida: v.notaRapida,
+                removido: v.removido ?? false,
+                esExtra: v.esExtra ?? false,
+              }
+            })
+          })(),
+          modificadores: (() => {
+            const pUI = p as ArticuloOperacionUI
+            const srcMods: (ArticuloModificadorOperacionInput | ArticuloOperacionModificador)[] =
+              pUI._modificadoresInput ?? pUI.modificadores ?? []
+            const mapped = srcMods
+              .map((m) => {
+                const asInput = m as ArticuloModificadorOperacionInput
+                const asServer = m as ArticuloOperacionModificador
+                return {
+                  articuloModificadorId:
+                    asInput.articuloModificadorId || asServer.articuloModificadorId || '',
+                  nroItem: m.nroItem,
+                  codigoArticulo: m.codigoArticulo || '',
+                  codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
+                  ...(asInput.codigoLote || asServer.lote?.codigoLote
+                    ? { codigoLote: asInput.codigoLote ?? asServer.lote?.codigoLote ?? '' }
+                    : {}),
+                  articuloPrecio: {
+                    codigoArticuloUnidadMedida:
+                      (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
+                        ?.codigoArticuloUnidadMedida ??
+                      asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                      '',
+                    cantidad: m.articuloPrecio?.cantidad ?? 1,
+                    precio: asInput.esOpcionGratuita
+                      ? 0
+                      : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                        (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
+                        0),
+                    descuento: m.articuloPrecio?.descuento ?? 0,
+                    impuesto: m.articuloPrecio?.impuesto ?? 0,
+                  },
+                  esOpcionGratuita:
+                    (asInput.esOpcionGratuita ?? false) && asServer.elegibleParaGratis !== false,
+                  notaRapida: m.notaRapida
+                    ? m.notaRapida.map((n) => ({ valor: n.valor, cantidad: n.cantidad }))
+                    : undefined,
+                }
+              })
+              .filter((m) => Boolean(m.articuloModificadorId))
+            return mapped.length > 0 ? mapped : undefined
+          })(),
+        })),
+        codigoMoneda: user.moneda.codigo,
+        tipoCambio: user.moneda.tipoCambio || 1,
+        tipo: ['DELIVERY', 'LLEVAR'].includes(pedido.tipo ?? '') ? pedido.tipo : undefined,
+        nota: pedido.nota || '',
+        espacioId: nuevoUbicacionId ?? undefined,
+      }
+
+      const basePayload = {
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+          email: pedido.cliente?.email,
+          telefono: pedido.cliente?.telefono,
+          direccion: pedido.cliente?.direccion,
+        },
+        input,
+      }
+
+      const response = await actualizarPedido({ id: pedido._id!, ...basePayload })
+      console.log('Pedido transferido exitosamente', response)
+      setOpenTransferirDialog(false)
+
+      if (onClear) onClear() // Limpiar selección para ver el refetch y salir de la mesa actual
+      return response
+    } catch (error) {
+      console.error('Error al transferir pedido', error)
+      alert(error instanceof Error ? error.message : 'Error al transferir pedido')
+      throw error // Re-throw to handle in the generic dialog level
+    }
+  }
+
+  const handleFinalizar = async (
+    metodoDefectoId?: number,
+    metodoDefectoNombre?: string,
+    inputNumeroTarjeta?: string,
+  ) => {
+    if (
+      !mesaSeleccionada?.pedido ||
+      !mesaSeleccionada.pedido._id ||
+      mesaSeleccionada.pedido._id.startsWith('nuevo-')
+    ) {
+      alert('El pedido no está registrado.')
+      return
+    }
+
+    const { pedido } = mesaSeleccionada
+    const totalAPagar = Math.max(0, subtotal - descuento - giftcard)
+
+    let pagosFinales = pagosRealizados
+
+    // Si no ingresaron ningún pago, asumimos que pagaron completo y usan el método seleccionado por defecto en la UI (o Efectivo).
+    if (pagosFinales.length === 0) {
+      pagosFinales = [
+        {
+          id: 'pago-defecto',
+          metodoId: metodoDefectoId || 1, // 1 es típicamente Efectivo en SIAT si no hay seleccionado
+          metodoNombre: metodoDefectoNombre || 'Efectivo',
+          monto: totalAPagar,
+          numeroTarjeta: inputNumeroTarjeta,
+        },
+      ]
+    } else {
+      const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
+      if (totalPagado < totalAPagar) {
+        alert('El monto pagado es menor al total a pagar.')
+        return
+      }
+    }
+
+    try {
+      await finalizarPedido({
+        id: pedido._id!,
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+        },
+        input: {
+          codigoMoneda: user.moneda?.codigo || 1,
+          montoTotal: totalAPagar,
+          usuario: user.correo || '',
+          codigoMetodoPago: pagosFinales[0]?.metodoId || 1,
+          numeroTarjeta:
+            pagosFinales[0]?.metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
+        } as RestPedidoFinalizarInput & { codigoMetodoPago: number; numeroTarjeta?: string },
+        metodoPagoVenta: pagosFinales.map((p) => ({
+          codigoMetodoPago: p.metodoId,
+          monto: p.monto,
+        })),
+      })
+
+      console.log('Pedido finalizado exitosamente')
+      setOpenCobroDialog(false)
+      setPagosRealizados([])
+      if (onClear) onClear() // Limpia la mesa visualmente tras pagar
+      if (onSuccess) onSuccess(null, true) // isFinalizado = true
+    } catch (error) {
+      console.error('Error al finalizar pedido', error)
+      alert(error instanceof Error ? error.message : 'Error al finalizar pedido')
+    }
+  }
+
+  const formatTarjeta = (num?: string): string => {
+    if (!num) return '0000000000000000'
+    const clean = num.replace(/\D/g, '')
+    if (!clean) return '0000000000000000'
+    if (clean.length === 16) return clean
+    if (clean.length <= 4) return clean.padStart(16, '0')
+    const first4 = clean.substring(0, 4)
+    const last4 = clean.substring(clean.length - 4)
+    return first4 + '0'.repeat(8) + last4
+  }
+
+  const handleFacturar = async (
+    metodoDefectoId?: number,
+    metodoDefectoNombre?: string,
+    inputNumeroTarjeta?: string,
+  ) => {
+    if (
+      !mesaSeleccionada?.pedido ||
+      !mesaSeleccionada.pedido._id ||
+      mesaSeleccionada.pedido._id.startsWith('nuevo-')
+    ) {
+      alert('El pedido no está registrado.')
+      return
+    }
+
+    const { pedido } = mesaSeleccionada
+    const totalAPagar = Math.max(0, subtotal - descuento - giftcard)
+
+    let pagosFinales = pagosRealizados
+
+    // Si no ingresaron ningún pago, usamos método por defecto
+    if (pagosFinales.length === 0) {
+      pagosFinales = [
+        {
+          id: 'pago-defecto',
+          metodoId: metodoDefectoId || 1,
+          metodoNombre: metodoDefectoNombre || 'Efectivo',
+          monto: totalAPagar,
+          numeroTarjeta: inputNumeroTarjeta,
+        },
+      ]
+    } else {
+      const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
+      if (totalPagado < totalAPagar) {
+        alert('El monto pagado es menor al total a pagar.')
+        return
+      }
+    }
+
+    const metodoPrincipal = pagosFinales[0].metodoId
+
+    try {
+      // Primero, DEBEMOS finalizar el pedido (cambio de estado a FINALIZADO) localmente
+      await finalizarPedido({
+        id: pedido._id!,
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+        },
+        input: {
+          codigoMoneda: user.moneda?.codigo || 1,
+          montoTotal: totalAPagar,
+          usuario: user.correo || '',
+          codigoMetodoPago: pagosFinales[0]?.metodoId || 1,
+          numeroTarjeta:
+            pagosFinales[0]?.metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
+        } as RestPedidoFinalizarInput & { codigoMetodoPago: number; numeroTarjeta?: string },
+        metodoPagoVenta: pagosFinales.map((p) => ({
+          codigoMetodoPago: p.metodoId,
+          monto: p.monto,
+        })),
+      })
+
+      // Una vez finalizado válidamente, solicitamos emitir la FACTURA al SIAT
+      await facturarPedido({
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+          email: pedido.cliente?.email,
+          telefono: pedido.cliente?.telefono,
+        },
+        numeroPedido: pedido.numeroPedido || 0,
+        input: {
+          codigoMoneda: user.moneda?.codigo || 1,
+          codigoMetodoPago: metodoPrincipal,
+          numeroTarjeta: metodoPrincipal === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
+          tipoCambio: user.moneda?.tipoCambio || 1,
+          usuario: user.correo || '',
+        },
+      })
+
+      console.log('Factura generada exitosamente')
+      setOpenCobroDialog(false)
+      setPagosRealizados([])
+      if (onClear) onClear()
+      if (onSuccess) onSuccess(null, true)
+    } catch (error) {
+      console.error('Error al facturar pedido', error)
+      alert(error instanceof Error ? error.message : 'Error al facturar pedido')
+    }
+  }
+
+  const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Backdrop sx={{ color: '#fff', zIndex: (t) => t.zIndex.modal + 1 }} open={isPending}>
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress color="inherit" size={48} />
+          <Typography variant="h6" fontWeight={600}>
+            {loadingMessage}
+          </Typography>
+        </Stack>
+      </Backdrop>
+
+      {/* Resumen Totales */}
+      <Box sx={{ px: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+            Subtotal
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+            {subtotal.toFixed(2)} BOB
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+            Descuento
+          </Typography>
+          <MontoMonedaTexto
+            monto={descuento}
+            editar={true}
+            onChange={(val) => setDescuento(val || 0)}
+            sigla="BOB"
+            montoProps={{ sx: { color: 'error.main', fontWeight: 600, fontSize: '0.875rem' } }}
+            siglaProps={{ sx: { color: 'error.main', fontSize: '0.75rem' } }}
+            buttonProps={{ sx: { color: 'error.main', py: 0, minHeight: 0 } }}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+            GiftCard
+          </Typography>
+          <MontoMonedaTexto
+            monto={giftcard}
+            editar={true}
+            onChange={(val) => setGiftcard(val || 0)}
+            sigla="BOB"
+            montoProps={{ sx: { color: 'error.main', fontWeight: 600, fontSize: '0.875rem' } }}
+            siglaProps={{ sx: { color: 'error.main', fontSize: '0.75rem' } }}
+            buttonProps={{ sx: { color: 'error.main', py: 0, minHeight: 0 } }}
+          />
+        </Box>
+        <Divider sx={{ mb: 0.5 }} />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1 }}>
+            Total
+          </Typography>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1 }}>
+            {Math.max(0, subtotal - descuento - giftcard).toFixed(2)} BOB
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Acciones */}
+      <Stack spacing={1}>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            size="large"
+            disabled={!mesaSeleccionada}
+            sx={{
+              flex: 1,
+              flexDirection: 'column',
+              p: 1.5,
+              borderColor: 'divider',
+              color: 'text.secondary',
+              bgcolor: 'background.paper',
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              '&:hover': {
+                bgcolor: 'action.hover',
+                borderColor: 'divider',
+              },
+            }}
+          >
+            <ReceiptLongOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+            Cuenta
+          </Button>
+          <Button
+            variant="outlined"
+            size="large"
+            disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+            onClick={() => setOpenDividirDialog(true)}
+            sx={{
+              flex: 1,
+              flexDirection: 'column',
+              p: 1.5,
+              borderColor: 'divider',
+              color: 'text.secondary',
+              bgcolor: 'background.paper',
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              '&:hover': {
+                bgcolor: 'action.hover',
+                borderColor: 'divider',
+              },
+            }}
+          >
+            <CallSplitOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+            Dividir
+          </Button>
+          <Button
+            variant="outlined"
+            size="large"
+            disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+            onClick={() => setOpenTransferirDialog(true)}
+            sx={{
+              flex: 1,
+              flexDirection: 'column',
+              p: 1.5,
+              borderColor: 'divider',
+              color: 'text.secondary',
+              bgcolor: 'background.paper',
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              '&:hover': {
+                bgcolor: 'action.hover',
+                borderColor: 'divider',
+              },
+            }}
+          >
+            <SyncAltOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+            Transferir
+          </Button>
+        </Stack>
+
+        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+          <Button
+            variant="contained"
+            size="large"
+            disabled={!mesaSeleccionada}
+            onClick={handleCancelar}
+            sx={{
+              flex: 1,
+              flexDirection: 'column',
+              p: 1.5,
+              bgcolor: alpha(theme.palette.error.main, 0.08),
+              color: 'error.main',
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              boxShadow: 'none',
+              border: '1px solid',
+              borderColor: 'transparent',
+              '&:hover': {
+                bgcolor: alpha(theme.palette.error.main, 0.12),
+                boxShadow: 'none',
+              },
+              '&.Mui-disabled': {
+                bgcolor: 'action.disabledBackground',
+              },
+            }}
+          >
+            <DeleteOutlineOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            size="large"
+            disabled={!mesaSeleccionada}
+            sx={{
+              flex: 1,
+              flexDirection: 'column',
+              p: 1.5,
+              bgcolor: '#f0f4ff', // Light bluish purple
+              color: '#4f46e5', // Indigo color
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              boxShadow: 'none',
+              border: '1px solid',
+              borderColor: 'transparent',
+              '&:hover': {
+                bgcolor: '#e0e7ff',
+                boxShadow: 'none',
+              },
+              '&.Mui-disabled': {
+                bgcolor: 'action.disabledBackground',
+              },
+            }}
+            onClick={handleRegistrar}
+          >
+            <RoomServiceOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+            {isPending
+              ? 'Cargando...'
+              : !mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')
+                ? 'Registrar'
+                : 'Actualizar'}
+          </Button>
+          <Button
+            variant="contained"
+            size="large"
+            disabled={
+              !mesaSeleccionada ||
+              !mesaSeleccionada.pedido ||
+              !mesaSeleccionada.pedido.productos ||
+              mesaSeleccionada.pedido.productos.length === 0
+            }
+            onClick={handleOpenCobro}
+            sx={{
+              flex: 1,
+              flexDirection: 'column',
+              p: 1.5,
+              bgcolor: '#2e7d32', // Solid Green
+              color: '#ffffff',
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              boxShadow: '0 4px 14px 0 rgba(46, 125, 50, 0.39)', // Nice green shadow
+              border: '1px solid',
+              borderColor: 'transparent',
+              '&:hover': {
+                bgcolor: '#1b5e20',
+                boxShadow: '0 6px 20px rgba(46, 125, 50, 0.4)',
+              },
+              '&.Mui-disabled': {
+                bgcolor: 'action.disabledBackground',
+                color: 'action.disabled',
+              },
+            }}
+          >
+            <PaymentsOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+            Cobrar
+          </Button>
+        </Stack>
+      </Stack>
+
+      {/* Dialogo de cobro */}
+      <RrCobroDialog
+        open={openCobroDialog}
+        onClose={() => setOpenCobroDialog(false)}
+        isProcessing={isPending}
+        subtotal={subtotal}
+        descuento={descuento}
+        giftcard={giftcard}
+        clienteInfo={
+          mesaSeleccionada?.pedido?.cliente && mesaSeleccionada.pedido.cliente.codigoCliente !== '00'
+            ? `Cobro a: ${mesaSeleccionada.pedido.cliente.razonSocial || ''} - ${mesaSeleccionada.pedido.cliente.numeroDocumento || ''}`
+            : 'Cobro a: Sin Razón Social'
+        }
+        onDescuentoChange={(val) => setDescuento(val)}
+        onGiftcardChange={(val) => setGiftcard(val)}
+        totalAPagar={Math.max(0, subtotal - descuento - giftcard)}
+        pagosRealizados={pagosRealizados}
+        onAddPago={(metodoId, metodoNombre, monto, numeroTarjeta) =>
+          setPagosRealizados((prev) => [
+            ...prev,
+            { id: Date.now().toString(), metodoId, metodoNombre, monto, numeroTarjeta },
+          ])
+        }
+        onRemovePago={(id) => setPagosRealizados((prev) => prev.filter((p) => p.id !== id))}
+        onFinalizar={handleFinalizar}
+        onFacturar={handleFacturar}
+      />
+      {/* Dialogo Dividir Cuenta */}
+      {mesaSeleccionada?.pedido && (
+        <RrDividirCuentaDialog
+          open={openDividirDialog}
+          onClose={() => setOpenDividirDialog(false)}
+          mesaSeleccionada={mesaSeleccionada}
+          registrarPedido={registrarPedido}
+          actualizarPedido={actualizarPedido}
+          finalizarPedido={finalizarPedido}
+          facturarPedido={facturarPedido}
+          user={user}
+          isPending={isPending}
+          onDividido={(productosRestantes, pedidoActualizado) => {
+            setOpenDividirDialog(false)
+            // Pasar el pedido actualizado del servidor para que mesaSeleccionada
+            // se actualice con los productos correctos (sin los divididos).
+            if (onSuccess) onSuccess(pedidoActualizado)
+          }}
+        />
+      )}
+
+      {/* Dialogo Transferir Mesa */}
+      {mesaSeleccionada?.pedido && openTransferirDialog && (
+        <RrTransferirMesaDialog
+          open={openTransferirDialog}
+          onClose={() => setOpenTransferirDialog(false)}
+          mesaSeleccionada={mesaSeleccionada}
+          onTransferir={handleTransferirSubmit}
+          user={user}
+          isPending={isActualizarPending}
+        />
+      )}
+    </Box>
+  )
 }
 
 export default RrAcciones

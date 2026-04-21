@@ -1,9 +1,7 @@
 import { genReplaceEmpty } from '../../../utils/helper'
 import { ClientApiInputProps, ClientInputProps } from '../interfaces/client'
 
-export const updateClientComposeService = (
-  input: ClientInputProps,
-): ClientApiInputProps => {
+export const updateClientComposeService = (input: ClientInputProps): ClientApiInputProps => {
   return {
     codigoTipoDocumentoIdentidad: input.sinTipoDocumento!.codigoClasificador,
     apellidos: genReplaceEmpty(input.apellidos, ''),

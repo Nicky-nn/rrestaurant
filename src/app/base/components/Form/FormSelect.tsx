@@ -58,6 +58,7 @@ type SelectProps<
   inputLabel?: string
   formControlProps?: FormControlProps
   size?: MuiSelectSize
+  fullWidth?: boolean
 }
 
 /**
@@ -82,6 +83,7 @@ const FormSelectComponent = <
     size = 'small',
     onFocus,
     onBlur,
+    fullWidth = true,
     ...others
   } = props
   const uniqueId = useId()
@@ -122,9 +124,7 @@ const FormSelectComponent = <
 
   const customStyles = useMuiSelectStyles<OptionType, IsMulti, Group>(error, size)
 
-  const fc: FormControlProps = formControlProps
-    ? { fullWidth: true, ...formControlProps }
-    : { fullWidth: true }
+  const fc: FormControlProps = formControlProps ? { fullWidth, ...formControlProps } : { fullWidth }
   return (
     <FormControl error={error || false} {...fc} variant="outlined" focused={isFocused}>
       {inputLabel && (

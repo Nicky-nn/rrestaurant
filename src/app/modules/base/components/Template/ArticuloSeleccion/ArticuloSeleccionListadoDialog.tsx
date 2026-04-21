@@ -1,4 +1,4 @@
-import { Close, Save } from '@mui/icons-material'
+import { CheckBoxOutlined, Close } from '@mui/icons-material'
 import {
   Button,
   Dialog,
@@ -39,6 +39,10 @@ interface OwnProps extends DialogProps {
 
 type Props = OwnProps
 
+const CLIENT_FILTER_TYPES: FilterTypeMap<ArticuloProps> = {
+  'articuloPrecioBase.monedaPrimaria.precio': 'number',
+}
+
 /**
  * Listamos los articulos de inventario
  * puede contener inventario o no
@@ -63,10 +67,6 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
 
   // Estado para la selección de filas
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({})
-
-  const CLIENT_FILTER_TYPES: FilterTypeMap<ArticuloProps> = {
-    'articuloPrecioBase.monedaPrimaria.precio': 'number',
-  }
 
   // Llamada a la api de listado
   const datos = useMrtQuery({
@@ -114,9 +114,7 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
     },
   }
 
-  /**
-   * Selección de articulos
-   */
+  /** Seleccion de articulos */
   const onSeleccionArticulos = () => {
     const idsArticulo = Object.keys(rowSelection)
     if (idsArticulo.length > 0) {
@@ -141,7 +139,7 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
 
   return (
     <Dialog
-      sx={{ '& .MuiDialog-paper': { maxHeight: '85vh' } }}
+      sx={{ '& .MuiDialog-paper': { maxHeight: '88vh' } }}
       maxWidth="xl"
       fullWidth
       open={open}
@@ -162,7 +160,7 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
       >
         <Close />
       </IconButton>
-      <DialogContent dividers>
+      <DialogContent>
         <MrtDynamicTable
           config={config}
           {...datos}
@@ -180,7 +178,12 @@ const ArticuloSeleccionListadoDialog: FunctionComponent<Props> = (props) => {
         <Button color={'error'} onClick={() => onClose([])}>
           Cerrar
         </Button>
-        <Button color={'primary'} variant={'contained'} startIcon={<Save />} onClick={onSeleccionArticulos}>
+        <Button
+          color={'primary'}
+          variant={'contained'}
+          startIcon={<CheckBoxOutlined />}
+          onClick={onSeleccionArticulos}
+        >
           Seleccionar Articulo
         </Button>
       </DialogActions>

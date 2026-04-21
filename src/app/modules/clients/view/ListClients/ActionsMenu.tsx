@@ -61,10 +61,7 @@ const ActionsMenu: FunctionComponent<Props> = ({ client, onRefetch, onUpdateClie
           <Edit /> Actualizar
         </SimpleMenuItem>
         <Divider />
-        <SimpleMenuItem
-          sx={{ color: 'red' }}
-          onClick={() => onDelete([client.codigoCliente])}
-        >
+        <SimpleMenuItem sx={{ color: 'red' }} onClick={() => onDelete([client.codigoCliente])}>
           <Delete /> Eliminar
         </SimpleMenuItem>
       </SimpleMenu>

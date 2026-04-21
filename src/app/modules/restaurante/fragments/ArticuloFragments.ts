@@ -52,6 +52,10 @@ export const ARTICULOFRAGMENT = gql`
                         _id
                         codigoUnidadMedida
                         nombreUnidadMedida
+                        sinUnidadMedida {
+                          codigoClasificador
+                          descripcion
+                        }
                         longitud
                         ancho
                         altura
@@ -110,6 +114,24 @@ export const ARTICULOFRAGMENT = gql`
       _id
       codigoGrupo
       nombreGrupo
+      unidadMedidaBase {
+        _id
+        codigoUnidadMedida
+        nombreUnidadMedida
+        longitud
+        ancho
+        altura
+        peso
+        volumen
+        state
+        usucre
+        createdAt
+        usumod
+        updatedAt
+      }
+      definicion {
+        cantidadBase
+      }
       state
       usucre
       createdAt
@@ -117,11 +139,16 @@ export const ARTICULOFRAGMENT = gql`
       updatedAt
     }
     articuloPrecioBase {
-      articuloUnidadMedida {
+      _id
+        articuloUnidadMedida {
           # Datos simples (Tipo ya expandido previamente)
           _id
           codigoUnidadMedida
           nombreUnidadMedida
+          sinUnidadMedida {
+            codigoClasificador
+            descripcion
+          }
           longitud
           ancho
           altura
@@ -156,6 +183,20 @@ export const ARTICULOFRAGMENT = gql`
         }
         monedaAdicional1 {
           # Datos simples (Tipo ya expandido previamente)
+          moneda {
+            _id
+            codigo
+            descripcion
+            sigla
+            tipoCambio
+            tipoCambioCompra
+            activo
+            state
+            usucre
+            usumod
+            createdAt
+            updatedAt
+          }
           precioBase
           precio
           delivery
@@ -164,6 +205,20 @@ export const ARTICULOFRAGMENT = gql`
         }
         monedaAdicional2 {
           # Datos simples (Tipo ya expandido previamente)
+          moneda {
+            _id
+            codigo
+            descripcion
+            sigla
+            tipoCambio
+            tipoCambioCompra
+            activo
+            state
+            usucre
+            usumod
+            createdAt
+            updatedAt
+          }
           precioBase
           precio
           delivery
@@ -172,6 +227,20 @@ export const ARTICULOFRAGMENT = gql`
         }
         monedaAdicional3 {
           # Datos simples (Tipo ya expandido previamente)
+          moneda {
+            _id
+            codigo
+            descripcion
+            sigla
+            tipoCambio
+            tipoCambioCompra
+            activo
+            state
+            usucre
+            usumod
+            createdAt
+            updatedAt
+          }
           precioBase
           precio
           delivery
@@ -192,6 +261,12 @@ export const ARTICULOFRAGMENT = gql`
           # Datos simples (Tipo ya expandido previamente)
           id
           filename
+          variants {
+            thumbnail
+            medium
+            square
+            public
+          }
         }
         factorAjuste
         umVenta
@@ -200,14 +275,66 @@ export const ARTICULOFRAGMENT = gql`
     }
     articuloPrecio {
       # Datos simples (Tipo ya expandido previamente)
+      _id
+      articuloUnidadMedida {
+        _id
+        codigoUnidadMedida
+        nombreUnidadMedida
+        longitud
+        ancho
+        altura
+        peso
+        volumen
+        state
+        usucre
+        createdAt
+        usumod
+        updatedAt
+      }
+      monedaPrimaria {
+        precioBase
+        precio
+        delivery
+        precioComparacion
+        manual
+      }
+      monedaAdicional1 {
+        precioBase
+        precio
+        delivery
+        precioComparacion
+        manual
+      }
+      monedaAdicional2 {
+        precioBase
+        precio
+        delivery
+        precioComparacion
+        manual
+      }
+      monedaAdicional3 {
+        precioBase
+        precio
+        delivery
+        precioComparacion
+        manual
+      }
       cantidadBase
+      descuento {
+        fechaInicial
+        fechaFinal
+        porcentaje
+      }
+      imagen {
+        id
+        filename
+      }
       factorAjuste
       umVenta
       umInventario
       umCompra
     }
     articuloVenta
-    articuloInventario
     articuloCompra
     inventario {
       _id
@@ -245,6 +372,24 @@ export const ARTICULOFRAGMENT = gql`
           _id
           codigoGrupo
           nombreGrupo
+          unidadMedidaBase {
+            _id
+            codigoUnidadMedida
+            nombreUnidadMedida
+            longitud
+            ancho
+            altura
+            peso
+            volumen
+            state
+            usucre
+            createdAt
+            usumod
+            updatedAt
+          }
+          definicion {
+            cantidadBase
+          }
           state
           usucre
           createdAt
@@ -256,6 +401,10 @@ export const ARTICULOFRAGMENT = gql`
           _id
           codigoUnidadMedida
           nombreUnidadMedida
+          sinUnidadMedida {
+            codigoClasificador
+            descripcion
+          }
           longitud
           ancho
           altura
@@ -272,6 +421,10 @@ export const ARTICULOFRAGMENT = gql`
           _id
           codigoUnidadMedida
           nombreUnidadMedida
+          sinUnidadMedida {
+            codigoClasificador
+            descripcion
+          }
           longitud
           ancho
           altura
@@ -288,6 +441,10 @@ export const ARTICULOFRAGMENT = gql`
           _id
           codigoUnidadMedida
           nombreUnidadMedida
+          sinUnidadMedida {
+            codigoClasificador
+            descripcion
+          }
           longitud
           ancho
           altura
@@ -304,6 +461,10 @@ export const ARTICULOFRAGMENT = gql`
           _id
           codigoUnidadMedida
           nombreUnidadMedida
+          sinUnidadMedida {
+            codigoClasificador
+            descripcion
+          }
           longitud
           ancho
           altura
@@ -326,6 +487,12 @@ export const ARTICULOFRAGMENT = gql`
                         codigo
                         direccion
                         telefono
+                        departamento {
+                          codigo
+                          codigoPais
+                          sigla
+                          departamento
+                        }
                         municipio
                         integracionSiat
                       }
@@ -355,6 +522,12 @@ export const ARTICULOFRAGMENT = gql`
                                   codigo
                                   direccion
                                   telefono
+                                  departamento {
+                                    codigo
+                                    codigoPais
+                                    sigla
+                                    departamento
+                                  }
                                   municipio
                                   integracionSiat
                                 }
@@ -430,12 +603,8 @@ export const ARTICULOFRAGMENT = gql`
     gestionArticulo
     verificarStock
     activo
-    complemento
-    listaComplemento {
-      id
-        codigoArticulo
-        nombreArticulo
-    }
+    tieneModificadores
+    esReceta
     state
     usucre
     createdAt

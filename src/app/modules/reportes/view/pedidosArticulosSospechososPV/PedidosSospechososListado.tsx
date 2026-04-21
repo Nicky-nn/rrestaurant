@@ -17,238 +17,167 @@ import AnomaliasListado from './AnomaliasListado'
 import { useMrtQuery } from '../../../../base/components/Table/useMrtQuery'
 import { genMrtQueryPagination } from '../../../../base/components/Table/genMrtQueryPagination'
 import { client } from '../../../restaurante/client'
-import { RESTPEDIDOLISTADO } from '../../../restaurante/queries/useRestPedidoListado'
-import { RestPedidoConnection } from '../../../restaurante'
+import { RESTPEDIDOAUDITORIALISTADO } from '../../../reportes/queries/useRestPedidoAuditoriaListado'
+import { RESTPEDIDOAUDITORIAREPORTEANOMALIA } from '../../../reportes/queries/useRestPedidoAuditoriaReporteAnomalia'
+import { RestPedidoAuditoriaConnection, RestPedidoAuditoria } from '../../../reportes/types'
 
 type Props = {
   fechaInicial: Date
   fechaFinal: Date
   codigoSucursal: number
-  codigoPuntoVenta: number[]
-  umbral: number
+  stats?: any
 }
-
-//  Calcula media, varianza y desviación estándar por artículo
-const calcularEstadisticas = (pedidos: any[], historial: any[]) => {
-  const cantidadesPorArticulo: Record<string, number[]> = {}
-
-  const agrupar = (fuente: any[]) => {
-    fuente.forEach((pedido) => {
-      pedido.articulos?.forEach((item: any) => {
-        const id = String(item.articuloId).trim()
-        if (!cantidadesPorArticulo[id]) {
-          cantidadesPorArticulo[id] = []
-        }
-        cantidadesPorArticulo[id].push(item.cantidad)
-      })
-    })
-  }
-
-  agrupar(pedidos)
-  agrupar(historial)
-
-  const estadisticas: Record<string, { media: number; varianza: number; desviacion: number }> = {}
-
-  for (const [id, cantidades] of Object.entries(cantidadesPorArticulo)) {
-    const n = cantidades.length
-    const media = cantidades.reduce((a, b) => a + b, 0) / n
-    const varianza = cantidades.reduce((suma, valor) => suma + (valor - media) ** 2, 0) / n
-    const desviacion = Math.sqrt(varianza)
-    estadisticas[id] = { media, varianza, desviacion }
-  }
-
-  return estadisticas
-}
-
-// Detecta artículos con cantidades fuera del rango esperado
-const detectarAnomalias = (pedidos: any[], historial: any[], umbral: number): any[] => {
-  const estadisticas = calcularEstadisticas(pedidos, historial)
-  const anomalias: any[] = []
-
-  pedidos.forEach((pedido) => {
-    const ultimoEstadoPorArticulo = new Map<string, any>()
-
-    pedido.historial?.forEach((registro: any) => {
-      registro.articuloOperacion?.forEach((art: any) => {
-        const id = String(art.articuloId).trim()
-        const previo = ultimoEstadoPorArticulo.get(id)
-
-        if (!previo || registro.nro > previo.nro) {
-          ultimoEstadoPorArticulo.set(id, { ...art, nro: registro.nro })
-        }
-      })
-    })
-
-    ultimoEstadoPorArticulo.forEach((art, id) => {
-      const codigo = String(art.codigoArticulo).trim()
-      const precioActual = art?.articuloPrecio?.monedaPrecio?.precio ?? null
-      const stat = estadisticas[id]
-
-      // Artículo eliminado
-      if (art.state?.toUpperCase() === 'ELIMINADO') {
-        anomalias.push({
-          pedidoId: pedido.pedidoId,
-          numeroPedido: pedido.numeroPedido,
-          orden: pedido.numeroOrden,
-          historial: pedido.historial,
-          productos: pedido.productos,
-          sucursal: pedido.sucursal,
-          puntoVenta: pedido.puntoVenta,
-          fecha: pedido.fecha,
-          nombre: art.nombreArticulo,
-          articuloId: id,
-          cantidad: 0,
-          precio: precioActual,
-          autor: pedido.autor,
-          tipo: 'ELIMINADO',
-          descripcion: 'Artículo eliminado del pedido',
-          estadoArticulo: 'ELIMINADO',
-        })
-        return
-      }
-
-      // Verificar solo disminuciones fuera del rango normal
-      if (stat?.desviacion) {
-        const limiteInferior = stat.media - umbral * stat.desviacion
-        const limiteSuperior = stat.media + umbral * stat.desviacion
-
-        // Buscar producto actual por código
-        const productoActual = pedido.productos?.find(
-          (p: any) => String(p.codigoArticulo).trim() === codigo
-        )
-
-        const cantidadActual = productoActual?.articuloPrecio?.cantidad ?? 0
-        const cantidadAnterior = art.articuloPrecio?.cantidad ?? 0
-
-        if (cantidadActual < cantidadAnterior && cantidadActual < limiteInferior) {
-          anomalias.push({
-            pedidoId: pedido.pedidoId,
-            numeroPedido: pedido.numeroPedido,
-            orden: pedido.numeroOrden,
-            historial: pedido.historial,
-            productos: pedido.productos,
-            sucursal: pedido.sucursal,
-            puntoVenta: pedido.puntoVenta,
-            fecha: pedido.fecha,
-            nombre: art.nombreArticulo,
-            articuloId: id,
-            cantidad: cantidadActual,
-            precio: precioActual,
-            autor: pedido.autor,
-            promedio: stat.media.toFixed(2),
-            desviacion: stat.desviacion.toFixed(2),
-            limiteInferior: limiteInferior.toFixed(2),
-            limiteSuperior: limiteSuperior.toFixed(2),
-            score: Math.abs(cantidadActual - stat.media) / stat.desviacion,
-            tipo: 'ACTUALIZACION',
-            descripcion: 'Disminución de cantidad',
-            estadoArticulo: art.state?.toUpperCase() || 'DESCONOCIDO',
-          })
-        }
-      }
-    })
-  })
-
-  return anomalias
-}
-
 
 const PedidosSospechososListado = ({
   fechaInicial,
   fechaFinal,
   codigoSucursal,
-  codigoPuntoVenta,
-  umbral,
+  stats,
 }: Props) => {
   const {
-    data: pedidos,
+    data: pedidosAuditoria,
     isError,
     isLoading,
     refetch,
   } = useMrtQuery({
-  queryKey: ['pedidos-sospechosos', fechaInicial, fechaFinal, codigoSucursal, codigoPuntoVenta, umbral],
-  queryFn: async (ctx) => {
-    const { limit, page, reverse, query } = genMrtQueryPagination(ctx)
+    queryKey: ['pedidos-anomalias', fechaInicial, fechaFinal, codigoSucursal],
+    queryFn: async (ctx) => {
+      const { limit, page, reverse, query } = genMrtQueryPagination(ctx)
 
-    const inicio = dayjs(fechaInicial).startOf('day').format('YYYY-MM-DD HH:mm:ss')
-    const fin = dayjs(fechaFinal).endOf('day').format('YYYY-MM-DD HH:mm:ss')
+      const inicioYMD = dayjs(fechaInicial).startOf('day').format('YYYY-MM-DD HH:mm:ss')
+      const finYMD = dayjs(fechaFinal).endOf('day').format('YYYY-MM-DD HH:mm:ss')
+      const inicioDMY = dayjs(fechaInicial).startOf('day').format('DD-MM-YYYY HH:mm:ss')
+      const finDMY = dayjs(fechaFinal).endOf('day').format('DD-MM-YYYY HH:mm:ss')
 
-    const queryExtra = [
-      `fechaDocumento>=${inicio}`,
-      `fechaDocumento<=${fin}`,
-      `historial.0`,
-      `state=FINALIZADO`,
-    ].join('&&')
+      const queryExtra = [
+        `fechaRegistro>=${inicioYMD}`,
+        `fechaRegistro<=${finYMD}`,
+        `esSospechoso=true`,
+      ].join('&&')
+      console.log(query)
+      console.log(queryExtra)
 
-    const entidad = {
-      codigoSucursal,
-      codigoPuntoVenta: codigoPuntoVenta[0], 
-    }
-
-    const data = await client.request<{ restPedidoListado: RestPedidoConnection }>(
-      RESTPEDIDOLISTADO,
-      {
-        entidad,
-        limit,
-        page,
-        reverse,
-        query: [query, queryExtra].filter(Boolean).join('&&'),
+      const entidad = {
+        codigoSucursal,
+        codigoPuntoVenta: 0
       }
-    )
 
-    return {
-      docs: data.restPedidoListado.docs ?? [],
-      pageInfo: data.restPedidoListado.pageInfo,
-    }
-  },
-  isServerSide: true,
-})
-  const pedidosDocs = pedidos?.docs ?? []
+      const data = await client.request<{ restPedidoAuditoriaListado: RestPedidoAuditoriaConnection }>(
+        RESTPEDIDOAUDITORIALISTADO,
+        {
+          entidad,
+          limit,
+          page,
+          reverse,
+          query: [query, queryExtra].filter(Boolean).join('&&'),
+        }
+      )
+      console.log(data)
 
-const pedidosConHistorial = useMemo(
-  () => pedidosDocs.filter((p: any) => p.historial && p.historial.length > 0),
-  [pedidosDocs],
-)
+      let docs = data.restPedidoAuditoriaListado.docs ?? []
+      let pageInfo = data.restPedidoAuditoriaListado.pageInfo
 
-  const pedidosRecientes = pedidosConHistorial.map((pedido: any) => ({
-    pedidoId: pedido._id,
-    fecha: pedido.fechaDocumento,
-    numeroPedido: pedido.numeroPedido,
-    numeroOrden: pedido.numeroOrden,
-    autor: pedido.usucre,
-    sucursal: pedido.sucursal.codigo,
-    puntoVenta: pedido.puntoVenta.codigo,
-    productos: pedido.productos,
-    historial: pedido.historial,
-    articulos: (pedido.productos || []).map((prod: any) => ({
-      articuloId: prod.articuloId,
-      nombre: prod.nombreArticulo,
-      cantidad: prod.articuloPrecio.cantidad,
-      precio: prod.articuloPrecio.monedaPrecio.precio,
-    })),
-  }))
-
-  const historialPedidos = pedidosConHistorial.flatMap((pedido: any) =>
-    (pedido.historial || []).map((registro: any) => ({
-      fecha: pedido.fechaDocumento,
-      articulos: (registro.articuloOperacion || [])
-        .filter(
-          (a: any) =>
-            a.state?.toUpperCase() === 'ELIMINADO' || a.articuloPrecio?.cantidad != null,
+      if (docs.length === 0) {
+        const fallbackData = await client.request<{ restPedidoAuditoriaReporteAnomalia: RestPedidoAuditoria[] }>(
+          RESTPEDIDOAUDITORIAREPORTEANOMALIA,
+          {
+            codigoSucursal,
+            fechaInicial: inicioYMD,
+            fechaFinal: finYMD
+          }
         )
-        .map((a: any) => ({
-          articuloId: a.articuloId,
-          nombre: a.nombreArticulo,
-          cantidad: a.articuloPrecio?.cantidad,
-          estado: a.state ?? 'DESCONOCIDO',
-        })),
-    })),
-  )
+        const fallbackDocs = fallbackData.restPedidoAuditoriaReporteAnomalia || []
+        docs = fallbackDocs.filter(d => d.esSospechoso)
+        pageInfo = {
+          totalDocs: docs.length,
+          totalPages: 1,
+          page: 1,
+          limit: docs.length || 10,
+          hasNextPage: false,
+          hasPrevPage: false,
+        } as any
+      }
 
-  const anomalias = useMemo(
-    () => detectarAnomalias(pedidosRecientes, historialPedidos, umbral),
-    [pedidosRecientes, historialPedidos, umbral],
-  )
+      return {
+        docs,
+        pageInfo,
+      }
+    },
+    isServerSide: true,
+  })
+
+  const pedidosDocs = pedidosAuditoria?.docs ?? []
+
+  const anomalias = useMemo(() => {
+    const list: any[] = []
+    pedidosDocs.forEach((auditoria: RestPedidoAuditoria) => {
+      if (auditoria.esSospechoso) {
+        
+        // Iteramos los artículos para reportar las causas si son por artículo
+        const modis = auditoria.articulos ?? []
+        let hasDetalle = false
+
+        modis.forEach(art => {
+           const cant = art.articuloPrecio?.cantidad ?? 0
+           const cantAnt = art.articuloPrecio?.cantidadAnterior ?? cant
+           const precio = art.articuloPrecio?.valor ?? 0
+           console.log(art.state)
+
+           const forceIndividualItemListing = auditoria.accion === 'ANULACION' || auditoria.accion === 'CANCELACION' || auditoria.accion === 'MODIFICACION_ARTICULOS'
+           if (art.state === 'ELIMINADO' || cant < cantAnt || forceIndividualItemListing) {
+               hasDetalle = true
+               const resumenPartes = auditoria.resumenCambios?.split('.') || []
+               const coincidenciaResumen = art.nombreArticulo 
+                 ? resumenPartes.map(s => s.trim()).filter(s => s.toLowerCase().includes(art.nombreArticulo!.toLowerCase())).join('. ')
+                 : ''
+               const resumenFinal = coincidenciaResumen || auditoria.resumenCambios
+
+               list.push({
+                 pedidoId: auditoria.pedidoId,
+                 numeroPedido: auditoria.numeroPedido,
+                 orden: auditoria.numeroOrden,
+                 sucursal: auditoria.codigoSucursal,
+                 puntoVenta: auditoria.codigoPuntoVenta,
+                 fecha: auditoria.fechaRegistro,
+                 nombre: art.nombreArticulo || 'General',
+                 articuloId: art.articuloId || auditoria.pedidoId,
+                 cantidad: cant,
+                 precio: precio,
+                 autor: auditoria.usuario,
+                 descripcion: auditoria.accion !== 'ANULACION' ? (resumenFinal || 'Anomalía en artículo') : (auditoria.motivosSospecha?.join(', ') || 'Anomalía en artículo'),
+                 resumenCambios: resumenFinal,
+                 motivosSospecha: auditoria.motivosSospecha,
+                 accion: auditoria.accion,
+                 estadoArticulo: auditoria.accion || 'ACTUALIZACION',
+               })
+           }
+        })
+
+        // Si no fue un artículo específico el anómalo (ej: tiempo muy corto, monto muy bajo), lo metemos global
+        if (!hasDetalle) {
+             list.push({
+                 pedidoId: auditoria.pedidoId,
+                 numeroPedido: auditoria.numeroPedido,
+                 orden: auditoria.numeroOrden,
+                 sucursal: auditoria.codigoSucursal,
+                 puntoVenta: auditoria.codigoPuntoVenta,
+                 fecha: auditoria.fechaRegistro,
+                 nombre: auditoria.accion === 'ANULACION' ? 'PEDIDO COMPLETO' : (auditoria.articulos?.map(art => art.nombreArticulo).filter(Boolean).join(', ') || 'PEDIDO COMPLETO'),
+                 articuloId: auditoria.pedidoId,
+                 cantidad: 1,
+                 precio: auditoria.totales?.operacion?.totalFinal || 0,
+                 autor: auditoria.usuario,
+                 descripcion: auditoria.accion !== 'ANULACION' ? (auditoria.resumenCambios || 'Pedido anómalo') : (auditoria.motivosSospecha?.join(', ') || 'Pedido anómalo'),
+                 resumenCambios: auditoria.resumenCambios,
+                 motivosSospecha: auditoria.motivosSospecha,
+                 accion: auditoria.accion,
+                 estadoArticulo: auditoria.accion || 'REVISION',
+             })
+        }
+      }
+    })
+    return list
+  }, [pedidosDocs, stats])
 
   return (
     <Box>

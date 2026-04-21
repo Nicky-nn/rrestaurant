@@ -9,11 +9,13 @@ import { UsuarioRestriccionProps } from '../cuenta/interfaces/restriccion.interf
 
 interface OwnProps {
   onChange: (value?: { key: number; value: string }[]) => void
+  value?: number | number[] | null
+  isMulti?: boolean
 }
 
 type Props = OwnProps
 
-const PuntoVentaRestriccionField: FunctionComponent<Props> = ({ onChange }) => {
+const SucursalRestriccionField: FunctionComponent<Props> = ({ onChange, value, isMulti = true }) => {
   const { data: sucursales, isLoading } = useQuery<UsuarioRestriccionProps>({
     queryKey: ['sucursalPuntoVenta'],
     queryFn: async () => {
@@ -35,14 +37,26 @@ const PuntoVentaRestriccionField: FunctionComponent<Props> = ({ onChange }) => {
       label: `${sucursal.codigo} - ${sucursal.direccion}`,
     })) || []
 
+  // Ensure value maps directly to the react-select options structure
+  const selectedValue = value !== undefined && value !== null
+    ? (Array.isArray(value) 
+        ? options.filter((o) => value.includes(o.key)) 
+        : options.find((o) => o.key === value)) || (isMulti ? [] : null)
+    : undefined
+
   return (
     <FormMultiSelect
-      isMulti={true}
+      value={selectedValue}
+      isMulti={isMulti}
       options={options}
       placeholder="Seleccione Sucursal"
-      onChange={(selectedOptions) => {
-        // Transform selected options to match the expected type
-        const transformedValues = selectedOptions?.map((option) => ({
+      onChange={(selectedOptions: any) => {
+        if (!selectedOptions) {
+          onChange([])
+          return
+        }
+        const opts = Array.isArray(selectedOptions) ? selectedOptions : [selectedOptions]
+        const transformedValues = opts.map((option: any) => ({
           key: Number(option.key),
           value: option.value,
         }))
@@ -54,4 +68,4 @@ const PuntoVentaRestriccionField: FunctionComponent<Props> = ({ onChange }) => {
   )
 }
 
-export default PuntoVentaRestriccionField
+export default SucursalRestriccionField

@@ -1,9 +1,4 @@
-import {
-    actionForm,
-    ActionFormProps,
-    AuditoriaProps,
-    PageInputProps,
-} from '../../../interfaces'
+import { actionForm, ActionFormProps, AuditoriaProps, PageInputProps } from '../../../interfaces'
 import { SinTipoDocumentoIdentidadProps } from '../../../interfaces/sin.interface'
 
 export interface ClientProps extends AuditoriaProps {

@@ -1,0 +1,38 @@
+{
+  "last_sync": "2026-03-24T17:27:35.292125",
+  "fragments": ["fragments/ImpresoraFragments.ts", "fragments/ArticuloPrecioGeneralFragments.ts"],
+  "queries": ["queries/useImpresoraPorSucursal.ts"],
+  "mutations": [
+    "mutations/useArticuloPrecioImpresoraUpsert.ts",
+    "mutations/useImpresoraRegistro.ts",
+    "mutations/useImpresoraActualizar.ts",
+    "mutations/useImpresoraEliminar.ts"
+  ],
+  "types": ["types/index.ts"],
+  "client": ["client/index.ts"],
+  "index": ["index.ts"],
+  "saved_operations": ["impresoraRegistro", "impresoraActualizar", "impresoraEliminar"],
+  "used_types": [
+    "ArticuloDescuento",
+    "Impresora",
+    "DateDMYHHMMSS",
+    "Moneda",
+    "ArticuloDescuentoCantidad",
+    "EntidadParamsInput",
+    "ArticuloPrecio",
+    "SinTipoPuntoVenta",
+    "ImagenCloudVariant",
+    "ImpresoraInput",
+    "SinUnidadMedida",
+    "DateDMYHHMM",
+    "ArticuloPrecioImpresoraInput",
+    "Sucursal",
+    "Departamento",
+    "ArticuloPrecioGeneral",
+    "OrgFacturaSucursal",
+    "ArticuloUnidadMedida",
+    "MonedaPrecio",
+    "PuntoVenta",
+    "ImagenCloud"
+  ]
+}

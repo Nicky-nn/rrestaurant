@@ -7,20 +7,27 @@ import LocalMallOutlinedIcon from '@mui/icons-material/LocalMallOutlined'
 import RemoveIcon from '@mui/icons-material/Remove'
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 import {
+  Alert,
   alpha,
   Box,
+  Button,
   IconButton,
   OutlinedInput,
   Paper,
+  Snackbar,
   Stack,
   TextField,
+  Tooltip,
   Typography,
   useTheme,
 } from '@mui/material'
-import { FunctionComponent, useEffect, useRef, useState } from 'react'
+import { keyframes } from '@mui/system'
+import { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import NumberSpinnerField from '../../../../base/components/NumberSpinnerField/NumberSpinnerField'
+import { searchClientsApi } from '../../../clients/api/searchClients.api'
 import InputSearchClients from '../../../clients/components/InputSearchClients'
+import { ClientProps } from '../../../clients/interfaces/client'
 import {
   ESTADO_MESA,
   MesaUI,
@@ -31,13 +38,40 @@ import {
 import { ArticuloOperacion } from '../../types'
 import RrOpciones from './RrOpciones'
 
+// Declaración del web component lord-icon para TypeScript
+declare module 'react' {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    interface IntrinsicElements {
+      'lord-icon': {
+        src?: string
+        trigger?: string
+        delay?: string | number
+        state?: string
+        colors?: string
+        stroke?: string | number
+        target?: string
+        style?: React.CSSProperties
+        className?: string
+        key?: React.Key | null
+      }
+    }
+  }
+}
+
 interface RrCarritoProps {
   mesaSeleccionada?: MesaUI | null
   onUpdateProduct?: (index: number, updatedItem: ArticuloOperacion) => void
   onRemoveProduct?: (index: number) => void
+  onClientChange?: (cliente: any) => void
 }
 
-const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpdateProduct, onRemoveProduct }) => {
+const RrCarrito: FunctionComponent<RrCarritoProps> = ({
+  mesaSeleccionada,
+  onUpdateProduct,
+  onRemoveProduct,
+  onClientChange,
+}) => {
   const theme = useTheme()
   const [openOpciones, setOpenOpciones] = useState(false)
   const [tipoPedido, setTipoPedido] = useState<TipoPedido>(TIPO_PEDIDO.SALON)
@@ -45,15 +79,55 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
   const [notaGeneral, setNotaGeneral] = useState('')
   const [initialCartState, setInitialCartState] = useState('')
 
+  // Cache del cliente 00: se carga UNA sola vez al montar el componente.
+  // Así al cambiar de mesa nunca se hace una llamada de red extra.
+  const defaultClientRef = useRef<ClientProps | null>(null)
+  const fetchDefaultClient = useCallback(() => {
+    if (defaultClientRef.current) return
+    searchClientsApi('00')
+      .then((resp) => {
+        const found = resp.find((c) => c.codigoCliente === '00') || resp[0] || null
+        defaultClientRef.current = found
+        // Si todavía no hay cliente seleccionado, aplicarlo
+        setOpcionesLlevar((prev) => {
+          if (prev?.cliente) return prev
+          if (!found) return prev
+          return { cliente: found, horaRecojo: '', solicitarUtensilios: false }
+        })
+      })
+      .catch(() => {
+        /* ignorar — sin internet simplemente no hay cliente 00 */
+      })
+  }, [])
+
+  useEffect(() => {
+    fetchDefaultClient()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Limpiamos los metadatos o llaves de GraphQL (como __typename) que alteran la igualdad del JSON
   const extractClienteData = (c: any) => {
     if (!c) return null
     return {
       _id: c._id,
-      codigo: c.codigo,
+      codigo: c.codigoCliente || c.codigo,
       razonSocial: c.razonSocial,
-      nit: c.nit,
+      nit: c.numeroDocumento || c.nit,
     }
+  }
+
+  // Snapshot de productos: _id del item (único por fila en el carrito) + cantidad.
+  // Usamos p._id como clave de sort, NO articuloId, porque puede haber varias filas
+  // del mismo artículo (diferente nota/complemento) y articuloId se repite —
+  // eso hacía el sort inestable y generaba falsos positivos en isOrderEdited.
+  const extractProductosSnapshot = (productos: any[] | undefined) => {
+    if (!productos?.length) return []
+    return [...productos]
+      .map((p) => ({
+        _id: String(p._id ?? ''),
+        qty: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
+      }))
+      .sort((a, b) => a._id.localeCompare(b._id))
   }
 
   const currentCartState = JSON.stringify({
@@ -61,11 +135,13 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
     tipo: tipoPedido,
     nota: notaGeneral,
     cliente: extractClienteData(opcionesLlevar?.cliente),
+    productos: extractProductosSnapshot(mesaSeleccionada?.pedido?.productos),
   })
 
   const isOrderEdited = initialCartState !== '' && initialCartState !== currentCartState
 
   const lastSyncRef = useRef({ mesaValue: '', pedidoId: '' })
+  const lastSnapshotUpdateRef = useRef<number>(0)
 
   // Sincronizar datos del carrito según si la mesa ya tiene una orden existente.
   useEffect(() => {
@@ -75,16 +151,28 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
     const isSameMesa = lastSyncRef.current.mesaValue === nextMesaValue
     const isSamePedido = lastSyncRef.current.pedidoId === nextPedidoId
 
-    const isLocalTransition = isSameMesa && 
-      (lastSyncRef.current.pedidoId === 'NUEVO' || lastSyncRef.current.pedidoId.startsWith('nuevo-')) && 
+    const isLocalTransition =
+      isSameMesa &&
+      (lastSyncRef.current.pedidoId === 'NUEVO' || lastSyncRef.current.pedidoId.startsWith('nuevo-')) &&
       (nextPedidoId === 'NUEVO' || nextPedidoId.startsWith('nuevo-'))
 
-    const shouldSync = !isSameMesa || (!isSamePedido && !isLocalTransition)
+    const currentSnapshotUpdate = (mesaSeleccionada?.pedido as any)?._forceSnapshotUpdate || 0
+    const needsSnapshotUpdate = currentSnapshotUpdate > lastSnapshotUpdateRef.current
+
+    const shouldSync =
+      !isSameMesa ||
+      (!isSamePedido && !isLocalTransition) ||
+      (lastSyncRef.current.pedidoId.startsWith('nuevo-') &&
+        !nextPedidoId.startsWith('nuevo-') &&
+        nextPedidoId !== 'NUEVO') ||
+      needsSnapshotUpdate
 
     if (shouldSync) {
       lastSyncRef.current = { mesaValue: nextMesaValue, pedidoId: nextPedidoId }
+      lastSnapshotUpdateRef.current = currentSnapshotUpdate
 
       if (mesaSeleccionada?.pedido) {
+        // When pedidoRetornado arrives, we update the initial snapshot to remove the dirty state
         const _tipo = (mesaSeleccionada.pedido.tipo as TipoPedido) || TIPO_PEDIDO.SALON
         const _nota = mesaSeleccionada.pedido.nota || ''
         const _cliente = mesaSeleccionada.pedido.cliente || null
@@ -95,6 +183,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
             tipo: _tipo,
             nota: _nota,
             cliente: extractClienteData(_cliente),
+            productos: extractProductosSnapshot(mesaSeleccionada.pedido.productos),
           }),
         )
 
@@ -102,33 +191,50 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
         setNotaGeneral(_nota)
 
         if (_cliente) {
-          setOpcionesLlevar({
-            cliente: _cliente,
-            horaRecojo: '',
-            solicitarUtensilios: false,
+          setOpcionesLlevar((prev) => {
+            const prevStr = JSON.stringify(extractClienteData(prev?.cliente))
+            const nextStr = JSON.stringify(extractClienteData(_cliente))
+
+            // SI COINCIDEN LOS DATOS DE CLIENTE, NO HACER NADA.
+            if (prevStr === nextStr) return prev
+
+            return {
+              cliente: _cliente,
+              horaRecojo: '',
+              solicitarUtensilios: false,
+            }
           })
         } else {
           setOpcionesLlevar(null)
         }
       } else {
-        // Mesa Libre / Nueva
+        // Mesa Libre / Nueva — usar el cliente 00 cacheado (sin llamada de red)
+        const clienteDefault = defaultClientRef.current
         setInitialCartState(
           JSON.stringify({
             pedidoId: 'NUEVO',
             tipo: TIPO_PEDIDO.SALON,
             nota: '',
-            cliente: null,
+            cliente: extractClienteData(clienteDefault),
+            productos: [],
           }),
         )
         setTipoPedido(TIPO_PEDIDO.SALON)
-        setOpcionesLlevar(null)
         setNotaGeneral('')
+        setOpcionesLlevar((prev) => {
+          const prevStr = JSON.stringify(extractClienteData(prev?.cliente))
+          const nextStr = JSON.stringify(extractClienteData(clienteDefault))
+          if (clienteDefault && prevStr === nextStr) return prev
+          return clienteDefault
+            ? { cliente: clienteDefault, horaRecojo: '', solicitarUtensilios: false }
+            : null
+        })
       }
     }
   }, [mesaSeleccionada])
 
   // Obtener el nombre del área desde localStorage (o default)
-  const getNombreArea = () => {
+  const nombreArea = useMemo(() => {
     try {
       const cachedData = localStorage.getItem('ubicacion')
       if (cachedData) {
@@ -136,28 +242,24 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
         return parsed?.descripcion || 'Salón Principal'
       }
     } catch {
-      // Ignorar error de parseo
+      // ignorar
     }
     return 'Salón Principal'
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mesaSeleccionada?.value]) // re-calcular solo si cambia de mesa
 
-  const nombreArea = getNombreArea()
-
-  // Función para determinar el color de la cabecera
-  const getColorByEstado = () => {
+  const headerColor = useMemo(() => {
     if (!mesaSeleccionada) return theme.palette.primary.main
     switch (mesaSeleccionada.estado) {
       case ESTADO_MESA.LIBRE:
-        return theme.palette.success.main // Verde claro para mesa libre
+        return theme.palette.success.main
       case ESTADO_MESA.OCUPADO:
       case ESTADO_MESA.OCUPADO_OTRO:
-        return theme.palette.warning.main // Amarillo/Naranja para mesa ocupada
+        return theme.palette.warning.main
       default:
         return theme.palette.primary.main
     }
-  }
-
-  const headerColor = getColorByEstado()
+  }, [mesaSeleccionada, theme.palette])
 
   // Helpers para icono y textos según el tipo de pedido
   const HeaderIcon =
@@ -184,7 +286,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
         : `Área: ${nombreArea}`
 
   return (
-    <Paper sx={{ p: 1.5, height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+    <Paper sx={{ p: 1, height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', mb: 0 }}>
       {mesaSeleccionada ? (
         <>
           {/* Header de Mesa (Diseño Nuevo) */}
@@ -251,20 +353,17 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
                   horaRecojo: prev?.horaRecojo || '',
                   solicitarUtensilios: prev?.solicitarUtensilios || false,
                 }))
+                if (onClientChange) onClientChange(c)
               }}
               onListShowed={() => {}}
-              autoSelectDefaultCode="00"
               editable={true}
               onChangeEditable={(modifications) => {
-                if (modifications) {
-                  setOpcionesLlevar((prev) => {
-                    if (!prev?.cliente) return prev
-                    const nextCliente = { ...prev.cliente, ...modifications }
-                    if (JSON.stringify(prev.cliente) === JSON.stringify(nextCliente)) {
-                      return prev
-                    }
-                    return { ...prev, cliente: nextCliente }
-                  })
+                if (modifications && opcionesLlevar?.cliente) {
+                  const nextCliente = { ...opcionesLlevar.cliente, ...modifications }
+                  if (JSON.stringify(opcionesLlevar.cliente) !== JSON.stringify(nextCliente)) {
+                    setOpcionesLlevar((prev) => (prev ? { ...prev, cliente: nextCliente } : prev))
+                    if (onClientChange) onClientChange(nextCliente)
+                  }
                 }
               }}
             />
@@ -274,14 +373,22 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
           <Box
             sx={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1 }}
           >
-            {mesaSeleccionada.pedido?.productos?.map((producto, index) => (
-              <CartItem 
-                key={`${producto.articuloId || index}-${index}`} 
-                item={producto} 
-                onUpdate={(updated) => onUpdateProduct?.(index, updated)}
-                onRemove={() => onRemoveProduct?.(index)}
-              />
-            ))}
+            {mesaSeleccionada.pedido?.productos?.length ? (
+              mesaSeleccionada.pedido.productos.map((producto, index) => (
+                <CartItem
+                  key={`${producto.articuloId || index}-${index}`}
+                  item={producto}
+                  onUpdate={(updated) => onUpdateProduct?.(index, updated)}
+                  onRemove={() => onRemoveProduct?.(index)}
+                />
+              ))
+            ) : (
+              <Box
+                sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', py: 2 }}
+              >
+                <EmptyCartIcon label="Selecciona productos del menú para comenzar la orden." />
+              </Box>
+            )}
           </Box>
 
           {/* Notas generales del pedido */}
@@ -291,7 +398,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
               border: '1px solid',
               borderColor: 'divider',
               borderRadius: 2,
-              p: 1.5,
+              p: 1,
               bgcolor: 'background.paper',
             }}
           >
@@ -301,7 +408,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
                 fontWeight: 800,
                 color: 'text.secondary',
                 letterSpacing: 1,
-                mb: 1,
+                mb: 0.5,
                 textTransform: 'uppercase',
               }}
             >
@@ -310,7 +417,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
             <TextField
               multiline
               fullWidth
-              minRows={2}
+              minRows={1}
               maxRows={4}
               placeholder="Notas"
               value={notaGeneral}
@@ -318,8 +425,8 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
               InputProps={{
                 sx: {
                   fontSize: '0.85rem',
-                  p: 1,
-                  bgcolor: '#fcfcfc',
+                  p: 0.5,
+                  bgcolor: 'background.default',
                 },
               }}
               sx={{
@@ -342,33 +449,87 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({ mesaSeleccionada, onUpda
           />
         </>
       ) : (
-        <>
-          <Typography variant="h6" gutterBottom>
-            Carrito
-          </Typography>
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              Selecciona una mesa
-            </Typography>
-          </Box>
-        </>
+        <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <EmptyCartIcon label="Selecciona una mesa" />
+        </Box>
       )}
     </Paper>
   )
 }
 
+// ─── Íconos Lord Icon para carrito vacío ────────────────────────────────────
+
+const EmptyCartIcon = ({ label }: { label?: string }) => {
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <lord-icon
+          src="https://cdn.lordicon.com/pmawqxvu.json"
+          trigger="hover"
+          delay="300"
+          style={{ width: '250px', height: '250px' }}
+        />
+      </Box>
+      {label && (
+        <Typography variant="body2" color="text.secondary">
+          {label}
+        </Typography>
+      )}
+    </Box>
+  )
+}
+
 // ─── Sub-componente para item del carrito ───────────────────────────────────
 
-const CartItem = ({ item, onUpdate, onRemove }: { item: ArticuloOperacion, onUpdate: (updated: ArticuloOperacion) => void, onRemove: () => void }) => {
+// Entrada suave (0→1 en 25%) y salida lenta (1→0 en el 75% restante)
+const pulseHighlight = keyframes`
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+`
+
+const CartItem = ({
+  item,
+  onUpdate,
+  onRemove,
+}: {
+  item: ArticuloOperacion
+  onUpdate: (updated: ArticuloOperacion) => void
+  onRemove: () => void
+}) => {
   const theme = useTheme()
   const [isEditing, setIsEditing] = useState(false)
 
   const originalCortesia = !!item.cortesia
-  const originalPrecio = item.articuloPrecio?.valor ?? item.articuloPrecio?.monedaPrecio?.precio ?? 0
+  const originalPrecio = item.articuloPrecio?.valor ?? 0
   const originalNota = item.nota || ''
-  
+
   // Leemos la cantidad siempre desde el prop (estado global de RestRegistrar)
   const cantidad = item.articuloPrecio?.cantidad ?? item.articuloPrecioBase?.cantidad ?? 1
+
+  // Flash en cualquier cambio de cantidad. Usamos un contador en vez de boolean:
+  // al alternar entre pulseA y pulseB el browser siempre ve un nombre nuevo
+  // y reinicia la animación desde el frame 0, sin importar clicks seguidos.
+  const prevCantidadRef = useRef(cantidad)
+  // Inicializar en 1 para disparar el flash inmediatamente al montar (primer ingreso al carrito)
+  const [flashCount, setFlashCount] = useState(1)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; key: number }>({
+    open: false,
+    message: '',
+    key: 0,
+  })
+  useEffect(() => {
+    if (cantidad !== prevCantidadRef.current) {
+      prevCantidadRef.current = cantidad
+      setFlashCount((n) => n + 1)
+    }
+  }, [cantidad])
 
   const [isCortesia, setIsCortesia] = useState(originalCortesia)
   const [precioNum, setPrecioNum] = useState<number | null>(originalPrecio)
@@ -377,10 +538,15 @@ const CartItem = ({ item, onUpdate, onRemove }: { item: ArticuloOperacion, onUpd
 
   // Dispara actualización hacia arriba para la cantidad
   const handleCantidadChange = (next: number) => {
+    setSnackbar((s) => ({
+      open: true,
+      message: `Modificando ${item.nombreArticulo} cantidad a ${next}`,
+      key: s.key + 1,
+    }))
     onUpdate({
       ...item,
       articuloPrecio: { ...(item.articuloPrecio || {}), cantidad: next },
-      articuloPrecioBase: { ...(item.articuloPrecioBase || {}), cantidad: next }
+      articuloPrecioBase: { ...(item.articuloPrecioBase || {}), cantidad: next },
     })
   }
 
@@ -393,15 +559,12 @@ const CartItem = ({ item, onUpdate, onRemove }: { item: ArticuloOperacion, onUpd
     descuentoNum !== 0
 
   const extras =
-    item.complementos
-      ?.map((c) => {
-        const qty = c.articuloPrecio?.cantidad ?? c.articuloPrecioBase?.cantidad ?? 1
-        return {
-          nombre: c.nombreArticulo,
-          cantidad: qty,
-        }
-      })
-      .filter((extra) => Boolean(extra.nombre)) || []
+    item.modificadores
+      ?.map((m) => ({
+        nombre: m.nombreArticulo,
+        cantidad: m.articuloPrecio?.cantidad ?? 1,
+      }))
+      .filter((extra) => Boolean(extra.nombre)) ?? []
   const notaRapidas = item.notaRapida?.map((nr) => nr.valor).filter(Boolean) || []
 
   // Custom notes separated by comma or dot
@@ -413,15 +576,31 @@ const CartItem = ({ item, onUpdate, onRemove }: { item: ArticuloOperacion, onUpd
   return (
     <Box
       sx={{
+        position: 'relative',
         border: '1px solid',
         borderColor: isCortesia ? 'success.light' : 'divider',
         borderRadius: 2,
-        p: 1, // reduced from 1.5
+        p: 1,
         bgcolor: 'background.paper',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
+      {/* Overlay de flash — se desmonta/monta con key para reiniciar animación siempre */}
+      {flashCount > 0 && (
+        <Box
+          key={`flash-${flashCount}`}
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 2,
+            pointerEvents: 'none',
+            bgcolor: 'rgba(76, 175, 80, 0.13)',
+            border: '1.5px solid rgba(76, 175, 80, 0.55)',
+            animation: `${pulseHighlight} 1.1s cubic-bezier(0.4, 0, 0.2, 1) forwards`,
+          }}
+        />
+      )}
       {/* Fila principal: Título y Botones */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
         <Box sx={{ flexGrow: 1, pr: 1 }}>
@@ -453,62 +632,82 @@ const CartItem = ({ item, onUpdate, onRemove }: { item: ArticuloOperacion, onUpd
           <Box sx={{ display: 'flex', alignItems: 'center', height: 28 }}>
             {/* Controles de Cantidad */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 1 }}>
-              <IconButton
-                onClick={() => handleCantidadChange(Math.max(1, cantidad - 1))}
-                size="small"
-                sx={{ bgcolor: 'grey.100', '&:hover': { bgcolor: 'grey.200' }, width: 24, height: 24 }}
-              >
-                <RemoveIcon sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
-              </IconButton>
+              <Tooltip title="Disminuir cantidad" enterDelay={1000}>
+                <IconButton
+                  onClick={() => handleCantidadChange(Math.max(1, cantidad - 1))}
+                  size="small"
+                  sx={{
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
+                    width: 24,
+                    height: 24,
+                  }}
+                >
+                  <RemoveIcon sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
+                </IconButton>
+              </Tooltip>
               <Typography sx={{ fontSize: '0.95rem', fontWeight: 800, minWidth: 16, textAlign: 'center' }}>
                 {cantidad}
               </Typography>
-              <IconButton
-                onClick={() => handleCantidadChange(cantidad + 1)}
-                size="small"
-                sx={{
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                  color: 'primary.main',
-                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
-                  width: 24,
-                  height: 24,
-                }}
-              >
-                <AddIcon sx={{ fontSize: '0.9rem' }} />
-              </IconButton>
+              <Tooltip title="Aumentar cantidad" enterDelay={1000}>
+                <IconButton
+                  onClick={() => handleCantidadChange(cantidad + 1)}
+                  size="small"
+                  sx={{
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
+                    width: 24,
+                    height: 24,
+                  }}
+                >
+                  <AddIcon sx={{ fontSize: '0.9rem' }} />
+                </IconButton>
+              </Tooltip>
             </Box>
 
             {/* Acciones */}
             <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-              <IconButton
-                size="small"
-                onClick={() => setIsEditing(!isEditing)}
-                sx={{
-                  bgcolor: isEditing ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                  color: isEditing ? 'primary.main' : 'text.secondary',
-                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) },
-                }}
-              >
-                <EditOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={() => setIsCortesia(!isCortesia)}
-                sx={{
-                  bgcolor: isCortesia ? alpha(theme.palette.success.main, 0.1) : 'transparent',
-                  color: isCortesia ? 'success.main' : 'text.secondary',
-                  '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.1) },
-                }}
-              >
-                <CardGiftcardOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={onRemove}
-                sx={{ color: 'text.secondary', '&:hover': { bgcolor: 'action.hover' } }}
-              >
-                <DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-              </IconButton>
+              <Tooltip title="Editar precio, descuento y nota personalizada" enterDelay={1000}>
+                <IconButton
+                  size="small"
+                  onClick={() => setIsEditing(!isEditing)}
+                  sx={{
+                    bgcolor: isEditing ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                    color: isEditing ? 'primary.main' : 'text.secondary',
+                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) },
+                  }}
+                >
+                  <EditOutlinedIcon sx={{ fontSize: '1.1rem' }} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Marcar como cortesía (gratis)" enterDelay={1000}>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    const next = !isCortesia
+                    setIsCortesia(next)
+                    onUpdate({ ...item, cortesia: next })
+                  }}
+                  sx={{
+                    bgcolor: isCortesia ? alpha(theme.palette.success.main, 0.1) : 'transparent',
+                    color: isCortesia ? 'success.main' : 'text.secondary',
+                    '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.1) },
+                  }}
+                >
+                  <CardGiftcardOutlinedIcon sx={{ fontSize: '1.1rem' }} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Eliminar producto del carrito" enterDelay={1000}>
+                <IconButton
+                  size="small"
+                  onClick={onRemove}
+                  sx={{ color: 'text.secondary', '&:hover': { bgcolor: 'action.hover' } }}
+                >
+                  <DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />
+                </IconButton>
+              </Tooltip>
             </Stack>
           </Box>
 
@@ -620,6 +819,30 @@ const CartItem = ({ item, onUpdate, onRemove }: { item: ArticuloOperacion, onUpd
               sx={{ bgcolor: '#fff', fontSize: '0.85rem', '& .MuiOutlinedInput-input': { p: 1 } }}
             />
           </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => {
+                onUpdate({
+                  ...item,
+                  nota: nota,
+                  cortesia: isCortesia,
+                  articuloPrecio: {
+                    ...(item.articuloPrecio || {}),
+                    valor: precioNum || 0,
+                  },
+                  articuloPrecioBase: {
+                    ...(item.articuloPrecioBase || {}),
+                    valor: precioNum || 0,
+                  },
+                })
+                setIsEditing(false)
+              }}
+            >
+              Guardar Cambios
+            </Button>
+          </Box>
         </Box>
       )}
 
@@ -631,9 +854,9 @@ const CartItem = ({ item, onUpdate, onRemove }: { item: ArticuloOperacion, onUpd
               <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', letterSpacing: 0.5 }}>
                 EXTRAS:
               </Typography>
-              {extras.map((extra, i) => (
+              {extras.map((extra: any, i: number) => (
                 <Box
-                  key={i}
+                  key={`extra-${i}`}
                   sx={{
                     px: 1,
                     py: 0.15,
@@ -696,6 +919,17 @@ const CartItem = ({ item, onUpdate, onRemove }: { item: ArticuloOperacion, onUpd
           )}
         </Box>
       )}
+      <Snackbar
+        key={`snackbar-${snackbar.key}`}
+        open={snackbar.open}
+        autoHideDuration={1000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" variant="standard" sx={{ minWidth: 220, boxShadow: 2 }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

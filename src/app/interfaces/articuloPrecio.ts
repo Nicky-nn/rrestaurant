@@ -1,23 +1,20 @@
 import { ArticuloUnidadMedidaProps } from './articuloUnidadMedida.ts'
 import { ImagenCloudProps } from './imagen.ts'
 import { InventarioProps } from './inventario.ts'
-import {
-  MonedaPrecioApiInputProps,
-  MonedaPrecioOperacionProps,
-  MonedaPrecioProps,
-  MonedaProps,
-} from './monedaPrecio.ts'
+import { MonedaPrecioApiInputProps, MonedaPrecioProps, MonedaProps } from './monedaPrecio.ts'
 import { ProveedorOperacionProps } from './proveedorOperacion.ts'
 import { TipoArticuloOperacionProps } from './tipoArticulo.ts'
 
 /**
  * Que vamos a evaluar para el calculo de costo y precio
  */
-export enum ApiTipoArtPrecioOperacion {
-  costo = 'costo',
-  precio = 'precio',
-}
+export const apiTipoArtPrecioOperacion = {
+  costo: 'costo',
+  precio: 'precio',
+} as const
 
+export type TipoArtPrecioOperacion =
+  (typeof apiTipoArtPrecioOperacion)[keyof typeof apiTipoArtPrecioOperacion]
 /**
  * Forma de realizacion de descuentos
  * prioridad fechaInicial, fechaFinal, cantidad y finalmente porcentaje
@@ -44,15 +41,45 @@ export interface PrecioInputProps {
 }
 
 /**
+ * Totales por linea o general
+ * @author isi-template
+ */
+export interface PrecioCostoTotalesProps {
+  /** Cantidad * valorBase */
+  subtotalBruto: number
+  /** Cantidad * (descuento + descuentoAdicional) */
+  totalDescuento: number
+  /** Monto en dinero solo del descuento adicional prorrateado */
+  totalDescuentoAdicional: number
+  /** Monto en dinero sumando TODOS los descuentos (Directo + Adicional) */
+  totalDescuentoGeneral: number
+  /** Porcentaje efectivo del descuento directo sobre el total bruto */
+  totalDescuentoP: number
+  /** Porcentaje efectivo del descuento adicional sobre el total bruto */
+  totalDescuentoAdicionalP: number
+  /** Porcentaje efectivo de todos los descuentos sobre el total bruto */
+  totalDescuentoGeneralP: number
+  /** Cantidad * valorNeto (Valor total del inventario base o Ingreso total ventas) */
+  subtotalNeto: number
+  /** Cantidad * impuestoUnitario */
+  totalImpuestos: number
+  /** Cantidad * gastoAdicional */
+  totalGasto: number
+  /** Cantidad * valorFinal (Total Valor Entrada Stock o Total a Pagar Cliente) */
+  totalFinal: number
+}
+
+/**
  * Estructura unificada para la distribución de montos financieros.
  * Permite manejar tanto la entrada de inventario (COSTO) como la salida (PRECIO).
+ * @author isi-template
  */
 export interface PrecioCostoOperacionProps {
   /** * Contexto de la operación:
    * - 'COSTO': Operación de entrada (Compras, Producción).
    * - 'PRECIO': Operación de salida (Ventas, Cotizaciones).
    */
-  tipoOperacion: ApiTipoArtPrecioOperacion
+  tipoOperacion: TipoArtPrecioOperacion
 
   // --- 1. VALORES DE REFERENCIA (INPUTS) ---
   /** * El valor nominal actual de la operación.
@@ -70,13 +97,20 @@ export interface PrecioCostoOperacionProps {
   // --- 2. AJUSTES DIRECTOS ---
   /** Descuento directo unitario (Monto). */
   descuento: number
-  /** Descuento adicional prorrateado (Monto). */
+  /** Descuento adicional prorrateado unitario (Monto). */
   descuentoAdicional: number
-
+  /** Descuento total unitario */
+  descuentoTotal: number
+  /** Descuento unitario porcentual */
+  descuentoP: number
+  /** Descuento adicional prorrateado unitario porcuentual */
+  descuentoAdicionalP: number
+  /** Descuento total unitario porcentual */
+  descuentoTotalP: number
   // --- 3. VALORES CONTABLES (NETOS E IMPUESTOS) ---
   /** * Valor financiero real "limpio" de la mercancía.
    * - COSTO: Base Imponible (Costo sin IVA ni gastos).
-   * - PRECIO: Revenue / Ingreso Neto Real (Precio de Venta sin IVA).
+   * - PRECIO: Revenue / Ingreso Neto Real (Precio de Venta sin IVA ni gastos).
    */
   valorNeto: number
   /** * Monto del impuesto unitario.
@@ -105,20 +139,43 @@ export interface PrecioCostoOperacionProps {
   valorFinal: number
 
   // --- 6. TOTALES ACUMULADOS (Unitarios * Cantidad) ---
-  totales: {
-    /** Cantidad * valorBase */
-    subtotalBruto: number
-    /** Cantidad * (descuento + descuentoAdicional) */
-    totalDescuento: number
-    /** Cantidad * valorNeto (Valor total del inventario base o Ingreso total ventas) */
-    subtotalNeto: number
-    /** Cantidad * impuestoUnitario */
-    totalImpuestos: number
-    /** Cantidad * gastoAdicional */
-    totalGasto: number
-    /** Cantidad * valorFinal (Total Valor Entrada Stock o Total a Pagar Cliente) */
-    totalFinal: number
-  }
+  totales: PrecioCostoTotalesProps
+}
+
+/**
+ * Valores default precio costo totales
+ * @author isi-template
+ * */
+export const PRECIO_COSTO_TOTALES_DEFAULT: PrecioCostoTotalesProps = {
+  subtotalBruto: 0,
+  totalDescuento: 0,
+  totalDescuentoP: 0,
+  totalDescuentoAdicional: 0,
+  totalDescuentoGeneral: 0,
+  totalDescuentoAdicionalP: 0,
+  totalDescuentoGeneralP: 0,
+  subtotalNeto: 0,
+  totalImpuestos: 0,
+  totalGasto: 0,
+  totalFinal: 0,
+}
+
+/**
+ * Calculo de totales generales tanto para operaciones como sistema báse
+ * @author isi-template
+ */
+export interface TotalesGeneralesProps {
+  operacion: PrecioCostoTotalesProps
+  sistema: PrecioCostoTotalesProps
+}
+
+/**
+ * Valor default para la generacion de totales generales
+ * @author isi-template
+ */
+export const TOTALES_GENERALES_DEFAULT: TotalesGeneralesProps = {
+  operacion: PRECIO_COSTO_TOTALES_DEFAULT,
+  sistema: PRECIO_COSTO_TOTALES_DEFAULT,
 }
 
 /**
@@ -128,8 +185,6 @@ export interface PrecioCostoOperacionProps {
 export interface ArticuloPrecioOperacionProps {
   /** Datos unidad de medida */
   articuloUnidadMedida: ArticuloUnidadMedidaProps
-  /** @deprecated ya no es nesesario para front-end*/
-  monedaPrecio: MonedaPrecioOperacionProps
   /** Estructura de moneda que incluye el tipo de cambio segun moneda principal */
   moneda: MonedaProps
   /** Tipo de cambio final, puede ser diferente al tipo de cambio de moneda */
@@ -139,14 +194,17 @@ export interface ArticuloPrecioOperacionProps {
   // /** Si TipoOperacion===costo, desglose de los datos para costo */
   // costoOperacion: CostoOperacionProps
   /** Tipo operacion de transaccion, costo o precio */
-  tipoOperacion: ApiTipoArtPrecioOperacion
+  tipoOperacion: TipoArtPrecioOperacion
   /** valor que se ingresa de front-end de operacion segun sea de tipoOperacion costo o precio */
   valor: number
+  /** costo báse heredado de tabla articuloPrecio, generalmente hace referencial al costo de operaciones, no se envia a front-end */
+  costo: number
+  /** Cantidad neta heredada de cantidades */
   cantidad: number
-  /** @deprecated, se camia por cantidadFactor */
-  cantidadBase: number
   /** Equivalencia de la unidad (12 unidades por Caja) */
   cantidadFactor: number
+  /** Historial del ultimo cambio de cantidad */
+  cantidadAnterior: number
   /** Descuento de linea */
   descuento: number
   /** Descuento prorrateado */
@@ -159,6 +217,7 @@ export interface ArticuloPrecioOperacionProps {
   incluyeImpuesto: boolean
   /** Si el descuento de linea aplica como descuento global o unitario, default: true */
   esDescuentoTotal: boolean
+  /** Factor de ajuste para modificaciones masivas de valor */
   factorAjuste: number
 }
 
@@ -170,7 +229,7 @@ export interface ArticuloPrecioOperacionInputProps {
   codigoArticuloUnidadMedida: string
   /** Cantidad de venta o compra */
   cantidad: number // Cantidad de items que ingresan a inventario
-  /** Precio o monto del item */
+  /** Valor, Precio, costo o monto del item */
   precio: number
   /** Descuento, que puede ser global o unitario, es dependiente del parametro esDescuentoTotal */
   descuento: number
@@ -187,11 +246,19 @@ export interface ArticuloPrecioOperacionInputProps {
  * @author isi-template
  */
 export interface ArticuloPrecioOperacionApiInputProps {
-  cantidad: number
   codigoArticuloUnidadMedida: string
-  descuento: number
-  impuesto: number
+  /** Cantidad de venta o compra */
+  cantidad: number // Cantidad de items que ingresan a inventario
+  /** Valor, Precio, costo o monto del item */
   precio: number
+  /** Descuento, que puede ser global o unitario, es dependiente del parametro esDescuentoTotal */
+  descuento: number
+  /** Impuesto % que va entre  0% y 100% */
+  impuesto: number
+  /** Si es true, el descuento se aplica global, si es false, el descuento se aplica por unidad, (default: true) */
+  esDescuentoTotal: boolean
+  /** Si el documento fue generado con factura o sin factura */
+  incluyeImpuesto: boolean
 }
 
 /**
@@ -204,6 +271,7 @@ export interface ArticuloPrecioProps {
   monedaAdicional1: MonedaPrecioProps | null
   monedaAdicional2: MonedaPrecioProps | null
   monedaAdicional3: MonedaPrecioProps | null
+  /** Equivalencia de la unidad (12 unidades por Caja) */
   cantidadBase: number // Equivalencia relacionada a la unidad de medida base
   descuento: ArticuloDescuentoProps | null // en caso de contar con un descuento especifico que aplica a todos los valores
   imagen: ImagenCloudProps | null
@@ -222,6 +290,7 @@ export interface ArticuloPrecioInputProps {
   monedaAdicional1: PrecioInputProps | null
   monedaAdicional2: PrecioInputProps | null
   monedaAdicional3: PrecioInputProps | null
+  /** Equivalencia de la unidad (12 unidades por Caja) */
   cantidadBase: number
   descuento: ArticuloDescuentoProps | null // en caso de contar con un descuento especifico que aplica a todos los valores
   factorAjuste: number // factor ajuste que afecta al precio, no asi al precio base, solo afecta si moneda precio manual es false

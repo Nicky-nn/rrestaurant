@@ -1,5 +1,6 @@
 import { clientsRoutesMap } from './modules/clients/clientsRoutes'
 import { homeRoutesMap } from './modules/home/HomeRoutes'
+import { impresorasRoutesMap } from './modules/impresoras/impresorasRoutes'
 import { ncdGestionRoutesMap } from './modules/notaCreditoDebito/notaCreditoDebitoRoutes'
 import { reporteRoutesMap } from './modules/reportes/reporteRoutes'
 import { restauranteRoutesMap } from './modules/restaurante/restauranteRoutes'
@@ -44,18 +45,18 @@ export const navigations: NavigationProps[] = [
         name: restauranteRoutesMap.facturas.name,
         iconText: 'PF',
         path: restauranteRoutesMap.facturas.path,
-      },
+      }
     ],
   },
   {
-    name: 'Nota Crédito Débito',
+    name: 'Notas de Credito/Debito',
     icon: 'receipt',
     children: [
       {
         name: ncdGestionRoutesMap.ncdGestion.name,
-        iconText: 'NCD',
+        iconText: 'NG',
         path: ncdGestionRoutesMap.ncdGestion.path,
-      },
+      }
     ],
   },
   {
@@ -75,21 +76,32 @@ export const navigations: NavigationProps[] = [
     icon: 'receipt',
     children: [
       {
-        name: reporteRoutesMap.articuloPorPuntoVenta.name,
-        iconText: 'APPV',
-        path: reporteRoutesMap.articuloPorPuntoVenta.path,
-      },
-      {
         name: reporteRoutesMap.articuloPorComercio.name,
-        iconText: 'APC',
+        iconText: 'AP',
         path: reporteRoutesMap.articuloPorComercio.path,
       },
       {
-        name: reporteRoutesMap.pedidosSospechosos.name,
-        iconText: 'PPS',
-        path: reporteRoutesMap.pedidosSospechosos.path,
+        name: reporteRoutesMap.articuloPorPuntoVenta.name,
+        iconText: 'APV',
+        path: reporteRoutesMap.articuloPorPuntoVenta.path,
       },
+      {
+        name: reporteRoutesMap.pedidosSospechosos.name,
+        iconText: 'NG',
+        path: reporteRoutesMap.pedidosSospechosos.path,
+      }
     ],
+  },
+  {
+    name:'Impresoras',
+    icon:'print',
+    children:[
+      {
+        name: impresorasRoutesMap.gestion.name,
+        iconText: 'IP',
+        path: impresorasRoutesMap.gestion.path,
+      },
+    ]
   }
 ]
 

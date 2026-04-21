@@ -137,7 +137,7 @@ const DetallePedidoWrapper = ({ row }: { row: RestPedido }) => {
   const [showHistory, setShowHistory] = useState(false)
   const users = useAuth()
   const isAdmin=users.user.rol ==='ADMINISTRADOR'
-  const hasHistory = row.historial && row.historial.length > 0 && isAdmin
+  const hasHistory =  isAdmin
   
   return (
     <Box sx={{ width: '100%' }}>
@@ -150,11 +150,7 @@ const DetallePedidoWrapper = ({ row }: { row: RestPedido }) => {
       )}
       {showHistory ? (
         <HistorialPedido
-          historial={row.historial ?? []}
-          productos={row.productos ?? []}
-          numeroPedido={row.numeroPedido}
-          fecha={row.fechaDocumento}
-          autor={row.usucre}
+          pedidoId={row._id || ''}
         />
       ) : (
         <ProductosDetalle productos={row.productos ?? []} />

@@ -69,7 +69,7 @@ export const ModalAnularPedido: React.FC<ModalAnularPedidoProps> = ({ open, pedi
   )
 
   const handleConfirmAnular = async () => {
-    if (!pedido) return
+    if (!pedido || !pedido._id) return
 
     const selectedItems = itemsAnular.filter((item) => item.selected)
     const itemsInput = selectedItems.map((item) => ({
@@ -88,7 +88,7 @@ export const ModalAnularPedido: React.FC<ModalAnularPedidoProps> = ({ open, pedi
         descripcionMotivo: motivo,
         restablecerStock: selectAllStock,
         input: itemsInput.length > 0 ? itemsInput : undefined,
-      })
+      } as any)
       onSuccess()
       onClose()
     } catch (e) {

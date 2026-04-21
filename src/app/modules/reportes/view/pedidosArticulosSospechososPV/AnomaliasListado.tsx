@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogTitle,
   Paper,
+  Tooltip,
 } from '@mui/material'
 import dayjs from 'dayjs'
 import exportFromJSON from 'export-from-json'
@@ -14,9 +15,9 @@ import { MrtDynamicTable } from '../../../../base/components/Table/MrtDynamicTab
 import { MrtTableConfig } from '../../../../base/components/Table/mrtTypes'
 import React, { useCallback, useMemo, useState } from 'react'
 
-import { HistorialPedido } from './ReporteHistoralPedido'
+import { ReporteHistorialPedido } from './ReporteHistoralPedido'
 import { DetalleAnomalia } from './DetalleAnomilia'
-import { ArticuloOperacion, HistorialArticuloOperacion } from '../../../restaurante'
+import { useAppConfirm } from '../../../../base/contexts/AppConfirmProvider'
 
 export type Anomalia = {
   articuloId: string
@@ -24,19 +25,17 @@ export type Anomalia = {
   nombre: string
   cantidad: number
   descripcion: string
+  resumenCambios?: string
+  motivosSospecha?: string[]
   precio: number
   autor: string
   estadoArticulo: string
+  accion?: string
   sucursal?: string
   puntoVenta?: string
   pedidoId?: string
   numeroPedido?: string
   orden?: number
-  productos?: ArticuloOperacion[]
-  historial?: HistorialArticuloOperacion[]
-  usucre?: string
-  fechaDocumento?: string
-  numeroOrden?: number
 }
 
 interface Props {
@@ -46,6 +45,7 @@ interface Props {
 const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
   const [openDialog, setOpenDialog] = useState(false)
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState<Anomalia | null>(null)
+  const { requestConfirm } = useAppConfirm()
 
   const columns = useMemo<MRT_ColumnDef<Anomalia>[]>(
     () => [
@@ -81,12 +81,6 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
         header: 'Pedido / Orden',
         size: 140,
       },
-      {
-        accessorFn: (row) => `${row.sucursal} - ${row.puntoVenta}`,
-        id: 'sucursalPunto',
-        header: 'Sucursal / PV',
-        size: 125,
-      },
       { accessorKey: 'nombre', header: 'Artículo', size: 200 },
       {
         accessorKey: 'cantidad',
@@ -94,26 +88,27 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
         size: 100,
       },
       {
-        accessorKey: 'descripcion',
-        header: 'Descripción',
+        accessorFn: (row) => row.motivosSospecha?.join(', ') || '-',
+        id: 'motivosSospecha',
+        header: 'Motivos Sospecha',
         size: 240,
         Cell: ({ cell }) => {
-          const value = cell.getValue<string>() || '-'
-          const valueLower = value.toLowerCase()
-          let color = 'inherit'
-          let fontWeight: 'normal' | 'bold' = 'normal'
-
-          if (valueLower.includes('eliminado') || valueLower.includes('eliminación')) {
-            color = 'red'
-            fontWeight = 'bold'
-          } else if (valueLower.includes('disminución')) {
-            color = 'orange'
-          } else if (valueLower.includes('aumento')) {
-            color = 'green'
-          }
-
-          return <span style={{ color, fontWeight }}>{value}</span>
-        },
+          const value = cell.getValue<string>()
+          return (
+            <Tooltip title={value} placement="top" arrow>
+              <div
+                style={{
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '220px'
+                }}
+              >
+                {value}
+              </div>
+            </Tooltip>
+          )
+        }
       },
       {
         accessorKey: 'precio',
@@ -126,21 +121,31 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
     [],
   )
 
-  const onExportarCSV = useCallback(() => {
+  const onExportarCSV = useCallback(async () => {
     if (!anomalias || anomalias.length === 0) {
       alert('No hay datos para exportar')
       return
     }
 
+    const confirm = await requestConfirm({
+      title: 'Exportar Reporte',
+      description: '¿Está seguro que desea exportar el listado de anomalías en formato CSV?',
+      confirmationText: 'Exportar',
+      confirmButtonColor: 'primary'
+    })
+
+    if (!confirm.confirmed) return
+
     const dataToExport = anomalias.map((item) => ({
-      'Pedido / Orden': `${item.numeroPedido || ''} - ${item.orden || ''}`,
-      'Sucursal / PV': `${item.sucursal || ''} - ${item.puntoVenta || ''}`,
+      'Pedido / Orden': `${item.numeroPedido ?? ''} - ${item.orden ?? ''}`,
+      'Sucursal / PV': `${item.sucursal ?? ''} - ${item.puntoVenta ?? ''}`,
       Artículo: item.nombre,
       Cantidad: item.cantidad,
-      Descripción: item.descripcion,
+      'Resumen Cambios': item.resumenCambios || '',
+      'Motivos Sospecha': item.motivosSospecha?.join(', ') || '',
       Precio: item.precio?.toFixed(2) || '',
       Autor: item.autor,
-      Fecha: dayjs(item.fecha).format('YYYY-MM-DD HH:mm'),
+      Fecha: item.fecha || '',
       'Estado Artículo': item.estadoArticulo,
     }))
 
@@ -151,7 +156,7 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
       delimiter: ';',
       withBOM: true,
     })
-  }, [anomalias])
+  }, [anomalias, requestConfirm])
 
   const config = useMemo<MrtTableConfig<Anomalia>>(
     () => ({
@@ -168,16 +173,11 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
           Exportar CSV
         </Button>
       ),
-      renderDetailPanel: (row) =>
-        row.historial && row.historial.length > 0 ? (
+      renderDetailPanel: (row) => (
           <DetalleAnomalia
-            articuloId={row.articuloId}
-            historial={row.historial}
-            productos={row.productos || []}
-            fecha={row.fechaDocumento || row.fecha}
-            autor={row.usucre || row.autor}
+            anomalia={row}
           />
-        ) : null,
+      ),
       additionalOptions: {
         enableColumnResizing: true,
         columnResizeMode: 'onChange',
@@ -214,17 +214,12 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
         fullWidth
       >
         <DialogTitle>
-          Historial del Pedido Nº {pedidoSeleccionado?.numeroPedido ?? ''}
+          Evolución del Pedido Nº {pedidoSeleccionado?.numeroPedido ?? ''}
         </DialogTitle>
         <DialogContent dividers>
           {pedidoSeleccionado ? (
-            <HistorialPedido
-              montoTotal={pedidoSeleccionado.precio}
-              historial={pedidoSeleccionado.historial || []}
-              productos={pedidoSeleccionado.productos || []}
-              numeroPedido={pedidoSeleccionado.numeroPedido || ''}
-              fecha={pedidoSeleccionado.fechaDocumento || pedidoSeleccionado.fecha}
-              autor={pedidoSeleccionado.usucre || pedidoSeleccionado.autor || ''}
+            <ReporteHistorialPedido
+              pedidoId={pedidoSeleccionado.pedidoId || ''}
             />
           ) : (
             <div>No hay datos para mostrar</div>

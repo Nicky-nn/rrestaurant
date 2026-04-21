@@ -9,12 +9,12 @@ export type MuiSelectSize = 'small' | 'medium' | 'large'
 // Configuración de dimensiones según el tamaño
 const sizeConfig = {
   small: {
-    minHeight: '36.13px',
-    fontSize: '14px', // 14px
+    minHeight: '39px',
+    fontSize: '1rem', // 14px
     paddingY: '0', // Padding vertical interno reducido
   },
   medium: {
-    minHeight: '56px', // Estándar MUI
+    minHeight: '54.5px', // Estándar MUI
     fontSize: '1rem', // 16px
     paddingY: '8px',
   },

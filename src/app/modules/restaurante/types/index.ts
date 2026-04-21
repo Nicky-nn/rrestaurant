@@ -13,9 +13,21 @@ export type DateDMYHHMMSS = string;
  */
 export type DateDMYHHMM = string;
 /**
+ * Url de la representación para la obtencion de la representación impresa 
+ */
+export type UrlRepresentacionGrafica = string;
+/**
+ * Url de la representación Grafica V2, para la obtención de la representación impresa, uso de Buffer para la generacion de archivos 
+ */
+export type UrlRepresentacionGraficaV2 = string;
+/**
  * Url de consulta documentos, para la obtención de la representación impresa, uso de Buffer para la generacion de archivos 
  */
 export type UrlConsultaDocumento = string;
+/**
+ * Url de la representación S.I.N para la obtencion de la representación impresa 
+ */
+export type UrlSinRepresentacionGrafica = string;
 /**
  * Información para ayudar en la paginación.
  */
@@ -89,6 +101,46 @@ export interface SinTipoDocumentoSector {
 }
 
 /**
+ * Métodos de generación de documentos digitales
+ */
+export interface SinTipoEmision {
+  /** Código de Tipo de Emisión */
+  codigoClasificador: string;
+  /** Descripción del Tipo de Emisión */
+  descripcion: string;
+}
+
+/**
+ * Tipos de documentos fiscales
+ */
+export interface SinTipoFactura {
+  /** Código de Tipo de Factura */
+  codigoClasificador: string;
+  /** Descripción del Tipo de Factura */
+  descripcion: string;
+}
+
+/**
+ * Medios por los cuales se hace efectivo un pago a una factura
+ */
+export interface SinTipoMetodoPago {
+  /** Código de Tipo de Método de Pago */
+  codigoClasificador: string;
+  /** Descripción del Tipo de Método de Pago */
+  descripcion: string;
+}
+
+/**
+ * Cualquier tipo de dinero (monedas, billetes, cheques, entre otros) que se encuentra en circulación en la economía de un territorio en concreto
+ */
+export interface SinTipoMoneda {
+  /** Código de Tipo de Moneda */
+  codigoClasificador: number;
+  /** Descripción del Tipo de Moneda */
+  descripcion: string;
+}
+
+/**
  * Es un lugar, dispositivo o medio de venta que está asociado a una sucursal o casa matriz y que por su forma de trabajo puede ser fijo (en el caso de puntos de venta para ferias) o móvil (en el caso de camiones de repartidores o de distribución). Los Puntos de Venta no están registrados en el Padrón Nacional de Contribuyentes
  */
 export interface SinTipoPuntoVenta {
@@ -106,6 +158,32 @@ export interface SinUnidadMedida {
   codigoClasificador?: number;
   /** Descripción de Unidad de Medida */
   descripcion?: string;
+}
+
+/**
+ * El CUIS es un valor generado por la Administración Tributaria y que identifica la relación entre el Sistema Informático de Facturación autorizado, credenciales, Contribuyente, sucursal y opcionalmente al punto de venta, es inalterable en su composición y deberá ser parte del envío de Facturas Digitales.
+ */
+export interface SinCuis {
+  /** Código Único de Inicio de Sistema */
+  codigo?: string;
+  /** Fecha de vigencia del CUIS */
+  fechaVigencia?: DateDMYHHMMSS;
+}
+
+/**
+ * Código Único de Facturación Diaria (CUFD) para el Sistema Informático de Facturación autorizado debe realizarse diariamente. Este código habilita el sistema del Sujeto Pasivo para la emisión de Facturas Digitales durante un periodo de vigencia de 24 horas
+ */
+export interface SinCufD {
+  /** Código Único de Facturación Diaria */
+  codigo?: string;
+  /** Código de control del CUFD */
+  codigoControl?: string;
+  /** Dirección de facturación del CUFD */
+  direccion?: string;
+  /** Fecha de vigencia del CUFD */
+  fechaVigencia?: DateDMYHHMMSS;
+  /** Fecha de inicio del CUFD */
+  fechaInicial?: DateDMYHHMMSS;
 }
 
 /**
@@ -148,7 +226,9 @@ export interface ImagenCloud {
  * Entrada de datos paramétricos de la entidad como codigos de sucursal o codigos de puntos de venta - El código de sucursal y punto de venta enviado esta restringido a su la restriccion de sucursal y punto de venta - Para verificar las restricciones consulte el servicio usuarioRestriccion
  */
 export interface EntidadParamsInput {
+  /** Codigo de sucursal */
   codigoSucursal?: number;
+  /** Código de punto de venta */
   codigoPuntoVenta?: number;
 }
 
@@ -156,11 +236,16 @@ export interface EntidadParamsInput {
  * Datos de entrada de un cliente registrado en base de datos
  */
 export interface ClienteOperacionInput {
+  /** Codigo del cliente definido por el cliente, en caso de no enviar, se asocia: - [numeroDocumento][complemento] */
   codigoCliente: string;
-  razonSocial: string;
-  email: string;
-  telefono: string;
-  direccion: string;
+  /** Razon Social del cliente. - En caso de no enviar, se obtiene la razon social del cliente registrado. */
+  razonSocial?: string;
+  /** Correo electrónico del cliente. - En caso de registro de un nuevo cliente, se debe ingresar el email - En caso de existencia de usuario, puede usarse para reemplazar el email del cliente registrado. */
+  email?: string;
+  /** Telefono de referencia */
+  telefono?: string;
+  /** Dirección del cliente */
+  direccion?: string;
 }
 
 /**
@@ -168,37 +253,37 @@ export interface ClienteOperacionInput {
  */
 export interface ClienteOperacion {
   /** Razon Social del cliente. */
-  razonSocial: string;
+  razonSocial?: string;
   /** Codigo unico que se asigna al cliente. */
-  codigoCliente: string;
+  codigoCliente?: string;
   /** Código del clasificador del tipo documento de identidad. */
-  tipoDocumentoIdentidad: SinTipoDocumentoIdentidad;
+  tipoDocumentoIdentidad?: SinTipoDocumentoIdentidad;
   /** Numero de documento del cliente */
-  numeroDocumento: string;
+  numeroDocumento?: string;
   /** Si es C.I., y contenga un numero de complemento */
-  complemento: string;
+  complemento?: string;
   /** Nombre del  titular de la cuenta. */
-  nombres: string;
+  nombres?: string;
   /** Apellidos del titular de la cuenta. */
-  apellidos: string;
+  apellidos?: string;
   /** Correo electrónico de la persona, este campo es unico en la organización. */
-  email: string;
+  email?: string;
   /** Telefono de referencia */
-  telefono: string;
+  telefono?: string;
   /** Si el cliente tiene linea de credito - true: El cliente puede acceder a una linea de credito - false: El cliente no puede acceder a una linea de credito */
-  lineaCredito: boolean;
+  lineaCredito?: boolean;
   /** Credito minimo para acceder a una linea de credito - 0 o nulo: No hay limite */
-  creditoMinimo: number;
+  creditoMinimo?: number;
   /** Credito maximo para acceder a una linea de credito - 0 o nulo: No hay limite */
-  creditoMaximo: number;
+  creditoMaximo?: number;
   /** Direccion de residencia del cliente */
-  direccion: string;
+  direccion?: string;
   /** Dirección en el cual el cliente desarrolla sus actividades económicas */
-  direccionLaboral: string;
+  direccionLaboral?: string;
   /** Nombre de la entidad donde el cliente desarrolla sus actividades económicas */
-  entidadLaboral: string;
+  entidadLaboral?: string;
   /** Máximo plazo (meses) de duración del un crédito - Se contabiliza en Nro de meses. */
-  maximoPlazo: number;
+  maximoPlazo?: number;
 }
 
 /**
@@ -277,6 +362,19 @@ export interface OrgFacturaSucursal {
   municipio?: string;
   /** Define si existe integración con SISTEMA DE ADMINISTRACIÓN TRIBUTARIA */
   integracionSiat?: boolean;
+}
+
+/**
+ * Urls para descargar los documentos en formato representacion gráfica
+ */
+export interface UrlsRepresentacionGrafica {
+  pdf?: UrlRepresentacionGrafica;
+  xml?: UrlRepresentacionGrafica;
+  rollo?: UrlRepresentacionGrafica;
+  rolloResumen?: UrlRepresentacionGrafica;
+  /** Formato rollo super reducido solo disponible para: - Factura Compra Venta */
+  rolloReducido?: UrlRepresentacionGraficaV2;
+  sin?: UrlSinRepresentacionGrafica;
 }
 
 /**
@@ -378,9 +476,9 @@ export interface MonedaPrecioOperacion {
  */
 export interface MetodoPago {
   /** Razon Social del cliente. */
-  codigoClasificador: number;
+  codigoClasificador?: number;
   /** Codigo unico que se asigna al cliente. */
-  descripcion: string;
+  descripcion?: string;
 }
 
 /**
@@ -493,6 +591,8 @@ export interface ArticuloDescuentoCantidad {
 export interface TotalesPrecioCostoOperacion {
   /** Importe Bruto (Si no hubiera descuentos), (cantidad * valorBase) */
   subtotalBruto?: number;
+  /** Subtotal visual para la línea del carrito (ignora prorrateos globales y gastos). - Contempla el descuento directo y asegura que el impuesto esté incluido. - Fórmula (Si incluye impuesto): = subtotalBruto - totalDescuento - Fórmula (Si NO incluye impuesto): = (subtotalBruto - totalDescuento) * (1 + tasaIva) */
+  subtotalLineaVisual?: number;
   /** Sumatoria de los descuentos - No se toma en cuenta el descuento adicional global */
   totalDescuento?: number;
   /** Sumatoria de los descuentos calculado en porcentaje - No se toma en cuenta el descuento adicional global */
@@ -533,6 +633,8 @@ export interface PrecioCostoOperacion {
   valor?: number;
   /** El valor de referencia histórico o estándar. - COSTO: Costo Promedio/Estándar anterior (Kardex). - PRECIO: Generalmente 0 (o Precio de Lista anterior para comparar subidas). */
   valorAnterior?: number;
+  /** Precio unitario visual con el impuesto incluido. Ideal para la columna "Precio Unitario" en el carrito. Fórmula (Si incluye impuesto): = valor Fórmula (Si NO incluye impuesto): = valor * (1 + tasaIva) */
+  valorConImpuesto?: number;
   /** Descuento directo unitario (Monto) */
   descuento?: number;
   /** Descuento adicional prorrateado (Monto). */
@@ -565,8 +667,6 @@ export interface PrecioCostoOperacion {
 export interface ArticuloPrecioOperacion {
   /** Articulo Unidad de medida y sus respectivas homologaciones */
   articuloUnidadMedida?: ArticuloUnidadMedida;
-  /** Moneda y precio segun la unidad de medida - Se depreca el objecto, los valores de "monedaPrecio" son parte el objeto "ArticuloPrecioOperacion" @deprecated */
-  monedaPrecio?: MonedaPrecioOperacion;
   /** Estructura de moneda que incluye el tipo de cambio segun moneda principal - implementada para version 2026.2.17 */
   moneda?: Moneda;
   /** Tipo de cambio final, puede ser diferente al tipo de cambio de moneda - implementada para version 2026.2.17 */
@@ -577,10 +677,10 @@ export interface ArticuloPrecioOperacion {
   tipoOperacion?: string;
   /** monto final de operacion según sea de tipoOperacion = costo | precio - Valor que se ingresa de front-end - Reemplaza a valor precio del objeto "monedaPrecio" - Implementada para version 2026.2.17 */
   valor?: number;
-  /** Cantidad Base de venta, solo consultable por el usuario - Este valor es reemplazado por el nuevo argumento `cantidadFactor` - Ejemplo: 1 Caja = 12 Unidades por caja, entonces, `cantidadFactor` = 12 - Ya no se debe usar @deprecated */
-  cantidadBase?: number;
   /** Cantidad de operacion */
   cantidad?: number;
+  /** Historial de cantidad anterior - Generalmente usado para mostrar historial de cantidades en el tiempo */
+  cantidadAnterior?: number;
   /** Equivalencia de la unidad (12 unidades por Caja) - Ejemplo: 1 Caja = 12 Unidades por caja, entonces, `cantidadFactor` = 12 */
   cantidadFactor?: number;
   /** Descuento de linea */
@@ -603,13 +703,22 @@ export interface ArticuloPrecioOperacion {
  * Datos de entrada de la unidad de medida montos monedas y precios
  */
 export interface ArticuloPrecioOperacionInput {
+  /** Código de articulo de unidad de medida */
   codigoArticuloUnidadMedida: string;
+  /** Cantidad de operacion o items solicitados segun la unidad de medida seleccionada */
   cantidad: number;
+  /** Valor, Precio, costo o monto de entrada */
   precio: number;
+  /** Descuento en caso aplique El valor descuento es por fila, independientemente de la cantidad */
   descuento: number;
+  /** Si el descuento de linea es total o por unidad - true: descuento total - false: descuento por unidad - Default true */
   esDescuentoTotal?: boolean;
+  /** Monto impuesto porcentual que se aplican a la operación - Impuesto % que va de 0% a 100% - Enviar 0 default */
   impuesto: number;
+  /** Si la operacion a realizar incluye impuesto - Default false */
   incluyeImpuesto?: boolean;
+  /** Tipo de valor asignado al valor|precio|costo - Valores admitidos "precio", "costo", "delivery", "null" - "null" es para cuando no se aplica valor precio default */
+  tipoValor?: string;
 }
 
 /**
@@ -759,6 +868,12 @@ export interface TipoArticulo {
   updatedAt?: DateDMYHHMMSS;
 }
 
+export interface ArticuloComposicionVenta {
+  articulo?: Articulo;
+  receta?: ArticuloRecetaOperacion;
+  modificadores?: ArticuloModificadorOperacion[];
+}
+
 /**
  * Una conexión a una lista de elementos.
  */
@@ -813,8 +928,6 @@ export interface Articulo {
   articuloPrecio?: ArticuloPrecio[];
   /** Si es item solo para realización de ventas */
   articuloVenta?: boolean;
-  /** Si es item solo para realización de inventarios */
-  articuloInventario?: boolean;
   /** Si es item solo para realización de compras administrativas */
   articuloCompra?: boolean;
   /** Datos de consulta del inventario */
@@ -831,10 +944,6 @@ export interface Articulo {
   verificarStock?: boolean;
   /** si es true, el articulo esta activo para su uso */
   activo?: boolean;
-  /** Si es true, el articulo se listará como complemento para otros articulos - Ej. Aderezos, articulos inventariados adicionales al articulo principal */
-  complemento?: boolean;
-  /** Lista de complementos del articulo - Ej. Aderezos, articulos inventariados adicionales al articulo principal - La lista se visualizará siempre y cuando el articulo tambien sea complemento - @deprecated */
-  listaComplemento?: ArticuloComplemento[];
   /** Se despliega el modal si cuenta con modificadores de articulo */
   tieneModificadores?: boolean;
   /** Si el articulo cuenta con receta asociada */
@@ -849,18 +958,6 @@ export interface Articulo {
   usumod?: string;
   /** Fecha de modificación del registro */
   updatedAt?: DateDMYHHMMSS;
-}
-
-/**
- * Resumen de un articulo complemento - Valor deprecado - @deprecated
- */
-export interface ArticuloComplemento {
-  /** Identificador único del articulo */
-  id?: string;
-  /** Código Único que identifica al articulo */
-  codigoArticulo?: string;
-  /** Nombre del articulo complemento */
-  nombreArticulo?: string;
 }
 
 export interface ArticuloOperacionComplemento {
@@ -938,14 +1035,41 @@ export interface ArticuloOperacion {
   notaRapida?: NotaRapida[];
   /** Si es item que verfica existencia de stock */
   verificarStock?: boolean;
-  /** Complementos de articulos que afectan al inventario - Ejemplos: Aderezos, etc */
-  complementos?: ArticuloOperacionComplemento[];
   /** Traza de impresora/as asociadas al articulo - En caso se realice actualizacion de impresoras, estas no afectan al registro */
   impresoras?: Impresora[];
   /** Si es un articulo para cortesía. - El precio del articulo se cambia a 0 solo cuando se finaliza el pedido. - Para otros estados, se mantiene el precio original */
   cortesia?: boolean;
+  /** Datos operativos de receta */
+  variacionReceta?: ArticuloOperacionReceta[];
+  modificadores?: ArticuloOperacionModificador[];
   /** Estado del registro - ELABORADO: Articulo que no ha sufrido cambios en el ciclo de vida del item - ACTUALIZADO: Se ha modificado algún valor del item - ELIMINADO: Se ha eliminado el item - NUEVO: Nuevo ingreso de item */
   state?: string;
+}
+
+/**
+ * Rastro o huella de la ultima transacción de registros / actualizacion del argumento Articulos / Productos.
+ */
+export interface UltimaTransaccion {
+  /** 'CREACION', 'EDICION', 'FINALIZACION' */
+  accion?: string;
+  /** Ultimo estado del registro */
+  stateAnterior?: string;
+  /** Quién hizo ese cambio */
+  usuario?: string;
+  /** Cuándo ocurrió */
+  fecha?: DateDMYHHMMSS;
+  /** Las fotografías del momento exacto antes del nuevo cambio */
+  articulos?: ArticuloOperacion[];
+  /** Totales generados */
+  totales?: TotalesGenerales;
+  /** Moneda de operación */
+  moneda?: Moneda;
+  /** Tipo de cambio */
+  tipoCambio?: number;
+  /** Descuento adicional */
+  descuentoAdicional?: number;
+  /** Otros costos */
+  otrosCostos?: number;
 }
 
 /**
@@ -978,15 +1102,25 @@ export interface NotaRapida {
  * Datos de entrada para asociar el articulo a las tablas relacionales
  */
 export interface ArticuloOperacionInput {
+  /** Nro de item en caso de contar con un item - Si envía null se asume nuevo registro - Si se envía un valor, busca el articulo en base a este nroItem */
   nroItem?: number;
+  /** Código del articulo */
   codigoArticulo: string;
+  /** Codigo de almacen */
   codigoAlmacen: string;
+  /** En caso de tener un lote */
   codigoLote?: string;
+  /** Definición de cantidad, precios, unidad medida. */
   articuloPrecio: ArticuloPrecioOperacionInput;
-  complementos?: ArticuloOperacionComplementoInput[];
+  /** Reglas de negocio que permiten la modificación de la receta - Array vacío [] significa que es receta estandar sin modificaciones. */
+  variacionReceta?: ArticuloRecetaOperacionInput[];
+  /** Productos externos anexados - Array vacío [] si es un producto simple */
+  modificadores?: ArticuloModificadorOperacionInput[];
+  /** Detalle Extra para el item */
   detalleExtra?: string;
-  nota?: string;
+  /** Nota rapida asociada al item */
   notaRapida?: NotaRapidaInput[];
+  /** Si el articulo es para cortesía. */
   cortesia?: boolean;
 }
 
@@ -994,19 +1128,39 @@ export interface ArticuloOperacionInput {
  * Nota rapida asociadas al articulo
  */
 export interface NotaRapidaInput {
+  /** Valor string que puede asociarse a cantidad */
   cantidad?: number;
+  /** Valor de la nota */
   valor?: string;
+  /** Atributo 1 */
   atributo1?: string;
+  /** Atributo 2 */
   atributo2?: string;
 }
 
 export interface ArticuloOperacionComplementoInput {
+  /** Código del articulo */
   codigoArticulo: string;
+  /** Codigo de almacen */
   codigoAlmacen: string;
+  /** En caso de tener un lote */
   codigoLote?: string;
+  /** Definición de cantidad, precios, unidad medida. */
   articuloPrecio: ArticuloPrecioOperacionInput;
+  /** Detalle extra para el item */
   detalleExtra?: string;
+  /** Nota asociada al item */
   nota?: string;
+}
+
+/**
+ * Métodos de pago adicionales} - Generalmente usada para registro de finalizacion de ventas
+ */
+export interface MetodoPagoVentaInput {
+  /** Código según el clasificador de métodos de pago */
+  codigoMetodoPago: number;
+  /** Monto Asignado al metodo de pago */
+  monto: number;
 }
 
 /**
@@ -1014,9 +1168,9 @@ export interface ArticuloOperacionComplementoInput {
  */
 export interface MetodoPagoVenta {
   /** Según el clasificador de métodos de pago */
-  metodoPago: MetodoPago;
+  metodoPago?: MetodoPago;
   /** Monto de pago */
-  monto: number;
+  monto?: number;
 }
 
 export interface InventarioLote {
@@ -1105,6 +1259,130 @@ export interface Inventario {
 }
 
 /**
+ * Detalle de items de la Factura Electrónica.
+ */
+export interface SalidaFacturaDetalle {
+  /** Número de item iterativo del detalle la factura. */
+  nroItem?: number;
+  /** Datos del clasificador de la Actividad Económica. */
+  actividadEconomica?: SinActividades;
+  /** Catálogo del Producto Servicio enviado por el SIN. */
+  productoServicio?: SinProductoServicio;
+  /** Código que otorga el contribuyente a su servicio o producto. */
+  producto?: string;
+  /** Descripción que otorga el contribuyente a su servicio o producto. */
+  descripcion?: string;
+  /** Cantidad del producto o servicio otorgado. En caso de servicio este valor debe ser 1. */
+  cantidad?: number;
+  /** Valor de la paramétrica que identifica la unidad de medida. */
+  unidadMedida?: SinUnidadMedida;
+  /** Precio que otorga el contribuyente a su servicio o producto. */
+  precioUnitario?: number;
+  /** Monto de descuento sobre el producto o servicio específico,  Si no aplica deberá ser nulo. */
+  montoDescuento?: number;
+  /** El subtotal es igual a la (cantidad * precio unitario) – descuento. */
+  subTotal?: number;
+  /** Número de serie correspondiente al producto vendido de línea blanca o negra. Nulo en otro caso. */
+  numeroSerie?: string;
+  /** Número de Imei del celular vendido. Nulo en otro caso. */
+  numeroImei?: string;
+  /** Detalle extra asociado al item, texto plano. */
+  detalleExtra?: string;
+  /** Mensaje de evento o acción que afecta al registro */
+  log?: string;
+}
+
+/**
+ * Documento Fiscal autorizado por la Administración Tributaria cuya emisión física o digital respalda la realización de compra/venta de bienes muebles, contratos de obras, prestación de servicios o toda otra prestación cualquiera fuere su naturaleza alcanzados por el IVA u otro impuesto
+ */
+export interface SalidaFactura {
+  /** Identificador único interno */
+  _id?: string;
+  /** Número de NIT registrado en el Padrón Nacional de Contribuyentes que corresponde a la persona o empresa que emite la factura. */
+  nitEmisor?: string;
+  /** Razón Social o nombre registrado en el Padrón Nacional de Contribuyentes de la persona o empresa que emite la factura. */
+  razonSocialEmisor?: string;
+  /** Numeración propia que se le asigna a la Factura. */
+  numeroFactura?: number;
+  /** Tipos de documentos fiscales */
+  tipoFactura?: SinTipoFactura;
+  /** Métodos de generación de documentos digitales */
+  tipoEmision?: SinTipoEmision;
+  /** Código único de facturación (CUF) debe ser generado por el emisor. */
+  cuf?: string;
+  /** Código Único de Facturación Diaria (CUFD) */
+  cufd?: SinCufD;
+  /** Codigo único de sistema */
+  cuis?: SinCuis;
+  /** Establecimientos secundarios donde se realiza alguna de las actividades económicas del Contribuyente, tienen una dirección física y están registradas en el Padrón Nacional de Contribuyentes */
+  sucursal?: OrgFacturaSucursal;
+  /** Es un lugar, dispositivo o medio de venta que está asociado a una sucursal o casa matriz y que por su forma de trabajo puede ser fijo (en el caso de puntos de venta para ferias) o móvil (en el caso de camiones de repartidores o de distribución). Los Puntos de Venta no están registrados en el Padrón Nacional de Contribuyentes */
+  puntoVenta?: OrgFacturaPuntoVenta;
+  /** Fecha y hora en la cual se emite la factura. Expresada en formato UTC Extendido, por ejemplo: “2020-02-15T08:40:12.215”. */
+  fechaEmision?: DateDMYHHMMSS;
+  /** Datos del cliente, El email puede variar segun el registro original. */
+  cliente?: ClienteOperacion;
+  /** Identifica el método de pago utilizado para realizar la compra. Por ejemplo el codigo de clasificador 1 que representa a un pago en efectivo. */
+  metodoPago?: SinTipoMetodoPago;
+  /** Cuando el método de pago es 2 (Tarjeta), debe enviarse este valor pero ofuscado con los primeros y últimos 4 dígitos en claro y ceros al medio. Ej: 4797000000007896,. */
+  numeroTarjeta?: string;
+  /** Monto total por el cual se realiza el hecho generador. */
+  montoTotal?: number;
+  /** Monto total en formato literal. */
+  montoTotalLiteral?: string;
+  /** Monto base para el cálculo del crédito fiscal. */
+  montoTotalSujetoIva?: number;
+  /** Valor de la paramétrica que identifica la moneda en la cual se realiza la transacción. */
+  moneda?: SinTipoMoneda;
+  /** Tipo de cambio de acuerdo a la moneda en la que se realiza el hecho generador, si el código de moneda es boliviano deberá ser igual a 1. */
+  tipoCambio?: number;
+  /** Es el Monto Total expresado en el tipo de moneda, si el código de moneda es boliviano deberá ser igual al monto total. */
+  montoTotalMoneda?: number;
+  /** Monto a ser cancelado con una Gift Card */
+  montoGiftCard?: number;
+  /** Monto Adicional al descuento por item */
+  descuentoAdicional?: number;
+  /** Código de Autorización de Facturas por Contingencia */
+  cafc?: string;
+  /** Leyenda asociada a la actividad económica. */
+  leyenda?: string;
+  /** Mensajes conforme a la ley 453, donde se mencionan los derechos de los usuarios. */
+  subLeyenda?: string;
+  /** Identifica al usuario que emite la factura, deberá ser descriptivo. Por ejemplo INTEGRATE */
+  usuario?: string;
+  /** Valor de la paramétrica que identifica el tipo de factura que se está emitiendo. Para este tipo de factura este valor es 1. */
+  documentoSector?: SinTipoDocumentoSector;
+  /** Para la anulación de una Factura emitida, la mencionada factura deberá estar previamente registrada y validada por la Administración Tributaria. Dichos servicios previa validación de los parámetros enviados, registran la solicitud devolviendo un código de estado cuando la misma fue correcta o un código de error y advertencia en caso contrario */
+  motivoAnulacion?: SinMotivoAnulacion;
+  /** Detalle extra, puede ser un HTML o un texto plano. la información registrada no se envia al servicio de impuestos nacionales */
+  detalleExtra?: string;
+  /** Detalle de los items a ser facturados */
+  detalle?: SalidaFacturaDetalle[];
+  /** Código del evento significativo Hechos inherentes al Sistema informático de Facturación que intervienen en su funcionamiento o que podrían afectar la emisión de las Facturas Digitales. Deben ser registrados hasta 48 horas posteriores de finalizada la contingencia, a través del sistema autorizado por la Administración Tributaria y enviados automáticamente a través del servicio Web correspondiente. */
+  eventoSignificativo?: string;
+  /** Respuesta al consumo del servicio de Facturacion Compra Venta */
+  codigoRecepcion?: string;
+  /** Representacion PDF, XML, ROLLO, ETC */
+  representacionGrafica?: UrlsRepresentacionGrafica;
+  /** Usuario de creación del registro */
+  usucre?: string;
+  /** Fecha de creación del registro */
+  createdAt?: DateDMYHHMMSS;
+  /** Usuario de modificación del registro */
+  usumod?: string;
+  /** Fecha de modificación del registro */
+  updatedAt?: DateDMYHHMMSS;
+  /** Estado del registro */
+  state?: string;
+  /** Referencia con alguna tabla relacionada */
+  referencia?: string;
+  /** Tipo de referencia - Ej: CREDITO, VENTA, NORMAL, REST, etc - Si es null se asume venta normal por servicio de facturación */
+  tipoVenta?: string;
+  /** Historial de eventos relacionados al registro - En caso de tener la factura en estado diferente a VALIDADA, ANULADA, se puede consultar el log del registro */
+  log?: string;
+}
+
+/**
  * Datos del tipo de articulo.
  */
 export interface Impresora {
@@ -1135,6 +1413,153 @@ export interface Impresora {
 }
 
 /**
+ * Articulo Operacion Modificador
+ */
+export interface ArticuloOperacionModificador {
+  /** Referencia a la tabla principal */
+  articuloModificadorId: string;
+  articuloId: string;
+  nroItem?: number;
+  codigoArticulo?: string;
+  nombreArticulo?: string;
+  almacen?: Almacen;
+  lote?: Lote;
+  /** Lo que pidió el cliente (Viene del Front-end) */
+  esOpcionGratuita?: boolean;
+  /** La regla que lo autorizó (Viene de la BD y se guarda como snapshot) */
+  elegibleParaGratis?: boolean;
+  /** Cuánto equivalía esta opción en la BD al momento de la venta */
+  cantidadIncluida?: number;
+  /** El mismo motor pesado de la línea principal */
+  articuloPrecio?: ArticuloPrecioOperacion;
+  nota?: string;
+  notaRapida?: NotaRapida[];
+  /** Estado de la linea */
+  state?: string;
+}
+
+/**
+ * Estructura de datos usada para operaciones transaccionales, ejemplo venta, compra, etc
+ */
+export interface ArticuloModificadorOpcionOperacion {
+  /** Código interno del articulo */
+  articulo?: Articulo;
+  /** Cantidad que se descontará del inventario al seleccionar esta opción (Ej: 1 porción) */
+  cantidadIncluida?: number;
+  /** Determina si este insumo puede aplicar para promociones de gratuidad en este grupo */
+  elegibleParaGratis?: boolean;
+}
+
+/**
+ * Opciones seleccionadas de los grupos de modificadores (Ej. Bebidas, Guarniciones)
+ */
+export interface ArticuloModificadorOperacionInput {
+  /** Nro de item en caso de contar con un item - Si envía null se asume nuevo registro - Si se envía un valor, busca el articulo en base a este nroItem */
+  nroItem?: number;
+  /** El ID de ArticuloModificador (Para leer maxSeleccion y opcionesGratuitas) */
+  articuloModificadorId: string;
+  /** Código del articulo */
+  codigoArticulo: string;
+  /** Codigo de almacen */
+  codigoAlmacen: string;
+  /** En caso de tener un lote */
+  codigoLote?: string;
+  /** Definición de cantidad, precios, unidad medida. */
+  articuloPrecio: ArticuloPrecioOperacionInput;
+  /** true = Consume un cupo de 'opcionesGratuitas' de ArticuloModificador */
+  esOpcionGratuita?: boolean;
+  /** Nota rapida asociada al item Instrucciones (Ej. "Con poco hielo", "Sin sal") */
+  notaRapida?: NotaRapidaInput[];
+}
+
+/**
+ * Estructura de datos usada para operaciones transaccionales, ejemplo venta, compra, etc
+ */
+export interface ArticuloModificadorOperacion {
+  /** Identificador interno */
+  _id?: string;
+  /** Nombre único público de la lista de complementos (Ej: "Elige tu guarnición") */
+  nombre?: string;
+  /** Mínima cantidad de selecciones requeridas (0 = Opcional, 1+ = Obligatorio) */
+  minSeleccion?: number;
+  /** Máxima cantidad de selecciones permitidas (1 = Radio buttons, >1 = Checkboxes) */
+  maxSeleccion?: number;
+  /** Cantidad de opciones que el sistema no cobrará (Regla de promoción) */
+  opcionesGratuitas?: number;
+  /** Lista de artículos que conforman este grupo de selección */
+  opciones?: ArticuloModificadorOpcionOperacion[];
+}
+
+/**
+ * Usado en respuesta de operacion de tablas dependientes, POS, REST, ETC
+ */
+export interface ArticuloOperacionReceta {
+  nroItem?: number;
+  articuloId?: string;
+  codigoArticulo?: string;
+  nombreArticulo?: string;
+  almacen?: Almacen;
+  lote?: Lote;
+  removido?: boolean;
+  esExtra?: boolean;
+  /** El motor pesado (Solo tendrá montos > 0 si esExtra = true) */
+  articuloPrecio?: ArticuloPrecioOperacion;
+  nota?: string;
+  notaRapida?: NotaRapida[];
+  /** Estado de la linea */
+  state?: string;
+}
+
+/**
+ * Estructura que se usa para exponer datos de transacción, ejemplo ventas
+ */
+export interface ArticuloRecetaIngredienteOperacion {
+  /** Código del articulo - Debe contener al menos precio */
+  articuloId?: string;
+  /** Datos de inventario articulo */
+  articulo?: Articulo;
+  /** Cantidad exacta que se descontará del inventario del ingrediente. Ej: Si la unidad de medida es "Porciones", y la hamburguesa lleva 3 porciones, esto es 3. */
+  cantidadBase?: number;
+  /** Bandera de personalización: ¿El cliente puede pedir que le quiten este ingrediente? (Ej: "Sin Cebolla" -> true. "Sin Pan" -> false). */
+  esRemovible?: boolean;
+  /** Bandera de personalización: ¿El cliente puede pedir extra de este ingrediente? Si es true, el POS permitirá cobrar una porción (unidad medida) adicional. */
+  permiteExtra?: boolean;
+}
+
+/**
+ * Datos de entrada para asociar el articulo con sus respectiva receta (si tiene), ademas de modificar la estructura de la misma - usado en ArticuloOperacionInput
+ */
+export interface ArticuloRecetaOperacionInput {
+  /** Nro de item en caso de contar con un item - Si envía null se asume nuevo registro - Si se envía un valor, busca el articulo en base a este nroItem */
+  nroItem?: number;
+  /** Código del articulo */
+  codigoArticulo: string;
+  /** Codigo de almacen */
+  codigoAlmacen: string;
+  /** En caso de tener un lote */
+  codigoLote?: string;
+  /** Definición de cantidad, precios, unidad medida. */
+  articuloPrecio: ArticuloPrecioOperacionInput;
+  /** Nota rapida asociada al item */
+  notaRapida?: NotaRapidaInput[];
+  /** Bandera de personalización: ¿El cliente puede pedir que le quiten este ingrediente? (Ej: "Sin Cebolla" -> true. "Sin Pan" -> false). true = Cliente pidió quitarlo (NO descuenta kardex extra, NO cobra) */
+  removido?: boolean;
+  /** Bandera de personalización: ¿El cliente puede pedir extra de este ingrediente? Si es true, el POS permitirá cobrar una porción (unidad medida) adicional. true = Cliente pidió más cantidad de la estándar */
+  esExtra?: boolean;
+}
+
+export interface ArticuloRecetaOperacion {
+  /** Identificador interno */
+  _id?: string;
+  /** Nombre único de la receta (Ej: "Hamburguesa primavera") */
+  nombre?: string;
+  /** Tiempo estimado de preparación en minutos */
+  tiempoPreparacionMinutos?: number;
+  /** Lista de ingredientes que componen el articulo padre */
+  ingredientes?: ArticuloRecetaIngredienteOperacion[];
+}
+
+/**
  * Datos de una mesa ocupada
  */
 export interface restPedidoMesasOcupadas {
@@ -1159,14 +1584,6 @@ export interface restPedidoMesasOcupadas {
 }
 
 /**
- * Eliminar item de un pedido - Se puede solicitar si debe restablecer el stock comprometido, siempre y cuando verificarStock = true
- */
-export interface RestPedidoEliminarItemInput {
-  nroItem: number;
-  restablecerStock?: boolean;
-}
-
-/**
  * Una conexión a una lista de elementos.
  */
 export interface RestPedidoConnection {
@@ -1180,8 +1597,11 @@ export interface RestPedidoConnection {
  * Datos de entrada para registro de una mesa
  */
 export interface RestMesaInput {
+  /** Nombre de mesa Ej. 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, m1, m2, etc En caso de usar una mesa generica registrar 0 */
   nombre?: string;
+  /** Posible cantidad de comenzales en la mesa - Se puede usar para marcar el nro de items de pedidos */
   nroComensales?: number;
+  /** Ubicación de la mesa */
   ubicacion?: string;
 }
 
@@ -1198,20 +1618,35 @@ export interface RestMesa {
 }
 
 export interface RestPedidoExpressInput {
+  /** Nombre Mesa. - Campo obligatorio */
   mesa: RestMesaInput;
+  /** Productos que son añadidos al pedido, pueden ser articulos o grupos de articulos */
   productos: ArticuloOperacionInput[];
+  /** Código de moneda de la transacción */
   codigoMoneda: number;
+  /** Tipo Cambio de la transacción */
   tipoCambio: number;
+  /** Resuelve el tipo de pedido - null = pedido normal - DELIVERY = pedido por delivery - LLEVAR = pedido para llevar */
   tipo?: string;
+  /** Nota relacionada al pedido - La información no se comparte con documentos relacionados, Ej. nota venta, factura */
   nota?: string;
+  /** Nota rapida alternativa a notas */
   notaRapida?: NotaRapidaInput[];
+  /** Términos de entrega del pedido */
   terminos?: string;
+  /** Fecha de entrega del pedido */
   fechaEntrega?: DateDMYHHMM;
+  /** Dirección de entrega del pedido */
   direccionEntrega?: string;
+  /** Identificador relacional del espacio - No realiza la validación de entidad vs espacio entidad - Si no se envía, se utiliza el espacio principal, en caso de no existir, se crea el espacio principal */
   espacioId?: string;
+  /** Atributo Auxiliar 1 */
   atributo1?: string;
+  /** Atributo Auxiliar 2 */
   atributo2?: string;
+  /** Atributo Auxiliar 3 */
   atributo3?: string;
+  /** Atributo Auxiliar 4 */
   atributo4?: string;
 }
 
@@ -1240,7 +1675,7 @@ export interface RestPedido {
   /** Productos o items que han sido eliminados de forma definitiva, pueden ser articulos o kit de articulos */
   productosEliminados?: ArticuloOperacion[];
   /** Rastro o huella de la ultima transacción de registros / actualizacion del argumento Productos. - Si los datos de productos son iguales a ultima transaccion, entonces, no se realiza modificacion en el valor. - Si los datos de productos son diferentes, entonces, se sobre escribe el valor con los datos de productos anterior. */
-  ultimaTransaccionProductos?: ArticuloOperacion[];
+  ultimaTransaccion?: UltimaTransaccion;
   /** Moneda de transaccion */
   moneda?: Moneda;
   /** Tipo de cambio de la transaccion */
@@ -1257,8 +1692,10 @@ export interface RestPedido {
   fechaDocumento?: DateDMYHHMM;
   /** Fecha contable del documento - Generalmente es la fecha de finalización del pedido */
   fechaContable?: DateDMYHHMM;
+  fechaCancelacion?: DateDMYHHMMSS;
+  fechaAnulacion?: DateDMYHHMMSS;
   /** Cliente de la operación */
-  cliente: ClienteOperacion;
+  cliente?: ClienteOperacion;
   /** Método de pago utilizado para la finalización del pedido - No es incluyente al momento de generar la factura, pero si es referencial - Se depreca en la siguiente versión */
   metodoPago?: MetodoPago;
   /** En caso el metodo de pago sea con tarjeta, debe enviar el nro de tarjeta - Se depreca en la siguiente versión */
@@ -1315,10 +1752,74 @@ export interface RestPedido {
   usumod?: string;
   /** Fecha de modificación del registro */
   updatedAt?: DateDMYHHMMSS;
-  /** Historial de articulos según el ciclo de vida del pedido. - Historial se actualiza solo cuando el registro se encuentra en estado COMPLETADO */
-  historial?: HistorialArticuloOperacion[];
   /** Relación con la apertura de caja */
   arqueoCajaId?: string;
+}
+
+/**
+ * Finaliza el pedido, se libera para la posterior emision de nota fiscal
+ */
+export interface RestPedidoFinalizarInput {
+  /** Confirmación de la moneda de operacion, debe ser igual a la moneda de transaccion */
+  codigoMoneda: number;
+  /** Monto Adicional al descuento por item. */
+  descuentoAdicional?: number;
+  /** Otros Costos, ejemplo Flete, etc */
+  otrosCostos?: number;
+  /** En caso de otros costos, descripción de los mismos */
+  descripcionOtrosCostos?: string;
+  /** Monto Total calculado */
+  montoTotal: number;
+  /** Fecha de entrega para nota de venta de pedido */
+  fechaEntrega?: DateDMYHHMM;
+  /** Dirección de entrega de la mercaderia */
+  direccionEntrega?: string;
+  /** Detalle extra, puede ser HTML o texto plano, la información registrada no se envía al SIN */
+  detalleExtra?: string;
+  /** Términos de la salida */
+  terminos?: string;
+  /** Identifica al usuario que emite la factura, deberá ser descriptivo. Por ejemplo JPEREZ - En caso de no enviar el dato, se reemplaza por el usuario de la sesión activa */
+  usuario?: string;
+}
+
+/**
+ * Una conexión a una lista de elementos.
+ */
+export interface RestFacturaConnection {
+  /** Información para ayudar en la paginación. */
+  pageInfo: PageInfo;
+  /** Lista de documentos. */
+  docs?: SalidaFactura[];
+}
+
+/**
+ * Datos de la transacción realizada, salida por factura
+ */
+export interface RestPedidoFactura {
+  /** Datos de la factura de compra venta */
+  factura?: SalidaFactura;
+  /** Datos del pedido, con relacion actualizada */
+  pedido?: RestPedido;
+}
+
+/**
+ * Datos de entrada para el registro de la salida (factura o nota de venta)
+ */
+export interface RestPedidoFacturaInput {
+  /** Codigo de excepción que se aplica a tipo nit - 0 valor por default, verica documento NIT - 1 No realiza verificación del tipo documento NIT */
+  codigoExcepcion?: number;
+  /** Identifica al usuario que emite la factura, deberá ser descriptivo. Por ejemplo JPEREZ - En caso de no enviar el dato, se reemplaza por el usuario de la sesión activa */
+  usuario?: string;
+  /** Valor de la paramétrica que identifica el método de pago utilizado para realizar la compra. Por ejemplo 1 que representa a un pago en efectivo. */
+  codigoMetodoPago: number;
+  /** Cuando el método de pago es 2 (Tarjeta), debe enviarse este valor pero ofuscado con los primeros y últimos 4 dígitos en claro y ceros al medio. Ej: 4797000000007896, en otro caso, debe enviarse un valor nulo o no enviar. */
+  numeroTarjeta?: string;
+  /** Código de la moneda con cual se realiza la transacción */
+  codigoMoneda: number;
+  /** Tipo de cambio de la moneda con la cual se realiza la transacción - Ej. 6.96 según la moneda BOLIVIANO */
+  tipoCambio: number;
+  /** Detalle extra con soporte HTML básico */
+  detalleExtra?: string;
 }
 
 /**
@@ -1341,4 +1842,52 @@ export interface RestEspacio {
   createdAt?: DateDMYHHMMSS;
   usumod?: string;
   updatedAt?: DateDMYHHMMSS;
+}
+
+/**
+ * Datos de entrada para registro de un nuevo espacio
+ */
+export interface RestEspacioInput {
+  descripcion: string;
+  nroMesas: number;
+  atributo1?: string;
+  atributo2?: string;
+  atributo3?: string;
+  atributo4?: string;
+}
+
+/**
+ * Datos del pedido
+ */
+export interface RestPedidoAuditoria {
+  /** Identificador único interno del pedido */
+  pedidoId?: string;
+  /** Código del pedido autoincrementable dependiendo de la sucursal donde se realiza la transacción */
+  numeroPedido?: number;
+  /** Número de orden simple actualizable por periodo determinado - Ej. Primer dia del mes se reinicia a 1 - Ej. Segundo dia del mes se reinicia a 1 */
+  numeroOrden?: number;
+  /** Periodo al que corresponde el inventario */
+  kardexPeriodo?: KardexPeriodo;
+  /** Datos de la sucursal */
+  codigoSucursal?: number;
+  /** Datos del punto de venta */
+  codigoPuntoVenta?: number;
+  /** Acción realizada basado en el historial de pedidos - "CREACION" | "MODIFICACION_ARTICULOS" | "MODIFICACION_FINANCIERA" | "CAMBIO_ESTADO" | "FINALIZACION" | "CANCELACION" | "ANULACION". */
+  accion?: string;
+  /** Usuario que realizó la acción */
+  usuario?: string;
+  /** Productos o items que han sido eliminados de forma definitiva, pueden ser articulos o kit de articulos */
+  resumenCambios?: string;
+  /** Rastro o huella de la ultima transacción de registros / actualizacion del argumento Productos. - Si los datos de productos son iguales a ultima transaccion, entonces, no se realiza modificacion en el valor. - Si los datos de productos son diferentes, entonces, se sobre escribe el valor con los datos de productos anterior. */
+  duracionMinutos?: number;
+  /** Snapshoot del ultimo cambio */
+  articulos?: ArticuloOperacion[];
+  /** Cálculos de los totales según detalle de productos */
+  totales?: TotalesGenerales;
+  esSospechoso?: boolean;
+  motivosSospecha?: string[];
+  /** Riesgo según 'BAJO' | 'MEDIO' | 'ALTO' | 'CRITICO' */
+  riesgoNivel?: string;
+  riesgoPuntaje?: number;
+  fechaRegistro?: DateDMYHHMMSS;
 }

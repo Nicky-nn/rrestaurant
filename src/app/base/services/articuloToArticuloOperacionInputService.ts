@@ -213,6 +213,7 @@ const seleccionarAlmacen = (
   options: {
     autoAlmacen: boolean
     codigoAlmacen?: string | null
+    verificarStock?: boolean
   },
 ): AlmacenProps | null => {
   if (!options.autoAlmacen) return null
@@ -228,10 +229,17 @@ const seleccionarAlmacen = (
     }
   }
 
-  // Buscar el primer almacén que no sea virtual
-  const almacenNoVirtual = detallesOrdenados.find((d) => d.almacen.prioridad !== apiAlmacenPrioridad.virtual)
-
-  return almacenNoVirtual?.almacen ?? null
+  if (options.verificarStock) {
+    // Buscar el primer almacén que no sea virtual
+    const almacenNoVirtual = detallesOrdenados.find(
+      (d) => d.almacen.prioridad !== apiAlmacenPrioridad.virtual,
+    )
+    return almacenNoVirtual?.almacen ?? detallesOrdenados[0]?.almacen ?? null
+  } else {
+    // Buscar el primer almacén virtual (o cualquiera como fallback)
+    const almacenVirtual = detallesOrdenados.find((d) => d.almacen.prioridad === apiAlmacenPrioridad.virtual)
+    return almacenVirtual?.almacen ?? detallesOrdenados[0]?.almacen ?? null
+  }
 }
 
 /**
@@ -247,6 +255,7 @@ const procesarLoteYAlmacen = (
     codigoAlmacen?: string | null
     mostrarAlmacenConStock: boolean
     mostrarLoteConStock: boolean
+    verificarStock?: boolean
   },
 ): { lote: LoteProps | null; almacen: AlmacenProps | null } => {
   let lote: LoteProps | null = null
@@ -312,6 +321,7 @@ const procesarLoteYAlmacen = (
     almacen = seleccionarAlmacen(detallesOrdenados, {
       autoAlmacen: options.autoAlmacen,
       codigoAlmacen: options.codigoAlmacen,
+      verificarStock: options.verificarStock,
     })
   }
 
@@ -354,7 +364,7 @@ export const articuloToArticuloOperacionInputService = (
 
   // Determinar precio según tipo de monto
   const { precio, moneda, precioBase, delivery } = transformarArticuloPrecioService(
-    articulo.articuloPrecioBase,
+    articulo?.articuloPrecioBase,
     monedaVenta,
   )
 
@@ -364,8 +374,8 @@ export const articuloToArticuloOperacionInputService = (
 
   // Procesar lote y almacén
   const { lote, almacen } =
-    articulo.inventario.length > 0
-      ? procesarLoteYAlmacen(articulo.inventario[0].detalle, {
+    (articulo?.inventario?.length || 0) > 0
+      ? procesarLoteYAlmacen(articulo?.inventario?.[0]?.detalle || [], {
           autoLote,
           codigoLote,
           metodoSeleccionLote,
@@ -373,26 +383,27 @@ export const articuloToArticuloOperacionInputService = (
           codigoAlmacen,
           mostrarAlmacenConStock,
           mostrarLoteConStock,
+          verificarStock: articulo?.verificarStock,
         })
       : { lote: null, almacen: null }
 
   // Determinar unidad de medida
   const articuloUnidadMedida =
-    options?.articuloUnidadMedida ?? articulo.articuloPrecioBase.articuloUnidadMedida
+    options?.articuloUnidadMedida ?? articulo?.articuloPrecioBase?.articuloUnidadMedida
 
   // Construir el resultado
   return {
     id: `${marca}${genRandomString(10).toUpperCase()}`,
     nroItem,
-    nombreArticulo: articulo.nombreArticulo,
-    codigoArticulo: articulo.codigoArticulo,
-    articuloId: articulo._id,
-    tipoArticulo: articulo.tipoArticulo,
-    claseArticulo: articulo.claseArticulo,
-    gestionArticulo: genReplaceEmpty(articulo.gestionArticulo, null),
+    nombreArticulo: articulo?.nombreArticulo || '',
+    codigoArticulo: articulo?.codigoArticulo || '',
+    articuloId: articulo?._id || '',
+    tipoArticulo: articulo?.tipoArticulo,
+    claseArticulo: articulo?.claseArticulo,
+    gestionArticulo: genReplaceEmpty(articulo?.gestionArticulo, null),
     almacen,
     lote,
-    sinProductoServicio: articulo.sinProductoServicio,
+    sinProductoServicio: articulo?.sinProductoServicio,
     articuloUnidadMedida,
     cantidadOriginal: cantidad,
     cantidad,
@@ -403,6 +414,6 @@ export const articuloToArticuloOperacionInputService = (
     moneda,
     detalleExtra,
     nota,
-    verificarStock: articulo.verificarStock,
+    verificarStock: articulo?.verificarStock,
   }
 }

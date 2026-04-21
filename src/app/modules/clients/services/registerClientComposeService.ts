@@ -1,9 +1,7 @@
 import { genReplaceEmpty } from '../../../utils/helper'
 import { ClientApiInputProps, ClientInputProps } from '../interfaces/client'
 
-export const registerClientComposeService = (
-  input: ClientInputProps,
-): ClientApiInputProps => {
+export const registerClientComposeService = (input: ClientInputProps): ClientApiInputProps => {
   return {
     nombres: input.nombres,
     apellidos: genReplaceEmpty(input.apellidos, ''),

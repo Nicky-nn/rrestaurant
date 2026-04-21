@@ -18,6 +18,7 @@ type Anomalia = {
     pedidoId: string
     numeroPedido: string
     orden: number
+    articuloId?: string
 }
 
 type AnomaliasGraficoProps = {
@@ -27,18 +28,19 @@ type AnomaliasGraficoProps = {
 const AnomaliasGrafico = ({ anomalias }: AnomaliasGraficoProps) => {
 
     const dataGrafica = useMemo(() => {
-        const agrupado: Record<string, { count: number; pares: Set<string> }> = {}
+        const agrupado: Record<string, { count: number; pares: Set<string>; nombre: string }> = {}
 
-        for (const { nombre, numeroPedido, orden } of anomalias) {
-            if (!agrupado[nombre]) {
-                agrupado[nombre] = { count: 0, pares: new Set() }
+        for (const { nombre, numeroPedido, orden, articuloId } of anomalias) {
+            const key = articuloId || nombre
+            if (!agrupado[key]) {
+                agrupado[key] = { count: 0, pares: new Set(), nombre }
             }
-            agrupado[nombre].count++
-            agrupado[nombre].pares.add(`pedido "${numeroPedido}" de la orden "${orden}"`)
+            agrupado[key].count++
+            agrupado[key].pares.add(`pedido "${numeroPedido}" de la orden "${orden}"`)
         }
 
         // Convertir a array y ordenar por cantidad descendente
-        const arrayDatos = Object.entries(agrupado).map(([nombre, { count, pares }]) => ({
+        const arrayDatos = Object.entries(agrupado).map(([key, { count, pares, nombre }]) => ({
             nombre,
             value: count,
             pares: Array.from(pares),

@@ -6,49 +6,70 @@ import DoneAllIcon from '@mui/icons-material/DoneAll'
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord'
 import NewReleasesIcon from '@mui/icons-material/NewReleases'
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle'
+import CancelIcon from '@mui/icons-material/Cancel'
 import { TimelineDot } from '@mui/lab'
-import { Box, Paper, Stack, Typography } from '@mui/material'
+import { Box, Paper, Stack, Typography, CircularProgress } from '@mui/material'
 import { format, parse } from 'date-fns'
 
-import { ArticuloOperacion, HistorialArticuloOperacion } from '../../types'
+import { useRestPedidoAuditoriaPorPedidoId } from '../../queries/useRestPedidoAuditoriaPorPedidoId'
 
 interface HistorialPedidoProps {
-  productos: ArticuloOperacion[]
-  historial: HistorialArticuloOperacion[]
-  numeroPedido?: string | number
-  fecha?: string
-  autor?: string
+  pedidoId: string
 }
 
-type Estado = 'ELABORADO' | 'NUEVO' | 'ELIMINADO' | 'ACTUALIZADO'
-
-const estadoIcono: Record<Estado, JSX.Element> = {
-  ELABORADO: <DoneAllIcon />,
-  NUEVO: <NewReleasesIcon />,
-  ELIMINADO: <DeleteIcon />,
-  ACTUALIZADO: <DragHandleOutlined />,
+const estadoIcono: Record<string, JSX.Element> = {
+  CREACION: <NewReleasesIcon />,
+  MODIFICACION_ARTICULOS: <DragHandleOutlined />,
+  MODIFICACION_FINANCIERA: <DragHandleOutlined />,
+  CAMBIO_ESTADO: <DragHandleOutlined />,
+  FINALIZACION: <DoneAllIcon />,
+  CANCELACION: <CancelIcon />,
+  ANULACION: <DeleteIcon />,
+  DEFAULT: <FiberManualRecordIcon />,
 }
 
-const estadoColor: Record<Estado, string> = {
-  ELABORADO: 'success.main',
-  NUEVO: 'info.main',
-  ELIMINADO: 'error.main',
-  ACTUALIZADO: 'grey.500',
+const estadoColor: Record<string, string> = {
+  CREACION: 'info.main',
+  MODIFICACION_ARTICULOS: 'warning.main',
+  MODIFICACION_FINANCIERA: 'warning.main',
+  CAMBIO_ESTADO: 'grey.500',
+  FINALIZACION: 'success.main',
+  CANCELACION: 'error.main',
+  ANULACION: 'error.main',
+  DEFAULT: 'grey.500',
+}
+
+const formatearTextoAccion = (accion: string) => {
+  return accion?.replace(/_/g, ' ') || 'DESCONOCIDO'
 }
 
 export const HistorialPedido = ({
-  historial,
-  numeroPedido,
-  fecha,
-  autor,
-  productos,
+  pedidoId,
 }: HistorialPedidoProps) => {
-  console.log('DATOS DEL HISTORIAL RECIBIDOS:', historial)
-  console.log('PRODUCTOS DEL PEDIDO:', productos)
-  const sortedHistorial = [...historial].sort((a, b) => (a.nro ?? 0) - (b.nro ?? 0))
+  const { data: historial = [], isLoading } = useRestPedidoAuditoriaPorPedidoId({ pedidoId })
 
-  const parsedDate = fecha ? parse(fecha, 'dd/MM/yyyy HH:mm', new Date()) : null
-  const isValidDate = parsedDate instanceof Date && !isNaN(parsedDate.getTime())
+  const numeroPedido = historial.length > 0 ? historial[0].numeroPedido : undefined
+
+  // Sort descending (newest first) using fechaRegistro DD/MM/YYYY HH:MM:SS
+  const sortedHistorial = [...historial].sort((a, b) => {
+    if (!a.fechaRegistro || !b.fechaRegistro) return 0
+    try {
+      const da = parse(a.fechaRegistro, 'dd/MM/yyyy HH:mm:ss', new Date())
+      const db = parse(b.fechaRegistro, 'dd/MM/yyyy HH:mm:ss', new Date())
+      return db.getTime() - da.getTime()
+    } catch {
+      return 0
+    }
+  })
+
+  // We fallback to general order props if step details are missing
+  if (isLoading) {
+    return (
+      <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -64,28 +85,35 @@ export const HistorialPedido = ({
           minWidth: 'md',
           margin: '0 auto',
           overflowX: 'auto',
-          mb: 4,
         }}
       >
         <Box
           sx={{
             display: 'flex',
             gap: 4,
-            py: 6,
             px: 2,
-            flexDirection: 'row-reverse',
             width: 'fit-content',
           }}
         >
           {sortedHistorial.map((h, idx) => {
-            const operaciones = h.articuloOperacion || []
-            const primerEstado = operaciones[0]?.state || 'NUEVO'
-            const color = estadoColor[primerEstado as Estado] || 'grey.500'
-            const icono = estadoIcono[primerEstado as Estado] || <FiberManualRecordIcon />
+            const accionType = h.accion || 'DEFAULT'
+            const color = estadoColor[accionType] || estadoColor['DEFAULT']
+            const icono = estadoIcono[accionType] || estadoIcono['DEFAULT']
+            // Al estar ordenado de más nuevo a más viejo, el paso cronológicamente anterior está en idx + 1
+            const pasoAnterior = idx < sortedHistorial.length - 1 ? sortedHistorial[idx + 1] : null
+            const articulos = h.articulos || []
+
+            // Find items that were present in previous step but missing now (ELIMINADOS)
+            const eliminados = pasoAnterior?.articulos?.filter(
+              (prevArt) => !articulos.some((currArt) => currArt.nroItem === prevArt.nroItem)
+            ) || []
+
+            // Combine both currently present and eliminated items for the step UI
+            const allItemsForStep = [...articulos, ...eliminados]
 
             return (
               <Box
-                key={h.nro}
+                key={idx}
                 sx={{
                   position: 'relative',
                   minWidth: 320,
@@ -103,9 +131,7 @@ export const HistorialPedido = ({
                     zIndex: 2,
                   }}
                 >
-                  <TimelineDot sx={{ bgcolor: color, color: 'white' }}>
-                    {icono}
-                  </TimelineDot>
+                  <TimelineDot sx={{ bgcolor: color, color: 'white' }}>{icono}</TimelineDot>
                 </Box>
 
                 {/* Línea horizontal entre timelines */}
@@ -114,10 +140,10 @@ export const HistorialPedido = ({
                     sx={{
                       position: 'absolute',
                       top: 20,
-                      left: '-60%',
-                      right: '55%',
+                      left: '50%',
+                      right: '-60%', // Extiende la línea hacia el siguiente nodo
                       height: 2,
-                      bgcolor: 'grey.400',
+                      bgcolor: 'grey.300',
                       zIndex: 1,
                     }}
                   />
@@ -132,77 +158,76 @@ export const HistorialPedido = ({
                     pt: 4,
                     borderTop: `4px solid ${color}`,
                     position: 'relative',
-                    minHeight: 260, // 🔹 alto mínimo consistente
+                    minHeight: 260,
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                   }}
                 >
-                  <Typography variant="subtitle1">Pedido {(h.nro ?? 0).toFixed(1)}</Typography>
-                  <Typography variant="body2" mb={1}>
-                    Actualización del pedido
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    {formatearTextoAccion(accionType)}
+                  </Typography>
+                  <Typography variant="body2" mb={2} color="text.secondary">
+                    {h.resumenCambios || 'Cambio en el pedido'}
                   </Typography>
 
                   {/* ——— Artículos con mini–timeline de estados ——— */}
                   <Stack spacing={2} mb={2}>
-                    {operaciones.map((articulo, i) => {
-                      let colorEstado =
-                        estadoColor[articulo.state as Estado] || 'grey.500'
-                      let iconoEstado = estadoIcono[articulo.state as Estado] || (
-                        <FiberManualRecordIcon />
-                      )
+                    {allItemsForStep.map((articulo, i) => {
+                      const isEliminado = eliminados.some((eli) => eli.nroItem === articulo.nroItem)
+                      
+                      let colorEstado = 'grey.500'
+                      let iconoEstado = <FiberManualRecordIcon />
+                      let textoEstado = 'MANTENIDO'
+                      
+                      let cantidadActual = articulo.articuloPrecio?.cantidad ?? 0
+                      let cantidadAnterior = 0
+                      let mostrarCambio = false
 
-                      // Mirar el pedido siguiente
-                      const siguiente = sortedHistorial[idx + 1]
-                      const cambiaEstado =
-                        siguiente &&
-                        siguiente.articuloOperacion.some(
-                          (a) => a.nombreArticulo === articulo.nombreArticulo,
+                      if (isEliminado) {
+                        // This item was in previous step but not here
+                        cantidadActual = 0
+                        cantidadAnterior = articulo.articuloPrecio?.cantidad ?? 0
+                        mostrarCambio = true
+                      } else {
+                        // Find this item in the previous step
+                        const prevArticulo = pasoAnterior?.articulos?.find(
+                          (a) => a.nroItem === articulo.nroItem
                         )
-
-                      // Comparar cantidades si el estado es ACTUALIZADO o si hay cambio de estado
-                      let textoEstado = articulo.state.toUpperCase() // por defecto
-                      if (articulo.state === 'ACTUALIZADO' || cambiaEstado) {
-                        let cantidadAnterior: number | undefined
-                        let invertirDiferencia = false
-
-                        if (siguiente) {
-                          // Buscar cantidad en siguiente historial
-                          const mismoArticuloAnterior = siguiente.articuloOperacion.find(
-                            (a) => a.codigoArticulo === articulo.codigoArticulo,
-                          )
-                          if (mismoArticuloAnterior) {
-                            cantidadAnterior =
-                              mismoArticuloAnterior.articuloPrecio.cantidad
+                        if (prevArticulo) {
+                          cantidadAnterior = prevArticulo.articuloPrecio?.cantidad ?? 0
+                          if (cantidadAnterior !== cantidadActual) {
+                            mostrarCambio = true
                           }
+                        } else {
+                          // It's entirely new in this step
+                          cantidadAnterior = 0
+                          mostrarCambio = true
                         }
+                      }
 
-                        if (cantidadAnterior === undefined) {
-                          // Si no hay siguiente historial, usar cantidad actual del producto
-                          const productoActual = productos.find(
-                            (a) => a.codigoArticulo === articulo.codigoArticulo,
-                          )
-                          if (productoActual) {
-                            cantidadAnterior = productoActual.articuloPrecio.cantidad
-                            invertirDiferencia = true
-                          }
+                      if (isEliminado) {
+                        iconoEstado = <DeleteIcon />
+                        colorEstado = 'error.main'
+                        textoEstado = 'ELIMINADO'
+                      } else if (mostrarCambio) {
+                        if (cantidadActual > cantidadAnterior) {
+                          iconoEstado = cantidadAnterior === 0 ? <NewReleasesIcon /> : <AddCircleIcon />
+                          colorEstado = cantidadAnterior === 0 ? 'info.main' : 'warning.main'
+                          textoEstado = cantidadAnterior === 0 ? 'AGREGADO' : 'AUMENTADO'
+                        } else if (cantidadActual < cantidadAnterior) {
+                          iconoEstado = <RemoveCircleIcon />
+                          colorEstado = 'error.light'
+                          textoEstado = 'DISMINUIDO'
                         }
-
-                        if (cantidadAnterior !== undefined) {
-                          let diferencia =
-                            articulo.articuloPrecio.cantidad - cantidadAnterior
-                          if (invertirDiferencia) diferencia = -diferencia
-
-                          if (diferencia > 0) {
-                            iconoEstado = <AddCircleIcon />
-                            colorEstado = 'warning.main'
-                            textoEstado = 'AUMENTADO'
-                          } else if (diferencia < 0) {
-                            iconoEstado = <RemoveCircleIcon />
-                            colorEstado = 'red'
-                            textoEstado = 'DISMINUIDO'
-                          }
-                        }
+                      } else if (accionType === 'CANCELACION' || accionType === 'ANULACION') {
+                        iconoEstado = estadoIcono[accionType]
+                        colorEstado = 'error.main'
+                        textoEstado = accionType
+                      } else if (accionType === 'FINALIZACION') {
+                        iconoEstado = <DoneAllIcon />
+                        colorEstado = 'success.main'
+                        textoEstado = 'FINALIZADO'
                       }
 
                       return (
@@ -227,30 +252,6 @@ export const HistorialPedido = ({
                               px: 2,
                             }}
                           >
-                            {/* Conector sólo si cambia de estado */}
-                            {cambiaEstado && (
-                              <Box
-                                sx={{
-                                  position: 'absolute',
-                                  top: '30%',
-                                  left: 0,
-                                  width: '100%',
-                                  height: 2,
-                                  bgcolor: colorEstado,
-                                  transform: 'translateY(-50%)',
-                                  zIndex: 0,
-                                  '&::before': {
-                                    content: '""',
-                                    position: 'absolute',
-                                    left: '-12px',
-                                    top: '-6px',
-                                    border: '6px solid transparent',
-                                    borderRightColor: colorEstado,
-                                  },
-                                }}
-                              />
-                            )}
-
                             <TimelineDot
                               sx={{
                                 bgcolor: colorEstado,
@@ -273,29 +274,29 @@ export const HistorialPedido = ({
 
                               <Typography
                                 variant="caption"
-                                color={colorEstado}
-                                sx={{ textTransform: 'uppercase' }}
+                                sx={{ color: colorEstado, textTransform: 'uppercase', fontWeight: 'bold' }}
                               >
-                                {textoEstado}
-                              </Typography>
-
-                              <Typography variant="caption" color="text.secondary">
-                                {h.fecha ?? fecha ?? 'Fecha desconocida'}
+                                {textoEstado} {mostrarCambio && !isEliminado ? `(${cantidadAnterior} → ${cantidadActual})` : ''}
+                                {isEliminado ? `(Era: ${cantidadAnterior})` : ''}
                               </Typography>
                             </Stack>
                           </Box>
                         </Paper>
                       )
                     })}
+                    
+                    {allItemsForStep.length === 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        No hay artículos registrados.
+                      </Typography>
+                    )}
                   </Stack>
 
                   {/* Fecha y autor */}
-                  <Typography variant="caption" color="text.secondary">
-                    <span style={{ display: 'block' }}>{autor ?? 'Sistema'}</span>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 'auto', pt: 2 }}>
+                    <span style={{ display: 'block', fontWeight: 'bold' }}>{h.usuario ?? 'Sistema'}</span>
                     <span style={{ display: 'block' }}>
-                      {isValidDate
-                        ? format(parsedDate, 'dd/MM/yyyy HH:mm')
-                        : 'Fecha desconocida'}
+                      {h.fechaRegistro ?? 'Fecha desconocida'}
                     </span>
                   </Typography>
                 </Paper>
@@ -307,3 +308,4 @@ export const HistorialPedido = ({
     </Box>
   )
 }
+

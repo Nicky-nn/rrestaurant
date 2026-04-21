@@ -3,20 +3,17 @@
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 import { client, gql } from '../client';
 import { RESTPEDIDOFRAGMENT } from '../fragments/RestPedidoFragments';
-import { EntidadParamsInput, RestPedido, RestPedidoEliminarItemInput } from '../types';
+import { EntidadParamsInput, RestPedido } from '../types';
 
 export interface RestPedidoAnularVariables {
-  id?: string;
+  id: string;
   entidad: EntidadParamsInput;
-  numeroPedido: number;
   descripcionMotivo: string;
-  restablecerStock?: boolean;
-  input?: RestPedidoEliminarItemInput[];
 }
 
 export const RESTPEDIDOANULAR = gql`
-  mutation RestPedidoAnular($id: ID, $entidad: EntidadParamsInput!, $numeroPedido: Int!, $descripcionMotivo: String!, $restablecerStock: Boolean, $input: [RestPedidoEliminarItemInput]) {
-    restPedidoAnular(id: $id, entidad: $entidad, numeroPedido: $numeroPedido, descripcionMotivo: $descripcionMotivo, restablecerStock: $restablecerStock, input: $input) { ...RestPedidoFragment }
+  mutation RestPedidoAnular($id: ID!, $entidad: EntidadParamsInput!, $descripcionMotivo: String!) {
+    restPedidoAnular(id: $id, entidad: $entidad, descripcionMotivo: $descripcionMotivo) { ...RestPedidoFragment }
   }
   ${RESTPEDIDOFRAGMENT}
 `;

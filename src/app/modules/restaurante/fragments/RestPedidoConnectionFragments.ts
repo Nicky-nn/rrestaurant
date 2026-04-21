@@ -82,6 +82,12 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             codigo
             direccion
             telefono
+            departamento {
+              codigo
+              codigoPais
+              sigla
+              departamento
+            }
             municipio
             integracionSiat
           }
@@ -104,6 +110,12 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             codigo
             direccion
             telefono
+            departamento {
+              codigo
+              codigoPais
+              sigla
+              departamento
+            }
             municipio
             integracionSiat
           }
@@ -145,26 +157,7 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             usumod
             updatedAt
           }
-          monedaPrecio {
-            moneda {
-              _id
-              codigo
-              descripcion
-              sigla
-              tipoCambio
-              tipoCambioCompra
-              activo
-              state
-              usucre
-              usumod
-              createdAt
-              updatedAt
-            }
-            precioBase
-            precio
-          }
           moneda {
-            # Datos simples (Tipo ya expandido previamente)
             _id
             codigo
             descripcion
@@ -183,8 +176,13 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             tipoOperacion
             valor
             valorAnterior
+            valorConImpuesto
             descuento
             descuentoAdicional
+            descuentoTotal
+            descuentoP
+            descuentoAdicionalP
+            descuentoTotalP
             valorNeto
             impuestoUnitario
             gastoAdicional
@@ -192,7 +190,13 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             valorFinal
             totales {
               subtotalBruto
+              subtotalLineaVisual
               totalDescuento
+              totalDescuentoP
+              totalDescuentoAdicional
+              totalDescuentoGeneral
+              totalDescuentoAdicionalP
+              totalDescuentoGeneralP
               subtotalNeto
               totalImpuestos
               totalGasto
@@ -201,8 +205,8 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           }
           tipoOperacion
           valor
-          cantidadBase
           cantidad
+          cantidadAnterior
           cantidadFactor
           descuento
           descuentoAdicional
@@ -214,11 +218,57 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
         }
         articuloPrecio {
           # Datos simples (Tipo ya expandido previamente)
+          articuloUnidadMedida {
+            _id
+            codigoUnidadMedida
+            nombreUnidadMedida
+            longitud
+            ancho
+            altura
+            peso
+            volumen
+            state
+            usucre
+            createdAt
+            usumod
+            updatedAt
+          }
+          moneda {
+            _id
+            codigo
+            descripcion
+            sigla
+            tipoCambio
+            tipoCambioCompra
+            activo
+            state
+            usucre
+            usumod
+            createdAt
+            updatedAt
+          }
           tipoCambio
+          estructuraValor {
+            tipoOperacion
+            valor
+            valorAnterior
+            valorConImpuesto
+            descuento
+            descuentoAdicional
+            descuentoTotal
+            descuentoP
+            descuentoAdicionalP
+            descuentoTotalP
+            valorNeto
+            impuestoUnitario
+            gastoAdicional
+            variacion
+            valorFinal
+          }
           tipoOperacion
           valor
-          cantidadBase
           cantidad
+          cantidadAnterior
           cantidadFactor
           descuento
           descuentoAdicional
@@ -227,23 +277,6 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           incluyeImpuesto
           esDescuentoTotal
           factorAjuste
-          monedaPrecio{
-            moneda{
-              codigo
-              descripcion
-              sigla
-              tipoCambio
-              tipoCambioCompra
-              activo
-              state
-              usucre
-              usumod
-              createdAt
-              updatedAt
-            }
-            precio
-            precioBase
-          }
         }
         detalleExtra
         nota
@@ -254,115 +287,6 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           atributo2
         }
         verificarStock
-        complementos {
-          articuloId
-          nroItem
-          tipoArticulo {
-            # Datos simples (Tipo ya expandido previamente)
-            codigo
-            descripcion
-          }
-          claseArticulo
-          grupoArticulo {
-            # Datos simples (Tipo ya expandido previamente)
-            codigoGrupoArticulo
-            nombreGrupoArticulo
-          }
-          codigoArticulo
-          nombreArticulo
-          almacen {
-            # Datos simples (Tipo ya expandido previamente)
-            _id
-            codigoAlmacen
-            nombre
-            ubicacion
-            tipo
-            activo
-            prioridad
-            state
-            usucre
-            createdAt
-            usumod
-            updatedAt
-          }
-          lote {
-            # Datos simples (Tipo ya expandido previamente)
-            _id
-            codigoLote
-            descripcion
-            codigoArticulo
-            atributo1
-            atributo2
-            atributo3
-            fechaAdmision
-            fechaFabricacion
-            fechaVencimiento
-            state
-            usucre
-            createdAt
-            usumod
-            updatedAt
-          }
-          codigoGrupo
-          sinProductoServicio {
-            # Datos simples (Tipo ya expandido previamente)
-            codigoActividad
-            codigoProducto
-            descripcionProducto
-          }
-          articuloPrecioBase {
-            # Datos simples (Tipo ya expandido previamente)
-            tipoCambio
-            tipoOperacion
-            valor
-            cantidadBase
-            cantidad
-            cantidadFactor
-            descuento
-            descuentoAdicional
-            otrosCostos
-            impuesto
-            incluyeImpuesto
-            esDescuentoTotal
-            factorAjuste
-          }
-          articuloPrecio {
-            # Datos simples (Tipo ya expandido previamente)
-            tipoCambio
-            tipoOperacion
-            valor
-            cantidadBase
-            cantidad
-            cantidadFactor
-            descuento
-            descuentoAdicional
-            otrosCostos
-            impuesto
-            incluyeImpuesto
-            esDescuentoTotal
-            factorAjuste
-            monedaPrecio{
-              moneda{
-                codigo
-                descripcion
-                sigla
-                tipoCambio
-                tipoCambioCompra
-                activo
-                state
-                usucre
-                usumod
-                createdAt
-                updatedAt
-              }
-              precio
-              precioBase
-            }
-          }
-          detalleExtra
-          nota
-          verificarStock
-        }
         impresoras {
           _id
           sucursal {
@@ -400,37 +324,575 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           updatedAt
         }
         cortesia
+        variacionReceta {
+          nroItem
+          articuloId
+          codigoArticulo
+          nombreArticulo
+          almacen {
+            # Datos simples (Tipo ya expandido previamente)
+            _id
+            codigoAlmacen
+            nombre
+            ubicacion
+            sucursal {
+              codigo
+              direccion
+              telefono
+              municipio
+              integracionSiat
+            }
+            tipo
+            activo
+            prioridad
+            state
+            usucre
+            createdAt
+            usumod
+            updatedAt
+          }
+          lote {
+            # Datos simples (Tipo ya expandido previamente)
+            _id
+            codigoLote
+            descripcion
+            codigoArticulo
+            sucursal {
+              codigo
+              direccion
+              telefono
+              municipio
+              integracionSiat
+            }
+            atributo1
+            atributo2
+            atributo3
+            fechaAdmision
+            fechaFabricacion
+            fechaVencimiento
+            state
+            usucre
+            createdAt
+            usumod
+            updatedAt
+          }
+          removido
+          esExtra
+          articuloPrecio {
+            # Datos simples (Tipo ya expandido previamente)
+            articuloUnidadMedida {
+              _id
+              codigoUnidadMedida
+              nombreUnidadMedida
+              longitud
+              ancho
+              altura
+              peso
+              volumen
+              state
+              usucre
+              createdAt
+              usumod
+              updatedAt
+            }
+            moneda {
+              _id
+              codigo
+              descripcion
+              sigla
+              tipoCambio
+              tipoCambioCompra
+              activo
+              state
+              usucre
+              usumod
+              createdAt
+              updatedAt
+            }
+            tipoCambio
+            estructuraValor {
+              tipoOperacion
+              valor
+              valorAnterior
+              valorConImpuesto
+              descuento
+              descuentoAdicional
+              descuentoTotal
+              descuentoP
+              descuentoAdicionalP
+              descuentoTotalP
+              valorNeto
+              impuestoUnitario
+              gastoAdicional
+              variacion
+              valorFinal
+            }
+            tipoOperacion
+            valor
+            cantidad
+            cantidadAnterior
+            cantidadFactor
+            descuento
+            descuentoAdicional
+            otrosCostos
+            impuesto
+            incluyeImpuesto
+            esDescuentoTotal
+            factorAjuste
+          }
+          nota
+          notaRapida {
+            # Datos simples (Tipo ya expandido previamente)
+            cantidad
+            valor
+            atributo1
+            atributo2
+          }
+          state
+        }
+        modificadores {
+          articuloModificadorId
+          articuloId
+          nroItem
+          codigoArticulo
+          nombreArticulo
+          almacen {
+            # Datos simples (Tipo ya expandido previamente)
+            _id
+            codigoAlmacen
+            nombre
+            ubicacion
+            sucursal {
+              codigo
+              direccion
+              telefono
+              municipio
+              integracionSiat
+            }
+            tipo
+            activo
+            prioridad
+            state
+            usucre
+            createdAt
+            usumod
+            updatedAt
+          }
+          lote {
+            # Datos simples (Tipo ya expandido previamente)
+            _id
+            codigoLote
+            descripcion
+            codigoArticulo
+            sucursal {
+              codigo
+              direccion
+              telefono
+              municipio
+              integracionSiat
+            }
+            atributo1
+            atributo2
+            atributo3
+            fechaAdmision
+            fechaFabricacion
+            fechaVencimiento
+            state
+            usucre
+            createdAt
+            usumod
+            updatedAt
+          }
+          esOpcionGratuita
+          elegibleParaGratis
+          cantidadIncluida
+          articuloPrecio {
+            # Datos simples (Tipo ya expandido previamente)
+            articuloUnidadMedida {
+              _id
+              codigoUnidadMedida
+              nombreUnidadMedida
+              longitud
+              ancho
+              altura
+              peso
+              volumen
+              state
+              usucre
+              createdAt
+              usumod
+              updatedAt
+            }
+            moneda {
+              _id
+              codigo
+              descripcion
+              sigla
+              tipoCambio
+              tipoCambioCompra
+              activo
+              state
+              usucre
+              usumod
+              createdAt
+              updatedAt
+            }
+            tipoCambio
+            estructuraValor {
+              tipoOperacion
+              valor
+              valorAnterior
+              valorConImpuesto
+              descuento
+              descuentoAdicional
+              descuentoTotal
+              descuentoP
+              descuentoAdicionalP
+              descuentoTotalP
+              valorNeto
+              impuestoUnitario
+              gastoAdicional
+              variacion
+              valorFinal
+            }
+            tipoOperacion
+            valor
+            cantidad
+            cantidadAnterior
+            cantidadFactor
+            descuento
+            descuentoAdicional
+            otrosCostos
+            impuesto
+            incluyeImpuesto
+            esDescuentoTotal
+            factorAjuste
+          }
+          nota
+          notaRapida {
+            # Datos simples (Tipo ya expandido previamente)
+            cantidad
+            valor
+            atributo1
+            atributo2
+          }
+          state
+        }
         state
       }
       productosEliminados {
         # Datos simples (Tipo ya expandido previamente)
         articuloId
         nroItem
+        tipoArticulo {
+          codigo
+          descripcion
+        }
         claseArticulo
         gestionArticulo
+        grupoArticulo {
+          codigoGrupoArticulo
+          nombreGrupoArticulo
+        }
         codigoArticulo
         nombreArticulo
+        almacen {
+          _id
+          codigoAlmacen
+          nombre
+          ubicacion
+          tipo
+          activo
+          prioridad
+          state
+          usucre
+          createdAt
+          usumod
+          updatedAt
+        }
+        lote {
+          _id
+          codigoLote
+          descripcion
+          codigoArticulo
+          atributo1
+          atributo2
+          atributo3
+          fechaAdmision
+          fechaFabricacion
+          fechaVencimiento
+          state
+          usucre
+          createdAt
+          usumod
+          updatedAt
+        }
         codigoGrupo
+        sinProductoServicio {
+          codigoActividad
+          codigoProducto
+          descripcionProducto
+        }
+        articuloPrecioBase {
+          tipoCambio
+          tipoOperacion
+          valor
+          cantidad
+          cantidadAnterior
+          cantidadFactor
+          descuento
+          descuentoAdicional
+          otrosCostos
+          impuesto
+          incluyeImpuesto
+          esDescuentoTotal
+          factorAjuste
+        }
+        articuloPrecio {
+          tipoCambio
+          tipoOperacion
+          valor
+          cantidad
+          cantidadAnterior
+          cantidadFactor
+          descuento
+          descuentoAdicional
+          otrosCostos
+          impuesto
+          incluyeImpuesto
+          esDescuentoTotal
+          factorAjuste
+        }
         detalleExtra
         nota
+        notaRapida {
+          cantidad
+          valor
+          atributo1
+          atributo2
+        }
         verificarStock
+        impresoras {
+          _id
+          nombre
+          descripcion
+          atributo1
+          atributo2
+          state
+          usucre
+          createdAt
+          usumod
+          updatedAt
+        }
         cortesia
+        variacionReceta {
+          nroItem
+          articuloId
+          codigoArticulo
+          nombreArticulo
+          removido
+          esExtra
+          nota
+          state
+        }
+        modificadores {
+          articuloModificadorId
+          articuloId
+          nroItem
+          codigoArticulo
+          nombreArticulo
+          esOpcionGratuita
+          elegibleParaGratis
+          cantidadIncluida
+          nota
+          state
+        }
         state
       }
-      ultimaTransaccionProductos {
-        # Datos simples (Tipo ya expandido previamente)
-        articuloId
-        nroItem
-        claseArticulo
-        gestionArticulo
-        codigoArticulo
-        nombreArticulo
-        codigoGrupo
-        detalleExtra
-        nota
-        verificarStock
-        cortesia
-        state
+      ultimaTransaccion {
+        accion
+        stateAnterior
+        usuario
+        fecha
+        articulos {
+          # Datos simples (Tipo ya expandido previamente)
+          articuloId
+          nroItem
+          tipoArticulo {
+            codigo
+            descripcion
+          }
+          claseArticulo
+          gestionArticulo
+          grupoArticulo {
+            codigoGrupoArticulo
+            nombreGrupoArticulo
+          }
+          codigoArticulo
+          nombreArticulo
+          almacen {
+            _id
+            codigoAlmacen
+            nombre
+            ubicacion
+            tipo
+            activo
+            prioridad
+            state
+            usucre
+            createdAt
+            usumod
+            updatedAt
+          }
+          lote {
+            _id
+            codigoLote
+            descripcion
+            codigoArticulo
+            atributo1
+            atributo2
+            atributo3
+            fechaAdmision
+            fechaFabricacion
+            fechaVencimiento
+            state
+            usucre
+            createdAt
+            usumod
+            updatedAt
+          }
+          codigoGrupo
+          sinProductoServicio {
+            codigoActividad
+            codigoProducto
+            descripcionProducto
+          }
+          articuloPrecioBase {
+            tipoCambio
+            tipoOperacion
+            valor
+            cantidad
+            cantidadAnterior
+            cantidadFactor
+            descuento
+            descuentoAdicional
+            otrosCostos
+            impuesto
+            incluyeImpuesto
+            esDescuentoTotal
+            factorAjuste
+          }
+          articuloPrecio {
+            tipoCambio
+            tipoOperacion
+            valor
+            cantidad
+            cantidadAnterior
+            cantidadFactor
+            descuento
+            descuentoAdicional
+            otrosCostos
+            impuesto
+            incluyeImpuesto
+            esDescuentoTotal
+            factorAjuste
+          }
+          detalleExtra
+          nota
+          notaRapida {
+            cantidad
+            valor
+            atributo1
+            atributo2
+          }
+          verificarStock
+          impresoras {
+            _id
+            nombre
+            descripcion
+            atributo1
+            atributo2
+            state
+            usucre
+            createdAt
+            usumod
+            updatedAt
+          }
+          cortesia
+          variacionReceta {
+            nroItem
+            articuloId
+            codigoArticulo
+            nombreArticulo
+            removido
+            esExtra
+            nota
+            state
+          }
+          modificadores {
+            articuloModificadorId
+            articuloId
+            nroItem
+            codigoArticulo
+            nombreArticulo
+            esOpcionGratuita
+            elegibleParaGratis
+            cantidadIncluida
+            nota
+            state
+          }
+          state
+        }
+        totales {
+          operacion {
+            # Datos simples (Tipo ya expandido previamente)
+            subtotalBruto
+            subtotalLineaVisual
+            totalDescuento
+            totalDescuentoP
+            totalDescuentoAdicional
+            totalDescuentoGeneral
+            totalDescuentoAdicionalP
+            totalDescuentoGeneralP
+            subtotalNeto
+            totalImpuestos
+            totalGasto
+            totalFinal
+          }
+          sistema {
+            # Datos simples (Tipo ya expandido previamente)
+            subtotalBruto
+            subtotalLineaVisual
+            totalDescuento
+            totalDescuentoP
+            totalDescuentoAdicional
+            totalDescuentoGeneral
+            totalDescuentoAdicionalP
+            totalDescuentoGeneralP
+            subtotalNeto
+            totalImpuestos
+            totalGasto
+            totalFinal
+          }
+        }
+        moneda {
+          # Datos simples (Tipo ya expandido previamente)
+          _id
+          codigo
+          descripcion
+          sigla
+          tipoCambio
+          tipoCambioCompra
+          activo
+          state
+          usucre
+          usumod
+          createdAt
+          updatedAt
+        }
+        tipoCambio
+        descuentoAdicional
+        otrosCostos
       }
       moneda {
         # Datos simples (Tipo ya expandido previamente)
@@ -454,6 +916,8 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
       descripcionOtrosCostos
       fechaDocumento
       fechaContable
+      fechaCancelacion
+      fechaAnulacion
       cliente {
         razonSocial
         codigoCliente
@@ -490,6 +954,37 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
       }
       montoTotal
       montoTotalBase
+      totales {
+        # Datos simples (Tipo ya expandido previamente)
+        operacion {
+          subtotalBruto
+          subtotalLineaVisual
+          totalDescuento
+          totalDescuentoP
+          totalDescuentoAdicional
+          totalDescuentoGeneral
+          totalDescuentoAdicionalP
+          totalDescuentoGeneralP
+          subtotalNeto
+          totalImpuestos
+          totalGasto
+          totalFinal
+        }
+        sistema {
+          subtotalBruto
+          subtotalLineaVisual
+          totalDescuento
+          totalDescuentoP
+          totalDescuentoAdicional
+          totalDescuentoGeneral
+          totalDescuentoAdicionalP
+          totalDescuentoGeneralP
+          subtotalNeto
+          totalImpuestos
+          totalGasto
+          totalFinal
+        }
+      }
       fechaEntrega
       direccionEntrega
       detalleExtra
@@ -526,28 +1021,6 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
       createdAt
       usumod
       updatedAt
-      historial {
-        nro
-        fecha
-        articuloOperacion {
-          # Datos simples (Tipo ya expandido previamente)
-          articuloId
-          nroItem
-          claseArticulo
-          gestionArticulo
-          codigoArticulo
-          nombreArticulo
-          articuloPrecio {
-            cantidad
-          }
-          codigoGrupo
-          detalleExtra
-          nota
-          verificarStock
-          cortesia
-          state
-        }
-      }
       arqueoCajaId
     }
   }

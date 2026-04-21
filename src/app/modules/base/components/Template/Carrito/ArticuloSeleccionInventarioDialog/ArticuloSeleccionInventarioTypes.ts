@@ -76,12 +76,6 @@ export interface AlmacenSeleccionProps {
 // }
 
 /**
- * Configuración para la selección de cantidad
- * @autor isi-template
- */
-export interface CantidadSeleccionProps extends MontoSeleccionProps {}
-
-/**
  * Configuración para la selección de precio
  * Distribución de precios a operar
  * @autor isi-template
@@ -96,13 +90,27 @@ export interface PrecioSeleccionProps extends MontoSeleccionProps {
    * @autor isi-template
    */
   tipoMonto?: 'precio' | 'costo' | 'delivery'
+  /** Cantidad de decimales para el input valor, default 2 */
+  nroDecimales?: number
+}
+
+/**
+ * Configuración para la selección de cantidad
+ * @autor isi-template
+ */
+export interface CantidadSeleccionProps extends MontoSeleccionProps {
+  /** Cantidad de decimales para el input cantidad, default 2 */
+  nroDecimales?: number
 }
 
 /**
  * Configuración para la selección de descuento
  * @autor isi-template
  */
-export interface DescuentoSeleccionProps extends MontoSeleccionProps {}
+export interface DescuentoSeleccionProps extends MontoSeleccionProps {
+  /** Cantidad de decimales para el input descuento, default 2 */
+  nroDecimales?: number
+}
 
 /**
  * Reglas de validación para la selección de artículos

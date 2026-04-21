@@ -1,12 +1,21 @@
-import { Box, Grid } from '@mui/material'
+import { Alert, Box, Grid, Snackbar } from '@mui/material'
 import { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import useAuth from '../../../base/hooks/useAuth'
+import { articuloToArticuloOperacionInputService } from '../../../base/services/articuloToArticuloOperacionInputService'
 import { ESTADO_MESA, MesaUI } from '../interfaces/mesa.interface'
 import { useRestEspacioPorSucursal } from '../queries/useRestEspacioPorSucursal'
 import { useRestPedidoListado } from '../queries/useRestPedidoListado'
 import { useRestPedidoMesasOcupadas } from '../queries/useRestPedidoMesasOcupadas'
-import { Articulo, ArticuloOperacion, RestPedido } from '../types'
+import {
+  Articulo,
+  ArticuloModificadorOperacionInput,
+  ArticuloOperacion,
+  ArticuloOperacionModificador,
+  ArticuloPrecioOperacion,
+  ArticuloRecetaOperacionInput,
+  RestPedido,
+} from '../types'
 import RrAcciones from './registrar/RrAcciones'
 import RrCarrito from './registrar/RrCarrito'
 import RrCategoriasProductos from './registrar/RrCategoriasProductos'
@@ -20,11 +29,22 @@ import RrMesas from './registrar/RrMesas'
  */
 const RestRegistrar: FunctionComponent = () => {
   const { user } = useAuth()
-  console.log('[RestRegistrar] Renderizando... Usuario:', user.usuario)
   const codigoSucursal = user.sucursal.codigo
   const codigoPuntoVenta = user.puntoVenta.codigo
   const [mesaSeleccionada, setMesaSeleccionada] = useState<MesaUI | null>(null)
   const [focusedIndex, setFocusedIndex] = useState(-1)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; key: number }>({
+    open: false,
+    message: '',
+    key: 0,
+  })
+  const [ultimoPedidoExitoso, setUltimoPedidoExitoso] = useState<any>(null)
+  const [isPedidoDirty, setIsPedidoDirty] = useState(false)
+
+  const handleMesaSeleccionada = useCallback((mesa: MesaUI | null) => {
+    setMesaSeleccionada(mesa)
+    setIsPedidoDirty(false)
+  }, [])
 
   // Obtener la lista de espacios de la sucursal actual
   const { data: espaciosRaw = [] } = useRestEspacioPorSucursal({ codigoSucursal })
@@ -37,8 +57,13 @@ const RestRegistrar: FunctionComponent = () => {
     return cachedData ? JSON.parse(cachedData)?._id : null
   })
 
+  const [loadingEspacio, setLoadingEspacio] = useState(false)
+
   // Función para cambiar de ubicación desde la UI
   const handleChangeEspacio = (nuevoEspacioId: string | null) => {
+    if (nuevoEspacioId === espacio) return // Fix bug: evitar re-reder e infinite loading
+
+    setLoadingEspacio(true)
     setEspacio(nuevoEspacioId)
     if (nuevoEspacioId) {
       const selected = espaciosData.find((e) => e._id === nuevoEspacioId)
@@ -49,7 +74,7 @@ const RestRegistrar: FunctionComponent = () => {
       localStorage.removeItem('ubicacion')
     }
     // Limpiar la selección actual
-    setMesaSeleccionada(null)
+    handleMesaSeleccionada(null)
     setFocusedIndex(-1)
   }
 
@@ -59,10 +84,10 @@ const RestRegistrar: FunctionComponent = () => {
     : 'mesa.ubicacion=null&state!=FINALIZADO&state!=ANULADO&state!=CANCELADO'
 
   // Obtener pedidos completos de la sucursal actual con el query de ubicación
-  console.log('queryParams', queryParams)
   const {
     data: pedidosData,
     isLoading: pedidosLoading,
+    isFetching: pedidosFetching,
     refetch: refetchPedidos,
   } = useRestPedidoListado(
     {
@@ -78,6 +103,15 @@ const RestRegistrar: FunctionComponent = () => {
       staleTime: 0,
     },
   )
+
+  // Apagar loadingEspacio cuando el fetch termina
+  useEffect(() => {
+    if (!pedidosFetching) {
+      // Pequeño timeout para evitar parpadeos visuales si la respuesta es instantánea (caché)
+      const t = setTimeout(() => setLoadingEspacio(false), 200)
+      return () => clearTimeout(t)
+    }
+  }, [pedidosFetching])
 
   // Obtener mesas ocupadas por otros usuarios (actualización cada 10s)
   const { data: mesasOcupadas = [], refetch: refetchMesas } = useRestPedidoMesasOcupadas(
@@ -114,6 +148,11 @@ const RestRegistrar: FunctionComponent = () => {
     mesasOcupadasPrevRef.current = cantidadActual
   }, [mesasOcupadas, refetchPedidos])
 
+  // Limpiar el parche optimista tan pronto como lleguen nuevos datos del backend
+  useEffect(() => {
+    setUltimoPedidoExitoso(null)
+  }, [pedidosData])
+
   // Generar lista de mesas combinando disponibles con pedidos activos
   const mesas = useMemo<MesaUI[]>(() => {
     // Determinar la cantidad de mesas basada en el espacio actual
@@ -126,7 +165,17 @@ const RestRegistrar: FunctionComponent = () => {
     }
 
     const mesas: MesaUI[] = []
-    const pedidos = pedidosData?.docs || []
+    const pedidos = pedidosData?.docs ? [...pedidosData.docs] : []
+
+    // Parche optimista instantáneo para que la tarjeta cambie su nombre rápido sin esperar el refetch
+    if (ultimoPedidoExitoso && ultimoPedidoExitoso._id) {
+      const idx = pedidos.findIndex((p) => p._id === ultimoPedidoExitoso._id)
+      if (idx !== -1) {
+        pedidos[idx] = { ...pedidos[idx], ...ultimoPedidoExitoso }
+      } else {
+        pedidos.push(ultimoPedidoExitoso)
+      }
+    }
 
     // El backend ya filtra por espacio mediante queryParams, así que todos los pedidos
     // retornados pertenecen al espacio actual. Solo mapeamos por nombre de mesa.
@@ -136,13 +185,14 @@ const RestRegistrar: FunctionComponent = () => {
 
     const mapaMesasOcupadas = new Map(
       mesasOcupadas
-        .filter((mo) => mo.mesa?.nombre)
+        .filter((mo) => mo.mesa?.nombre && (mo.mesa.ubicacion || null) === (espacio || null))
         .map((mo) => {
           const pedidoCompleto = mo.pedidoId ? pedidosById.get(mo.pedidoId) : null
           return [
             mo.mesa!.nombre,
             {
               usuario: mo.usucre || 'Usuario',
+              codigoPuntoVenta: mo.codigoPuntoVenta,
               pedidoId: mo.pedidoId,
               pedido: pedidoCompleto,
               ubicacion: mo.mesa!.ubicacion || null,
@@ -163,6 +213,7 @@ const RestRegistrar: FunctionComponent = () => {
           label: `Mesa ${nombreMesa}`,
           estado: ESTADO_MESA.OCUPADO,
           pedido: miPedido,
+          usuarioOcupante: miPedido.usucre,
         })
       } else {
         const mesaOcupada = mapaMesasOcupadas.get(nombreMesa)
@@ -170,16 +221,39 @@ const RestRegistrar: FunctionComponent = () => {
         const correspondeEspacio = mesaOcupada?.ubicacion === (espacio || null)
 
         if (mesaOcupada && correspondeEspacio) {
-          const pedido = mesaOcupada.pedido || undefined
+          let pedido = mesaOcupada.pedido || undefined
           const usuarioOcupante = mesaOcupada.usuario
+          const posOcupante = mesaOcupada.codigoPuntoVenta
 
-          if (usuarioOcupante === user.usuario) {
+          // Validar coherencia: Si el pedido asociado dice estar en otra mesa (por transferencia reciente),
+          // ignorar la ocupación 'stale' de esta posición.
+          if (pedido?.mesa?.nombre && pedido.mesa.nombre !== nombreMesa) {
+            pedido = undefined
+          }
+
+          // Es de mi punto de venta si el código coincide
+          const esMio = posOcupante === user.puntoVenta.codigo
+
+          // Si el backend reporta la mesa como ocupada por MI punto de venta,
+          // pero ya no existe pedido activo (o se movió), es un falso positivo (stale flag)
+          if (esMio && !pedido) {
+            mesas.push({
+              _id: `mesa-${i}`,
+              value: nombreMesa,
+              label: `Mesa ${nombreMesa}`,
+              estado: ESTADO_MESA.LIBRE,
+            })
+            continue
+          }
+
+          if (esMio) {
             mesas.push({
               _id: pedido?._id || `mesa-${i}`,
               value: nombreMesa,
               label: `Mesa ${nombreMesa}`,
               estado: ESTADO_MESA.OCUPADO,
               pedido,
+              usuarioOcupante,
             })
           } else {
             mesas.push({
@@ -187,7 +261,7 @@ const RestRegistrar: FunctionComponent = () => {
               value: nombreMesa,
               label: `Mesa ${nombreMesa}`,
               estado: ESTADO_MESA.OCUPADO_OTRO,
-              pedido,
+              pedido: pedido || undefined, // A veces de otro punto de venta no tendremos los datos del pedido
               usuarioOcupante,
             })
           }
@@ -203,9 +277,16 @@ const RestRegistrar: FunctionComponent = () => {
     }
 
     return mesas
-  }, [pedidosData, mesasOcupadas, user.usuario, espacio, espaciosData])
+  }, [pedidosData, mesasOcupadas, user.puntoVenta.codigo, espacio, espaciosData, ultimoPedidoExitoso])
 
   // Generar un color de fondo pastel distinto por cada espacio usando hash del _id
+  // Ref estable que siempre apunta al valor actual de mesaSeleccionada.
+  // Permite que handleAddProduct tenga deps=[] sin quedarse con un valor stale.
+  const mesaSeleccionadaRef = useRef(mesaSeleccionada)
+  useEffect(() => {
+    mesaSeleccionadaRef.current = mesaSeleccionada
+  }, [mesaSeleccionada])
+
   const bgColor = useMemo(() => {
     if (!espacio) return 'rgba(255, 255, 255, 0)' // Salón Principal: sin tinte
     const idx = espaciosData.findIndex((e) => e._id === espacio)
@@ -223,118 +304,216 @@ const RestRegistrar: FunctionComponent = () => {
     return paleta[idx % paleta.length]
   }, [espacio, espaciosData])
 
-  const handleAddProduct = useCallback((payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number }> }) => {
-    if (!mesaSeleccionada) {
-      alert('Por favor selecciona una mesa (o pedido Para Llevar / Delivery) antes de agregar productos.')
-      return
-    }
-
-    const { articulo, cantidad, notasIds, complementos } = payload
-
-    setMesaSeleccionada((prev) => {
-      if (!prev) return prev
-
-      const nuevoPedido = prev.pedido ? { ...prev.pedido } : {
-        _id: `nuevo-${Date.now()}`,
-        tipo: prev.value === 'Llevar' ? 'LLEVAR' : 'SALON',
-        state: 'NUEVO',
-        productos: [],
-        totalBase: 0,
-        totalCalculado: 0,
-        estadoLectura: false, // dummy values
-        estadoImpresora: false,
-      } as unknown as RestPedido
-
-      const productos = [...(nuevoPedido.productos || [])]
-
-      // Ordenar IDs para comparar de forma estricta independientemente del orden de inserción
-      const notasNuevasSorted = [...notasIds].sort()
-      const compsNuevosSorted = [...complementos].sort((a, b) => a._id.localeCompare(b._id))
-
-      const existingIdx = productos.findIndex(p => {
-        // Misma base de articulo (manejar fallback a _id directo u originado de la prop)
-        const pId = p.articuloId || (p as any).articulo?._id || (p as any)._id
-        if (pId !== articulo._id) return false
-        
-        // Misma nota rapida
-        const pNotas = [...(p.notaRapida?.map(n => n.valor).filter(Boolean) || [])].sort()
-        if (pNotas.join('|') !== notasNuevasSorted.join('|')) return false
-
-        // Si existen notas personalizadas escritas a mano (modificadas desde el carrito localmente), 
-        // son productos distintos por defecto porque vienen limpios de la card.
-        if ((p.nota || '').trim() !== '') return false
-
-        // Mismos complementos (mismos IDs y misma cantidad configurada)
-        const pComps = p.complementos || []
-        if (pComps.length !== compsNuevosSorted.length) return false
-
-        for (const compNuevo of compsNuevosSorted) {
-          const matched = pComps.find(c => (c.articuloId || (c as any).id || (c as any)._id) === compNuevo._id)
-          if (!matched) return false
-          const pCompQty = matched.articuloPrecio?.cantidad ?? matched.articuloPrecioBase?.cantidad ?? 1
-          if (pCompQty !== compNuevo.cantidad) return false
-        }
-
-        return true // ¡Match perfecto!
-      })
-
-      if (existingIdx >= 0) {
-        // Incrementar la cantidad del producto exacto
-        const existing = productos[existingIdx]
-        const currentQty = existing.articuloPrecio?.cantidad ?? existing.articuloPrecioBase?.cantidad ?? 1
-        const nextQty = currentQty + cantidad
-
-        productos[existingIdx] = {
-          ...existing,
-          articuloPrecio: {
-            ...existing.articuloPrecio,
-            cantidad: nextQty
-          },
-          articuloPrecioBase: {
-            ...existing.articuloPrecioBase,
-            cantidad: nextQty
-          }
-        }
-      } else {
-        // Agregar uno completamente nuevo
-        const nuevoProd: ArticuloOperacion = {
-          articuloId: articulo._id,
-          codigoArticulo: articulo.codigoArticulo,
-          nombreArticulo: articulo.nombreArticulo,
-          claseArticulo: articulo.claseArticulo,
-          tipoArticulo: articulo.tipoArticulo,
-          gestionArticulo: articulo.gestionArticulo,
-          articuloPrecioBase: { 
-             cantidad, 
-             valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0, 
-             moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
-             monedaPrecio: { precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0 }
-          },
-          articuloPrecio: { 
-             cantidad, 
-             valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0, 
-             moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
-             monedaPrecio: { precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0 }
-          },
-          notaRapida: notasIds.map(n => ({ valor: n })),
-          nota: '', // vacias, luego el usuario las setea manual
-          cortesia: false,
-          complementos: complementos.map(c => ({
-             articuloId: c._id,
-             nombreArticulo: c.nombre,
-             articuloPrecioBase: { cantidad: c.cantidad, valor: c.precio, precio: c.precio, monedaPrecio: { precio: c.precio } },
-             articuloPrecio: { cantidad: c.cantidad, valor: c.precio, precio: c.precio, monedaPrecio: { precio: c.precio } }
-          }))
-        }
-        productos.push(nuevoProd)
+  const handleAddProduct = useCallback(
+    (payload: {
+      articulo: Articulo
+      cantidad: number
+      notasIds: string[]
+      variacionReceta?: ArticuloRecetaOperacionInput[]
+      modificadoresInput?: ArticuloModificadorOperacionInput[]
+    }) => {
+      if (!mesaSeleccionadaRef.current) {
+        alert('Por favor selecciona una mesa (o pedido Para Llevar / Delivery) antes de agregar productos.')
+        return
       }
 
-      nuevoPedido.productos = productos
-      return { ...prev, pedido: nuevoPedido }
-    })
-  }, [mesaSeleccionada])
+      const { articulo, cantidad, notasIds, variacionReceta = [], modificadoresInput = [] } = payload
+
+      // Calculamos si ya existe el item usando la ref (fuera del setState)
+      // para poder mostrar el toast ANTES de actualizar el estado.
+      const productosActuales = mesaSeleccionadaRef.current?.pedido?.productos || []
+      const notasNuevasSorted = [...notasIds].sort()
+      const modsNuevosSorted = [...modificadoresInput].sort((a, b) =>
+        a.articuloModificadorId.localeCompare(b.articuloModificadorId),
+      )
+      // Firma de variacionReceta: lista de codigoArticulo+removido+esExtra para comparar identidad
+      const vrNuevaFirma = [...variacionReceta]
+        .map((v) => `${v.codigoArticulo}:${v.removido ? 'R' : ''}${v.esExtra ? 'E' : ''}`)
+        .sort()
+        .join('|')
+
+      const yaExiste = productosActuales.some((p) => {
+        const pId = p.articuloId || (p as any).articulo?._id || (p as any)._id
+        if (pId !== articulo._id) return false
+        const pNotas = [...(p.notaRapida?.map((n) => n.valor).filter(Boolean) || [])].sort()
+        if (pNotas.join('|') !== notasNuevasSorted.join('|')) return false
+        if ((p.nota || '').trim() !== '') return false
+        // Comparar variacionReceta
+        const pVrFirma = [...((p as any).variacionReceta ?? [])]
+          .map((v: any) => `${v.codigoArticulo}:${v.removido ? 'R' : ''}${v.esExtra ? 'E' : ''}`)
+          .sort()
+          .join('|')
+        if (pVrFirma !== vrNuevaFirma) return false
+        const pCompsMap = new Map<string, number>()
+        for (const c of p.modificadores || []) {
+          const cId = c.articuloModificadorId || (c as any).id || (c as any)._id
+          if (!cId) continue
+          pCompsMap.set(cId, (pCompsMap.get(cId) || 0) + (c.articuloPrecio?.cantidad ?? 1))
+        }
+        if (pCompsMap.size !== modsNuevosSorted.length) return false
+        return modsNuevosSorted.every(
+          (cn) => pCompsMap.get(cn.articuloModificadorId) === (cn.articuloPrecio?.cantidad ?? 1), // Asegurar lógica de cantidad si existe en modificadores
+        )
+      })
+
+      if (yaExiste) {
+        const qtaActual = productosActuales.find((p) => (p.articuloId || (p as any)._id) === articulo._id)
+        const qtaNum =
+          (qtaActual?.articuloPrecio?.cantidad ?? qtaActual?.articuloPrecioBase?.cantidad ?? 1) + cantidad
+        setSnackbar((s) => ({
+          open: true,
+          message: `Modificando ${articulo.nombreArticulo} cantidad a ${qtaNum}`,
+          key: s.key + 1,
+        }))
+      } else {
+        setSnackbar((s) => ({
+          open: true,
+          message: `Adicionando ${articulo.nombreArticulo} al carrito`,
+          key: s.key + 1,
+        }))
+      }
+
+      setIsPedidoDirty(true)
+
+      setMesaSeleccionada((prev) => {
+        if (!prev) return prev
+
+        const nuevoPedido = prev.pedido
+          ? { ...prev.pedido }
+          : ({
+              _id: `nuevo-${Date.now()}`,
+              tipo: prev.value === 'Llevar' ? 'LLEVAR' : 'SALON',
+              state: 'NUEVO',
+              productos: [],
+              totalBase: 0,
+              totalCalculado: 0,
+              estadoLectura: false, // dummy values
+              estadoImpresora: false,
+            } as unknown as RestPedido)
+
+        const productos = [...(nuevoPedido.productos || [])]
+
+        // Ordenar IDs para comparar de forma estricta independientemente del orden de inserción
+        const notasNuevasSorted = [...notasIds].sort()
+        const modsNuevosSorted = [...modificadoresInput].sort((a, b) =>
+          a.articuloModificadorId.localeCompare(b.articuloModificadorId),
+        )
+
+        const existingIdx = productos.findIndex((p) => {
+          // Misma base de articulo (manejar fallback a _id directo u originado de la prop)
+          const pId = p.articuloId || (p as any).articulo?._id || (p as any)._id
+          if (pId !== articulo._id) return false
+
+          // Misma nota rapida
+          const pNotas = [...(p.notaRapida?.map((n) => n.valor).filter(Boolean) || [])].sort()
+          if (pNotas.join('|') !== notasNuevasSorted.join('|')) return false
+
+          // Si existen notas personalizadas escritas a mano (modificadas desde el carrito localmente),
+          // son productos distintos por defecto porque vienen limpios de la card.
+          if ((p.nota || '').trim() !== '') return false
+
+          // Misma variacionReceta (sin cebolla != con cebolla)
+          const pVrFirma = [...((p as any).variacionReceta ?? [])]
+            .map((v: any) => `${v.codigoArticulo}:${v.removido ? 'R' : ''}${v.esExtra ? 'E' : ''}`)
+            .sort()
+            .join('|')
+          if (pVrFirma !== vrNuevaFirma) return false
+
+          // Mismos complementos: agrupar por articuloId sumando cantidades para manejar
+          // tanto pedidos cargados del servidor (pueden tener varias entradas qty=1 por complemento)
+          // como pedidos locales (una sola entrada con la cantidad acumulada).
+          const pMods = p.modificadores || []
+
+          // Construir mapa agrupado: articuloId → cantidad total
+          const pModsMap = new Map<string, number>()
+          for (const c of pMods) {
+            const cId = c.articuloModificadorId || (c as any).id || (c as any)._id
+            if (!cId) continue
+            const qty = c.articuloPrecio?.cantidad ?? 1
+            pModsMap.set(cId, (pModsMap.get(cId) || 0) + qty)
+          }
+
+          // Debe haber exactamente los mismos articuloIds de complemento
+          if (pModsMap.size !== modsNuevosSorted.length) return false
+
+          for (const modNuevo of modsNuevosSorted) {
+            const existingQty = pModsMap.get(modNuevo.articuloModificadorId)
+            if (existingQty === undefined) return false
+            const qtyNuevo = modNuevo.articuloPrecio?.cantidad ?? 1
+            if (existingQty !== qtyNuevo) return false
+          }
+
+          return true // ¡Match perfecto!
+        })
+
+        if (existingIdx >= 0) {
+          // Incrementar la cantidad del producto exacto
+          const existing = productos[existingIdx]
+          const currentQty = existing.articuloPrecio?.cantidad ?? existing.articuloPrecioBase?.cantidad ?? 1
+          const nextQty = currentQty + cantidad
+
+          productos[existingIdx] = {
+            ...existing,
+            articuloPrecio: { ...existing.articuloPrecio, cantidad: nextQty },
+            articuloPrecioBase: { ...existing.articuloPrecioBase, cantidad: nextQty },
+          }
+        } else {
+          // Usar el servicio para obtener lote, almacén y armar la base del producto
+          const baseProd = articuloToArticuloOperacionInputService(articulo as any, user.moneda, {
+            cantidad,
+            autoAlmacen: true,
+            autoLote: true,
+          })
+
+          const nuevoProd = {
+            ...(baseProd as unknown as ArticuloOperacion),
+            articuloPrecioBase: {
+              cantidad,
+              valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
+              precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
+              moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
+              articuloUnidadMedida: articulo.articuloPrecioBase?.articuloUnidadMedida,
+            },
+            articuloPrecio: {
+              cantidad,
+              valor: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
+              precio: articulo.articuloPrecioBase?.monedaPrimaria?.precio || 0,
+              moneda: articulo.articuloPrecioBase?.monedaPrimaria?.moneda,
+              articuloUnidadMedida: articulo.articuloPrecioBase?.articuloUnidadMedida,
+            },
+            notaRapida: notasIds.map((n) => ({ valor: n })),
+            nota: '', // vacias, luego el usuario las setea manual
+            cortesia: false,
+            variacionReceta: variacionReceta.length > 0 ? variacionReceta : undefined,
+            _modificadoresInput: modificadoresInput,
+            modificadores: modificadoresInput.map((m) => {
+              const qty = m.articuloPrecio?.cantidad ?? 1
+              return {
+                articuloModificadorId: m.articuloModificadorId,
+                articuloId: m.codigoArticulo, // Fallback aproximado
+                nroItem: m.nroItem ?? undefined,
+                codigoArticulo: m.codigoArticulo || '',
+                nombreArticulo: (m as any).nombreArticulo || 'Modificador',
+                esOpcionGratuita: m.esOpcionGratuita,
+                elegibleParaGratis: (m as any).elegibleParaGratis,
+                cantidadIncluida: qty,
+                articuloPrecio: m.articuloPrecio as unknown as ArticuloPrecioOperacion,
+                state: 'NUEVO',
+              } as ArticuloOperacionModificador
+            }),
+          }
+          productos.push(nuevoProd)
+        }
+
+        nuevoPedido.productos = productos
+        return { ...prev, pedido: nuevoPedido }
+      })
+    },
+    [user.moneda],
+  )
 
   const handleUpdateProduct = useCallback((index: number, updatedItem: ArticuloOperacion) => {
+    setIsPedidoDirty(true)
     setMesaSeleccionada((prev) => {
       if (!prev || !prev.pedido || !prev.pedido.productos) return prev
       const productos = [...prev.pedido.productos]
@@ -344,6 +523,7 @@ const RestRegistrar: FunctionComponent = () => {
   }, [])
 
   const handleRemoveProduct = useCallback((index: number) => {
+    setIsPedidoDirty(true)
     setMesaSeleccionada((prev) => {
       if (!prev || !prev.pedido || !prev.pedido.productos) return prev
       const productos = [...prev.pedido.productos]
@@ -352,62 +532,193 @@ const RestRegistrar: FunctionComponent = () => {
     })
   }, [])
 
-  return (
-    <Grid
-      container
-      spacing={2}
-      sx={{
-        height: 'calc(100vh - 150px)',
-        flexGrow: 1,
-        minHeight: 0,
-        overflow: 'hidden',
-        m: 0,
-        pb: 2,
-        width: '100%',
-      }}
-    >
-      <Grid
-        size={{ xs: 12, md: 8 }}
-        sx={{ display: 'flex', flexDirection: 'column', gap: 0, height: '100%' }}
-      >
-        <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-          <RrMesas
-            options={mesas}
-            selectedOption={mesaSeleccionada}
-            setSelectedOption={setMesaSeleccionada}
-            focusedIndex={focusedIndex}
-            setFocusedIndex={setFocusedIndex}
-            codigoSucursal={codigoSucursal}
-            isLoading={pedidosLoading}
-            bgColor={bgColor}
-          />
-        </Box>
-        <Box sx={{ flexGrow: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <RrCategoriasProductos
-            espacios={espaciosData}
-            espacioSeleccionado={espacio}
-            onChangeEspacio={handleChangeEspacio}
-            onAddProduct={handleAddProduct}
-          />
-        </Box>
-      </Grid>
+  const handleSuccess = useCallback(
+    (pedidoRetornado?: any, isFinalizado?: boolean) => {
+      const isNuevo =
+        !mesaSeleccionadaRef.current?.pedido?._id ||
+        mesaSeleccionadaRef.current.pedido._id.startsWith('nuevo-')
 
+      setSnackbar((s) => ({
+        open: true,
+        message: isFinalizado
+          ? 'Pedido finalizado exitosamente'
+          : isNuevo
+            ? 'Pedido registrado con éxito'
+            : 'Pedido actualizado con éxito',
+        key: s.key + 1,
+      }))
+
+      if (pedidoRetornado && !isFinalizado) {
+        setUltimoPedidoExitoso(pedidoRetornado)
+      }
+
+      if (!isFinalizado) {
+        // Mantenemos al usuario en la misma mesa si solo fue un registro/guardado parcial.
+        setMesaSeleccionada((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            _id: pedidoRetornado?._id || prev._id,
+            estado: ESTADO_MESA.OCUPADO,
+            pedido: { ...(pedidoRetornado || prev.pedido), _forceSnapshotUpdate: Date.now() } as any,
+          }
+        })
+        setIsPedidoDirty(false)
+      }
+
+      refetchPedidos()
+    },
+    [refetchPedidos],
+  )
+
+  const handleCancel = useCallback(() => {
+    setSnackbar((s) => ({
+      open: true,
+      message: `Pedido cancelado exitosamente`,
+      key: s.key + 1,
+    }))
+
+    // Actualizar solo la mesa actual a estado LIBRE y limpiar el pedido
+    setMesaSeleccionada((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        estado: ESTADO_MESA.LIBRE,
+        pedido: undefined,
+      }
+    })
+    setIsPedidoDirty(false)
+
+    refetchPedidos()
+    refetchMesas()
+  }, [refetchMesas, refetchPedidos])
+
+  const handleClear = useCallback(() => {
+    setMesaSeleccionada((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        estado: ESTADO_MESA.LIBRE,
+        pedido: undefined,
+      }
+    })
+    setIsPedidoDirty(false)
+    refetchPedidos()
+    refetchMesas()
+  }, [refetchMesas, refetchPedidos])
+
+  const handleClientChange = useCallback((cliente: any) => {
+    setIsPedidoDirty(true)
+    setMesaSeleccionada((prev) => {
+      if (!prev) return prev
+      // Si el pedido no existe, asumimos estructura base
+      const pedidoActual = prev.pedido || { productos: [] }
+
+      // Construimos el objeto cliente compatible con RestPedido['cliente']
+      // Nota: ClientProps tiene codigoCliente, razonSocial, nit, email, etc.
+      // RestPedido['cliente'] espera ClienteOperacion con codigoCliente, razonSocial...
+      const nuevoCliente = {
+        _id: cliente._id,
+        codigoCliente: cliente.codigoCliente || '0',
+        razonSocial: cliente.razonSocial || 'SN',
+        numeroDocumento: cliente.numeroDocumento || cliente.nit, // A veces viene como nit
+        nit: cliente.nit || cliente.numeroDocumento,
+        email: cliente.email,
+        telefono: cliente.telefono,
+        direccion: cliente.direccion,
+      }
+
+      return {
+        ...prev,
+        pedido: {
+          ...pedidoActual,
+          cliente: nuevoCliente,
+        } as any,
+      }
+    })
+  }, [])
+
+  return (
+    <>
       <Grid
-        size={{ xs: 12, md: 4 }}
-        sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: '100%' }}
+        container
+        spacing={1.5}
+        sx={{
+          height: 'calc(100vh - 105px)', // Reducido para evitar el scroll
+          flexGrow: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+          width: '100%',
+          pr: 2,
+          pb: 0,
+          mb: 0,
+          mt: 0,
+        }}
       >
-        <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <RrCarrito 
-            mesaSeleccionada={mesaSeleccionada} 
-            onUpdateProduct={handleUpdateProduct} 
-            onRemoveProduct={handleRemoveProduct} 
-          />
-        </Box>
-        <Box sx={{ flexShrink: 0 }}>
-          <RrAcciones />
-        </Box>
+        <Grid
+          size={{ xs: 12, md: 8 }}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 0, height: '100%' }}
+        >
+          <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+            <RrMesas
+              key={espacio || 'salon-principal'}
+              options={mesas}
+              selectedOption={mesaSeleccionada}
+              setSelectedOption={handleMesaSeleccionada}
+              focusedIndex={focusedIndex}
+              setFocusedIndex={setFocusedIndex}
+              codigoSucursal={codigoSucursal}
+              isLoading={pedidosLoading || loadingEspacio}
+              bgColor={bgColor}
+            />
+          </Box>
+          <Box
+            sx={{ flexGrow: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+          >
+            <RrCategoriasProductos
+              espacios={espaciosData}
+              espacioSeleccionado={espacio}
+              onChangeEspacio={handleChangeEspacio}
+              onAddProduct={handleAddProduct}
+            />
+          </Box>
+        </Grid>
+
+        <Grid
+          size={{ xs: 12, md: 4 }}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}
+        >
+          <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <RrCarrito
+              mesaSeleccionada={mesaSeleccionada}
+              onUpdateProduct={handleUpdateProduct}
+              onRemoveProduct={handleRemoveProduct}
+              onClientChange={handleClientChange}
+            />
+          </Box>
+          <Box sx={{ flexShrink: 0, mt: 'auto' }}>
+            <RrAcciones
+              mesaSeleccionada={mesaSeleccionada}
+              isPedidoDirty={isPedidoDirty}
+              onSuccess={handleSuccess}
+              onCancel={handleCancel}
+              onClear={handleClear}
+            />
+          </Box>
+        </Grid>
       </Grid>
-    </Grid>
+      <Snackbar
+        key={`snackbar-${snackbar.key}`}
+        open={snackbar.open}
+        autoHideDuration={1200}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" variant="standard" sx={{ minWidth: 250, boxShadow: 2 }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   )
 }
 

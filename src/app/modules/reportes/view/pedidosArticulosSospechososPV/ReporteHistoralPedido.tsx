@@ -1,280 +1,226 @@
+import { JSX } from 'react'
+import { DragHandleOutlined } from '@mui/icons-material'
+import AddCircleIcon from '@mui/icons-material/AddCircle'
+import DeleteIcon from '@mui/icons-material/Delete'
+import DoneAllIcon from '@mui/icons-material/DoneAll'
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord'
+import NewReleasesIcon from '@mui/icons-material/NewReleases'
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle'
+import CancelIcon from '@mui/icons-material/Cancel'
 import {
   Box,
-  Chip,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
+  Stack,
+  Typography,
+  CircularProgress,
   TableContainer,
+  Table,
   TableHead,
   TableRow,
+  TableCell,
+  TableBody,
+  Chip
 } from '@mui/material'
-import { amber } from '@mui/material/colors'
-import { useTheme } from '@mui/material/styles'
+import { parse } from 'date-fns'
 
-import { numberWithCommas } from '../../../../base/components/MyInputs/NumberInput'
-import { useAdaptiveColor } from '../../../../base/hooks/useAdaptiveColor'
-import { ArticuloOperacion, HistorialArticuloOperacion } from '../../../restaurante'
+import { useRestPedidoAuditoriaPorPedidoId } from '../../../restaurante/queries/useRestPedidoAuditoriaPorPedidoId'
 
-type HistorialPedidoProps = {
-  montoTotal: number
-  productos: ArticuloOperacion[]
-  historial: HistorialArticuloOperacion[]
-  numeroPedido: number | string
-  fecha: string
-  autor: string
+interface HistorialPedidoProps {
+  pedidoId: string
 }
 
-const EstadoChip = ({ estado }: { estado: string }) => {
-  const theme = useTheme()
+const estadoIcono: Record<string, JSX.Element> = {
+  CREACION: <NewReleasesIcon fontSize="small" />,
+  MODIFICACION_ARTICULOS: <DragHandleOutlined fontSize="small" />,
+  MODIFICACION_FINANCIERA: <DragHandleOutlined fontSize="small" />,
+  CAMBIO_ESTADO: <DragHandleOutlined fontSize="small" />,
+  FINALIZACION: <DoneAllIcon fontSize="small" />,
+  CANCELACION: <CancelIcon fontSize="small" />,
+  ANULACION: <DeleteIcon fontSize="small" />,
+  DEFAULT: <FiberManualRecordIcon fontSize="small" />,
+}
 
-  const estadoColor: Record<string, string> = {
-    NUEVO: theme.palette.info.main,
-    ELABORADO: theme.palette.success.main,
-    ELIMINADO: theme.palette.error.main,
+const estadoColor: Record<string, "info" | "warning" | "success" | "error" | "default"> = {
+  CREACION: 'info',
+  MODIFICACION_ARTICULOS: 'warning',
+  MODIFICACION_FINANCIERA: 'warning',
+  CAMBIO_ESTADO: 'default',
+  FINALIZACION: 'success',
+  CANCELACION: 'error',
+  ANULACION: 'error',
+  DEFAULT: 'default',
+}
+
+const formatearTextoAccion = (accion: string) => {
+  return accion?.replace(/_/g, ' ') || 'DESCONOCIDO'
+}
+
+export const ReporteHistorialPedido = ({
+  pedidoId,
+}: HistorialPedidoProps) => {
+  const { data: historial = [], isLoading } = useRestPedidoAuditoriaPorPedidoId({ pedidoId })
+
+  const numeroPedido = historial.length > 0 ? historial[0].numeroPedido : undefined
+
+  // Ordenar cronológicamente (más antiguo primero) para leer los cambios en orden como una bitácora
+  const sortedHistorial = [...historial].sort((a, b) => {
+    if (!a.fechaRegistro || !b.fechaRegistro) return 0
+    try {
+      const da = parse(a.fechaRegistro, 'dd/MM/yyyy HH:mm:ss', new Date())
+      const db = parse(b.fechaRegistro, 'dd/MM/yyyy HH:mm:ss', new Date())
+      return da.getTime() - db.getTime()
+    } catch {
+      return 0
+    }
+  })
+
+  if (isLoading) {
+    return (
+      <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress />
+      </Box>
+    )
   }
-
-  const backgroundColor = estadoColor[estado] ?? '#ccc'
 
   return (
-    <Chip
-      label={estado}
-      size="small"
-      sx={{
-        backgroundColor,
-        color: '#fff',
-        fontWeight: 'bold',
-      }}
-    />
-  )
-}
+    <Box sx={{ padding: 1 }}>
 
-export const HistorialPedido = ({
-  montoTotal,
-  historial,
-  productos,
-  numeroPedido,
-  fecha,
-  autor,
-}: HistorialPedidoProps) => {
-  type Fila = {
-    nombreArticulo: string
-    cantidadInicial: number
-    moneda: string
-    precioInicial: number
-    estadoInicial: string
-    cantidadFinal: number
-    precioFinal: number
-    estadoFinal: string
-    montoTotal: number
-    fecha: string
-    autor: string
-  }
-
-  const adaptiveColor = useAdaptiveColor()
-
-  const productosPorCodigo = new Map(productos.map((p) => [p.codigoArticulo || '', p]))
-
-  const operacionesPorArticulo = new Map<
-    string,
-    { nombreArticulo: string; ops: (typeof historial)[0]['articuloOperacion'] }
-  >()
-
-  historial.forEach((registro) => {
-    registro.articuloOperacion.forEach((op) => {
-      const key = op.codigoArticulo || ''
-      if (!operacionesPorArticulo.has(key)) {
-        operacionesPorArticulo.set(key, {
-          nombreArticulo: op.nombreArticulo || '',
-          ops: [],
-        })
-      }
-      operacionesPorArticulo.get(key)!.ops.push({
-        ...op,
-      })
-    })
-  })
-
-  const filas: Fila[] = []
-
-  const ultimaFechaHistorial =
-    historial.slice().sort((a, b) => (b.nro ?? 0) - (a.nro ?? 0))[0]?.fecha ?? ''
-
-  operacionesPorArticulo.forEach(({ nombreArticulo, ops }) => {
-    if (ops.length === 0) return
-
-    const primera = ops[0]
-    const productoActual = productosPorCodigo.get(primera.codigoArticulo || '')
-    const ultima = ops[ops.length - 1]
-    const cantidadInicial = ultima.articuloPrecio?.cantidad ?? 1
-
-    const moneda =
-      primera.articuloPrecio?.monedaPrecio?.moneda?.sigla ??
-      primera.articuloPrecio?.moneda?.sigla ??
-      productoActual?.articuloPrecio?.monedaPrecio?.moneda?.sigla ??
-      productoActual?.articuloPrecio?.moneda?.sigla ??
-      '-'
-
-    const precioInicial = primera.articuloPrecio?.monedaPrecio?.precioBase ?? primera.articuloPrecio?.valor ?? 0
-    const estadoInicial = primera.state
-
-    const cantidadFinal =
-      productoActual?.state === 'ELIMINADO' || ultima.state === 'ELIMINADO'
-        ? 0
-        : (productoActual?.articuloPrecio?.cantidad ?? 1)
-    const precioFinal = productoActual?.articuloPrecio?.monedaPrecio?.precio ?? productoActual?.articuloPrecio?.valor ?? 0
-    const estadoFinal = ultima.state
-
-    filas.push({
-      nombreArticulo,
-      cantidadInicial,
-      moneda,
-      precioInicial,
-      estadoInicial,
-      cantidadFinal,
-      precioFinal,
-      estadoFinal,
-      montoTotal,
-      autor,
-      fecha: ultimaFechaHistorial ?? fecha,
-    })
-  })
-
-  const hayCambios = filas.some(
-    (item) =>
-      item.precioInicial !== item.precioFinal ||
-      item.cantidadInicial !== item.cantidadFinal,
-  )
-
-  return hayCambios ? (
-    <Box>
-      <TableContainer component={Paper} elevation={3}>
+      <TableContainer component={Paper} elevation={0} variant="outlined">
         <Table size="small">
-          <TableHead
-            sx={{
-              backgroundColor: (theme) => theme.palette.primary.main,
-              color: (theme) => theme.palette.common.white,
-            }}
-          >
-            <TableRow
-              sx={{
-                '& th': {
-                  color: (theme) => theme.palette.common.white,
-                  fontWeight: 'bold',
-                  padding: '8px',
-                },
-              }}
-            >
-              <TableCell align="left" sx={{ width: 65, minWidth: 60 }}>
-                Pedido
-              </TableCell>
-              <TableCell align="left" sx={{ width: 200, minWidth: 150 }}>
-                Artículo
-              </TableCell>
-              <TableCell align="left" sx={{ width: 90, minWidth: 80 }}>
-                Cant. Inicial
-              </TableCell>
-              <TableCell align="right" sx={{ width: 120, minWidth: 100 }}>
-                Precio Inicial
-              </TableCell>
-              <TableCell align="left" sx={{ width: 100, minWidth: 80 }}>
-                Estado Inicial
-              </TableCell>
-              <TableCell align="left" sx={{ width: 86, minWidth: 80 }}>
-                Cant. Final
-              </TableCell>
-              <TableCell align="right" sx={{ width: 120, minWidth: 100 }}>
-                Precio Final
-              </TableCell>
-              <TableCell align="center" sx={{ width: 100, minWidth: 80 }}>
-                Estado Final
-              </TableCell>
-              <TableCell align="left" sx={{ width: 80, minWidth: 60 }}>
-                Moneda
-              </TableCell>
-              <TableCell align="right" sx={{ width: 140, minWidth: 100 }}>
-                Total Recibido
-              </TableCell>
-              <TableCell align="right" sx={{ width: 140, minWidth: 100 }}>
-                Total Esperado
-              </TableCell>
-              <TableCell align="left" sx={{ width: 100, minWidth: 90 }}>
-                Autor
-              </TableCell>
-              <TableCell align="left" sx={{ width: 130, minWidth: 100 }}>
-                Fecha
-              </TableCell>
+          <TableHead sx={{ backgroundColor: 'primary.main' }}>
+            <TableRow>
+              <TableCell sx={{ minWidth: 140, fontWeight: 'bold' }}>Fecha</TableCell>
+              <TableCell sx={{ minWidth: 110, fontWeight: 'bold' }}>Usuario</TableCell>
+              <TableCell sx={{ minWidth: 170, fontWeight: 'bold' }}>Acción Ejecutada</TableCell>
+              <TableCell sx={{ minWidth: 200, fontWeight: 'bold' }}>Resumen Automático</TableCell>
+              <TableCell sx={{ minWidth: 250, fontWeight: 'bold' }}>Puntos Críticos Detectados</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filas.map((item, index) => {
-              const precioDiferente = item.precioInicial !== item.precioFinal
-              const cantidadDiferente = item.cantidadInicial !== item.cantidadFinal
+            {sortedHistorial.map((h, idx) => {
+              const accionType = h.accion || 'DEFAULT'
+              const chipColor = estadoColor[accionType] || 'default'
+              const icono = estadoIcono[accionType] || estadoIcono['DEFAULT']
+              
+              const pasoAnterior = idx > 0 ? sortedHistorial[idx - 1] : null
+              const articulos = h.articulos || []
+
+              // Encontrar artículos que estaban antes pero ya no están ahora
+              const eliminados = pasoAnterior?.articulos?.filter(
+                (prevArt) => !articulos.some((currArt) => currArt.nroItem === prevArt.nroItem)
+              ) || []
+
+              // Consolidar artículos actuales más los eliminados en este paso para recorrerlos todos juntos
+              const allItemsForStep = [...articulos, ...eliminados]
+
+              const itemsCriticos: JSX.Element[] = []
+
+              let huboCambiosCriticos = false
+
+              allItemsForStep.forEach((articulo) => {
+                const isAnulacionOCancelacion = accionType === 'ANULACION' || accionType === 'CANCELACION'
+                const isEliminado = isAnulacionOCancelacion || eliminados.some((eli) => eli.nroItem === articulo.nroItem)
+                
+                let cantidadActual = articulo.articuloPrecio?.cantidad ?? 0
+                let cantidadAnterior = 0
+                let cambioDetectado = false
+
+                if (isEliminado) {
+                  cantidadActual = 0
+                  const prevArticulo = pasoAnterior?.articulos?.find(a => a.nroItem === articulo.nroItem)
+                  cantidadAnterior = prevArticulo ? (prevArticulo.articuloPrecio?.cantidad ?? 0) : (articulo.articuloPrecio?.cantidad ?? 0)
+                  cambioDetectado = true
+                } else {
+                  // Buscar el artículo en el paso anterior para comparar
+                  const prevArticulo = pasoAnterior?.articulos?.find(
+                    (a) => a.nroItem === articulo.nroItem
+                  )
+                  if (prevArticulo) {
+                    cantidadAnterior = prevArticulo.articuloPrecio?.cantidad ?? 0
+                    if (cantidadAnterior !== cantidadActual) {
+                      cambioDetectado = true
+                    }
+                  } else {
+                    // Es totalmente nuevo en este paso
+                    cantidadAnterior = 0
+                    cambioDetectado = true
+                  }
+                }
+
+                if (isEliminado) {
+                  huboCambiosCriticos = true
+                  let textoEliminado = 'Fue eliminado'
+                  if (accionType === 'ANULACION') textoEliminado = 'Fue anulado'
+                  if (accionType === 'CANCELACION') textoEliminado = 'Fue cancelado'
+
+                  itemsCriticos.push(
+                    <Typography key={articulo.nroItem} variant="body2" sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <DeleteIcon fontSize="inherit" /> <strong>{articulo.nombreArticulo}</strong>: {textoEliminado} (Antes: {cantidadAnterior})
+                    </Typography>
+                  )
+                } else if (cambioDetectado) {
+                  huboCambiosCriticos = true
+                  if (cantidadActual > cantidadAnterior) {
+                    const isNew = cantidadAnterior === 0;
+                    itemsCriticos.push(
+                      <Typography key={articulo.nroItem} variant="body2" sx={{ color: isNew ? 'info.main' : 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                         <AddCircleIcon fontSize="inherit" /> 
+                         <strong>{articulo.nombreArticulo}</strong>: {isNew ? `Se agregó (${cantidadActual})` : `Aumentó la cantidad (${cantidadAnterior} → ${cantidadActual})`}
+                      </Typography>
+                    )
+                  } else if (cantidadActual < cantidadAnterior) {
+                    itemsCriticos.push(
+                      <Typography key={articulo.nroItem} variant="body2" sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <RemoveCircleIcon fontSize="inherit" /> <strong>{articulo.nombreArticulo}</strong>: Disminuyó la cantidad ({cantidadAnterior} → {cantidadActual})
+                      </Typography>
+                    )
+                  }
+                } else {
+                  itemsCriticos.push(
+                    <Typography key={articulo.nroItem} variant="body2" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <FiberManualRecordIcon fontSize="inherit" sx={{ fontSize: 10 }} /> <strong>{articulo.nombreArticulo}</strong>: Mantenido ({cantidadActual})
+                    </Typography>
+                  )
+                }
+              })
 
               return (
-                <TableRow key={index} sx={{ padding: '8px' }}>
-                  <TableCell>{numeroPedido}</TableCell>
-                  <TableCell>{item.nombreArticulo}</TableCell>
-
-                  <TableCell
-                    align="right"
-                    sx={cantidadDiferente ? { backgroundColor: adaptiveColor(amber[100]) } : {}}
-                  >
-                    {item.cantidadInicial}
+                <TableRow key={idx} hover>
+                  <TableCell sx={{ verticalAlign: 'top' }}>
+                    {h.fechaRegistro ?? '-'}
                   </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={precioDiferente ? { backgroundColor: adaptiveColor(amber[100]) } : {}}
-                  >
-                    {numberWithCommas(item.precioInicial, '-')}
+                  <TableCell sx={{ verticalAlign: 'top' }}>
+                    <Typography variant="body2" fontWeight="bold">
+                      {h.usuario ?? 'Sistema'}
+                    </Typography>
                   </TableCell>
-
-                  <TableCell align="center">
-                    <EstadoChip estado={item.estadoInicial} />
+                  <TableCell sx={{ verticalAlign: 'top' }}>
+                    <Chip 
+                      icon={icono} 
+                      label={formatearTextoAccion(accionType)} 
+                      color={chipColor} 
+                      size="small" 
+                    />
                   </TableCell>
-
-                  <TableCell
-                    align="right"
-                    sx={cantidadDiferente ? { backgroundColor: adaptiveColor(amber[100]) } : {}}
-                  >
-                    {item.cantidadFinal}
+                  <TableCell sx={{ verticalAlign: 'top' }}>
+                     {h.resumenCambios || <Typography variant="caption" color="text.secondary">Sin detalles</Typography>}
                   </TableCell>
-
-                  <TableCell
-                    align="right"
-                    sx={precioDiferente ? { backgroundColor: adaptiveColor(amber[100]) } : {}}
-                  >
-                    {numberWithCommas(item.precioFinal, '-')}
+                  <TableCell sx={{ verticalAlign: 'top' }}>
+                     {!huboCambiosCriticos && allItemsForStep.length > 0 && (
+                       <Typography variant="body2" sx={{ color: 'success.main', display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                         <DoneAllIcon fontSize="inherit" /> Sin cambios críticos de artículos.
+                       </Typography>
+                     )}
+                     {itemsCriticos.length > 0 ? (
+                       <Stack spacing={0.5}>
+                         {itemsCriticos}
+                       </Stack>
+                     ) : (
+                       <Typography variant="caption" color="text.secondary">
+                         No hay artículos registrados.
+                       </Typography>
+                     )}
                   </TableCell>
-
-                  <TableCell align="center">
-                    <EstadoChip estado={item.estadoFinal} />
-                  </TableCell>
-                  <TableCell align="center">{item.moneda}</TableCell>
-
-                  <TableCell
-                    align="right"
-                    sx={
-                      precioDiferente || cantidadDiferente
-                        ? { backgroundColor: adaptiveColor(amber[100]) }
-                        : {}
-                    }
-                  >
-                    {numberWithCommas(item.precioFinal * item.cantidadFinal, '-')}
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={
-                      precioDiferente || cantidadDiferente
-                        ? { backgroundColor: adaptiveColor(amber[100]) }
-                        : {}
-                    }
-                  >
-                    {numberWithCommas(item.precioInicial * item.cantidadInicial, '-')}
-                  </TableCell>
-
-                  <TableCell>{item.autor}</TableCell>
-                  <TableCell>{item.fecha}</TableCell>
                 </TableRow>
               )
             })}
@@ -282,5 +228,5 @@ export const HistorialPedido = ({
         </Table>
       </TableContainer>
     </Box>
-  ) : null
+  )
 }

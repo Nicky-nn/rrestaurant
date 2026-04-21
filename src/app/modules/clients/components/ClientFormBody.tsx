@@ -208,11 +208,7 @@ const ClientFormBody: FunctionComponent<Props> = (props) => {
 
         <Grid size={{ xs: 12 }}>
           <Divider sx={{ my: 1 }} />
-          <Button
-            variant="text"
-            fullWidth
-            onClick={() => setOpenDireccion(!openDireccion)}
-          >
+          <Button variant="text" fullWidth onClick={() => setOpenDireccion(!openDireccion)}>
             {openDireccion ? 'Ocultar Dirección' : 'Añadir Dirección'}
           </Button>
           <Collapse in={openDireccion} timeout="auto" unmountOnExit sx={{ width: '100%', mt: 1 }}>

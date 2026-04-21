@@ -19,10 +19,15 @@ interface NotaStat {
 }
 
 // Función global que se llama SOLO cuando se confirma (ej. Clic en Agregar)
+// Las estadísticas de uso solo sirven para ORDENAR los chips por frecuencia,
+// NUNCA pre-seleccionan notas al abrir el modal.
 export const guardarUsoNotasLocal = (notas: Set<string>, storageId?: string) => {
   if (notas.size === 0) return
 
-  const lsKey = storageId ? `rr_notas_usage_stats_${storageId}` : 'rr_notas_usage_stats'
+  const lsKey =
+    storageId && storageId !== 'undefined'
+      ? `rr_notas_usage_stats_${storageId}`
+      : 'rr_notas_usage_stats_global'
   let prevStats: NotaStat[] = []
 
   try {
@@ -35,7 +40,7 @@ export const guardarUsoNotasLocal = (notas: Set<string>, storageId?: string) => 
   }
 
   const nextStats = [...prevStats]
-  
+
   Array.from(notas).forEach((notaStr) => {
     const upper = notaStr.toUpperCase().trim()
     const existingIndex = nextStats.findIndex((s) => s.upper === upper)
@@ -65,7 +70,10 @@ const RrNotasRapidas: React.FC<RrNotasRapidasProps> = ({
   const [notaManual, setNotaManual] = useState('')
   const [stats, setStats] = useState<NotaStat[]>([])
 
-  const lsKey = storageId ? `rr_notas_usage_stats_${storageId}` : 'rr_notas_usage_stats'
+  const lsKey =
+    storageId && storageId !== 'undefined'
+      ? `rr_notas_usage_stats_${storageId}`
+      : 'rr_notas_usage_stats_global'
 
   // Cargar estadísticas de LocalStorage al montar o cambiar de key (y cada vez que se abre)
   useEffect(() => {
@@ -168,7 +176,7 @@ const RrNotasRapidas: React.FC<RrNotasRapidasProps> = ({
           const originalText = notaStat.original
           // Chequeamos selección sin importar si predefinida fue cambiada levemente de case
           const selected = Array.from(selectedNotas).some((s) => s.toUpperCase().trim() === notaStat.upper)
-          
+
           return (
             <Chip
               key={notaStat.upper}
@@ -210,11 +218,7 @@ const RrNotasRapidas: React.FC<RrNotasRapidasProps> = ({
           slotProps={{
             input: {
               endAdornment: notaManual.trim() ? (
-                <Chip
-                  label="↵ Enter"
-                  size="small"
-                  sx={{ fontSize: '0.65rem', height: 20, mr: -0.5 }}
-                />
+                <Chip label="↵ Enter" size="small" sx={{ fontSize: '0.65rem', height: 20, mr: -0.5 }} />
               ) : undefined,
             },
           }}

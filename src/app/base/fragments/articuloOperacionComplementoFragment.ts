@@ -5,6 +5,7 @@ import { gql } from 'graphql-request'
 /**
  * Fragmnt graphq para tipar los almacenes
  * @author isi-template
+ * @deprecated
  */
 export const articuloOperacionComplementoFragment = gql`
   fragment articuloOperacionComplementoFields on ArticuloOperacionComplemento {

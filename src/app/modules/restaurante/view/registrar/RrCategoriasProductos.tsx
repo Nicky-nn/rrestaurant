@@ -7,12 +7,16 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import SearchIcon from '@mui/icons-material/Search'
 import {
   Box,
+  Button,
   Card,
   CardActionArea,
   CardMedia,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
-  FormControl,
   FormControlLabel,
   IconButton,
   InputAdornment,
@@ -21,20 +25,30 @@ import {
   Popover,
   Radio,
   RadioGroup,
-  Select,
   Skeleton,
   TextField,
   Tooltip,
   Typography,
 } from '@mui/material'
+import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
-import { FunctionComponent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  FunctionComponent,
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
 import useAuth from '../../../../base/hooks/useAuth'
 import { useHorizontalDragScroll } from '../../../../base/hooks/useHorizontalDragScroll'
+import { useRestEspacioRegistro } from '../../mutations/useRestEspacioRegistro'
 import { useArticuloInventarioListado } from '../../queries/useArticuloInventarioListado'
-import { Articulo } from '../../types'
+import { Articulo, ArticuloModificadorOperacionInput, ArticuloRecetaOperacionInput } from '../../types'
 import RrComplementoModal from './RrComplementoModal'
 
 dayjs.extend(customParseFormat)
@@ -148,207 +162,208 @@ const SkeletonCard = () => (
 interface ProductCardProps {
   articulo: Articulo
   onClick?: (a: Articulo) => void
-  onAddProduct?: (payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number }> }) => void
+  onAddProduct?: (payload: {
+    articulo: Articulo
+    cantidad: number
+    notasIds: string[]
+    variacionReceta?: ArticuloRecetaOperacionInput[]
+    modificadoresInput?: ArticuloModificadorOperacionInput[]
+  }) => void
   /** Si true, oculta el área de imagen (modo compacto para filas sin imágenes) */
   compact?: boolean
 }
 
-const ProductCard: FunctionComponent<ProductCardProps> = ({ articulo, onClick, onAddProduct, compact = false }) => {
-  const [complementoModalOpen, setComplementoModalOpen] = useState(false)
-  const listaComplemento = articulo.listaComplemento ?? []
-  const tieneComplementos = listaComplemento.length > 0
-  const disponible = isDisponible(articulo)
-  const imagenUrl = getImagenUrl(articulo)
-  const precio = articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0
-  const sigla = articulo.articuloPrecioBase?.monedaPrimaria?.moneda?.sigla ?? 'Bs'
+const ProductCard: FunctionComponent<ProductCardProps> = memo(
+  ({ articulo, onClick, onAddProduct, compact = false }) => {
+    const [complementoModalOpen, setComplementoModalOpen] = useState(false)
+    const tieneComplementos = Boolean(articulo.esReceta || articulo.tieneModificadores)
+    const disponible = isDisponible(articulo)
+    const imagenUrl = getImagenUrl(articulo)
+    const precio = articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0
+    const sigla = articulo.articuloPrecioBase?.monedaPrimaria?.moneda?.sigla ?? 'Bs'
 
-  return (
-    <>
-      <Tooltip
-        title={`${articulo.nombreArticulo} - ${sigla} ${precio.toFixed(2)}${!disponible ? ' (AGOTADO)' : ''}`}
-        placement="top"
-        arrow
-        enterDelay={400}
-        enterNextDelay={200}
-      >
-        <Card
-          sx={{
-            borderRadius: 2,
-            opacity: disponible ? 1 : 0.6,
-            transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s',
-            userSelect: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'relative',
-            bgcolor: (theme) =>
-              theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[200],
-            // Borde de color secondary cuando el artículo tiene complementos
-            border: '2px solid',
-            borderColor: tieneComplementos ? 'secondary.main' : 'transparent',
-            '&:hover': disponible ? { boxShadow: 6, transform: 'translateY(-3px)' } : {},
-          }}
+    return (
+      <>
+        <Tooltip
+          title={`${articulo.nombreArticulo} - ${sigla} ${precio.toFixed(2)}${!disponible ? ' (AGOTADO)' : ''}`}
+          placement="top"
+          arrow
+          enterDelay={400}
+          enterNextDelay={200}
         >
-          <CardActionArea
-            disabled={!disponible}
-            onClick={() => {
-              if (!disponible) return
-              if (tieneComplementos) {
-                setComplementoModalOpen(true)
-              } else {
-                onClick?.(articulo)
-                onAddProduct?.({
-                  articulo,
-                  cantidad: 1,
-                  notasIds: [],
-                  complementos: [],
-                })
-              }
-            }}
+          <Card
             sx={{
+              borderRadius: 2,
+              opacity: disponible ? 1 : 0.6,
+              transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s',
+              userSelect: 'none',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'stretch',
-              justifyContent: 'flex-start',
-              flexGrow: 1,
+              position: 'relative',
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[200],
+              // Borde de color secondary cuando el artículo tiene complementos
+              border: '2px solid',
+              borderColor: tieneComplementos ? 'secondary.main' : 'transparent',
+              '&:hover': disponible ? { boxShadow: 6, transform: 'translateY(-3px)' } : {},
             }}
           >
-            {/* Área de imagen: solo se muestra si no es modo compacto */}
-            {!compact && (
-              <Box sx={{ position: 'relative', width: '100%', height: 100, flexShrink: 0 }}>
-                {imagenUrl ? (
-                  <CardMedia
-                    component="img"
-                    image={imagenUrl}
-                    alt={articulo.nombreArticulo ?? ''}
-                    sx={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }}
-                  />
-                ) : (
-                  <Box
-                    sx={{
-                      width: '100%',
-                      height: 100,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: 'grey.100',
-                    }}
-                  >
-                    <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
-                      Sin imagen
-                    </Typography>
-                  </Box>
-                )}
-
-                {!disponible && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      bgcolor: 'error.main',
-                      color: 'error.contrastText',
-                      textAlign: 'center',
-                      py: 0.25,
-                    }}
-                  >
-                    <Typography
-                      sx={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: 0.8, lineHeight: 1.4 }}
-                    >
-                      AGOTADO
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            )}
-
-            {/* Barra accent primary para cards sin imagen (modo compacto) */}
-            {compact && (
-              <Box
-                sx={{
-                  width: '100%',
-                  height: 3,
-                  bgcolor: disponible ? 'primary.main' : 'error.main',
-                  flexShrink: 0,
-                }}
-              />
-            )}
-
-            {/* Texto: nombre + precio */}
-            <Box
+            <CardActionArea
+              disabled={!disponible}
+              onClick={() => {
+                if (!disponible) return
+                if (tieneComplementos) {
+                  setComplementoModalOpen(true)
+                } else {
+                  onClick?.(articulo)
+                  onAddProduct?.({
+                    articulo,
+                    cantidad: 1,
+                    notasIds: [],
+                  })
+                }
+              }}
               sx={{
-                px: 1,
-                pt: compact ? 0.75 : 0.5,
-                pb: compact ? 1.25 : 1,
-                flexShrink: 0,
-                minHeight: compact ? 52 : 44,
                 display: 'flex',
                 flexDirection: 'column',
+                alignItems: 'stretch',
                 justifyContent: 'flex-start',
-                gap: 0.25,
+                flexGrow: 1,
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  lineHeight: 1.3,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'normal',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  minHeight: '2.21em', // Altura mínima para 2 líneas
-                }}
-              >
-                {articulo.nombreArticulo}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: '0.85rem',
-                  fontWeight: 500,
-                  color: disponible ? 'text.secondary' : 'error.main',
-                  lineHeight: 1.2,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {sigla} {precio.toFixed(2)}
-                {compact && !disponible && (
-                  <Typography
-                    component="span"
-                    sx={{
-                      ml: 0.75,
-                      fontSize: '0.6rem',
-                      fontWeight: 700,
-                      color: 'error.main',
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    · AGOTADO
-                  </Typography>
-                )}
-              </Typography>
-            </Box>
-          </CardActionArea>
+              {/* Área de imagen: solo se muestra si no es modo compacto */}
+              {!compact && (
+                <Box sx={{ position: 'relative', width: '100%', height: 100, flexShrink: 0 }}>
+                  {imagenUrl ? (
+                    <CardMedia
+                      component="img"
+                      image={imagenUrl}
+                      alt={articulo.nombreArticulo ?? ''}
+                      sx={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: 100,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: 'transparent',
+                      }}
+                    >
+                      <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
+                        Sin imagen
+                      </Typography>
+                    </Box>
+                  )}
 
-          {/* Badge de complementos — fuera del CardActionArea para no interferir con el click del card */}
-          {tieneComplementos && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 4,
-                right: 4,
-                zIndex: 2,
-              }}
-            >
-              <Tooltip
-                title={`${listaComplemento.length} complemento${listaComplemento.length !== 1 ? 's' : ''} — click para ver detalles`}
-                arrow
+                  {!disponible && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        bgcolor: 'error.main',
+                        color: 'error.contrastText',
+                        textAlign: 'center',
+                        py: 0.25,
+                      }}
+                    >
+                      <Typography
+                        sx={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: 0.8, lineHeight: 1.4 }}
+                      >
+                        AGOTADO
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              {/* Barra accent primary para cards sin imagen (modo compacto) */}
+              {compact && (
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: 3,
+                    bgcolor: disponible ? 'primary.main' : 'error.main',
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+
+              {/* Texto: nombre + precio */}
+              <Box
+                sx={{
+                  px: 1,
+                  pt: compact ? 0.75 : 0.5,
+                  pb: compact ? 1.25 : 1,
+                  flexShrink: 0,
+                  minHeight: compact ? 52 : 44,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-start',
+                  gap: 0.25,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    lineHeight: 1.3,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'normal',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    minHeight: '2.21em', // Altura mínima para 2 líneas
+                  }}
+                >
+                  {articulo.nombreArticulo}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 500,
+                    color: disponible ? 'text.secondary' : 'error.main',
+                    lineHeight: 1.2,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {sigla} {precio.toFixed(2)}
+                  {compact && !disponible && (
+                    <Typography
+                      component="span"
+                      sx={{
+                        ml: 0.75,
+                        fontSize: '0.6rem',
+                        fontWeight: 700,
+                        color: 'error.main',
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      · AGOTADO
+                    </Typography>
+                  )}
+                </Typography>
+              </Box>
+            </CardActionArea>
+
+            {/* Badge de modificadores/receta — fuera del CardActionArea para no interferir con el click del card */}
+            {tieneComplementos && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 4,
+                  right: 4,
+                  zIndex: 2,
+                }}
               >
                 <Chip
                   icon={<ExtensionIcon sx={{ fontSize: '0.75rem !important' }} />}
-                  label={listaComplemento.length}
+                  label={articulo.esReceta ? 'R' : 'M'}
                   size="small"
                   color="secondary"
                   onClick={(e) => {
@@ -365,25 +380,24 @@ const ProductCard: FunctionComponent<ProductCardProps> = ({ articulo, onClick, o
                     '& .MuiChip-label': { px: 0.75 },
                   }}
                 />
-              </Tooltip>
-            </Box>
-          )}
-        </Card>
-      </Tooltip>
+              </Box>
+            )}
+          </Card>
+        </Tooltip>
 
-      {/* Modal en archivo separado RrComplementoModal.tsx */}
-      {tieneComplementos && (
-        <RrComplementoModal
-          open={complementoModalOpen}
-          onClose={() => setComplementoModalOpen(false)}
-          articulo={articulo}
-          listaComplemento={listaComplemento}
-          onAdd={onAddProduct}
-        />
-      )}
-    </>
-  )
-}
+        {/* Modal de receta / modificadores */}
+        {tieneComplementos && (
+          <RrComplementoModal
+            open={complementoModalOpen}
+            onClose={() => setComplementoModalOpen(false)}
+            articulo={articulo}
+            onAdd={onAddProduct}
+          />
+        )}
+      </>
+    )
+  },
+) as FunctionComponent<ProductCardProps>
 
 // ─── Category tab (Box) ────────────────────────────────────────────────────────
 
@@ -393,7 +407,7 @@ interface CategoryTabProps {
   onClick: () => void
 }
 
-const CategoryTab: FunctionComponent<CategoryTabProps> = ({ label, selected, onClick }) => (
+const CategoryTab: FunctionComponent<CategoryTabProps> = memo(({ label, selected, onClick }) => (
   <Box
     onClick={onClick}
     sx={{
@@ -417,7 +431,7 @@ const CategoryTab: FunctionComponent<CategoryTabProps> = ({ label, selected, onC
   >
     {label}
   </Box>
-)
+)) as FunctionComponent<CategoryTabProps>
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
@@ -425,7 +439,13 @@ interface RrCategoriasProductosProps {
   espacios?: { _id?: string; descripcion?: string | null; default?: number | null }[]
   espacioSeleccionado?: string | null
   onChangeEspacio?: (espacioId: string | null) => void
-  onAddProduct?: (payload: { articulo: Articulo, cantidad: number, notasIds: string[], complementos: Array<{ _id: string, nombre: string, precio: number, cantidad: number }> }) => void
+  onAddProduct?: (payload: {
+    articulo: Articulo
+    cantidad: number
+    notasIds: string[]
+    variacionReceta?: ArticuloRecetaOperacionInput[]
+    modificadoresInput?: ArticuloModificadorOperacionInput[]
+  }) => void
 }
 
 /**
@@ -452,11 +472,32 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
   })
 
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string | null>(null)
+  const [searchModalArticulo, setSearchModalArticulo] = useState<Articulo | null>(null)
   const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(null)
   const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null)
   const [sortConfig, setSortConfig] = useState<SortConfig>(SORT_DEFAULT)
   const [searchTerm, setSearchTerm] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const [errorMesas, setErrorMesas] = useState(false)
+  const [helperMesas, setHelperMesas] = useState('')
+
+  const [openEspacioModal, setOpenEspacioModal] = useState(false)
+  const [nuevoEspacioNombre, setNuevoEspacioNombre] = useState('')
+  const [nuevoEspacioMesas, setNuevoEspacioMesas] = useState<number | ''>(10)
+
+  const queryClient = useQueryClient()
+  const registrarEspacioMutation = useRestEspacioRegistro({
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['restEspacioPorSucursal'] })
+      setOpenEspacioModal(false)
+      setNuevoEspacioNombre('')
+      setNuevoEspacioMesas(10)
+      onChangeEspacio?.(data._id as string)
+    },
+    onError: (err) => {
+      alert('Error al crear espacio: ' + err.message)
+    },
+  })
 
   // ── Barra de categorías dinámica ──────────────────────────────────────────
   const [catBarMode, setCatBarMode] = useState<CatBarMode>('single')
@@ -697,7 +738,7 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
         <TextField
           fullWidth
           size="small"
-          placeholder="Buscar producto... (Alt+A)"
+          placeholder="Buscar producto..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           inputRef={searchInputRef}
@@ -707,13 +748,61 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
                 <SearchIcon fontSize="small" />
               </InputAdornment>
             ),
-            endAdornment: searchTerm ? (
+            endAdornment: (
               <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setSearchTerm('')}>
-                  <ClearIcon fontSize="small" />
-                </IconButton>
+                {searchTerm ? (
+                  <IconButton size="small" onClick={() => setSearchTerm('')}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                ) : (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.4,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                      opacity: 0.7,
+                    }}
+                  >
+                    <Box
+                      component="kbd"
+                      sx={{
+                        bgcolor: 'background.default',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        px: 0.6,
+                        py: 0.2,
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        fontFamily: 'sans-serif',
+                      }}
+                    >
+                      Alt
+                    </Box>
+                    <Box
+                      component="kbd"
+                      sx={{
+                        bgcolor: 'background.default',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        px: 0.6,
+                        py: 0.2,
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        fontFamily: 'sans-serif',
+                      }}
+                    >
+                      A
+                    </Box>
+                  </Box>
+                )}
               </InputAdornment>
-            ) : null,
+            ),
           }}
           sx={{
             '& .MuiOutlinedInput-root': {
@@ -952,10 +1041,15 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
                       return (
                         <Box
                           key={articulo._id ?? articulo.codigoArticulo}
-                          onClick={() =>
-                            disponible &&
-                            console.log('[RrCategoriasProductos] Seleccionado:', articulo.nombreArticulo)
-                          }
+                          onClick={() => {
+                            if (!disponible) return
+                            const tieneComps = Boolean(articulo.esReceta || articulo.tieneModificadores)
+                            if (tieneComps) {
+                              setSearchModalArticulo(articulo)
+                            } else {
+                              onAddProduct?.({ articulo, cantidad: 1, notasIds: [] })
+                            }
+                          }}
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
@@ -1047,7 +1141,6 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
                     key={articulo._id ?? articulo.codigoArticulo}
                     articulo={articulo}
                     compact={compact}
-                    onClick={(a) => console.log('[RrCategoriasProductos] Seleccionado:', a.nombreArticulo)}
                     onAddProduct={onAddProduct}
                   />
                 ))}
@@ -1058,6 +1151,19 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
         )}
       </Box>
 
+      {/* Modal receta/modificadores para búsqueda */}
+      {searchModalArticulo && (
+        <RrComplementoModal
+          open={Boolean(searchModalArticulo)}
+          onClose={() => setSearchModalArticulo(null)}
+          articulo={searchModalArticulo}
+          onAdd={(payload) => {
+            onAddProduct?.(payload)
+            setSearchModalArticulo(null)
+          }}
+        />
+      )}
+
       {/* Popover de espacios */}
       <Popover
         open={Boolean(moreAnchorEl)}
@@ -1065,33 +1171,136 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
         onClose={() => setMoreAnchorEl(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        slotProps={{ paper: { sx: { p: 1.5, minWidth: 200 } } }}
+        slotProps={{ paper: { sx: { p: 1, minWidth: 200 } } }}
       >
         <Typography
           variant="caption"
-          sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', mb: 0.5 }}
+          sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', px: 1, pt: 0.5, pb: 0.5 }}
         >
           Espacio
         </Typography>
-        <FormControl size="small" fullWidth variant="outlined">
-          <Select
-            value={espacioSeleccionado || ''}
-            onChange={(e) => {
-              onChangeEspacio?.(e.target.value === '' ? null : (e.target.value as string))
+        <MenuItem
+          selected={!espacioSeleccionado}
+          onClick={() => {
+            onChangeEspacio?.(null)
+            setMoreAnchorEl(null)
+          }}
+          sx={{ fontSize: '0.875rem', borderRadius: 1 }}
+        >
+          Salón Principal
+        </MenuItem>
+        {espacios.map((e) => (
+          <MenuItem
+            key={e._id}
+            selected={espacioSeleccionado === e._id}
+            onClick={() => {
+              onChangeEspacio?.(e._id as string)
               setMoreAnchorEl(null)
             }}
-            displayEmpty
-            sx={{ fontSize: '0.875rem' }}
+            sx={{ fontSize: '0.875rem', borderRadius: 1 }}
           >
-            <MenuItem value="">Salón Principal</MenuItem>
-            {espacios.map((e) => (
-              <MenuItem key={e._id} value={e._id}>
-                {e.descripcion || 'Sin nombre'}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            {e.descripcion || 'Sin nombre'}
+          </MenuItem>
+        ))}
+        <Divider sx={{ my: 0.5 }} />
+        <MenuItem
+          onClick={() => {
+            setOpenEspacioModal(true)
+            setMoreAnchorEl(null)
+          }}
+          sx={{ fontSize: '0.875rem', borderRadius: 1, color: 'primary.main', fontWeight: 'bold' }}
+        >
+          + Crear Nuevo
+        </MenuItem>
       </Popover>
+
+      <Dialog open={openEspacioModal} onClose={() => setOpenEspacioModal(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Crear Nuevo Espacio</DialogTitle>
+
+        <DialogContent
+          dividers
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            pt: 2,
+          }}
+        >
+          <TextField
+            label="Nombre del Espacio"
+            variant="outlined"
+            size="small"
+            fullWidth
+            value={nuevoEspacioNombre}
+            onChange={(e) => setNuevoEspacioNombre(e.target.value)}
+            autoFocus
+          />
+
+          <TextField
+            label="Cantidad de Mesas"
+            variant="outlined"
+            size="small"
+            type="number"
+            fullWidth
+            inputProps={{ min: 1, max: 100 }}
+            value={nuevoEspacioMesas}
+            error={errorMesas}
+            helperText={helperMesas}
+            onChange={(e) => {
+              const valor = Number(e.target.value)
+
+              if (valor > 100) {
+                setErrorMesas(true)
+                setHelperMesas('Máximo 100 mesas por espacio. Cree otro piso o espacio.')
+              } else {
+                setErrorMesas(false)
+                setHelperMesas('')
+                setNuevoEspacioMesas(e.target.value ? valor : '')
+              }
+            }}
+          />
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={() => setOpenEspacioModal(false)}
+            color="inherit"
+            disabled={registrarEspacioMutation.isPending}
+          >
+            Cancelar
+          </Button>
+
+          <Button
+            onClick={() => {
+              if (!nuevoEspacioNombre.trim() || !nuevoEspacioMesas) return
+
+              if (nuevoEspacioMesas > 100) {
+                setErrorMesas(true)
+                setHelperMesas('Máximo 100 mesas por espacio. Cree otro piso o espacio.')
+                return
+              }
+
+              registrarEspacioMutation.mutate({
+                entidad: { codigoSucursal, codigoPuntoVenta },
+                input: {
+                  descripcion: nuevoEspacioNombre.trim(),
+                  nroMesas: Number(nuevoEspacioMesas),
+                },
+              })
+            }}
+            variant="contained"
+            color="primary"
+            disabled={
+              !nuevoEspacioNombre.trim() ||
+              !nuevoEspacioMesas ||
+              errorMesas ||
+              registrarEspacioMutation.isPending
+            }
+          >
+            {registrarEspacioMutation.isPending ? 'Creando...' : 'Crear'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Popover de filtros */}
       <Popover
