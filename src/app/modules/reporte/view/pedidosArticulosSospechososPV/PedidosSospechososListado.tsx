@@ -1,20 +1,13 @@
 import { CheckCircleOutline } from '@mui/icons-material'
-import {
-  Alert,
-  AlertTitle,
-  Box,
-  CircularProgress,
-  Divider,
-  Grid,
-  Paper,
-  Typography,
-} from '@mui/material'
+import { Alert, AlertTitle, Box, CircularProgress, Divider, Grid, Paper, Typography } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { useMemo } from 'react'
 
-import { obtenerListadoPedidos } from '../../../pos/api/pedidosListado.api'
 import AnomaliasGrafico from '../../../pos/view/listado/AnomaliasGrafico'
+import { client } from '../../../restaurante/client'
+import { RESTPEDIDOLISTADO } from '../../../restaurante/queries/useRestPedidoListado'
 import AnomaliasListado from './AnomaliasListado'
 
 type Props = {
@@ -110,9 +103,7 @@ const detectarAnomalias = (pedidos: any[], historial: any[], umbral: number): an
         const limiteSuperior = stat.media + umbral * stat.desviacion
 
         // Buscar producto actual por código
-        const productoActual = pedido.productos?.find(
-          (p: any) => String(p.codigoArticulo).trim() === codigo
-        )
+        const productoActual = pedido.productos?.find((p: any) => String(p.codigoArticulo).trim() === codigo)
 
         const cantidadActual = productoActual?.articuloPrecio?.cantidad ?? 0
         const cantidadAnterior = art.articuloPrecio?.cantidad ?? 0
@@ -149,7 +140,6 @@ const detectarAnomalias = (pedidos: any[], historial: any[], umbral: number): an
   return anomalias
 }
 
-
 const PedidosSospechososListado = ({
   fechaInicial,
   fechaFinal,
@@ -157,6 +147,7 @@ const PedidosSospechososListado = ({
   codigoPuntoVenta,
   umbral,
 }: Props) => {
+  const theme = useTheme()
   const inicio = dayjs(fechaInicial).startOf('day').format('YYYY-MM-DD HH:mm:ss')
   const fin = dayjs(fechaFinal).endOf('day').format('YYYY-MM-DD HH:mm:ss')
   const query = `fechaDocumento>=${inicio}&fechaDocumento<=${fin}&historial.0&state=FINALIZADO`
@@ -182,7 +173,11 @@ const PedidosSospechososListado = ({
             codigoSucursal,
             codigoPuntoVenta: pv,
           }
-          const { docs } = await obtenerListadoPedidos(fetchPagination, entidad)
+          const response = await client.request<{ restPedidoListado: { docs?: any[] } }>(RESTPEDIDOLISTADO, {
+            ...fetchPagination,
+            entidad,
+          })
+          const docs = response.restPedidoListado.docs ?? []
 
           // Excluir pedidos provenientes de divisiones
           return docs.filter((pedido: any) => !pedido.atributo4?.includes('fromDivision:true'))
@@ -221,10 +216,7 @@ const PedidosSospechososListado = ({
     (pedido.historial || []).map((registro: any) => ({
       fecha: pedido.fechaDocumento,
       articulos: (registro.articuloOperacion || [])
-        .filter(
-          (a: any) =>
-            a.state?.toUpperCase() === 'ELIMINADO' || a.articuloPrecio?.cantidad != null,
-        )
+        .filter((a: any) => a.state?.toUpperCase() === 'ELIMINADO' || a.articuloPrecio?.cantidad != null)
         .map((a: any) => ({
           articuloId: a.articuloId,
           nombre: a.nombreArticulo,
@@ -260,15 +252,15 @@ const PedidosSospechososListado = ({
           sx={{
             p: 4,
             textAlign: 'center',
-            backgroundColor: '#f8f9fa',
-            border: '2px dashed #e0e0e0',
+            backgroundColor: theme.palette.action.hover,
+            border: `2px dashed ${theme.palette.divider}`,
             borderRadius: 2,
           }}
         >
           <CheckCircleOutline
             sx={{
               fontSize: 64,
-              color: '#4caf50',
+              color: theme.palette.success.main,
               mb: 2,
             }}
           />
@@ -283,10 +275,11 @@ const PedidosSospechososListado = ({
 
       {anomalias.length > 0 && (
         <Grid container spacing={2} alignItems="flex-start">
-          <Grid item xs={12} md={7}>
+          <Grid size={{ xs: 12, md: 7 }}>
             <AnomaliasListado anomalias={anomalias} />
           </Grid>
-          <Grid item xs={12} md={5}>
+
+          <Grid size={{ xs: 12, md: 5 }}>
             <Divider sx={{ mb: 2 }}>Anomalías</Divider>
             <AnomaliasGrafico anomalias={anomalias} />
           </Grid>

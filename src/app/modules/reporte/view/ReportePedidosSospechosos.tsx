@@ -1,17 +1,16 @@
-import { Box, Divider, FormLabel, Slider, Stack, Typography, useTheme } from '@mui/material'
+import { Box, Divider, FormLabel, Slider, Stack, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid'
 import { FunctionComponent, useEffect, useState } from 'react'
 
+import { SimpleBox, SimpleContainerBox } from '../../../base/components/Container/SimpleBox'
 import MyDateRangePickerField from '../../../base/components/MyInputs/MyDateRangePickerField'
 import Breadcrumb from '../../../base/components/Template/Breadcrumb/Breadcrumb'
-import { SimpleBox, SimpleContainerBox } from '../../../base/components/Template/Cards/SimpleBox'
 import useAuth from '../../../base/hooks/useAuth'
 import PuntoVentaRestriccionField from '../../base/components/PuntoVentaRestriccionField'
 import { reporteRoutesMap } from '../reporteRoutes'
 import PedidosSospechososListado from './pedidosArticulosSospechososPV/PedidosSospechososListado'
 
 const ReportePedidosSospechosos: FunctionComponent = () => {
-  const theme = useTheme()
   const {
     user: { sucursal, puntoVenta },
   } = useAuth()
@@ -46,31 +45,31 @@ const ReportePedidosSospechosos: FunctionComponent = () => {
   return (
     <SimpleContainerBox>
       <Breadcrumb routeSegments={[reporteRoutesMap.pedidosSospechosos]} />
+
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Stack
-            direction={{ xs: 'column', sm: 'column', md: 'row' }}
+            direction={{ xs: 'column', md: 'row' }}
             divider={<Divider orientation="vertical" flexItem />}
-            spacing={1}
+            spacing={2}
             alignItems="center"
           >
-            {/* DateRange con altura small */}
+            {/* DateRange */}
             <Box sx={{ minWidth: 250 }}>
               <MyDateRangePickerField
-                startDate={startDate ?? undefined}
-                endDate={endDate ?? undefined}
-                onChange={(date) => setDateRange(date)}
+                startDate={startDate || null}
+                endDate={endDate || null}
+                onChange={setDateRange}
               />
             </Box>
 
-            {/* PuntoVenta con altura small */}
+            {/* PuntoVenta */}
             <Box
               sx={{
-                [theme.breakpoints.up('md')]: {
-                  minWidth: 390,
-                  maxWidth: 700,
-                },
-                '& .MuiInputBase-root': { height: 40 }, // fuerza 40px
+                minWidth: { md: 390 },
+                maxWidth: { md: 700 },
+                width: '100%',
+                '& .MuiInputBase-root': { height: 40 },
               }}
             >
               <PuntoVentaRestriccionField
@@ -81,6 +80,8 @@ const ReportePedidosSospechosos: FunctionComponent = () => {
                 }}
               />
             </Box>
+
+            {/* Slider */}
             <Box sx={{ minWidth: 150, px: 2 }}>
               <FormLabel component="legend">Umbral</FormLabel>
               <Slider
@@ -103,11 +104,11 @@ const ReportePedidosSospechosos: FunctionComponent = () => {
           </Stack>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <SimpleBox>
             <PedidosSospechososListado
-              fechaInicial={startDate ?? new Date()}
-              fechaFinal={endDate ?? new Date()}
+              fechaInicial={startDate || new Date()}
+              fechaFinal={endDate || new Date()}
               codigoSucursal={sucursal.codigo}
               codigoPuntoVenta={puntosVenta.map((item) => item.key)}
               umbral={umbral}
