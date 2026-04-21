@@ -2,7 +2,9 @@ import { Alert, Box, Grid, Snackbar } from '@mui/material'
 import { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import useAuth from '../../../base/hooks/useAuth'
+import useCajas from '../../../base/hooks/useCajas'
 import { articuloToArticuloOperacionInputService } from '../../../base/services/articuloToArticuloOperacionInputService'
+import AperturaCajaDialog from '../../cajas/view/AperturaCajaDialog'
 import { ESTADO_MESA, MesaUI } from '../interfaces/mesa.interface'
 import { useRestEspacioPorSucursal } from '../queries/useRestEspacioPorSucursal'
 import { useRestPedidoListado } from '../queries/useRestPedidoListado'
@@ -29,6 +31,8 @@ import RrMesas from './registrar/RrMesas'
  */
 const RestRegistrar: FunctionComponent = () => {
   const { user } = useAuth()
+  const { cajaActiva, aperturaCajaActivo } = useCajas()
+  const sinCaja = !cajaActiva || !aperturaCajaActivo
   const codigoSucursal = user.sucursal.codigo
   const codigoPuntoVenta = user.puntoVenta.codigo
   const [mesaSeleccionada, setMesaSeleccionada] = useState<MesaUI | null>(null)
@@ -668,6 +672,7 @@ const RestRegistrar: FunctionComponent = () => {
 
   return (
     <>
+      <AperturaCajaDialog open={sinCaja} onSuccess={() => {}} />
       <Grid
         container
         spacing={1.5}

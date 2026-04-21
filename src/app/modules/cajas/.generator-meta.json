@@ -1,0 +1,55 @@
+{
+  "last_sync": "2026-04-21T16:52:49.228243",
+  "fragments": [
+    "fragments/CajaConnectionFragments.ts",
+    "fragments/TurnoCajaFragments.ts",
+    "fragments/ArqueoCajaFragments.ts",
+    "fragments/ArqueoCajaConnectionFragments.ts"
+  ],
+  "queries": [
+    "queries/useCajaListado.ts",
+    "queries/useTurnoCajaListado.ts",
+    "queries/useArqueoCajaListado.ts"
+  ],
+  "mutations": [
+    "mutations/useAperturaCajaRegistro.ts"
+  ],
+  "types": [
+    "types/index.ts"
+  ],
+  "client": [
+    "client/index.ts"
+  ],
+  "index": [
+    "index.ts"
+  ],
+  "saved_operations": [
+    "arqueoCajaListado"
+  ],
+  "used_types": [
+    "TurnoCaja",
+    "CajaUsuario",
+    "MonedaParams",
+    "Caja",
+    "Departamento",
+    "ArqueoCajaCortesia",
+    "ArqueoCajaObservacion",
+    "MetodoPago",
+    "CajaConnection",
+    "PageInfo",
+    "AperturaCajaRegistroInput",
+    "PuntoVenta",
+    "ArqueoCajaComprobante",
+    "ArqueoCajaConnection",
+    "ArqueoCajaMetodoPago",
+    "EntidadParamsInput",
+    "Sucursal",
+    "UrlInvConsultaDocumento",
+    "ArqueoCaja",
+    "DateDMYHHMMSS",
+    "ArqueoCajaIngreso",
+    "ArqueoCajaRepresentacionGrafica",
+    "ArqueoCajaRetiro",
+    "SinTipoPuntoVenta"
+  ]
+}

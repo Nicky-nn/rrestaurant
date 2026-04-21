@@ -19,7 +19,9 @@ import { FunctionComponent, useEffect, useMemo, useState } from 'react'
 
 import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto'
 import { useAppConfirm } from '../../../../base/contexts/AppConfirmProvider'
+import { useError } from '../../../../base/contexts/ErrorProvider'
 import useAuth from '../../../../base/hooks/useAuth'
+import { MyGraphQlError } from '../../../../base/services/GraphqlError'
 import { MesaUI } from '../../interfaces/mesa.interface'
 import { useRestPedidoActualizar } from '../../mutations/useRestPedidoActualizar'
 import { useRestPedidoCancelar } from '../../mutations/useRestPedidoCancelar'
@@ -62,6 +64,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   const theme = useTheme()
   const { user } = useAuth()
   const { requestConfirm } = useAppConfirm()
+  const { showError } = useError()
   const [descuento, setDescuento] = useState<number>(0)
   const [giftcard, setGiftcard] = useState<number>(0)
 
@@ -250,7 +253,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       return response
     } catch (error) {
       console.error('Error al registrar pedido', error)
-      alert(error instanceof Error ? error.message : 'Error al registrar pedido')
+      showError(new MyGraphQlError(error as Error))
       return false
     }
   }
@@ -289,7 +292,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       if (onCancel) onCancel()
     } catch (error) {
       console.error('Error al cancelar pedido', error)
-      alert(error instanceof Error ? error.message : 'Error al cancelar pedido')
+      showError(new MyGraphQlError(error as Error))
     }
   }
 
@@ -487,7 +490,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       return response
     } catch (error) {
       console.error('Error al transferir pedido', error)
-      alert(error instanceof Error ? error.message : 'Error al transferir pedido')
+      showError(new MyGraphQlError(error as Error))
       throw error // Re-throw to handle in the generic dialog level
     }
   }
@@ -502,7 +505,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       !mesaSeleccionada.pedido._id ||
       mesaSeleccionada.pedido._id.startsWith('nuevo-')
     ) {
-      alert('El pedido no está registrado.')
+      showError(new Error('El pedido no está registrado.'))
       return
     }
 
@@ -525,7 +528,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
     } else {
       const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
       if (totalPagado < totalAPagar) {
-        alert('El monto pagado es menor al total a pagar.')
+        showError(new Error('El monto pagado es menor al total a pagar.'))
         return
       }
     }
@@ -562,7 +565,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       if (onSuccess) onSuccess(null, true) // isFinalizado = true
     } catch (error) {
       console.error('Error al finalizar pedido', error)
-      alert(error instanceof Error ? error.message : 'Error al finalizar pedido')
+      showError(new MyGraphQlError(error as Error))
     }
   }
 
@@ -587,7 +590,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       !mesaSeleccionada.pedido._id ||
       mesaSeleccionada.pedido._id.startsWith('nuevo-')
     ) {
-      alert('El pedido no está registrado.')
+      showError(new Error('El pedido no está registrado.'))
       return
     }
 
@@ -610,7 +613,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
     } else {
       const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
       if (totalPagado < totalAPagar) {
-        alert('El monto pagado es menor al total a pagar.')
+        showError(new Error('El monto pagado es menor al total a pagar.'))
         return
       }
     }
@@ -672,7 +675,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       if (onSuccess) onSuccess(null, true)
     } catch (error) {
       console.error('Error al facturar pedido', error)
-      alert(error instanceof Error ? error.message : 'Error al facturar pedido')
+      showError(new MyGraphQlError(error as Error))
     }
   }
 

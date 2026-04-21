@@ -5,6 +5,7 @@ import MatxLayout from '../base/components/Template/MatxLayout/MatxLayout'
 import cuentaRoutes from '../modules/base/cuenta/CuentaRoutes'
 import NotFound from '../modules/base/sessions/NotFound'
 import sessionRoutes from '../modules/base/sessions/SessionRoutes'
+import cajasRoutes from '../modules/cajas/cajasRoutes'
 import clientsRoutes from '../modules/clients/clientsRoutes'
 import homeRoutes, { homeRoutesMap } from '../modules/home/HomeRoutes'
 import impresorasRoutes from '../modules/impresoras/impresorasRoutes'
@@ -21,6 +22,7 @@ export const appRoutes = [
     children: [
       ...homeRoutes,
       ...cuentaRoutes,
+      ...cajasRoutes,
       ...clientsRoutes,
       ...restaurantRoutes,
       ...impresorasRoutes,

@@ -60,6 +60,12 @@ export interface IngresoProps {
   fecha: string
 }
 
+export interface ArqueoCajaCortesiaProps {
+  conteoArticulos: number
+  conteoPedidos: number
+  montoTotal: number
+}
+
 export interface ArqueoCajaProps {
   _id: string
   cajaId: string
@@ -93,6 +99,7 @@ export interface ArqueoCajaProps {
   metodoPagoVenta: MetodoPagoVenta[]
   retiros: RetiroProps[]
   ingresos: IngresoProps[]
+  cortesia: ArqueoCajaCortesiaProps
   turnoCaja?: TurnoCajaProps
   observaciones: AperturaCajaObservacionesProps[]
   representacionGrafica: ArqueoCajaRepresentacionGraficaProps
@@ -112,11 +119,11 @@ export interface AperturaCajaActivo {
   cajaId: string
   cajaCodigo: string
   modulo: string
-  representacionGrafica?: { rollo?: string }
+  moneda: { codigo: number; descripcion: string; sigla: string }
+  representacionGrafica?: ArqueoCajaRepresentacionGraficaProps
   state: string
   supervisor: [string]
   responsables: string[]
-  moneda?: { codigo: number; descripcion: string; sigla: string }
   turnoCaja?: { _id: string; nombre: string; horaInicio: string; horaCierre: string }
   usuario: [string]
   usuariosCaja: [string]

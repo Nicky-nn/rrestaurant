@@ -10,6 +10,7 @@ import ReloadPrompt from './app/base/components/ReloadPrompt/ReloadPrompt'
 import MatxTheme from './app/base/components/Template/MatxTheme/MatxTheme'
 import { AppConfirmProvider } from './app/base/contexts/AppConfirmProvider.tsx'
 import { BreadcrumbProvider } from './app/base/contexts/BreadcrumbContext'
+import { ErrorProvider } from './app/base/contexts/ErrorProvider.tsx'
 import { AuthProvider } from './app/base/contexts/JWTAuthContext'
 import { SecurityProvider } from './app/base/contexts/SecurityContext'
 import { SettingsProvider } from './app/base/contexts/SettingsContext.tsx'
@@ -143,8 +144,10 @@ function App() {
                     </Box>
                   )}
 
-                  {content}
-                  <ReloadPrompt />
+                  <ErrorProvider>
+                    {content}
+                    <ReloadPrompt />
+                  </ErrorProvider>
                 </ConfirmProvider>
               </AppConfirmProvider>
             </MatxTheme>

@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Computer, KeyboardArrowDown, PointOfSale } from '@mui/icons-material'
+import { Computer, KeyboardArrowDown, Lock, LockOpen, PointOfSale } from '@mui/icons-material'
 import {
   alpha,
   Box,
   Button,
-  Link,
   Menu,
   MenuItem,
   MenuProps,
@@ -23,12 +21,13 @@ import {
 } from '@mui/material'
 import { useConfirm } from 'material-ui-confirm'
 import React, { FC, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { apiCuentaMonedaActualizar } from '../../../../base/api/apiCuentaMonedaActualizar'
 import { themeShadows } from '../../../../base/components/Template/MatxTheme/themeColors'
 import useAuth from '../../../../base/hooks/useAuth'
-import useCajas from '../../../../base/hooks/useCajas.tsx'
-import useOperaciones from '../../../../base/hooks/useOperaciones.ts'
+import useCajas from '../../../../base/hooks/useCajas'
+import useOperaciones from '../../../../base/hooks/useOperaciones'
 import { MonedaParamsProps } from '../../../../base/interfaces/base'
 import { MonedaProps } from '../../../../interfaces/monedaPrecio'
 import { topBarHeightRestriccion } from '../../../../utils/constant'
@@ -107,7 +106,6 @@ const LayoutRestriccionV2: FC<any> = () => {
   const { articuloMoneda } = useOperaciones()
   const confirm = useConfirm()
 
-  const { cajaActiva, aperturaCajaActivo } = useCajas()
   // MONEDA
   const [monedaListado, setMonedaListado] = useState<MonedaProps[]>([])
   const [anchorMoneda, setAnchorMoneda] = React.useState<null | HTMLElement>(null)
@@ -144,58 +142,13 @@ const LayoutRestriccionV2: FC<any> = () => {
       .catch(() => {})
   }
 
-  // MONEDA
   // RAZON SOCIAL
   const [anchorRazonSocial, setAnchorRazonSocial] = useState<HTMLButtonElement | null>(null)
   const openRazonSocial = Boolean(anchorRazonSocial)
   const idRazonSocial = openRazonSocial ? 'simple-popover-razon-social' : undefined
-  // RAZON SOCIAL
 
   const handleChangeSucursal = () => {
     setOpen(true)
-  }
-
-  // Componente para mostrar el estado de la caja con colores
-  const EstadoChip = ({ estado, codigo }: { estado?: string; codigo?: string }) => {
-    const theme = useTheme()
-
-    const colores: Record<string, string> = {
-      ELABORADO: theme.palette.success.main,
-      ARQUEO: theme.palette.warning.main,
-      FINALIZADO: theme.palette.error.main,
-    }
-
-    const textos: Record<string, string> = {
-      ELABORADO: 'CAJA ACTIVA',
-      ARQUEO: 'EN ARQUEO',
-      FINALIZADO: 'CAJA CERRADA',
-      '': 'SIN CAJA',
-    }
-
-    const estadoKey = (estado ?? '').toUpperCase()
-    const color = colores[estadoKey] ?? theme.palette.grey[500]
-    const labelBase = textos[estadoKey] ?? estado ?? '-'
-
-    // Añadimos el código de la caja si existe
-    const label = codigo ? `${labelBase} - ${codigo}` : labelBase
-
-    return (
-      <Button
-        variant="contained"
-        size="small"
-        sx={{
-          backgroundColor: color,
-          color: '#fff',
-          fontStyle: 'bold',
-        }}
-        component={Link}
-        // href={cajasRoutesMap.gestion.path}
-      >
-        <Typography variant={'body1'} noWrap>
-          {label}
-        </Typography>
-      </Button>
-    )
   }
 
   useEffect(() => {
@@ -208,6 +161,61 @@ const LayoutRestriccionV2: FC<any> = () => {
       setMonedaListado(m)
     }
   }, [articuloMoneda])
+
+  const { aperturaCajaActivo, cajaActiva } = useCajas()
+
+  // Componente para mostrar el estado de la caja con colores
+  const EstadoChip = ({ estado, codigo }: { estado?: string; codigo?: string }) => {
+    const theme = useTheme()
+
+    const colores: Record<string, string> = {
+      ELABORADO: theme.palette.success.main,
+      ARQUEO: theme.palette.warning.main,
+      FINALIZADO: theme.palette.warning.main,
+    }
+
+    const textos: Record<string, string> = {
+      ELABORADO: 'CAJA ABIERTA',
+      ARQUEO: 'EN ARQUEO',
+      FINALIZADO: 'CAJA CERRADA',
+      '': 'CAJA CERRADA',
+    }
+
+    const iconos: Record<string, React.ReactNode> = {
+      ELABORADO: <LockOpen fontSize="small" />,
+      ARQUEO: <PointOfSale fontSize="small" />,
+      FINALIZADO: <Lock fontSize="small" />,
+      '': <Lock fontSize="small" />,
+    }
+
+    const estadoKey = (estado ?? '').toUpperCase()
+    const color = colores[estadoKey] ?? theme.palette.warning.main
+    const labelBase = textos[estadoKey] ?? estado ?? 'CAJA CERRADA'
+    const icono = iconos[estadoKey] ?? <Lock fontSize="small" />
+
+    // Añadimos el código de la caja si existe
+    const label = codigo ? `${labelBase} - ${codigo}` : labelBase
+
+    return (
+      <Button
+        variant="contained"
+        size="small"
+        startIcon={icono}
+        sx={{
+          backgroundColor: color,
+          color: '#fff',
+          fontStyle: 'bold',
+        }}
+        component={Link}
+        // to={cajasRoutesMap.gestion.path}
+        to={'/cajas/gestion'}
+      >
+        <Typography variant={'body1'} noWrap>
+          {label}
+        </Typography>
+      </Button>
+    )
+  }
 
   return (
     <>
@@ -339,24 +347,19 @@ const LayoutRestriccionV2: FC<any> = () => {
                             ({moneda.sigla})
                           </Typography>
                         </MenuItem>
-                      ))}
+                      ))}{' '}
+                      {monedaListado.length === 0 && (
+                        <MenuItem disableRipple>
+                          <Typography variant={'body1'}>No hay monedas</Typography>
+                        </MenuItem>
+                      )}
                     </StyledMenu>
                   </TableCell>
-                  <TableCell align="right" sx={{ width: 180, whiteSpace: 'nowrap' }}>
-                    {cajaActiva && aperturaCajaActivo && (
-                      <Tooltip title="Caja abierta" placement="top">
-                        <Button
-                          size={'small'}
-                          variant="contained"
-                          color="success"
-                          startIcon={<PointOfSale />}
-                          disableElevation
-                          sx={{ whiteSpace: 'nowrap' }}
-                        >
-                          CAJA ACTIVA {aperturaCajaActivo.cajaCodigo}
-                        </Button>
-                      </Tooltip>
-                    )}
+                  <TableCell align="right" sx={{ width: 220 }}>
+                    <EstadoChip
+                      estado={cajaActiva && aperturaCajaActivo ? aperturaCajaActivo.state : ''}
+                      codigo={cajaActiva && aperturaCajaActivo ? aperturaCajaActivo.cajaCodigo : undefined}
+                    />
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -364,6 +367,8 @@ const LayoutRestriccionV2: FC<any> = () => {
           </TableContainer>
         </RestriccionTopBarContainer>
       </RestriccionTopBarRoot>
+
+      {/* Diálogo original */}
       <CuentaRestriccionDialog
         id={'CuentaRestriccionV2'}
         keepMounted={false}

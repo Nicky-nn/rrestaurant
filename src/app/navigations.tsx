@@ -1,3 +1,4 @@
+import { cajasRoutesMap } from './modules/cajas/cajasRoutes'
 import { clientsRoutesMap } from './modules/clients/clientsRoutes'
 import { homeRoutesMap } from './modules/home/HomeRoutes'
 import { impresorasRoutesMap } from './modules/impresoras/impresorasRoutes'
@@ -44,6 +45,17 @@ export const navigations: NavigationProps[] = [
         name: restauranteRoutesMap.facturas.name,
         iconText: 'FA',
         path: restauranteRoutesMap.facturas.path,
+      },
+    ],
+  },
+  {
+    name: 'Cajas',
+    icon: 'point_of_sale',
+    children: [
+      {
+        name: cajasRoutesMap.gestion.name,
+        iconText: 'GC',
+        path: cajasRoutesMap.gestion.path,
       },
     ],
   },
