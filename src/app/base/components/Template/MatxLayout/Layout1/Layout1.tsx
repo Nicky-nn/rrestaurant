@@ -5,6 +5,7 @@ import { Outlet } from 'react-router-dom'
 
 import LayoutRestriccionV2 from '../../../../../modules/base/components/LayoutRestriccion/LayoutRestriccionV2.tsx'
 import { sidenavCompactWidth, sideNavWidth } from '../../../../../utils/constant'
+import { CajasProvider } from '../../../../contexts/CajasContext.tsx'
 import useSettings from '../../../../hooks/useSettings'
 import StyledScrollBar from '../../../Container/StyledScrollBar'
 import Footer from '../../Footer/Footer'
@@ -89,6 +90,7 @@ const Layout1 = () => {
   }, [isMdScreen])
 
   return (
+    <CajasProvider>
     <Layout1Root className={layoutClasses}>
       {showSidenav && sidenavMode !== 'close' && (
         <SidenavTheme>
@@ -148,6 +150,7 @@ const Layout1 = () => {
 
       {/*settings.secondarySidebar.show && <SecondarySidebar/>*/}
     </Layout1Root>
+    </CajasProvider>
   )
 }
 

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Computer, KeyboardArrowDown } from '@mui/icons-material'
+import { Computer, KeyboardArrowDown, PointOfSale } from '@mui/icons-material'
 import {
   alpha,
   Box,
@@ -342,11 +342,22 @@ const LayoutRestriccionV2: FC<any> = () => {
                       ))}
                     </StyledMenu>
                   </TableCell>
-                  {cajaActiva && aperturaCajaActivo && (
-                    <TableCell align="right" sx={{ width: 220 }}>
-                      {/* <EstadoChip estado={aperturaCajaActivo.state} codigo={aperturaCajaActivo.cajaCodigo} /> */}
-                    </TableCell>
-                  )}
+                  <TableCell align="right" sx={{ width: 180, whiteSpace: 'nowrap' }}>
+                    {cajaActiva && aperturaCajaActivo && (
+                      <Tooltip title="Caja abierta" placement="top">
+                        <Button
+                          size={'small'}
+                          variant="contained"
+                          color="success"
+                          startIcon={<PointOfSale />}
+                          disableElevation
+                          sx={{ whiteSpace: 'nowrap' }}
+                        >
+                          CAJA ACTIVA {aperturaCajaActivo.cajaCodigo}
+                        </Button>
+                      </Tooltip>
+                    )}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
