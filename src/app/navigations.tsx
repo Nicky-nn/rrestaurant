@@ -43,7 +43,7 @@ export const navigations: NavigationProps[] = [
       },
       {
         name: restauranteRoutesMap.facturas.name,
-        iconText: 'PF',
+        iconText: 'FA',
         path: restauranteRoutesMap.facturas.path,
       }
     ],
@@ -76,32 +76,32 @@ export const navigations: NavigationProps[] = [
     icon: 'receipt',
     children: [
       {
-        name: reporteRoutesMap.articuloPorComercio.name,
-        iconText: 'AP',
-        path: reporteRoutesMap.articuloPorComercio.path,
-      },
-      {
         name: reporteRoutesMap.articuloPorPuntoVenta.name,
-        iconText: 'APV',
+        iconText: 'APPV',
         path: reporteRoutesMap.articuloPorPuntoVenta.path,
       },
       {
+        name: reporteRoutesMap.articuloPorComercio.name,
+        iconText: 'APC',
+        path: reporteRoutesMap.articuloPorComercio.path,
+      },
+      {
         name: reporteRoutesMap.pedidosSospechosos.name,
-        iconText: 'NG',
+        iconText: 'PPS',
         path: reporteRoutesMap.pedidosSospechosos.path,
-      }
+      },
     ],
   },
   {
-    name:'Impresoras',
-    icon:'print',
-    children:[
+    name: 'Impresoras',
+    icon: 'print',
+    children: [
       {
         name: impresorasRoutesMap.gestion.name,
         iconText: 'IP',
         path: impresorasRoutesMap.gestion.path,
       },
-    ]
+    ],
   }
 ]
 

@@ -42,6 +42,8 @@ export interface RrComplementoModalProps {
     variacionReceta: ArticuloRecetaOperacionInput[]
     /** Modificadores seleccionados para enviar al servidor */
     modificadoresInput: ArticuloModificadorOperacionInput[]
+    /** Precio unitario con modificadores y receta extra incluidos */
+    precioUnitario: number
   }) => void
 }
 
@@ -399,6 +401,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     articulo.imagen?.variants?.thumbnail ??
     null
 
+  console.log('Composición venta:', { composicion, precioBase, precioModificadoresExtra, precioRecetaExtra })
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <Dialog
@@ -666,6 +669,10 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                       }
                     }
 
+                    // Cuántos cupos gratuitos del grupo todavía no están asignados a ningún item seleccionado
+                    const cuposUsadosGrupo = Object.values(freeQtyPerArt).reduce((s, v) => s + v, 0)
+                    const cuposLibresGrupo = cuposGratisDisplay - cuposUsadosGrupo
+
                     return (
                       <Box
                         key={grupo._id ?? gIdx}
@@ -728,24 +735,27 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             const selected = qty > 0
                             const precio = op.articulo ? getPrecio(op.articulo) : 0
                             const opSigla = op.articulo ? getSigla(op.articulo) : sigla
-                            // Verificar disponibilidad de stock para artículos gestionados por lotes
-                            const stockCheck =
-                              op.articulo?.verificarStock === true
-                                ? articuloToArticuloOperacionInputService(
-                                    op.articulo as unknown as Parameters<
-                                      typeof articuloToArticuloOperacionInputService
-                                    >[0],
-                                    user.moneda,
-                                    {
-                                      cantidad: 1,
-                                      autoAlmacen: true,
-                                      autoLote: true,
-                                      mostrarLoteConStock: true,
-                                    },
-                                  )
-                                : null
-                            const sinStock =
-                              op.articulo?.verificarStock === true && stockCheck?.almacen === null
+                            // Verificar disponibilidad de stock para artículos gestionados por lotes (gestionArticulo === 'LOTE')
+                            // Solo se activa para artículos que verifican stock Y gestionan por lotes.
+                            // almacen puede ser no-null incluso sin lotes (fallback del servicio),
+                            // así que chequeamos lote === null para detectar "sin lotes disponibles con stock".
+                            const necesitaLote =
+                              op.articulo?.verificarStock === true && op.articulo?.gestionArticulo === 'LOTE'
+                            const stockCheck = necesitaLote
+                              ? articuloToArticuloOperacionInputService(
+                                  op.articulo! as unknown as Parameters<
+                                    typeof articuloToArticuloOperacionInputService
+                                  >[0],
+                                  user.moneda,
+                                  {
+                                    cantidad: 1,
+                                    autoAlmacen: true,
+                                    autoLote: true,
+                                    mostrarLoteConStock: true,
+                                  },
+                                )
+                              : null
+                            const sinStock = necesitaLote && stockCheck?.lote === null
                             // Max del grupo alcanzado Y esta opción ya tiene 0 → deshabilitado
                             const maxAlcanzado = grupoLleno && !selected
                             const disabled = maxAlcanzado || sinStock
@@ -789,29 +799,52 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                   if (!disabled) setOpcionQty(artId, 1, grupoOpciones, maxSel)
                                 }}
                               >
-                                {/* Fila superior: nombre (máx 2 líneas, altura fija) */}
-                                <Typography
-                                  variant="body2"
-                                  fontWeight={selected ? 700 : 500}
-                                  color={
-                                    selected
-                                      ? esCompletamenteGratis
-                                        ? 'success.main'
-                                        : 'primary.main'
-                                      : 'text.primary'
-                                  }
+                                {/* Fila superior: nombre (izq) + precio (der) */}
+                                <Box
                                   sx={{
-                                    lineHeight: 1.25,
-                                    overflow: 'hidden',
-                                    display: '-webkit-box',
-                                    WebkitBoxOrient: 'vertical',
-                                    WebkitLineClamp: 2,
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    justifyContent: 'space-between',
+                                    gap: 0.5,
                                   }}
                                 >
-                                  {nombre}
-                                </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight={selected ? 700 : 500}
+                                    color={
+                                      selected
+                                        ? esCompletamenteGratis
+                                          ? 'success.main'
+                                          : 'primary.main'
+                                        : 'text.primary'
+                                    }
+                                    sx={{
+                                      flex: 1,
+                                      lineHeight: 1.25,
+                                      overflow: 'hidden',
+                                      display: '-webkit-box',
+                                      WebkitBoxOrient: 'vertical',
+                                      WebkitLineClamp: 2,
+                                    }}
+                                  >
+                                    {nombre}
+                                  </Typography>
+                                  {/* Precio al lado derecho del nombre */}
+                                  {!sinStock && precio > 0 && !esCompletamenteGratis && (
+                                    <Typography
+                                      variant="body2"
+                                      fontWeight={700}
+                                      color={selected ? 'primary.main' : 'text.secondary'}
+                                      sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+                                    >
+                                      {esParcialmenteGratis
+                                        ? `+${opSigla}${precio.toFixed(2)}`
+                                        : `+${opSigla}${precio.toFixed(2)}`}
+                                    </Typography>
+                                  )}
+                                </Box>
 
-                                {/* Fila inferior: precio a la izquierda, stepper a la derecha */}
+                                {/* Fila inferior: chips de estado (izq) + stepper (der) */}
                                 <Box
                                   sx={{
                                     display: 'flex',
@@ -820,16 +853,18 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                     gap: 0.5,
                                   }}
                                 >
-                                  {/* Precio / badge GRATIS / badge SIN STOCK */}
-                                  {sinStock ? (
-                                    <Chip
-                                      label="Sin stock"
-                                      size="small"
-                                      color="error"
-                                      sx={{ height: 18, fontSize: '0.6rem' }}
-                                    />
-                                  ) : precio > 0 ? (
-                                    esCompletamenteGratis ? (
+                                  {/* Chips de estado */}
+                                  <Box
+                                    sx={{ display: 'flex', gap: 0.5, flexWrap: 'nowrap', overflow: 'hidden' }}
+                                  >
+                                    {sinStock ? (
+                                      <Chip
+                                        label="Sin stock"
+                                        size="small"
+                                        color="error"
+                                        sx={{ height: 18, fontSize: '0.6rem' }}
+                                      />
+                                    ) : esCompletamenteGratis ? (
                                       <Chip
                                         label="GRATIS"
                                         size="small"
@@ -837,20 +872,30 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                         sx={{ height: 18, fontSize: '0.6rem' }}
                                       />
                                     ) : (
-                                      <Typography
-                                        variant="caption"
-                                        fontWeight={600}
-                                        color={selected ? 'primary.main' : 'text.secondary'}
-                                        sx={{ whiteSpace: 'nowrap' }}
-                                      >
-                                        {esParcialmenteGratis
-                                          ? `+${opSigla}${precio.toFixed(2)} (${cubiertoPorGratis} gratis)`
-                                          : `+${opSigla}${precio.toFixed(2)}`}
-                                      </Typography>
-                                    )
-                                  ) : (
-                                    <Box />
-                                  )}
+                                      <>
+                                        {esParcialmenteGratis && (
+                                          <Chip
+                                            label={`${cubiertoPorGratis} gratis`}
+                                            size="small"
+                                            color="success"
+                                            sx={{ height: 18, fontSize: '0.6rem' }}
+                                          />
+                                        )}
+                                        {op.elegibleParaGratis === true && cuposLibresGrupo > 0 && (
+                                          <Chip
+                                            label="APTO PARA REGALO"
+                                            size="medium"
+                                            color="warning"
+                                            sx={{
+                                              height: 18,
+                                              fontSize: '0.6rem',
+                                              '& .MuiChip-label': { px: 0.75 },
+                                            }}
+                                          />
+                                        )}
+                                      </>
+                                    )}
+                                  </Box>
 
                                   {/* Stepper compacto */}
                                   <QtyStepperInline
@@ -985,7 +1030,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             (ap) => ap.articuloUnidadMedida?.codigoUnidadMedida,
                           )?.articuloUnidadMedida?.codigoUnidadMedida ??
                           '',
-                        cantidad: 1, // backend requiere cantidad > 0; removido:true indica que se elimina
+                        cantidad: 0, // removido:true → backend exige cantidad estrictamente 0
                         precio: 0,
                         descuento: 0,
                         impuesto: 0,
@@ -1128,6 +1173,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                           impuesto: 0,
                         },
                         esOpcionGratuita: false,
+                        // Extra para mostrar el nombre en el carrito (no se envía al backend)
+                        ...({ nombreArticulo: op.articulo.nombreArticulo ?? '' } as any),
                       })
                     }
 
@@ -1145,6 +1192,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                           impuesto: 0,
                         },
                         esOpcionGratuita: false,
+                        // Extra para mostrar el nombre en el carrito (no se envía al backend)
+                        ...({ nombreArticulo: op.articulo.nombreArticulo ?? '' } as any),
                       })
                     }
                   })
@@ -1156,6 +1205,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                   notasIds: notasIdsFinales,
                   variacionReceta,
                   modificadoresInput,
+                  precioUnitario: precioBase + precioModificadoresExtra + precioRecetaExtra,
                 })
               }
               onClose()

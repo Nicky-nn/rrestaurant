@@ -606,13 +606,33 @@ export interface TotalesPrecioCostoOperacion {
   /** Total final de descuentos en porcentaje - totalDescuento + totalDescuentoAdicional */
   totalDescuentoGeneralP?: number;
   /** Base imponible  Cantidad * valorNeto (Valor total del inventario base o Ingreso total ventas) - incluye todos los descuentos - tasaIva = 1 + (iva / 100) */
+  /** Sumatoria de los descuentos calculado en porcentaje - No se toma en cuenta el descuento adicional global */
+  totalDescuentoP?: number;
+  /** Descuento adicional Global */
+  totalDescuentoAdicional?: number;
+  /** Total final de descuentos - totalDescuento + totalDescuentoAdicional */
+  totalDescuentoGeneral?: number;
+  /** Descuento adicional Global en porcentaje */
+  totalDescuentoAdicionalP?: number;
+  /** Total final de descuentos en porcentaje - totalDescuento + totalDescuentoAdicional */
+  totalDescuentoGeneralP?: number;
+  /** Base imponible  Cantidad * valorNeto (Valor total del inventario base o Ingreso total ventas) - incluye todos los descuentos - tasaIva = 1 + (iva / 100) */
   subtotalNeto?: number;
   /** Total Impuestos (Debito Fiscal generado por la línea), (cantidad * impuesto unitario) */
   totalImpuestos?: number;
   /** Cantidad * gastoAdicional */
   totalGasto?: number;
   /** Precio Final Unitario (Lo que paga el cliente por 1), incluye impuestos, y descuentos (cantidad * subtotalNeto) - Cantidad * valorFinal (Total Valor Entrada Stock o Total a Pagar Cliente) - Incluye todos los descuentos y gastos adicionales */
+  /** Precio Final Unitario (Lo que paga el cliente por 1), incluye impuestos, y descuentos (cantidad * subtotalNeto) - Cantidad * valorFinal (Total Valor Entrada Stock o Total a Pagar Cliente) - Incluye todos los descuentos y gastos adicionales */
   totalFinal?: number;
+}
+
+/**
+ * Resultados finales calculados para los detalles - Operacion es según la transacción entre cliente sistema. - Sistema = conversion de datos de operacion segpun moneda principal
+ */
+export interface TotalesGenerales {
+  operacion?: TotalesPrecioCostoOperacion;
+  sistema?: TotalesPrecioCostoOperacion;
 }
 
 /**
@@ -631,6 +651,7 @@ export interface PrecioCostoOperacion {
   tipoOperacion?: string;
   /** El valor nominal actual de la operación. - COSTO: Precio unitario en la Factura del Proveedor. - PRECIO: Precio de Lista / Catálogo actual. */
   valor?: number;
+  valor?: number;
   /** El valor de referencia histórico o estándar. - COSTO: Costo Promedio/Estándar anterior (Kardex). - PRECIO: Generalmente 0 (o Precio de Lista anterior para comparar subidas). */
   valorAnterior?: number;
   /** Precio unitario visual con el impuesto incluido. Ideal para la columna "Precio Unitario" en el carrito. Fórmula (Si incluye impuesto): = valor Fórmula (Si NO incluye impuesto): = valor * (1 + tasaIva) */
@@ -639,6 +660,14 @@ export interface PrecioCostoOperacion {
   descuento?: number;
   /** Descuento adicional prorrateado (Monto). */
   descuentoAdicional?: number;
+  /** Suma del descuento unitario directo + adicional unitario */
+  descuentoTotal?: number;
+  /** Porcentaje de descuento directo unitario */
+  descuentoP?: number;
+  /** Porcentaje de descuento adicional unitario prorrateado */
+  descuentoAdicionalP?: number;
+  /** Porcentaje de la suma de todos los descuentos (Directo + Adicional) */
+  descuentoTotalP?: number;
   /** Suma del descuento unitario directo + adicional unitario */
   descuentoTotal?: number;
   /** Porcentaje de descuento directo unitario */
@@ -725,6 +754,8 @@ export interface ArticuloPrecioOperacionInput {
  * Datos de entrada para el registro / actualización de articulo unidad de medida
  */
 export interface ArticuloPrecio {
+  /** Código interno de articulo Precio */
+  _id?: string;
   /** Código interno de articulo Precio */
   _id?: string;
   /** Datos de la unidad de medida */
@@ -1080,6 +1111,8 @@ export interface HistorialArticuloOperacion {
   nro?: number;
   /** Historial de ArticuloOperacion hasta antes de realizar la ultima actualización */
   articuloOperacion?: ArticuloOperacion[];
+  /** fecha de cambio de estado */
+  fecha?: DateDMYHHMMSS;
   /** fecha de cambio de estado */
   fecha?: DateDMYHHMMSS;
 }
@@ -1708,6 +1741,8 @@ export interface RestPedido {
   montoTotalBase?: number;
   /** Calculos de los totales según detalle de productos */
   totales?: TotalesGenerales;
+  /** Calculos de los totales según detalle de productos */
+  totales?: TotalesGenerales;
   /** Fecha de entrega para nota de venta de pedido */
   fechaEntrega?: DateDMYHHMM;
   /** Dirección de entrega de la mercaderia */
@@ -1857,37 +1892,11 @@ export interface RestEspacioInput {
 }
 
 /**
- * Datos del pedido
+ * Extensión de ArticuloOperacion con campos temporales que solo existen en el estado local del frontend.
+ * Estos campos NUNCA se envían al backend — se usan solo para mover datos entre componentes React.
  */
-export interface RestPedidoAuditoria {
-  /** Identificador único interno del pedido */
-  pedidoId?: string;
-  /** Código del pedido autoincrementable dependiendo de la sucursal donde se realiza la transacción */
-  numeroPedido?: number;
-  /** Número de orden simple actualizable por periodo determinado - Ej. Primer dia del mes se reinicia a 1 - Ej. Segundo dia del mes se reinicia a 1 */
-  numeroOrden?: number;
-  /** Periodo al que corresponde el inventario */
-  kardexPeriodo?: KardexPeriodo;
-  /** Datos de la sucursal */
-  codigoSucursal?: number;
-  /** Datos del punto de venta */
-  codigoPuntoVenta?: number;
-  /** Acción realizada basado en el historial de pedidos - "CREACION" | "MODIFICACION_ARTICULOS" | "MODIFICACION_FINANCIERA" | "CAMBIO_ESTADO" | "FINALIZACION" | "CANCELACION" | "ANULACION". */
-  accion?: string;
-  /** Usuario que realizó la acción */
-  usuario?: string;
-  /** Productos o items que han sido eliminados de forma definitiva, pueden ser articulos o kit de articulos */
-  resumenCambios?: string;
-  /** Rastro o huella de la ultima transacción de registros / actualizacion del argumento Productos. - Si los datos de productos son iguales a ultima transaccion, entonces, no se realiza modificacion en el valor. - Si los datos de productos son diferentes, entonces, se sobre escribe el valor con los datos de productos anterior. */
-  duracionMinutos?: number;
-  /** Snapshoot del ultimo cambio */
-  articulos?: ArticuloOperacion[];
-  /** Cálculos de los totales según detalle de productos */
-  totales?: TotalesGenerales;
-  esSospechoso?: boolean;
-  motivosSospecha?: string[];
-  /** Riesgo según 'BAJO' | 'MEDIO' | 'ALTO' | 'CRITICO' */
-  riesgoNivel?: string;
-  riesgoPuntaje?: number;
-  fechaRegistro?: DateDMYHHMMSS;
+export interface ArticuloOperacionUI extends Omit<ArticuloOperacion, 'variacionReceta'> {
+  variacionReceta?: ArticuloOperacionReceta[] | ArticuloRecetaOperacionInput[];
+  _modificadoresInput?: ArticuloModificadorOperacionInput[];
+  _forceSnapshotUpdate?: number;
 }

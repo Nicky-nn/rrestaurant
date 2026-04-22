@@ -21,140 +21,68 @@ import { ModalAnularPedido } from './gestion/ModalAnularPedido.tsx'
 import ModalPedidoFacturar from './gestion/ModalPedidoFacturar.tsx'
 
 const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => {
-  const totalGeneral = useMemo(() => {
-    return productos.reduce((acc, p) => {
-      const cantidad = p.articuloPrecio?.cantidad ?? 0
-      const precio = p.articuloPrecio?.valor ?? 0
-      const descuento = p.articuloPrecio?.descuento ?? 0
-      return acc + (cantidad * precio - descuento)
-    }, 0)
-  }, [productos])
-
-  const columns = useMemo<MRT_ColumnDef<ArticuloOperacion>[]>(
-    () => [
-      {
-        id: 'nroItem',
-        header: '#',
-        size: 50,
-        Cell: ({ row }) => row.index + 1,
-      },
-      {
-        accessorKey: 'codigoArticulo',
-        header: 'Cód. Artículo',
-      },
-      {
-        accessorKey: 'nombreArticulo',
-        header: 'Artículo',
-      },
-      {
-        accessorFn: (row) => row.articuloPrecio?.cantidad ?? 0,
-        id: 'cantidad',
-        header: 'Cantidad',
-        muiTableBodyCellProps: { align: 'right' },
-        muiTableHeadCellProps: { align: 'right' },
-      },
-      {
-        accessorFn: (row) => (row.articuloPrecio?.valor ?? 0).toFixed(2),
-        id: 'precio',
-        header: 'Precio',
-        muiTableBodyCellProps: { align: 'right' },
-        muiTableHeadCellProps: { align: 'right' },
-      },
-      {
-        accessorFn: (row) => (row.articuloPrecio?.descuento ?? 0).toFixed(2),
-        id: 'descuento',
-        header: 'Descuento',
-        muiTableBodyCellProps: { align: 'right' },
-        muiTableHeadCellProps: { align: 'right' },
-      },
-      {
-        accessorFn: (row) => row.cortesia,
-        id: 'cortesia',
-        header: 'Cortesía',
-        Cell: ({ cell }) => (
-          cell.getValue() ? (
-            <Chip size="small" label="Sí" color="success" />
-          ) : (
-            <Chip size="small" label="No" variant="outlined" />
-          )
-        ),
-        Footer: () => <Typography variant="subtitle2" fontWeight="bold">Total General</Typography>,
-      },
-      {
-        accessorFn: (row) => {
-          const cantidad = row.articuloPrecio?.cantidad ?? 0
-          const precio = row.articuloPrecio?.valor ?? 0
-          const descuento = row.articuloPrecio?.descuento ?? 0
-          return cantidad * precio - descuento
-        },
-        id: 'total',
-        header: 'Total',
-        Cell: ({ cell }) => Number(cell.getValue() ?? 0).toFixed(2),
-        muiTableBodyCellProps: { align: 'right' },
-        muiTableHeadCellProps: { align: 'right' },
-        muiTableFooterCellProps: { align: 'right' },
-        Footer: () => (
-          <Typography variant="subtitle2" fontWeight="bold">
-            {totalGeneral.toFixed(2)}
-          </Typography>
-        ),
-      },
-    ],
-    [totalGeneral]
-  )
-
-  const config = useMemo<MrtTableConfig<ArticuloOperacion>>(
-    () => ({
-      id: 'detalle-productos',
-      columns,
-      manualPagination: false,
-      additionalOptions: {
-        enablePagination: false,
-        enableBottomToolbar: false,
-        enableTopToolbar: false,
-        enableSorting: false,
-        enableColumnActions: false,
-        enableColumnFilters: false,
-        enableGlobalFilter: false,
-        muiTablePaperProps: {
-          elevation: 0,
-          sx: { borderRadius: 0, border: 'none', background: 'transparent' }
-        }
-      }
-    }),
-    [columns]
-  )
-
   if (!productos.length) return <Typography variant="body2">Sin productos</Typography>
   return (
-    <Box sx={{ width: '100%', p: 1 }}>
-      <MrtDynamicTable config={config} data={productos} />
-    </Box>
-  )
-}
-
-const DetallePedidoWrapper = ({ row }: { row: RestPedido }) => {
-  const [showHistory, setShowHistory] = useState(false)
-  const users = useAuth()
-  const isAdmin=users.user.rol ==='ADMINISTRADOR'
-  const hasHistory =  isAdmin
-  
-  return (
-    <Box sx={{ width: '100%' }}>
-      {hasHistory && (
-        <Box sx={{ p: 1, pb: 0, display: 'flex', justifyContent: 'flex-start', width: '100%' }}>
-          <Button variant="outlined" size="small" onClick={() => setShowHistory(!showHistory)}>
-            {showHistory ? 'Ocultar Historial' : 'Ver Historial'}
-          </Button>
-        </Box>
-      )}
-      {showHistory ? (
-        <HistorialPedido
-          pedidoId={row._id || ''}
-        />
-      ) : (
-        <ProductosDetalle productos={row.productos ?? []} />
-      )}
+    <Box sx={{ p: 1 }}>
+      <Table size="small">
+        <TableHead>
+          <TableRow sx={{ backgroundColor: 'action.hover' }}>
+            <TableCell>#</TableCell>
+            <TableCell>Cód. Artículo</TableCell>
+            <TableCell>Artículo</TableCell>
+            <TableCell align="right">Cantidad</TableCell>
+            <TableCell align="right">Precio</TableCell>
+            <TableCell align="right">Descuento</TableCell>
+            <TableCell align="center">Cortesía</TableCell>
+            <TableCell align="right">Total</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {productos.map((p, idx) => {
+            const cantidad = p.articuloPrecio?.cantidad ?? 0
+            const precio = p.articuloPrecio?.valor ?? 0
+            const descuento = p.articuloPrecio?.descuento ?? 0
+            const total = cantidad * precio - descuento
+            const mods = (p as any).modificadores ?? []
+            return (
+              <>
+                <TableRow key={p.articuloId ?? idx} hover>
+                  <TableCell>{p.nroItem ?? idx + 1}</TableCell>
+                  <TableCell>{p.codigoArticulo ?? '-'}</TableCell>
+                  <TableCell>
+                    <Box sx={{ fontWeight: 600 }}>{p.nombreArticulo ?? '-'}</Box>
+                    {mods.length > 0 && (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                        {mods.map((m: any, mi: number) => (
+                          <Chip
+                            key={mi}
+                            label={`${m.articuloPrecio?.cantidad > 1 ? `${m.articuloPrecio.cantidad}x ` : ''}${m.nombreArticulo ?? m.codigoArticulo ?? '?'}`}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            sx={{ height: 18, fontSize: '0.68rem' }}
+                          />
+                        ))}
+                      </Box>
+                    )}
+                  </TableCell>
+                  <TableCell align="right">{cantidad}</TableCell>
+                  <TableCell align="right">{precio.toFixed(2)}</TableCell>
+                  <TableCell align="right">{descuento.toFixed(2)}</TableCell>
+                  <TableCell align="center">
+                    {p.cortesia ? (
+                      <Chip size="small" label="Sí" color="success" />
+                    ) : (
+                      <Chip size="small" label="No" variant="outlined" />
+                    )}
+                  </TableCell>
+                  <TableCell align="right">{total.toFixed(2)}</TableCell>
+                </TableRow>
+              </>
+            )
+          })}
+        </TableBody>
+      </Table>
     </Box>
   )
 }

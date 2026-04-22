@@ -43,18 +43,19 @@ const calcPrecioItem = (item: ArticuloOperacion): number => {
 
   const itemUI = item as ArticuloOperacionUI
 
-  const variacionPrecio =
-    (itemUI.variacionReceta ?? []).reduce((sum, v) => {
-      if (v.esExtra) {
-        const asInput = v as ArticuloRecetaOperacionInput
-        const asServer = v as ArticuloOperacionReceta
-        const cp = (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
-          (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ?? 0
-        const cq = v.articuloPrecio?.cantidad ?? 1
-        return sum + Number(cp) * Number(cq)
-      }
-      return sum
-    }, 0)
+  const variacionPrecio = (itemUI.variacionReceta ?? []).reduce((sum, v) => {
+    if (v.esExtra) {
+      const asInput = v as ArticuloRecetaOperacionInput
+      const asServer = v as ArticuloOperacionReceta
+      const cp =
+        (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+        (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
+        0
+      const cq = v.articuloPrecio?.cantidad ?? 1
+      return sum + Number(cp) * Number(cq)
+    }
+    return sum
+  }, 0)
 
   const modificadoresPrecio =
     (itemUI._modificadoresInput ?? []).reduce((sum, m) => {
@@ -224,8 +225,10 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
               ...(codigoLote ? { codigoLote } : {}),
               articuloPrecio: {
                 codigoArticuloUnidadMedida:
-                  (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)?.codigoArticuloUnidadMedida ??
-                  asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ?? '',
+                  (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
+                    ?.codigoArticuloUnidadMedida ??
+                  asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                  '',
                 cantidad: 2,
                 precio: 100,
                 descuento: v.articuloPrecio?.descuento ?? 0,
@@ -240,32 +243,35 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
         modificadores: (() => {
           const srcMods: (ArticuloModificadorOperacionInput | ArticuloOperacionModificador)[] =
             pUI._modificadoresInput ?? pUI.modificadores ?? []
-          const mapped = srcMods.map((m) => {
-            const asInput = m as ArticuloModificadorOperacionInput
-            const asServer = m as ArticuloOperacionModificador
-            return {
-              articuloModificadorId: asInput.articuloModificadorId || asServer.articuloModificadorId || '',
-              nroItem: m.nroItem,
-              codigoArticulo: m.codigoArticulo || '',
-              codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
-              ...(asInput.codigoLote || asServer.lote?.codigoLote
-                ? { codigoLote: asInput.codigoLote ?? asServer.lote?.codigoLote ?? '' }
-                : {}),
-              articuloPrecio: {
-                codigoArticuloUnidadMedida:
-                  (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)?.codigoArticuloUnidadMedida ??
-                  asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ?? '',
-                cantidad: m.articuloPrecio?.cantidad ?? 1,
-                precio: asInput.esOpcionGratuita
-                  ? 0
-                  : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
-                      (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ?? 0),
-                descuento: m.articuloPrecio?.descuento ?? 0,
-                impuesto: m.articuloPrecio?.impuesto ?? 0,
-              },
-              esOpcionGratuita: asInput.esOpcionGratuita ?? false,
-            }
-          }).filter((m) => Boolean(m.articuloModificadorId))
+          const mapped = srcMods
+            .map((m) => {
+              const asInput = m as ArticuloModificadorOperacionInput
+              const asServer = m as ArticuloOperacionModificador
+              return {
+                articuloModificadorId: asInput.articuloModificadorId || asServer.articuloModificadorId || '',
+                nroItem: m.nroItem,
+                codigoArticulo: m.codigoArticulo || '',
+                codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
+                // codigoLote omitido: el backend de RestPedido falla con lote.codigoArticulo requerido
+                articuloPrecio: {
+                  codigoArticuloUnidadMedida:
+                    (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
+                      ?.codigoArticuloUnidadMedida ??
+                    asServer.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                    '',
+                  cantidad: m.articuloPrecio?.cantidad ?? 1,
+                  precio: asInput.esOpcionGratuita
+                    ? 0
+                    : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                      (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
+                      0),
+                  descuento: m.articuloPrecio?.descuento ?? 0,
+                  impuesto: m.articuloPrecio?.impuesto ?? 0,
+                },
+                esOpcionGratuita: asInput.esOpcionGratuita ?? false,
+              }
+            })
+            .filter((m) => Boolean(m.articuloModificadorId))
           return mapped.length > 0 ? mapped : undefined
         })(),
       }
@@ -656,7 +662,9 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
                         .filter((v) => v.esExtra)
                         .map((v, j) => (
                           <Typography key={`var-${j}`} variant="caption" color="text.secondary">
-                            + {v.articuloPrecio?.cantidad ?? 1}x Extra {(v as ArticuloOperacionReceta).nombreArticulo ?? (v as ArticuloRecetaOperacionInput).codigoArticulo}
+                            + {v.articuloPrecio?.cantidad ?? 1}x Extra{' '}
+                            {(v as ArticuloOperacionReceta).nombreArticulo ??
+                              (v as ArticuloRecetaOperacionInput).codigoArticulo}
                           </Typography>
                         ))}
                       {((producto as ArticuloOperacionUI)._modificadoresInput ?? []).map((m, j) => (
