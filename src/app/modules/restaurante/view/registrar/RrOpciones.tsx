@@ -1,7 +1,20 @@
 import CloseIcon from '@mui/icons-material/Close'
 import DeliveryDiningOutlinedIcon from '@mui/icons-material/DeliveryDiningOutlined'
 import LocalMallOutlinedIcon from '@mui/icons-material/LocalMallOutlined'
+import PrintIcon from '@mui/icons-material/Print'
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
+import pdfMake from 'pdfmake/build/pdfmake'
+
+import PdfViewerDialog from '../../../reporte/components/PdfViewerDialog'
+;(pdfMake as any).fonts = {
+  Roboto: {
+    normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
+    bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf',
+    italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf',
+    bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf',
+  },
+}
+
 import {
   alpha,
   Box,
@@ -273,6 +286,159 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
   const [codigoOrdenApp, setCodigoOrdenApp] = useState('')
   const [nombreRepartidor, setNombreRepartidor] = useState('')
 
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+
+  const handleImprimirCliente = async () => {
+    if (!cliente || cliente.codigoCliente === '00') return
+
+    const d = direccionLocal
+    const contentData: any[] = [{ text: 'Cliente', style: 'header' }]
+
+    // Razón Social + Documento (siempre, los más importantes)
+    const row1: any[] = []
+    if (cliente.razonSocial)
+      row1.push({
+        width: '*',
+        stack: [
+          { text: 'Razón Social', style: 'label' },
+          { text: cliente.razonSocial, style: 'value' },
+        ],
+      })
+    if (cliente.numeroDocumento)
+      row1.push({
+        width: '*',
+        stack: [
+          { text: 'Documento', style: 'label' },
+          { text: cliente.numeroDocumento, style: 'value' },
+        ],
+      })
+    if (row1.length) contentData.push({ columns: row1, columnGap: 8, margin: [0, 4, 0, 0] })
+
+    // Teléfono + Email
+    const row2: any[] = []
+    if (cliente.telefono)
+      row2.push({
+        width: '*',
+        stack: [
+          { text: 'Teléfono', style: 'label' },
+          { text: cliente.telefono, style: 'value' },
+        ],
+      })
+    if (cliente.email)
+      row2.push({
+        width: '*',
+        stack: [
+          { text: 'Email', style: 'label' },
+          { text: cliente.email, style: 'value' },
+        ],
+      })
+    if (row2.length) contentData.push({ columns: row2, columnGap: 8, margin: [0, 4, 0, 0] })
+
+    // Dirección
+    const hasDirInfo = d.calle || d.numero || d.barrio || d.apartamento || d.referenciasAdicionales
+    if (hasDirInfo) {
+      contentData.push({
+        canvas: [{ type: 'line', x1: 0, y1: 2, x2: 207, y2: 2, lineWidth: 0.5, lineColor: '#cccccc' }],
+        margin: [0, 4, 0, 4],
+      })
+
+      const row3: any[] = []
+      if (d.calle)
+        row3.push({
+          width: '*',
+          stack: [
+            { text: 'Calle/Ave.', style: 'label' },
+            { text: d.calle, style: 'value' },
+          ],
+        })
+      if (d.numero)
+        row3.push({
+          width: '*',
+          stack: [
+            { text: 'Número', style: 'label' },
+            { text: d.numero, style: 'value' },
+          ],
+        })
+      if (row3.length) contentData.push({ columns: row3, columnGap: 8, margin: [0, 0, 0, 2] })
+
+      const row4: any[] = []
+      if (d.barrio)
+        row4.push({
+          width: '*',
+          stack: [
+            { text: 'Zona/Barrio', style: 'label' },
+            { text: d.barrio, style: 'value' },
+          ],
+        })
+      if (d.apartamento)
+        row4.push({
+          width: '*',
+          stack: [
+            { text: 'Apto.', style: 'label' },
+            { text: d.apartamento, style: 'value' },
+          ],
+        })
+      if (row4.length) contentData.push({ columns: row4, columnGap: 8, margin: [0, 0, 0, 2] })
+
+      if (d.referenciasAdicionales)
+        contentData.push({
+          stack: [
+            { text: 'Referencias', style: 'label' },
+            { text: d.referenciasAdicionales, style: 'value' },
+          ],
+          margin: [0, 0, 0, 2],
+        })
+    }
+
+    // Delivery PedidosYa
+    if (
+      tipoPedidoLocal === TIPO_PEDIDO.DELIVERY &&
+      metodoDelivery === 'PEDIDOS_YA' &&
+      (codigoOrdenApp || nombreRepartidor)
+    ) {
+      contentData.push({
+        canvas: [{ type: 'line', x1: 0, y1: 2, x2: 207, y2: 2, lineWidth: 0.5, lineColor: '#cccccc' }],
+        margin: [0, 4, 0, 4],
+      })
+      const rowEnt: any[] = []
+      if (codigoOrdenApp)
+        rowEnt.push({
+          width: '*',
+          stack: [
+            { text: 'Orden (App)', style: 'label' },
+            { text: codigoOrdenApp, style: 'value' },
+          ],
+        })
+      if (nombreRepartidor)
+        rowEnt.push({
+          width: '*',
+          stack: [
+            { text: 'Repartidor', style: 'label' },
+            { text: nombreRepartidor, style: 'value' },
+          ],
+        })
+      if (rowEnt.length) contentData.push({ columns: rowEnt, columnGap: 8 })
+    }
+
+    const pdfDefinition = {
+      pageSize: { width: 227, height: 'auto' },
+      pageMargins: [10, 10, 10, 10],
+      content: contentData,
+      styles: {
+        header: { fontSize: 12, bold: true, alignment: 'center', margin: [0, 0, 0, 2] },
+        label: { fontSize: 8, bold: true, color: '#555555' },
+        value: { fontSize: 9 },
+      },
+      defaultStyle: { fontSize: 9 },
+    }
+
+    swalLoading('Generando PDF...')
+    const blob = await pdfMake.createPdf(pdfDefinition as any).getBlob()
+    swalClose()
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl)
+    setPdfUrl(URL.createObjectURL(blob))
+  }
+
   // Sincronizar al abrir (incluye datos de delivery previos)
   useEffect(() => {
     if (open) {
@@ -424,8 +590,19 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
       fullWidth
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography variant="h6" fontWeight="700">
+        <Typography variant="h6" fontWeight="700" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           Detalles de la Orden
+          {cliente && cliente.codigoCliente !== '00' && (
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={handleImprimirCliente}
+              title="Imprimir Cliente"
+              sx={{ ml: 0.5 }}
+            >
+              <PrintIcon fontSize="small" />
+            </IconButton>
+          )}
         </Typography>
         <IconButton edge="end" color="inherit" onClick={onClose} aria-label="close">
           <CloseIcon />
@@ -492,7 +669,7 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
                         {getEstadoTexto()}
                       </Typography>
                     </Grid>
-                    <Grid size={{ xs: 12 }}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                         Área / Ubicación
                       </Typography>
@@ -503,6 +680,14 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
                         variant="outlined"
                         sx={{ fontWeight: 700, fontSize: '0.8rem' }}
                       />
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Cliente en Mesa
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600">
+                        {mesaSeleccionada?.pedido?.cliente?.razonSocial || 'N/A'}
+                      </Typography>
                     </Grid>
                   </Grid>
                 </Box>
@@ -673,6 +858,8 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
           Guardar Detalles
         </Button>
       </DialogActions>
+
+      <PdfViewerDialog open={!!pdfUrl} pdfUrl={pdfUrl || ''} onClose={() => setPdfUrl(null)} />
     </Dialog>
   )
 }

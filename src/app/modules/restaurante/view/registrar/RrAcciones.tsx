@@ -116,7 +116,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
               '',
             cantidad: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
             precio: p.articuloPrecio?.valor ?? p.articuloPrecioBase?.valor ?? 0,
-            descuento: p.articuloPrecio?.descuento ?? 0,
+            descuento: p.cortesia
+              ? (p.articuloPrecio?.valor ?? p.articuloPrecioBase?.valor ?? 0)
+              : (p.articuloPrecio?.descuento ?? 0),
             impuesto: p.articuloPrecio?.impuesto ?? 0,
           },
           detalleExtra: p.nota || undefined,
@@ -160,7 +162,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
                     (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
                     0,
-                  descuento: v.articuloPrecio?.descuento ?? 0,
+                  descuento: p.cortesia
+                    ? ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                      (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
+                      0)
+                    : (v.articuloPrecio?.descuento ?? 0),
                   impuesto: v.articuloPrecio?.impuesto ?? 0,
                 },
                 notaRapida: v.notaRapida,
@@ -198,7 +204,13 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                       : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
                         (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
                         0),
-                    descuento: m.articuloPrecio?.descuento ?? 0,
+                    descuento: p.cortesia
+                      ? asInput.esOpcionGratuita
+                        ? 0
+                        : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                          (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
+                          0)
+                      : (m.articuloPrecio?.descuento ?? 0),
                     impuesto: m.articuloPrecio?.impuesto ?? 0,
                   },
                   // Guard: si el dato viene del servidor (re-edición sin reabrir modal),
@@ -371,7 +383,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
               '',
             cantidad: p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1,
             precio: p.articuloPrecio?.valor ?? p.articuloPrecioBase?.valor ?? 0,
-            descuento: p.articuloPrecio?.descuento ?? 0,
+            descuento: p.cortesia
+              ? (p.articuloPrecio?.valor ?? p.articuloPrecioBase?.valor ?? 0)
+              : (p.articuloPrecio?.descuento ?? 0),
             impuesto: p.articuloPrecio?.impuesto ?? 0,
           },
           detalleExtra: p.nota || undefined,
@@ -410,7 +424,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
                     (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
                     0,
-                  descuento: v.articuloPrecio?.descuento ?? 0,
+                  descuento: p.cortesia
+                    ? ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                      (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
+                      0)
+                    : (v.articuloPrecio?.descuento ?? 0),
                   impuesto: v.articuloPrecio?.impuesto ?? 0,
                 },
                 notaRapida: v.notaRapida,
@@ -446,7 +464,13 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                       : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
                         (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
                         0),
-                    descuento: m.articuloPrecio?.descuento ?? 0,
+                    descuento: p.cortesia
+                      ? asInput.esOpcionGratuita
+                        ? 0
+                        : ((asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
+                          (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
+                          0)
+                      : (m.articuloPrecio?.descuento ?? 0),
                     impuesto: m.articuloPrecio?.impuesto ?? 0,
                   },
                   esOpcionGratuita:
