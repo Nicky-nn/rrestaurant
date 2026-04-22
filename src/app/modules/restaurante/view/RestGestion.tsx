@@ -313,7 +313,7 @@ const RestGestion: FunctionComponent<Props> = () => {
             setPedidoAnular(row)
             setOpenAnular(true)
           },
-          // disabled: (row) => row.state !== 'FINALIZADO' || row.tipoDocumento !== 'NOTA_VENTA',
+          disabled: (row) => row.state !== 'FINALIZADO',
         },
       ],
       renderDetailPanel: (row) => <ProductosDetalle productos={row.productos ?? []} />,

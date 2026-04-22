@@ -1,11 +1,22 @@
 import { LoadingButton } from '@mui/lab'
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material'
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  TextField,
+  Typography,
+} from '@mui/material'
 import { FunctionComponent, useEffect, useMemo, useState } from 'react'
 
-import { useError } from '../../../base/contexts/ErrorProvider'
 import useAuth from '../../../base/hooks/useAuth'
 import { MyGraphQlError } from '../../../base/services/GraphqlError'
 import { getEntidadInput } from '../../../utils/getEntidadInput'
+import { swalClose, swalException, swalLoading } from '../../../utils/swal'
 import { useRestPedidoAnular } from '../mutations/useRestPedidoAnular'
 import { RestPedido } from '../types'
 
@@ -21,7 +32,6 @@ const RestAnularPedidoDialog: FunctionComponent<RestAnularPedidoDialogProps> = (
   onClose,
 }) => {
   const { user } = useAuth()
-  const { showError } = useError()
   const entidad = useMemo(() => getEntidadInput(user), [user])
   const [motivo, setMotivo] = useState('')
   const { mutateAsync: anularPedido, isPending } = useRestPedidoAnular()
@@ -32,11 +42,14 @@ const RestAnularPedidoDialog: FunctionComponent<RestAnularPedidoDialogProps> = (
 
   const handleConfirm = async () => {
     if (!pedido?._id || !motivo.trim()) return
+    swalLoading('Anulando pedido...')
     try {
       await anularPedido({ id: pedido._id, entidad, descripcionMotivo: motivo.trim() })
+      swalClose()
       onClose(true)
     } catch (err: any) {
-      showError(new MyGraphQlError(err))
+      swalClose()
+      swalException(new MyGraphQlError(err))
     }
   }
 
@@ -44,6 +57,58 @@ const RestAnularPedidoDialog: FunctionComponent<RestAnularPedidoDialogProps> = (
     <Dialog open={open} onClose={() => onClose()} fullWidth maxWidth="xs">
       <DialogTitle>Anular Pedido</DialogTitle>
       <DialogContent>
+        {pedido && (
+          <Box
+            sx={(theme) => ({
+              mb: 2,
+              p: 1.5,
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor:
+                theme.palette.mode === 'dark' ? theme.palette.background.default : theme.palette.grey[50],
+            })}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 0.5,
+              }}
+            >
+              <Typography variant="subtitle2">Pedido #{pedido.numeroPedido}</Typography>
+
+              <Chip
+                label={pedido.state}
+                size="small"
+                color="warning"
+                variant="outlined" // mejor en oscuro
+              />
+            </Box>
+
+            <Divider sx={{ my: 0.75 }} />
+
+            {pedido.mesa?.nombre && (
+              <Typography variant="body2" color="text.secondary">
+                Mesa: <strong>{pedido.mesa.nombre}</strong>
+              </Typography>
+            )}
+
+            {pedido.fechaDocumento && (
+              <Typography variant="body2" color="text.secondary">
+                Fecha: <strong>{pedido.fechaDocumento}</strong>
+              </Typography>
+            )}
+
+            {pedido.montoTotal != null && (
+              <Typography variant="body2" color="text.secondary">
+                Monto total: <strong>Bs {pedido.montoTotal.toFixed(2)}</strong>
+              </Typography>
+            )}
+          </Box>
+        )}
+
         <TextField
           autoFocus
           fullWidth

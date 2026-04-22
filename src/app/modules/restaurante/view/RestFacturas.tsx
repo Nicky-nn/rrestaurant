@@ -16,6 +16,7 @@ import { RESTFACTURALISTADO } from '../queries/useRestFacturaListado'
 import { restauranteRoutesMap } from '../restauranteRoutes'
 import { RestFacturaConnection, SalidaFactura, SalidaFacturaDetalle } from '../types'
 import { tableFacturaColumns } from './listado/TableRestFacturaHeaders.tsx'
+import RestAnularFacturaDialog from './RestAnularFacturaDialog.tsx'
 import RestConsultaFacturaDialog from './RestConsultaFacturaDialog.tsx'
 import RestReenviarFacturaDialog from './RestReenviarFacturaDialog.tsx'
 
@@ -189,6 +190,14 @@ const RestFacturas: FunctionComponent<Props> = () => {
         open={openReenviarFactura}
         onClose={() => setOpenReenviarFactura(false)}
         factura={factura}
+      />
+      <RestAnularFacturaDialog
+        open={openAnularVenta}
+        factura={factura}
+        onClose={(anulado) => {
+          setOpenAnularVenta(false)
+          if (anulado) restFacturas.refetch()
+        }}
       />
     </SimpleContainerBox>
   )
