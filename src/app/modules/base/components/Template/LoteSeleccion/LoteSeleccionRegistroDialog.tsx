@@ -24,7 +24,7 @@ import { apiLoteGlobalRegistro } from '../../../../../base/api/apiLoteGlobalRegi
 import { ContentConfirmMessage } from '../../../../../base/components/Dialog/ContentConfirmMessage.tsx'
 import SimpleDatePicker from '../../../../../base/components/MyInputs/SimpleDatePicker.tsx'
 import SimpleDateTimePickerField from '../../../../../base/components/MyInputs/SimpleDateTimePickerField.tsx'
-import { LoteApiInputProps, LoteInputProps, LoteProps } from '../../../../../interfaces/lote.ts'
+import { LoteApiInputProps, LoteProps } from '../../../../../interfaces/lote.ts'
 import { dateToDMYHHMMSS, dayjsToDMY } from '../../../../../utils/dayjsHelper.ts'
 import { notSuccess } from '../../../../../utils/notification.ts'
 import { swalClose, swalException, swalLoading } from '../../../../../utils/swal.ts'
@@ -80,7 +80,7 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<LoteGlobalInputProps>({
+  } = useForm<any>({
     defaultValues: { ...defaultForm, codigoArticulo },
     resolver: yupResolver<any, any, any>(schema),
   })
@@ -91,7 +91,7 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
    * Guardamos los datos del lote
    * @param data
    */
-  const handleFormSubmit = async (data: LoteGlobalInputProps) => {
+  const handleFormSubmit = async (data: any) => {
     const input: LoteApiInputProps = {
       descripcion: data.descripcion,
       atributo1: data.atributo1,
@@ -200,7 +200,6 @@ const LoteSeleccionRegistroDialog: React.FC<NuevoLoteDialogProps> = ({
                     size={'small'}
                     variant="outlined"
                     error={!!errors.codigoLote}
-                    helperText={errors.codigoLote?.message}
                     placeholder="Ej: 4500XXX"
                   />
                 )}

@@ -83,13 +83,14 @@ const MyDatePickerFieldComponent: FunctionComponent<MuiDatePickerProps> = (props
   return (
     <MuiReactDatePickerStyles size={size}>
       <DatePicker
-        {...others}
+        {...(others as any)}
         showIcon={false}
         selected={value}
         dateFormat={dateFormat}
         locale={'es'}
         onChange={handleDateChange}
         isClearable={false}
+        selectsMultiple={false}
         customInput={
           <TextField
             label={label}

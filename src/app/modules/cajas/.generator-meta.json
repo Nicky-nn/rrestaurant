@@ -1,5 +1,5 @@
 {
-  "last_sync": "2026-04-21T16:52:49.228243",
+  "last_sync": "2026-04-21T20:34:54.071870",
   "fragments": [
     "fragments/CajaConnectionFragments.ts",
     "fragments/TurnoCajaFragments.ts",
@@ -12,7 +12,11 @@
     "queries/useArqueoCajaListado.ts"
   ],
   "mutations": [
-    "mutations/useAperturaCajaRegistro.ts"
+    "mutations/useAperturaCajaRegistro.ts",
+    "mutations/useAperturaCajaRetirar.ts",
+    "mutations/useAperturaCajaIngresar.ts",
+    "mutations/useAperturaCajaArquear.ts",
+    "mutations/useAperturaCajaCerrar.ts"
   ],
   "types": [
     "types/index.ts"
@@ -24,32 +28,38 @@
     "index.ts"
   ],
   "saved_operations": [
-    "arqueoCajaListado"
+    "aperturaCajaArquear",
+    "aperturaCajaCerrar"
   ],
   "used_types": [
-    "TurnoCaja",
-    "CajaUsuario",
-    "MonedaParams",
-    "Caja",
-    "Departamento",
-    "ArqueoCajaCortesia",
-    "ArqueoCajaObservacion",
-    "MetodoPago",
-    "CajaConnection",
-    "PageInfo",
-    "AperturaCajaRegistroInput",
-    "PuntoVenta",
-    "ArqueoCajaComprobante",
-    "ArqueoCajaConnection",
-    "ArqueoCajaMetodoPago",
-    "EntidadParamsInput",
-    "Sucursal",
-    "UrlInvConsultaDocumento",
-    "ArqueoCaja",
-    "DateDMYHHMMSS",
-    "ArqueoCajaIngreso",
-    "ArqueoCajaRepresentacionGrafica",
+    "AperturaCajaCerrarInput",
     "ArqueoCajaRetiro",
-    "SinTipoPuntoVenta"
+    "ArqueoCajaRepresentacionGrafica",
+    "AperturaCajaArquearInput",
+    "SinTipoPuntoVenta",
+    "AperturaCajaRegistroInput",
+    "ArqueoCajaIngreso",
+    "EntidadParamsInput",
+    "AperturaCajaRetirarInput",
+    "PageInfo",
+    "DateDMYHHMMSS",
+    "TurnoCaja",
+    "ArqueoCajaObservacion",
+    "PuntoVenta",
+    "ArqueoCajaMetodoPago",
+    "CajaUsuario",
+    "Caja",
+    "ArqueoCajaComprobante",
+    "Sucursal",
+    "Departamento",
+    "UrlInvConsultaDocumento",
+    "AperturaCajaIngresarInput",
+    "MonedaParams",
+    "ArqueoCajaConnection",
+    "CajaConnection",
+    "ArqueoCajaCortesia",
+    "ArqueoCaja",
+    "MetodoPago",
+    "MetodoPagoVentaInput"
   ]
 }

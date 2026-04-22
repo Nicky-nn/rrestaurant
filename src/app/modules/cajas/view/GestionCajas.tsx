@@ -19,6 +19,7 @@ import {
   styled,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import React, { FunctionComponent, useState } from 'react'
@@ -30,6 +31,12 @@ import { cajasRoutesMap } from '../cajasRoutes'
 import { useArqueoCajaListado } from '../queries/useArqueoCajaListado'
 import { ArqueoCajaObservacion } from '../types'
 import AperturaCajaDialog from './AperturaCajaDialog'
+import ArqueoCajaPaso1Dialog from './ArqueoCajaPaso1Dialog'
+import CerrarCajaPaso2Dialog from './CerrarCajaPaso2Dialog'
+import HistorialCajas from './HistorialCajas'
+import IngresoCajaDialog from './IngresoCajaDialog'
+import RetiroCajaDialog from './RetiroCajaDialog'
+import UltimaCaja from './UltimaCaja'
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
@@ -136,6 +143,11 @@ const formatFechaHora = (fecha?: string) => {
 const GestionCajas: FunctionComponent = () => {
   const [tab, setTab] = useState('actual')
   const [openApertura, setOpenApertura] = useState(false)
+  const [openIngreso, setOpenIngreso] = useState(false)
+  const [openRetiro, setOpenRetiro] = useState(false)
+  const [openArquearPaso1, setOpenArquearPaso1] = useState(false)
+  const [openCerrarPaso2, setOpenCerrarPaso2] = useState(false)
+  const [montoRealCierre, setMontoRealCierre] = useState(0)
 
   const { aperturaCajaActivo, refetchArqueoActivo, refetchCajas } = useCajas()
 
@@ -230,9 +242,27 @@ const GestionCajas: FunctionComponent = () => {
                   <AccountBalanceWallet fontSize="small" />
                 </IconCircle>
                 <Box>
-                  <Typography variant="subtitle1" fontWeight={700} lineHeight={1.2}>
-                    Arqueo de Caja {caja?.cajaCodigo || '...'}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="subtitle1" fontWeight={700} lineHeight={1.2}>
+                      Arqueo de Caja {caja?.cajaCodigo || '...'}
+                    </Typography>
+                    {caja?.state && (
+                      <Chip
+                        label={caja.state}
+                        size="small"
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: '0.65rem',
+                          height: 20,
+                          bgcolor:
+                            caja.state === 'ELABORADO'
+                              ? (t) => alpha(t.palette.success.main, 0.12)
+                              : (t) => alpha(t.palette.warning.main, 0.15),
+                          color: caja.state === 'ELABORADO' ? 'success.dark' : 'warning.dark',
+                        }}
+                      />
+                    )}
+                  </Box>
                   <Typography variant="caption" color="text.secondary">
                     {caja?.turnoCaja?.nombre || 'Turno'} &nbsp;·&nbsp; Abierta el{' '}
                     {formatHora(obsApertura?.fecha ?? caja?.fechaApertura)}
@@ -243,6 +273,8 @@ const GestionCajas: FunctionComponent = () => {
                 <Button
                   size="small"
                   variant="outlined"
+                  disabled={caja?.state !== 'ELABORADO'}
+                  onClick={() => setOpenIngreso(true)}
                   startIcon={
                     <CallReceived sx={{ transform: 'rotate(-90deg)', fontSize: '1rem !important' }} />
                   }
@@ -264,6 +296,8 @@ const GestionCajas: FunctionComponent = () => {
                 <Button
                   size="small"
                   variant="outlined"
+                  disabled={caja?.state !== 'ELABORADO'}
+                  onClick={() => setOpenRetiro(true)}
                   startIcon={<CallMade sx={{ fontSize: '1rem !important' }} />}
                   sx={{
                     color: 'error.main',
@@ -283,6 +317,13 @@ const GestionCajas: FunctionComponent = () => {
                 <Button
                   size="small"
                   variant="contained"
+                  onClick={() => {
+                    if (caja?.state && caja.state !== 'ELABORADO') {
+                      setOpenCerrarPaso2(true)
+                    } else {
+                      setOpenArquearPaso1(true)
+                    }
+                  }}
                   startIcon={<Lock sx={{ fontSize: '1rem !important' }} />}
                   sx={{
                     backgroundColor: 'text.primary',
@@ -337,24 +378,26 @@ const GestionCajas: FunctionComponent = () => {
                       -{formatMoney(caja?.totalRetiros)}
                     </Typography>
                   </MontoRow>
-                  <MontoRow>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Total Ventas
-                    </Typography>
+                  <Tooltip title="El monto de retiros y gastos está oculto para evitar que se filtre información sensible. Una vez arquees la caja, podrás ver el monto real y compararlo con el monto teórico para identificar posibles diferencias.">
+                    <MontoRow>
+                      <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                        Total Ventas
+                      </Typography>
 
-                    <Typography
-                      variant="body2"
-                      fontWeight={700}
-                      color="warning.main"
-                      sx={{
-                        filter: 'blur(6px)',
-                        userSelect: 'none',
-                        pointerEvents: 'none',
-                      }}
-                    >
-                      -{formatMoney(caja?.totalRetiros)}
-                    </Typography>
-                  </MontoRow>
+                      <Typography
+                        variant="body2"
+                        fontWeight={700}
+                        color="warning.main"
+                        sx={{
+                          filter: 'blur(6px)',
+                          userSelect: 'none',
+                          pointerEvents: 'none',
+                        }}
+                      >
+                        -{formatMoney(caja?.totalRetiros)}
+                      </Typography>
+                    </MontoRow>
+                  </Tooltip>
 
                   <Box sx={{ mt: 'auto', pt: 16 }}>
                     <Button
@@ -519,13 +562,9 @@ const GestionCajas: FunctionComponent = () => {
           </Box>
         )}
 
-        {tab !== 'actual' && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
-            <Typography variant="body2" color="text.secondary">
-              En construcción...
-            </Typography>
-          </Box>
-        )}
+        {tab === 'ultima' && <UltimaCaja />}
+
+        {tab === 'historial' && <HistorialCajas />}
       </Box>
 
       <AperturaCajaDialog
@@ -537,6 +576,49 @@ const GestionCajas: FunctionComponent = () => {
           refetchCajas()
         }}
       />
+      {aperturaCajaActivo?._id && (
+        <IngresoCajaDialog
+          open={openIngreso}
+          onClose={() => setOpenIngreso(false)}
+          cajaId={aperturaCajaActivo._id}
+          supervisores={caja?.supervisor ?? []}
+        />
+      )}
+      {aperturaCajaActivo?._id && (
+        <RetiroCajaDialog
+          open={openRetiro}
+          onClose={() => setOpenRetiro(false)}
+          cajaId={aperturaCajaActivo._id}
+          supervisores={caja?.supervisor ?? []}
+        />
+      )}
+
+      {caja && (
+        <ArqueoCajaPaso1Dialog
+          open={openArquearPaso1}
+          onClose={() => setOpenArquearPaso1(false)}
+          caja={caja}
+          onNext={(montoReal) => {
+            setMontoRealCierre(montoReal)
+            setOpenArquearPaso1(false)
+            setOpenCerrarPaso2(true)
+          }}
+        />
+      )}
+
+      {caja && (
+        <CerrarCajaPaso2Dialog
+          open={openCerrarPaso2}
+          onClose={() => setOpenCerrarPaso2(false)}
+          onBack={() => {
+            setOpenCerrarPaso2(false)
+            if (caja.state === 'ELABORADO') setOpenArquearPaso1(true)
+          }}
+          caja={caja}
+          montoReal={montoRealCierre}
+          supervisores={caja?.supervisor ?? []}
+        />
+      )}
     </SimpleContainerBox>
   )
 }

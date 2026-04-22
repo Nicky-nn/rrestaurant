@@ -2,4 +2,5 @@
 
 export * from './client';
 export * from './types';
-export * from './queries/useArqueoCajaListado';
+export * from './mutations/useAperturaCajaArquear';
+export * from './mutations/useAperturaCajaCerrar';

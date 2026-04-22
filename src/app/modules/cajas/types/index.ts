@@ -3,27 +3,27 @@
 /**
  * Date in DD/MM/YYYY HH:MM:SS format
  */
-export type DateDMYHHMMSS = string;
+export type DateDMYHHMMSS = string
 /**
- * Url de consulta documentos de inventarios, para la obtención de la representación impresa, uso de Buffer para la generacion de archivos 
+ * Url de consulta documentos de inventarios, para la obtención de la representación impresa, uso de Buffer para la generacion de archivos
  */
-export type UrlInvConsultaDocumento = string;
+export type UrlInvConsultaDocumento = string
 /**
  * Información para ayudar en la paginación.
  */
 export interface PageInfo {
   /** Al paginar hacia adelante, ¿hay más elementos? */
-  hasNextPage: boolean;
+  hasNextPage: boolean
   /** Al paginar hacia atrás, ¿hay más elementos? */
-  hasPrevPage: boolean;
+  hasPrevPage: boolean
   /** Número total de registros */
-  totalDocs?: number;
+  totalDocs?: number
   /** Agrupador de registros */
-  limit?: number;
+  limit?: number
   /** Pagina Actual de consulta */
-  page?: number;
+  page?: number
   /** Total de paginas */
-  totalPages?: number;
+  totalPages?: number
 }
 
 /**
@@ -31,9 +31,9 @@ export interface PageInfo {
  */
 export interface SinTipoPuntoVenta {
   /** Código de Tipo de Punto de Venta */
-  codigoClasificador: string;
+  codigoClasificador: string
   /** Descripción del Tipo de Punto de Venta */
-  descripcion: string;
+  descripcion: string
 }
 
 /**
@@ -41,11 +41,11 @@ export interface SinTipoPuntoVenta {
  */
 export interface MonedaParams {
   /** Código del clasificador de monedas */
-  codigo?: number;
+  codigo?: number
   /** Descripción de la moneda */
-  descripcion?: string;
+  descripcion?: string
   /** Sigla de la moneda */
-  sigla?: string;
+  sigla?: string
 }
 
 /**
@@ -53,9 +53,9 @@ export interface MonedaParams {
  */
 export interface EntidadParamsInput {
   /** Codigo de sucursal */
-  codigoSucursal?: number;
+  codigoSucursal?: number
   /** Código de punto de venta */
-  codigoPuntoVenta?: number;
+  codigoPuntoVenta?: number
 }
 
 /**
@@ -63,13 +63,13 @@ export interface EntidadParamsInput {
  */
 export interface PuntoVenta {
   /** Código único del punto de venta */
-  codigo?: number;
+  codigo?: number
   /** - Comisionistas de acuerdo a normativa vigente; - Ventanilla de Cobranza autorizada por la ASFI según normativa; - Puntos de Ventas Móviles para venta de bienes o prestación de servicios; - Puntos de Venta YPFB para la venta de combustible a precio internacional; - Puntos de Venta (Cajeros o similares) para la venta de otros bienes y/o prestación de servicios. - Puntos de Venta conjunta, habilitada para emisión conjunta de documentos fiscales. */
-  tipoPuntoVenta?: SinTipoPuntoVenta;
+  tipoPuntoVenta?: SinTipoPuntoVenta
   /** Nombre, Alias del punto de venta */
-  nombre?: string;
+  nombre?: string
   /** Descripción del punto de venta */
-  descripcion?: string;
+  descripcion?: string
 }
 
 /**
@@ -77,17 +77,17 @@ export interface PuntoVenta {
  */
 export interface Sucursal {
   /** Codigo único de la sucursal */
-  codigo?: number;
+  codigo?: number
   /** Direccion de la sucursal */
-  direccion?: string;
+  direccion?: string
   /** Teléfono de referencia */
-  telefono?: string;
+  telefono?: string
   /** Datos del departamento */
-  departamento?: Departamento;
+  departamento?: Departamento
   /** Municipio donde se encuentra la sucursal */
-  municipio?: string;
+  municipio?: string
   /** Si cuenta con integracion SIAT */
-  integracionSiat?: boolean;
+  integracionSiat?: boolean
 }
 
 /**
@@ -95,13 +95,13 @@ export interface Sucursal {
  */
 export interface Departamento {
   /** Código segun INE */
-  codigo?: number;
+  codigo?: number
   /** Código de Pais segun ISO 3166-1 */
-  codigoPais?: number;
+  codigoPais?: number
   /** Sigla del departamento */
-  sigla?: string;
+  sigla?: string
   /** Nombre del departamento */
-  departamento?: string;
+  departamento?: string
 }
 
 /**
@@ -109,9 +109,21 @@ export interface Departamento {
  */
 export interface MetodoPago {
   /** Razon Social del cliente. */
-  codigoClasificador?: number;
+  codigoClasificador?: number
   /** Codigo unico que se asigna al cliente. */
-  descripcion?: string;
+  descripcion?: string
+}
+
+/**
+ * Métodos de pago adicionales} - Generalmente usada para registro de finalizacion de ventas
+ */
+export interface MetodoPagoVentaInput {
+  /** Código según el clasificador de métodos de pago */
+  codigoMetodoPago: number
+  /** Monto Asignado al metodo de pago */
+  monto: number
+  /** Monto real contado por el usuario */
+  montoReal: number
 }
 
 /**
@@ -119,9 +131,9 @@ export interface MetodoPago {
  */
 export interface CajaConnection {
   /** Información para ayudar en la paginación. */
-  pageInfo: PageInfo;
+  pageInfo: PageInfo
   /** Lista de documentos. */
-  docs?: Caja[];
+  docs?: Caja[]
 }
 
 /**
@@ -129,7 +141,7 @@ export interface CajaConnection {
  */
 export interface CajaUsuario {
   /** Nombre de usuario responsable */
-  usuario?: string;
+  usuario?: string
 }
 
 /**
@@ -137,39 +149,39 @@ export interface CajaUsuario {
  */
 export interface Caja {
   /** Identificador interno del registro */
-  _id?: string;
+  _id?: string
   /** Código Único que identifica a la caja */
-  codigo?: string;
+  codigo?: string
   /** Sucursal asociado a la caja */
-  sucursal?: Sucursal;
+  sucursal?: Sucursal
   /** Listado de puntos de venta asociados a la caja */
-  puntoVenta?: PuntoVenta[];
+  puntoVenta?: PuntoVenta[]
   /** Dominio de usuarios que pueden realizar la apertura de caja */
-  usuarios?: CajaUsuario[];
+  usuarios?: CajaUsuario[]
   /** Saldo inicial en caja antes de ingresar a operaciones */
-  saldoInicial?: number;
+  saldoInicial?: number
   /** Saldo actual según la ultima apertura de caja */
-  saldoActual?: number;
+  saldoActual?: number
   /** Nombre de usuario del responsable de caja según los turnos */
-  responsable?: CajaUsuario[];
+  responsable?: CajaUsuario[]
   /** Nombre del ultimo usuario de apertura de caja */
-  usuarioApertura?: string;
+  usuarioApertura?: string
   /** Fecha de ultimo cierre de caja */
-  fechaUltimoCierre?: DateDMYHHMMSS;
+  fechaUltimoCierre?: DateDMYHHMMSS
   /** Relación con el ultimo arqueo de caja */
-  ultimoArqueoCajaId?: string;
+  ultimoArqueoCajaId?: string
   /** Ubicación física de la caja */
-  ubicacion?: string;
+  ubicacion?: string
   /** Estado del registro * ELABORADO = Estado inerte del registro antes de ingresar a operaciones * ABIERTO = Ocupado para transacciones * CERRADO = Libre para asignación * ARQUEO = Conteo de dinero */
-  state?: string;
+  state?: string
   /** Usuario de creación del registro */
-  usucre?: string;
+  usucre?: string
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS;
+  createdAt?: DateDMYHHMMSS
   /** Usuario de modificación del registro */
-  usumod?: string;
+  usumod?: string
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS;
+  updatedAt?: DateDMYHHMMSS
 }
 
 /**
@@ -177,9 +189,9 @@ export interface Caja {
  */
 export interface ArqueoCajaConnection {
   /** Información para ayudar en la paginación. */
-  pageInfo: PageInfo;
+  pageInfo: PageInfo
   /** Lista de documentos. */
-  docs?: ArqueoCaja[];
+  docs?: ArqueoCaja[]
 }
 
 /**
@@ -187,8 +199,38 @@ export interface ArqueoCajaConnection {
  */
 export interface ArqueoCajaComprobante {
   /** Tipo de comprobante - FACTURA O NOTA_VENTA - Número referencial del comprobante */
-  tipo?: string;
-  numero?: string;
+  tipo?: string
+  numero?: string
+}
+
+/**
+ * Datos de entrada para la apertura de caja
+ */
+export interface AperturaCajaRetirarInput {
+  /** Motivo por el cual se realizará el retiro */
+  motivo: string
+  /** Monto de retiro - Debe ser igual o menor al monto teorico */
+  monto: number
+  /** Beneficiario del retiro */
+  beneficiario: string
+  /** Usuario de aprobación */
+  aprobador?: string
+  /** Tipo de comprobante, factura, nota, etc - FACTURA | NOTA | RECIBO */
+  comprobanteTipo: string
+  /** Número referencial de comprobante */
+  comprobanteNumero: string
+}
+
+/**
+ * Datos de entrada para la apertura de caja
+ */
+export interface AperturaCajaIngresarInput {
+  /** Motivo por el cual se realizará el ingreso a caja */
+  motivo: string
+  /** Monto de ingreso */
+  monto: number
+  /** Usuario de aprobación */
+  aprobador?: string
 }
 
 /**
@@ -196,11 +238,31 @@ export interface ArqueoCajaComprobante {
  */
 export interface AperturaCajaRegistroInput {
   /** Mótivo del retiro */
-  montoInicial: number;
+  montoInicial: number
   /** Monto retirado */
-  observacion?: string;
+  observacion?: string
   /** Identificador interno del turno de la caja */
-  turnoCajaId: string;
+  turnoCajaId: string
+}
+
+/**
+ * Datos de entrada para la apertura de caja
+ */
+export interface AperturaCajaCerrarInput {
+  /** Registro de montos para cada método de pago - Codigo metodo de pago debe pertenecer al conjunto de metodos de pago registrados en el ciclo de vida del arqueo caja. - Monto que se registra pertenece al nuevo reporte de ventas generado */
+  metodoPago: MetodoPagoVentaInput[]
+  /** Observación de cierre de caja */
+  observacion?: string
+  /** Supervisor de caja - Debe ser un elemento del dominio de responsables de apertura de caja */
+  supervisor: string
+}
+
+/**
+ * Datos de entrada para la apertura de caja
+ */
+export interface AperturaCajaArquearInput {
+  /** Observación de cierre de caja */
+  observacion?: string
 }
 
 /**
@@ -208,11 +270,11 @@ export interface AperturaCajaRegistroInput {
  */
 export interface ArqueoCajaMetodoPago {
   /** Según el clasificador de métodos de pago */
-  metodoPago?: MetodoPago;
+  metodoPago?: MetodoPago
   /** Monto de pago generado por el sistema */
-  monto?: number;
+  monto?: number
   /** Monto registrado por el usuario */
-  montoUsuario?: number;
+  montoUsuario?: number
 }
 
 /**
@@ -220,21 +282,21 @@ export interface ArqueoCajaMetodoPago {
  */
 export interface ArqueoCajaRetiro {
   /** Mótivo del retiro */
-  motivo?: string;
+  motivo?: string
   /** Monto retirado */
-  monto?: number;
+  monto?: number
   /** Quien es el beneficiario del retiro */
-  beneficiario?: string;
+  beneficiario?: string
   /** Usuario que realiza el retiro de caja */
-  usuario?: string;
+  usuario?: string
   /** Usuario que aprueba el retiro de Caja */
-  aprobador?: string;
+  aprobador?: string
   /** Detalle de comprobante de retiro */
-  comprobante?: ArqueoCajaComprobante;
+  comprobante?: ArqueoCajaComprobante
   /** Fecha y hora de retiro */
-  fecha?: DateDMYHHMMSS;
+  fecha?: DateDMYHHMMSS
   /** Representación grafica del reporte de ventas */
-  representacionGrafica?: ArqueoCajaRepresentacionGrafica;
+  representacionGrafica?: ArqueoCajaRepresentacionGrafica
 }
 
 /**
@@ -242,15 +304,15 @@ export interface ArqueoCajaRetiro {
  */
 export interface ArqueoCajaIngreso {
   /** Mótivo del retiro */
-  motivo?: string;
+  motivo?: string
   /** Monto retirado */
-  monto?: number;
+  monto?: number
   /** Usuario que realiza el ingreso de caja */
-  usuario?: string;
+  usuario?: string
   /** Usuario que aprueba el retiro de Caja */
-  aprobador?: string;
+  aprobador?: string
   /** Fecha y hora de retiro */
-  fecha?: DateDMYHHMMSS;
+  fecha?: DateDMYHHMMSS
 }
 
 /**
@@ -258,11 +320,11 @@ export interface ArqueoCajaIngreso {
  */
 export interface ArqueoCajaCortesia {
   /** Número de ventas realizadas que contienen al menos 1 cortesia. */
-  conteoPedidos?: number;
+  conteoPedidos?: number
   /** Número total de articulos de venta por cortesia */
-  conteoArticulos?: number;
+  conteoArticulos?: number
   /** Monto total de perdida por cortesia */
-  montoTotal?: number;
+  montoTotal?: number
 }
 
 /**
@@ -270,13 +332,13 @@ export interface ArqueoCajaCortesia {
  */
 export interface ArqueoCajaObservacion {
   /** Fecha de la observacion */
-  fecha?: DateDMYHHMMSS;
+  fecha?: DateDMYHHMMSS
   /** Acción generada por el backend, en función a tipo de servicio ejecutado */
-  accion?: string;
+  accion?: string
   /** Usuario que realizó la acción */
-  usuario?: string;
+  usuario?: string
   /** Observacion registrada por el usuario */
-  observacion?: string;
+  observacion?: string
 }
 
 /**
@@ -284,77 +346,77 @@ export interface ArqueoCajaObservacion {
  */
 export interface ArqueoCaja {
   /** Identificador interno del registro */
-  _id?: string;
+  _id?: string
   /** Referencia a la caja */
-  cajaId?: string;
+  cajaId?: string
   /** Código de la caja Asociado */
-  cajaCodigo?: string;
+  cajaCodigo?: string
   /** Sucursal asociado a la caja */
-  sucursal?: Sucursal;
+  sucursal?: Sucursal
   /** Punto de venta asociado a la caja */
-  puntoVenta?: PuntoVenta;
+  puntoVenta?: PuntoVenta
   /** Usuarios responsables del arqueo de caja */
-  usuario?: string[];
+  usuario?: string[]
   /** Dominio de usuarios de caja que tienen permitido ingresar al arqueo */
-  usuariosCaja?: string[];
+  usuariosCaja?: string[]
   /** Usuario que realiza la apertura de la caja */
-  usuarioApertura?: string;
+  usuarioApertura?: string
   /** Usuario que realiza el cierre de la caja */
-  usuarioCierre?: string;
+  usuarioCierre?: string
   /** Módulo al que pertenece el arqueo de caja - Valores admitidos: REST, POS */
-  modulo?: string;
+  modulo?: string
   /** Usuario encargado de la supervision de caja - Un elemento de supervisor pertenece al dominio de responsables. */
-  supervisor?: string[];
+  supervisor?: string[]
   /** Responsables de aprobación o acción realizadas en apertura caja */
-  responsables?: string[];
+  responsables?: string[]
   /** Monto inicial de apertura de caja */
-  montoInicial?: number;
+  montoInicial?: number
   /** Número total de ventas */
-  nroVentas?: number;
+  nroVentas?: number
   /** Monto Total de ventas en efectivo */
-  totalVentas?: number;
+  totalVentas?: number
   /** Monto Total de ventas solo en efectivo */
-  totalVentasEfectivo?: number;
+  totalVentasEfectivo?: number
   /** Total de retiros en efectivo */
-  totalRetiros?: number;
+  totalRetiros?: number
   /** Monto Total de ingreso a caja */
-  totalIngresos?: number;
+  totalIngresos?: number
   /** (Inicial + VentasEfectivo - Retiros) - Calculo automático */
-  montoTeorico?: number;
+  montoTeorico?: number
   /** Monto que registra el operador según el arqueo */
-  montoReal?: number;
+  montoReal?: number
   /** diferencia entre el monto teorico y el monto real */
-  diferencia?: number;
+  diferencia?: number
   /** Detalle de totales según el método de pago */
-  metodoPagoVenta?: ArqueoCajaMetodoPago[];
+  metodoPagoVenta?: ArqueoCajaMetodoPago[]
   /** Detalle de retiros realizados de la caja */
-  retiros?: ArqueoCajaRetiro[];
+  retiros?: ArqueoCajaRetiro[]
   /** Detalle de ingresos realizados de la caja */
-  ingresos?: ArqueoCajaIngreso[];
+  ingresos?: ArqueoCajaIngreso[]
   /** Detalle de ventas realizadas por cortesia */
-  cortesia?: ArqueoCajaCortesia;
+  cortesia?: ArqueoCajaCortesia
   /** Observaciones en el periodo de operacion */
-  observaciones?: ArqueoCajaObservacion[];
+  observaciones?: ArqueoCajaObservacion[]
   /** Fecha y hora de apertura de Caja */
-  fechaApertura?: DateDMYHHMMSS;
+  fechaApertura?: DateDMYHHMMSS
   /** Fecha y hora de cierre de Caja */
-  fechaCierre?: DateDMYHHMMSS;
+  fechaCierre?: DateDMYHHMMSS
   /** Turno de operación */
-  turnoCaja?: TurnoCaja;
+  turnoCaja?: TurnoCaja
   /** Representación grafica del reporte de ventas */
-  representacionGrafica?: ArqueoCajaRepresentacionGrafica;
+  representacionGrafica?: ArqueoCajaRepresentacionGrafica
   /** Moneda principal de sistema - Tipo de cambio siempre será 1 */
-  moneda?: MonedaParams;
+  moneda?: MonedaParams
   /** Estado del registro * ELABORADO = Estado de operaciones de caja. * ARQUEO = Estado de Cuente de dinero de la caja. * FINALIZADO = Cuando ya se cierra la caja. */
-  state?: string;
+  state?: string
   /** Usuario de creación del registro */
-  usucre?: string;
+  usucre?: string
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS;
+  createdAt?: DateDMYHHMMSS
   /** Usuario de modificación del registro */
-  usumod?: string;
+  usumod?: string
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS;
+  updatedAt?: DateDMYHHMMSS
 }
 
 /**
@@ -362,9 +424,9 @@ export interface ArqueoCaja {
  */
 export interface ArqueoCajaRepresentacionGrafica {
   /** PDF Formato Medio Oficio */
-  pdf?: UrlInvConsultaDocumento;
+  pdf?: UrlInvConsultaDocumento
   /** PDF Formato Rollo */
-  rollo?: UrlInvConsultaDocumento;
+  rollo?: UrlInvConsultaDocumento
 }
 
 /**
@@ -372,23 +434,23 @@ export interface ArqueoCajaRepresentacionGrafica {
  */
 export interface TurnoCaja {
   /** Identificador interno del registro */
-  _id?: string;
+  _id?: string
   /** Nombre único del turno Ejemplo: Mañana, Tarde, Noche, etc. */
-  nombre?: string;
+  nombre?: string
   /** Hora de inicio del turno - Admite valores entre 0 - 24 */
-  horaInicio?: number;
+  horaInicio?: number
   /** Hora de fin del turno - Admite valores entre 0 - 24 */
-  horaCierre?: number;
+  horaCierre?: number
   /** Bloquea las ventas en el turno - true: Bloquea o fuerza que se finalicen las ventas para ingreso a arqueo. - false o null: No bloquea las ventas, es posible realizar arqueos aun si no se tienen las ventas finalizadas. */
-  bloquearVentas?: boolean;
+  bloquearVentas?: boolean
   /** Estado del registro * ELABORADO = Estado general */
-  state?: string;
+  state?: string
   /** Usuario de creación del registro */
-  usucre?: string;
+  usucre?: string
   /** Fecha de creación del registro */
-  createdAt?: DateDMYHHMMSS;
+  createdAt?: DateDMYHHMMSS
   /** Usuario de modificación del registro */
-  usumod?: string;
+  usumod?: string
   /** Fecha de modificación del registro */
-  updatedAt?: DateDMYHHMMSS;
+  updatedAt?: DateDMYHHMMSS
 }

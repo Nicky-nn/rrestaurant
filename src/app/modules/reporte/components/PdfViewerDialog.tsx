@@ -9,11 +9,12 @@ import {
   InputLabel,
   Stack,
   Toolbar,
-  Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import Dialog from '@mui/material/Dialog'
-import { FunctionComponent, useState } from 'react'
+import { FunctionComponent, useEffect, useState } from 'react'
 
 import { apiImprimirUrl } from '../../../base/api/apiImpresoras'
 import AppSelect from '../../../base/components/MySelect/AppSelect'
@@ -34,16 +35,21 @@ interface PdfViewerDialogProps {
   onClose: () => void
 }
 
-/**
- * Dialog para visualizar el PDF generado y opcionalmente imprimirlo.
- * La sección de impresión solo se muestra si la licencia de impresión está ACTIVADA.
- */
 const PdfViewerDialog: FunctionComponent<PdfViewerDialogProps> = ({ open, pdfUrl, onClose }) => {
   const { li } = useAuth()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+
   const licenciaActiva = li?.activo === true
 
   const [grupoSeleccionado, setGrupoSeleccionado] = useState<string>('Comanda')
   const [imprimiendo, setImprimiendo] = useState(false)
+  const [iframeLoading, setIframeLoading] = useState(true)
+
+  // Resetear el loading cuando cambia el PDF o se abre el dialog
+  useEffect(() => {
+    if (open) setIframeLoading(true)
+  }, [pdfUrl, open])
 
   const handleImprimir = async () => {
     if (!pdfUrl) {
@@ -66,108 +72,140 @@ const PdfViewerDialog: FunctionComponent<PdfViewerDialogProps> = ({ open, pdfUrl
     <Dialog
       open={open}
       onClose={onClose}
+      fullScreen={isMobile} // Pantalla completa en móviles para mejor experiencia
       fullWidth
       maxWidth="xl"
-      PaperProps={{ sx: { height: '95vh', display: 'flex', flexDirection: 'column' } }}
+      PaperProps={{
+        sx: {
+          height: isMobile ? '100%' : '95vh',
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'background.default',
+        },
+      }}
     >
       {/* Barra superior */}
       <AppBar position="relative" color="default" elevation={1} sx={{ flexShrink: 0 }}>
         <Toolbar variant="dense" sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="subtitle1" fontWeight={700}>
-            Vista previa del PDF
+          <Typography variant="subtitle1" fontWeight={700} noWrap>
+            Vista previa
           </Typography>
-          <IconButton edge="end" onClick={onClose}>
+          <IconButton edge="end" onClick={onClose} size="small">
             <Close />
           </IconButton>
         </Toolbar>
       </AppBar>
 
-      {/* Contenido principal */}
-      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Panel izquierdo: impresión (solo si licencia activa) */}
+      {/* Contenido principal Adaptable */}
+      <Stack direction={isMobile ? 'column' : 'row'} sx={{ flex: 1, overflow: 'hidden' }}>
+        {/* Panel de impresión (Arriba en móvil, Izquierda en desktop) */}
         {licenciaActiva && (
           <Box
             sx={{
-              width: 220,
+              width: isMobile ? '100%' : 240,
               flexShrink: 0,
-              borderRight: '1px solid',
+              borderRight: isMobile ? 'none' : '1px solid',
+              borderBottom: isMobile ? '1px solid' : 'none',
               borderColor: 'divider',
               p: 2,
               display: 'flex',
-              flexDirection: 'column',
+              flexDirection: isMobile ? 'row' : 'column',
+              alignItems: isMobile ? 'center' : 'stretch',
               gap: 2,
+              overflowX: 'auto',
             }}
           >
-            <Stack spacing={0.5}>
-              <Typography
-                variant="subtitle2"
-                fontWeight={700}
-                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-              >
-                <Print fontSize="small" color="primary" />
-                Imprimir PDF
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Selecciona el grupo de impresión registrado.
-              </Typography>
-            </Stack>
+            {!isMobile && (
+              <Stack spacing={0.5}>
+                <Typography
+                  variant="subtitle2"
+                  fontWeight={700}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                >
+                  <Print fontSize="small" color="primary" />
+                  Imprimir
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Selecciona el destino
+                </Typography>
+              </Stack>
+            )}
 
-            <FormControl fullWidth size="small">
+            <FormControl fullWidth={!isMobile} size="small" sx={{ minWidth: isMobile ? 120 : 'auto' }}>
               <InputLabel>Grupo</InputLabel>
               <AppSelect
                 label="Grupo"
                 options={GRUPOS_IMPRESION}
                 value={grupoSeleccionado}
                 onChange={(e) => setGrupoSeleccionado(e.target.value as string)}
-                size="small"
               />
             </FormControl>
 
-            <Tooltip title={imprimiendo ? 'Enviando...' : ''}>
-              <span>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  size="small"
-                  startIcon={imprimiendo ? <CircularProgress size={14} color="inherit" /> : <Print />}
-                  disabled={imprimiendo}
-                  onClick={handleImprimir}
-                >
-                  {imprimiendo ? 'Enviando...' : 'Imprimir'}
-                </Button>
-              </span>
-            </Tooltip>
-
             <Button
-              fullWidth
-              variant="text"
-              size="small"
-              color="inherit"
-              onClick={onClose}
-              sx={{ mt: 'auto' }}
+              fullWidth={!isMobile}
+              variant="contained"
+              size="medium"
+              startIcon={imprimiendo ? <CircularProgress size={16} color="inherit" /> : <Print />}
+              disabled={imprimiendo || !pdfUrl}
+              onClick={handleImprimir}
+              sx={{ whiteSpace: 'nowrap' }}
             >
-              Cerrar
+              {imprimiendo ? '...' : 'Imprimir'}
             </Button>
           </Box>
         )}
 
-        {/* Panel derecho: iframe PDF */}
-        <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {/* Visor de PDF con Loading State */}
+        <Box sx={{ flex: 1, position: 'relative', bgcolor: '#525659', display: 'flex' }}>
           {pdfUrl ? (
-            <iframe
-              src={pdfUrl}
-              width="100%"
-              height="100%"
-              style={{ border: 'none', display: 'block', flex: 1 }}
-              title="PDF Viewer"
-            />
+            <>
+              {iframeLoading && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2,
+                    bgcolor: 'background.paper',
+                  }}
+                >
+                  <CircularProgress size={40} />
+                  <Typography sx={{ mt: 2 }} variant="body2" color="text.secondary">
+                    Cargando documento...
+                  </Typography>
+                </Box>
+              )}
+              <iframe
+                src={`${pdfUrl}#toolbar=1`} // Forzar barra de herramientas del PDF
+                width="100%"
+                height="100%"
+                style={{
+                  border: 'none',
+                  opacity: iframeLoading ? 0 : 1,
+                  transition: 'opacity 0.3s ease',
+                }}
+                title="PDF Viewer"
+                onLoad={() => setIframeLoading(false)}
+              />
+            </>
           ) : (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-              <CircularProgress />
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+                color: 'white',
+              }}
+            >
+              <Typography>No se pudo cargar el archivo.</Typography>
             </Box>
           )}
         </Box>
-      </Box>
+      </Stack>
     </Dialog>
   )
 }
