@@ -1,13 +1,11 @@
 import {
-  AddShoppingCartOutlined,
   CancelOutlined,
   DescriptionOutlined,
+  ManageAccountsOutlined,
   PrintOutlined,
-  ReceiptOutlined,
 } from '@mui/icons-material'
 import { Box, Chip, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
 import { FunctionComponent, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 
 import { SimpleContainerBox } from '../../../base/components/Container/SimpleBox'
 import { FilterTypeMap } from '../../../base/components/Table/castMrtFilters.ts'
@@ -27,6 +25,7 @@ import { restauranteRoutesMap } from '../restauranteRoutes'
 import { ArticuloOperacion, RestPedido, RestPedidoConnection, RestPedidoFinalizarInput } from '../types'
 import { tableColumns } from './listado/TableRestPedidoHeaders.tsx'
 import RrCobroDialog, { PagoRealizado } from './registrar/RrCobroDialog'
+import RrGestionPedidoDialog from './registrar/RrGestionPedidoDialog'
 
 const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => {
   if (!productos.length) return <Typography variant="body2">Sin productos</Typography>
@@ -109,6 +108,8 @@ const RestGestion: FunctionComponent<Props> = () => {
 
   const [selectedPedido, setSelectedPedido] = useState<RestPedido | null>(null)
   const [openCobro, setOpenCobro] = useState(false)
+  const [openGestion, setOpenGestion] = useState(false)
+  const [pedidoGestion, setPedidoGestion] = useState<RestPedido | null>(null)
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
   const [descuento, setDescuento] = useState(0)
   const [giftcard, setGiftcard] = useState(0)
@@ -268,8 +269,6 @@ const RestGestion: FunctionComponent<Props> = () => {
     }
   }
 
-  const navigate = useNavigate()
-
   const columns = useMemo(() => tableColumns, [])
 
   const config = useMemo<MrtTableConfig<RestPedido>>(
@@ -281,15 +280,16 @@ const RestGestion: FunctionComponent<Props> = () => {
       manualPagination: true,
       rowMenuActions: [
         {
-          label: 'Agregar Productos',
-          icon: <AddShoppingCartOutlined />,
-          onClick: () => navigate(restauranteRoutesMap.registro.path),
-          disabled: (row) => row.state !== 'COMPLETADO' || row.tipoDocumento !== 'NOTA_VENTA',
-        },
-        {
-          label: 'Facturar',
-          icon: <ReceiptOutlined />,
-          onClick: ({ row }) => handleAbrirFacturar(row),
+          label: 'Gestionar',
+          icon: <ManageAccountsOutlined />,
+          onClick: ({ row }) => {
+            if (row.state === 'COMPLETADO') {
+              setPedidoGestion(row)
+              setOpenGestion(true)
+            } else {
+              handleAbrirFacturar(row)
+            }
+          },
           disabled: (row) => row.tipoDocumento !== 'NOTA_VENTA',
         },
         {
@@ -311,7 +311,7 @@ const RestGestion: FunctionComponent<Props> = () => {
       ],
       renderDetailPanel: (row) => <ProductosDetalle productos={row.productos ?? []} />,
     }),
-    [columns, navigate],
+    [columns],
   )
 
   const REST_GESTION_FILTER_TYPES: FilterTypeMap<RestPedido> = {
@@ -369,6 +369,15 @@ const RestGestion: FunctionComponent<Props> = () => {
       <Box>
         <MrtDynamicTable config={config} {...restGestion} />
       </Box>
+
+      <RrGestionPedidoDialog
+        open={openGestion}
+        onClose={() => {
+          setOpenGestion(false)
+          restGestion.refetch()
+        }}
+        pedido={pedidoGestion}
+      />
 
       <RrCobroDialog
         open={openCobro}
