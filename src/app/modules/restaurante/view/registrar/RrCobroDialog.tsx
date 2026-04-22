@@ -682,29 +682,31 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
           </Box>
           {/* Footer Buttons */}
           <Stack direction="row" spacing={1.5} sx={{ mt: 3 }}>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => {
-                if (onFinalizar)
-                  onFinalizar(metodoSeleccionado || 1, metodoSeleccionadoObj?.descripcion || 'Efectivo')
-              }}
-              disabled={isProcessing}
-              fullWidth
-              sx={{
-                p: 2,
-                borderRadius: 3,
-                bgcolor: isDark ? alpha(theme.palette.text.primary, 0.15) : '#1e293b',
-                color: isDark ? theme.palette.text.primary : 'white',
-                fontWeight: 700,
-                textTransform: 'none',
-                fontSize: '1rem',
-                '&:hover': { bgcolor: isDark ? alpha(theme.palette.text.primary, 0.25) : '#0f172a' },
-              }}
-            >
-              <ReceiptLongOutlinedIcon sx={{ mr: 1 }} />
-              Finalizar
-            </Button>
+            {onFinalizar && (
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => {
+                  if (onFinalizar)
+                    onFinalizar(metodoSeleccionado || 1, metodoSeleccionadoObj?.descripcion || 'Efectivo')
+                }}
+                disabled={isProcessing}
+                fullWidth
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  bgcolor: isDark ? alpha(theme.palette.text.primary, 0.15) : '#1e293b',
+                  color: isDark ? theme.palette.text.primary : 'white',
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  '&:hover': { bgcolor: isDark ? alpha(theme.palette.text.primary, 0.25) : '#0f172a' },
+                }}
+              >
+                <ReceiptLongOutlinedIcon sx={{ mr: 1 }} />
+                Finalizar
+              </Button>
+            )}
             <Button
               variant="contained"
               size="large"

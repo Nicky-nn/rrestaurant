@@ -1,6 +1,13 @@
-import { CancelOutlined, DescriptionOutlined, PrintOutlined, ReceiptOutlined } from '@mui/icons-material'
+import {
+  AddShoppingCartOutlined,
+  CancelOutlined,
+  DescriptionOutlined,
+  PrintOutlined,
+  ReceiptOutlined,
+} from '@mui/icons-material'
 import { Box, Chip, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
-import { FunctionComponent, useMemo } from 'react'
+import { FunctionComponent, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { SimpleContainerBox } from '../../../base/components/Container/SimpleBox'
 import { FilterTypeMap } from '../../../base/components/Table/castMrtFilters.ts'
@@ -9,12 +16,17 @@ import { MrtDynamicTable } from '../../../base/components/Table/MrtDynamicTable.
 import { MrtTableConfig } from '../../../base/components/Table/mrtTypes.ts'
 import { useMrtQuery } from '../../../base/components/Table/useMrtQuery.tsx'
 import Breadcrumb from '../../../base/components/Template/Breadcrumb/Breadcrumb'
+import { useError } from '../../../base/contexts/ErrorProvider'
 import useAuth from '../../../base/hooks/useAuth'
+import { MyGraphQlError } from '../../../base/services/GraphqlError'
 import { client } from '../client'
+import { useRestPedidoFacturaRegistro } from '../mutations/useRestPedidoFacturaRegistro'
+import { useRestPedidoFinalizar } from '../mutations/useRestPedidoFinalizar'
 import { RESTPEDIDOLISTADO } from '../queries/useRestPedidoListado'
 import { restauranteRoutesMap } from '../restauranteRoutes'
-import { ArticuloOperacion, RestPedido, RestPedidoConnection } from '../types'
+import { ArticuloOperacion, RestPedido, RestPedidoConnection, RestPedidoFinalizarInput } from '../types'
 import { tableColumns } from './listado/TableRestPedidoHeaders.tsx'
+import RrCobroDialog, { PagoRealizado } from './registrar/RrCobroDialog'
 
 const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => {
   if (!productos.length) return <Typography variant="body2">Sin productos</Typography>
@@ -89,6 +101,174 @@ type Props = RestGestionComponentProps
 
 const RestGestion: FunctionComponent<Props> = () => {
   const { user } = useAuth()
+  const { showError } = useError()
+
+  const { mutateAsync: finalizarPedido, isPending: isFinalizarPending } = useRestPedidoFinalizar()
+  const { mutateAsync: facturarPedido, isPending: isFacturarPending } = useRestPedidoFacturaRegistro()
+  const isPending = isFinalizarPending || isFacturarPending
+
+  const [selectedPedido, setSelectedPedido] = useState<RestPedido | null>(null)
+  const [openCobro, setOpenCobro] = useState(false)
+  const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
+  const [descuento, setDescuento] = useState(0)
+  const [giftcard, setGiftcard] = useState(0)
+
+  const subtotal = useMemo(() => {
+    if (!selectedPedido) return 0
+    // Si hay productos calculamos desde ellos, si no usamos montoTotal del pedido (caso FINALIZADO)
+    const productosTotal = (selectedPedido.productos ?? []).reduce((acc, p) => {
+      if (p.cortesia) return acc
+      const precio = p.articuloPrecio?.valor ?? 0
+      const cantidad = p.articuloPrecio?.cantidad ?? 1
+      let sub = precio * cantidad
+      ;(p as any).modificadores?.forEach((m: any) => {
+        sub += (m.articuloPrecio?.valor ?? 0) * (m.articuloPrecio?.cantidad ?? 1)
+      })
+      return acc + sub
+    }, 0)
+    return productosTotal > 0 ? productosTotal : (selectedPedido.montoTotal ?? 0)
+  }, [selectedPedido])
+
+  const totalAPagar = Math.max(0, subtotal - descuento - giftcard)
+
+  const formatTarjeta = (num?: string): string => {
+    if (!num) return '0000000000000000'
+    const clean = num.replace(/\D/g, '')
+    if (clean.length === 16) return clean
+    if (clean.length <= 4) return clean.padStart(16, '0')
+    return clean.substring(0, 4) + '0'.repeat(8) + clean.substring(clean.length - 4)
+  }
+
+  const handleAbrirFacturar = (pedido: RestPedido) => {
+    setSelectedPedido(pedido)
+    // Recuperar pagos ya realizados si el pedido está FINALIZADO
+    const pagosExistentes: PagoRealizado[] = (pedido.metodoPagoVenta ?? []).map((mp, i) => ({
+      id: `existing-${i}`,
+      metodoId: mp.metodoPago?.codigoClasificador ?? 1,
+      metodoNombre: mp.metodoPago?.descripcion ?? 'Efectivo',
+      monto: mp.monto ?? 0,
+    }))
+    setPagosRealizados(pagosExistentes)
+    setDescuento(0)
+    setGiftcard(0)
+    setOpenCobro(true)
+  }
+
+  const handleFinalizar = async (metodoDefectoId?: number, metodoDefectoNombre?: string) => {
+    if (!selectedPedido?._id) return
+    const pagosFinales = pagosRealizados.length
+      ? pagosRealizados
+      : [
+          {
+            id: 'def',
+            metodoId: metodoDefectoId || 1,
+            metodoNombre: metodoDefectoNombre || 'Efectivo',
+            monto: totalAPagar,
+          },
+        ]
+    try {
+      await finalizarPedido({
+        id: selectedPedido._id,
+        entidad: { codigoSucursal: user.sucursal.codigo, codigoPuntoVenta: user.puntoVenta.codigo },
+        cliente: {
+          codigoCliente: selectedPedido.cliente?.codigoCliente || '00',
+          razonSocial: selectedPedido.cliente?.razonSocial || 'Sin Razón Social',
+        },
+        input: {
+          codigoMoneda: user.moneda?.codigo || 1,
+          montoTotal: totalAPagar,
+          usuario: user.correo || '',
+          codigoMetodoPago: pagosFinales[0].metodoId,
+        } as RestPedidoFinalizarInput & { codigoMetodoPago: number },
+        metodoPagoVenta: pagosFinales.map((p) => ({ codigoMetodoPago: p.metodoId, monto: p.monto })),
+      })
+      setOpenCobro(false)
+      setSelectedPedido(null)
+      setPagosRealizados([])
+      restGestion.refetch()
+    } catch (error) {
+      showError(new MyGraphQlError(error as Error))
+    }
+  }
+
+  const handleFacturar = async (
+    metodoDefectoId?: number,
+    metodoDefectoNombre?: string,
+    inputNumeroTarjeta?: string,
+  ) => {
+    if (!selectedPedido?._id) return
+
+    const pagosFinales = pagosRealizados.length
+      ? pagosRealizados
+      : [
+          {
+            id: 'def',
+            metodoId: metodoDefectoId || 1,
+            metodoNombre: metodoDefectoNombre || 'Efectivo',
+            monto: totalAPagar,
+            numeroTarjeta: inputNumeroTarjeta,
+          },
+        ]
+
+    if (pagosRealizados.length) {
+      const totalPagado = pagosRealizados.reduce((a, p) => a + p.monto, 0)
+      if (totalPagado < totalAPagar) {
+        showError(new Error('El monto pagado es menor al total.'))
+        return
+      }
+    }
+
+    try {
+      // Solo finalizar si aún no está FINALIZADO
+      if (selectedPedido.state !== 'FINALIZADO') {
+        await finalizarPedido({
+          id: selectedPedido._id,
+          entidad: { codigoSucursal: user.sucursal.codigo, codigoPuntoVenta: user.puntoVenta.codigo },
+          cliente: {
+            codigoCliente: selectedPedido.cliente?.codigoCliente || '00',
+            razonSocial: selectedPedido.cliente?.razonSocial || 'Sin Razón Social',
+          },
+          input: {
+            codigoMoneda: user.moneda?.codigo || 1,
+            montoTotal: totalAPagar,
+            usuario: user.correo || '',
+            codigoMetodoPago: pagosFinales[0].metodoId,
+            numeroTarjeta:
+              pagosFinales[0].metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
+          } as RestPedidoFinalizarInput & { codigoMetodoPago: number; numeroTarjeta?: string },
+          metodoPagoVenta: pagosFinales.map((p) => ({ codigoMetodoPago: p.metodoId, monto: p.monto })),
+        })
+      }
+
+      await facturarPedido({
+        entidad: { codigoSucursal: user.sucursal.codigo, codigoPuntoVenta: user.puntoVenta.codigo },
+        cliente: {
+          codigoCliente: selectedPedido.cliente?.codigoCliente || '00',
+          razonSocial: selectedPedido.cliente?.razonSocial || 'Sin Razón Social',
+          email: selectedPedido.cliente?.email,
+          telefono: selectedPedido.cliente?.telefono,
+        },
+        numeroPedido: selectedPedido.numeroPedido || 0,
+        input: {
+          codigoMoneda: user.moneda?.codigo || 1,
+          codigoMetodoPago: pagosFinales[0].metodoId,
+          numeroTarjeta:
+            pagosFinales[0].metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
+          tipoCambio: user.moneda?.tipoCambio || 1,
+          usuario: user.correo || '',
+        },
+      })
+
+      setOpenCobro(false)
+      setSelectedPedido(null)
+      setPagosRealizados([])
+      restGestion.refetch()
+    } catch (error) {
+      showError(new MyGraphQlError(error as Error))
+    }
+  }
+
+  const navigate = useNavigate()
 
   const columns = useMemo(() => tableColumns, [])
 
@@ -101,9 +281,16 @@ const RestGestion: FunctionComponent<Props> = () => {
       manualPagination: true,
       rowMenuActions: [
         {
+          label: 'Agregar Productos',
+          icon: <AddShoppingCartOutlined />,
+          onClick: () => navigate(restauranteRoutesMap.registro.path),
+          disabled: (row) => row.state !== 'COMPLETADO' || row.tipoDocumento !== 'NOTA_VENTA',
+        },
+        {
           label: 'Facturar',
           icon: <ReceiptOutlined />,
-          onClick: () => {},
+          onClick: ({ row }) => handleAbrirFacturar(row),
+          disabled: (row) => row.tipoDocumento !== 'NOTA_VENTA',
         },
         {
           label: 'Generar Comanda',
@@ -124,7 +311,7 @@ const RestGestion: FunctionComponent<Props> = () => {
       ],
       renderDetailPanel: (row) => <ProductosDetalle productos={row.productos ?? []} />,
     }),
-    [columns],
+    [columns, navigate],
   )
 
   const REST_GESTION_FILTER_TYPES: FilterTypeMap<RestPedido> = {
@@ -182,6 +369,36 @@ const RestGestion: FunctionComponent<Props> = () => {
       <Box>
         <MrtDynamicTable config={config} {...restGestion} />
       </Box>
+
+      <RrCobroDialog
+        open={openCobro}
+        onClose={() => {
+          setOpenCobro(false)
+          restGestion.refetch()
+        }}
+        isProcessing={isPending}
+        subtotal={subtotal}
+        descuento={descuento}
+        giftcard={giftcard}
+        onDescuentoChange={setDescuento}
+        onGiftcardChange={setGiftcard}
+        totalAPagar={totalAPagar}
+        pagosRealizados={pagosRealizados}
+        onAddPago={(metodoId, metodoNombre, monto, numeroTarjeta) =>
+          setPagosRealizados((prev) => [
+            ...prev,
+            { id: Date.now().toString(), metodoId, metodoNombre, monto, numeroTarjeta },
+          ])
+        }
+        onRemovePago={(id) => setPagosRealizados((prev) => prev.filter((p) => p.id !== id))}
+        onFinalizar={selectedPedido?.state === 'COMPLETADO' ? handleFinalizar : undefined}
+        onFacturar={handleFacturar}
+        clienteInfo={
+          selectedPedido?.cliente && selectedPedido.cliente.codigoCliente !== '00'
+            ? `${selectedPedido.cliente.razonSocial || ''} - ${selectedPedido.cliente.numeroDocumento || ''}`
+            : undefined
+        }
+      />
     </SimpleContainerBox>
   )
 }
