@@ -1869,3 +1869,15 @@ export interface RestEspacioInput {
   atributo3?: string;
   atributo4?: string;
 }
+
+/**
+ * Datos de entrada para actualizacion de espacio
+ */
+export interface RestEspacioActualizarInput {
+  descripcion?: string;
+  nroMesas?: number;
+  atributo1?: string;
+  atributo2?: string;
+  atributo3?: string;
+  atributo4?: string;
+}

@@ -1,3 +1,4 @@
+import { Delete, Edit } from '@mui/icons-material'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ClearIcon from '@mui/icons-material/Clear'
@@ -43,11 +44,17 @@ import {
   useRef,
   useState,
 } from 'react'
+import Swal from 'sweetalert2'
 
 import useAuth from '../../../../base/hooks/useAuth'
 import { useHorizontalDragScroll } from '../../../../base/hooks/useHorizontalDragScroll'
+import { swalException } from '../../../../utils/swal'
+import { client } from '../../client'
+import { useRestEspacioActualizar } from '../../mutations/useRestEspacioActualizar'
+import { useRestEspacioEliminar } from '../../mutations/useRestEspacioEliminar'
 import { useRestEspacioRegistro } from '../../mutations/useRestEspacioRegistro'
 import { useArticuloInventarioListado } from '../../queries/useArticuloInventarioListado'
+import { RESTPEDIDOMESASOCUPADAS } from '../../queries/useRestPedidoMesasOcupadas'
 import { Articulo, ArticuloModificadorOperacionInput, ArticuloRecetaOperacionInput } from '../../types'
 import RrComplementoModal from './RrComplementoModal'
 
@@ -436,7 +443,12 @@ const CategoryTab: FunctionComponent<CategoryTabProps> = memo(({ label, selected
 // ─── Main component ────────────────────────────────────────────────────────────
 
 interface RrCategoriasProductosProps {
-  espacios?: { _id?: string; descripcion?: string | null; default?: number | null }[]
+  espacios?: {
+    _id?: string
+    descripcion?: string | null
+    default?: number | null
+    nroMesas?: number | null
+  }[]
   espacioSeleccionado?: string | null
   onChangeEspacio?: (espacioId: string | null, espacio?: any) => void
   onAddProduct?: (payload: {
@@ -470,7 +482,6 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
     verificarInventario: true,
     query: 'articuloVenta=true',
   })
-
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string | null>(null)
   const [searchModalArticulo, setSearchModalArticulo] = useState<Articulo | null>(null)
   const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(null)
@@ -482,6 +493,8 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
   const [helperMesas, setHelperMesas] = useState('')
 
   const [openEspacioModal, setOpenEspacioModal] = useState(false)
+  const [modoEspacioModal, setModoEspacioModal] = useState<'crear' | 'editar'>('crear')
+  const [espacioEditandoId, setEspacioEditandoId] = useState<string | null>(null)
   const [nuevoEspacioNombre, setNuevoEspacioNombre] = useState('')
   const [nuevoEspacioMesas, setNuevoEspacioMesas] = useState<number | ''>(10)
 
@@ -499,7 +512,40 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
       onChangeEspacio?.(data._id as string, data)
     },
     onError: (err) => {
-      alert('Error al crear espacio: ' + err.message)
+      swalException(err)
+    },
+  })
+  const actualizarEspacioMutation = useRestEspacioActualizar({
+    onSuccess: (data) => {
+      queryClient.setQueryData(['restEspacioPorSucursal', { codigoSucursal }], (old: any) => {
+        if (!old) return [data]
+        return old.map((item: any) => (item?._id === data?._id ? data : item))
+      })
+      queryClient.invalidateQueries({ queryKey: ['restEspacioPorSucursal'] })
+      setOpenEspacioModal(false)
+      setModoEspacioModal('crear')
+      setEspacioEditandoId(null)
+      setNuevoEspacioNombre('')
+      setNuevoEspacioMesas(10)
+      onChangeEspacio?.(data._id as string, data)
+    },
+    onError: (err) => {
+      swalException(err)
+    },
+  })
+  const eliminarEspacioMutation = useRestEspacioEliminar({
+    onSuccess: (_, variables) => {
+      queryClient.setQueryData(['restEspacioPorSucursal', { codigoSucursal }], (old: any) => {
+        if (!old) return old
+        return old.filter((item: any) => item?._id !== variables.id)
+      })
+      queryClient.invalidateQueries({ queryKey: ['restEspacioPorSucursal'] })
+      if (espacioSeleccionado === variables.id) {
+        onChangeEspacio?.(null)
+      }
+    },
+    onError: (err) => {
+      swalException(err)
     },
   })
 
@@ -1201,14 +1247,113 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
               onChangeEspacio?.(e._id as string)
               setMoreAnchorEl(null)
             }}
-            sx={{ fontSize: '0.875rem', borderRadius: 1 }}
+            sx={{
+              fontSize: '0.875rem',
+              borderRadius: 1,
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 1,
+            }}
           >
-            {e.descripcion || 'Sin nombre'}
+            {/* Nombre */}
+            <Box sx={{ flexGrow: 1 }}>{e.descripcion || 'Sin nombre'}</Box>
+
+            {/* Acciones */}
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 0.5,
+                opacity: 0.6,
+                '&:hover': { opacity: 1 },
+              }}
+              onClick={(ev) => ev.stopPropagation()}
+            >
+              <IconButton
+                size="small"
+                onClick={() => {
+                  if (!e._id) return
+                  setModoEspacioModal('editar')
+                  setEspacioEditandoId(e._id)
+                  setNuevoEspacioNombre(e.descripcion || '')
+                  setNuevoEspacioMesas(e.nroMesas && e.nroMesas > 0 ? e.nroMesas : 10)
+                  setErrorMesas(false)
+                  setHelperMesas('')
+                  setOpenEspacioModal(true)
+                  setMoreAnchorEl(null)
+                }}
+                sx={{
+                  color: 'text.disabled',
+                  '&:hover': { color: 'primary.main' },
+                }}
+              >
+                <Edit fontSize="small" />
+              </IconButton>
+
+              <Tooltip
+                title={
+                  espacioSeleccionado === e._id
+                    ? 'Eliminar espacio'
+                    : 'Seleccione este espacio para habilitar eliminación'
+                }
+              >
+                <span>
+                  <IconButton
+                    size="small"
+                    disabled={espacioSeleccionado !== e._id || eliminarEspacioMutation.isPending}
+                    onClick={async () => {
+                      if (!e._id) return
+                      if (espacioSeleccionado !== e._id) return
+
+                      const response = await client.request<{
+                        restPedidoMesasOcupadas: Array<{ _id?: string }>
+                      }>(RESTPEDIDOMESASOCUPADAS, {
+                        codigoSucursal,
+                        espacioId: e._id,
+                      })
+                      const tieneMesasOcupadas = (response.restPedidoMesasOcupadas?.length ?? 0) > 0
+                      if (tieneMesasOcupadas) {
+                        await Swal.fire({
+                          icon: 'warning',
+                          title: 'No permitido',
+                          text: 'No puede eliminar espacio con mesas ocupadas.',
+                          confirmButtonText: 'Entendido',
+                        })
+                        return
+                      }
+
+                      const result = await Swal.fire({
+                        icon: 'question',
+                        title: 'Eliminar espacio',
+                        html: `Confirma eliminar espacio <b>${e.descripcion || 'Sin nombre'}</b>?`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Si, eliminar',
+                        cancelButtonText: 'Cancelar',
+                      })
+                      if (!result.isConfirmed) return
+                      eliminarEspacioMutation.mutate({ id: e._id as string })
+                      setMoreAnchorEl(null)
+                    }}
+                    sx={{
+                      color: 'text.disabled',
+                      '&:hover': { color: 'error.main' },
+                    }}
+                  >
+                    <Delete fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </Box>
           </MenuItem>
         ))}
         <Divider sx={{ my: 0.5 }} />
         <MenuItem
           onClick={() => {
+            setModoEspacioModal('crear')
+            setEspacioEditandoId(null)
+            setNuevoEspacioNombre('')
+            setNuevoEspacioMesas(10)
+            setErrorMesas(false)
+            setHelperMesas('')
             setOpenEspacioModal(true)
             setMoreAnchorEl(null)
           }}
@@ -1219,7 +1364,7 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
       </Popover>
 
       <Dialog open={openEspacioModal} onClose={() => setOpenEspacioModal(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Crear Nuevo Espacio</DialogTitle>
+        <DialogTitle>{modoEspacioModal === 'editar' ? 'Editar Espacio' : 'Crear Nuevo Espacio'}</DialogTitle>
 
         <DialogContent
           dividers
@@ -1269,7 +1414,7 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
           <Button
             onClick={() => setOpenEspacioModal(false)}
             color="inherit"
-            disabled={registrarEspacioMutation.isPending}
+            disabled={registrarEspacioMutation.isPending || actualizarEspacioMutation.isPending}
           >
             Cancelar
           </Button>
@@ -1281,6 +1426,18 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
               if (nuevoEspacioMesas > 100) {
                 setErrorMesas(true)
                 setHelperMesas('Máximo 100 mesas por espacio. Cree otro piso o espacio.')
+                return
+              }
+
+              if (modoEspacioModal === 'editar') {
+                if (!espacioEditandoId) return
+                actualizarEspacioMutation.mutate({
+                  id: espacioEditandoId,
+                  input: {
+                    descripcion: nuevoEspacioNombre.trim(),
+                    nroMesas: Number(nuevoEspacioMesas),
+                  },
+                })
                 return
               }
 
@@ -1298,10 +1455,17 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
               !nuevoEspacioNombre.trim() ||
               !nuevoEspacioMesas ||
               errorMesas ||
-              registrarEspacioMutation.isPending
+              registrarEspacioMutation.isPending ||
+              actualizarEspacioMutation.isPending
             }
           >
-            {registrarEspacioMutation.isPending ? 'Creando...' : 'Crear'}
+            {registrarEspacioMutation.isPending || actualizarEspacioMutation.isPending
+              ? modoEspacioModal === 'editar'
+                ? 'Guardando...'
+                : 'Creando...'
+              : modoEspacioModal === 'editar'
+                ? 'Guardar'
+                : 'Crear'}
           </Button>
         </DialogActions>
       </Dialog>

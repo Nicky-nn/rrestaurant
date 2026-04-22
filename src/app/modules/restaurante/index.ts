@@ -2,4 +2,5 @@
 
 export * from './client';
 export * from './types';
-export * from './queries/useSinMotivoAnulacion';
+export * from './mutations/useRestEspacioActualizar';
+export * from './mutations/useRestEspacioEliminar';
