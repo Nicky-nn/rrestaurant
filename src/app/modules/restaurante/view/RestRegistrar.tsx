@@ -64,13 +64,13 @@ const RestRegistrar: FunctionComponent = () => {
   const [loadingEspacio, setLoadingEspacio] = useState(false)
 
   // Función para cambiar de ubicación desde la UI
-  const handleChangeEspacio = (nuevoEspacioId: string | null) => {
+  const handleChangeEspacio = (nuevoEspacioId: string | null, espacioObj?: any) => {
     if (nuevoEspacioId === espacio) return // Fix bug: evitar re-reder e infinite loading
 
     setLoadingEspacio(true)
     setEspacio(nuevoEspacioId)
     if (nuevoEspacioId) {
-      const selected = espaciosData.find((e) => e._id === nuevoEspacioId)
+      const selected = espacioObj || espaciosData.find((e) => e._id === nuevoEspacioId)
       if (selected) {
         localStorage.setItem('ubicacion', JSON.stringify(selected))
       }
@@ -81,6 +81,16 @@ const RestRegistrar: FunctionComponent = () => {
     handleMesaSeleccionada(null)
     setFocusedIndex(-1)
   }
+
+  // Sincronizar localstorage en caso de que espaciosData se actualice después (ej. crear espacio)
+  useEffect(() => {
+    if (espacio && espaciosData.length > 0) {
+      const selected = espaciosData.find((e) => e._id === espacio)
+      if (selected) {
+        localStorage.setItem('ubicacion', JSON.stringify(selected))
+      }
+    }
+  }, [espacio, espaciosData])
 
   // Generar queryString con filtro de ubicación actual, omitiendo finalizados/anulados
   const queryParams = espacio

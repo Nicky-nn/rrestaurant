@@ -2,6 +2,22 @@ import Swal, { SweetAlertResult } from 'sweetalert2'
 
 import { swalExceptionMsg } from '../base/services/swalExceptionMsg'
 
+const isDarkMode = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia &&
+  window.matchMedia('(prefers-color-scheme: dark)').matches
+
+const getSwalTheme = () => {
+  const dark = isDarkMode()
+
+  return {
+    background: dark ? '#1e1e1e' : '#ffffff',
+    color: dark ? '#eaeaea' : '#1a1a1a',
+    confirmButtonColor: dark ? '#90caf9' : '#1976d2',
+    cancelButtonColor: dark ? '#ef5350' : '#d33',
+  }
+}
+
 export const swalConfirm = {
   title: 'Confirmación',
   showCancelButton: true,
@@ -11,45 +27,42 @@ export const swalConfirm = {
 }
 
 export const swalErrorMsg = (msg: string | Array<any>, size: 'sm' | 'md' | 'lg' = 'lg') => {
-  const width = size === 'sm' ? 450 : size === 'md' ? 600 : size === 'lg' ? 800 : 450
+  const width = size === 'sm' ? 450 : size === 'md' ? 600 : 800
+  const theme = getSwalTheme()
+
   Swal.fire({
-    title: 'Alerta!!',
-    width: 800,
+    title: 'Alerta',
+    width,
+    background: theme.background,
+    color: theme.color,
     customClass: {
       popup: 'swalError',
     },
     allowEscapeKey: false,
     allowOutsideClick: false,
     html: msg,
-  }).then()
+  })
 }
 
-/**
- * Custom error para excepciones
- * @author isi-template
- * @param e
- */
 export const swalException = (e: Error | any) => {
+  const theme = getSwalTheme()
+
   Swal.fire({
-    title: 'Alerta!!',
+    title: 'Alerta',
     width: 700,
+    background: theme.background,
+    color: theme.color,
+    confirmButtonColor: theme.cancelButtonColor,
     customClass: {
-      popup: 'swalError', // 'swalError' es aplicado al popup
+      popup: 'swalError',
     },
     allowEscapeKey: false,
     allowOutsideClick: true,
-    confirmButtonColor: '#d33',
     html: swalExceptionMsg(e),
     confirmButtonText: 'Cerrar',
-  }).then()
+  })
 }
 
-/**
- * @description Dialog de confirmación devuelve un Promise en then
- * @author isi-template
- * @param title
- * @param text
- */
 export const swalConfirmDialog = async ({
   title = 'Confirmación',
   text = 'Confirma que desea realizar la acción',
@@ -57,38 +70,21 @@ export const swalConfirmDialog = async ({
   title?: string
   text?: string
 }): Promise<SweetAlertResult<any>> => {
+  const theme = getSwalTheme()
+
   return Swal.fire({
     title,
     html: text,
+    background: theme.background,
+    color: theme.color,
     showCancelButton: true,
     confirmButtonText: 'Si, Confirmar',
     cancelButtonText: 'Cancelar',
+    confirmButtonColor: theme.confirmButtonColor,
+    cancelButtonColor: theme.cancelButtonColor,
   })
 }
 
-/*
-await swalAsyncConfirmDialog({
-  title: `Inactivar al usuario ${row.usuario}`,
-  text: `Confirma que desea INACTIVAR al usuario ${row.nombres}, el usuario ya no podrá iniciar sesión`,
-  preConfirm: async () => {
-    return fetch(...args).catch((e) => {
-      swalException(e)
-      return false
-    })
-  },
-}).then((resp) => {
-  if (resp.isConfirmed) {
-    notSuccess(); setRowSelection({}); refetch();
-  }
-})
-*/
-/**
- * @description Confirmación para datos asincronos, usado para api rest, debe usar preConfirm(), y then
- * @author isi-template
- * @param title
- * @param text
- * @param preConfirm, función que retorna los datos del fetch, return api.save()
- */
 export const swalAsyncConfirmDialog = async ({
   title = 'Confirmación',
   text = 'Confirma que desea realizar la acción',
@@ -98,54 +94,53 @@ export const swalAsyncConfirmDialog = async ({
   text?: string
   preConfirm: ({ ...props }: any) => any
 }): Promise<SweetAlertResult<Awaited<any>>> => {
+  const theme = getSwalTheme()
+
   return Swal.fire({
     title,
+    html: text,
+    background: theme.background,
+    color: theme.color,
     showCancelButton: true,
     confirmButtonText: 'Confirmar',
     cancelButtonText: 'Cancelar',
-    cancelButtonColor: '#d33',
+    confirmButtonColor: theme.confirmButtonColor,
+    cancelButtonColor: theme.cancelButtonColor,
     backdrop: true,
-    html: text,
     didOpen: () => {
-      // @ts-ignore
-      if (Swal.getPopup().querySelector('button.swal2-confirm') !== null) {
-        // @ts-ignore
-        Swal.getPopup().querySelector('button.swal2-confirm').focus()
-      }
+      const btn = Swal.getPopup()?.querySelector('button.swal2-confirm') as HTMLButtonElement | null
+      if (btn) btn.focus()
     },
     showLoaderOnConfirm: true,
-    preConfirm, // allowOutsideClick: () => !Swal.isLoading()
+    preConfirm,
   })
 }
-/**
- * Creamos una carga de loading
- * @author isi-template
- */
+
 export const swalLoading = (mensaje?: string): void => {
+  const theme = getSwalTheme()
+
   Swal.fire({
     html: `<div class="nano-text">${mensaje || 'Procesando...'}</div>`,
-    width: '220px', // Ancho solicitado
-    padding: '13px 10px 10px', // Padding superior casi nulo (4px)
+    width: '220px',
+    padding: '13px 10px 10px',
+    background: theme.background,
+    color: theme.color,
     showConfirmButton: false,
-    allowOutsideClick: false, // Bloquea clic fuera
-    allowEscapeKey: false, // BLOQUEO DE TECLA ESC
-    background: '#fff',
-    backdrop: 'rgba(0,0,0,0.45)',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    backdrop: 'rgba(0,0,0,0.6)',
     timer: 60000,
     customClass: {
       popup: 'isi-swal-nano',
       htmlContainer: 'nano-html-override',
-      actions: 'nano-actions-override', // Clase para controlar el área del spinner
+      actions: 'nano-actions-override',
     },
     didOpen: () => {
       Swal.showLoading()
     },
-  }).then()
+  })
 }
-/**
- * Cerramos algun dialog abierto
- * @author isi-template
- */
+
 export const swalClose = () => {
   Swal.close()
 }

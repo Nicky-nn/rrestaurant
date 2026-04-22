@@ -438,7 +438,7 @@ const CategoryTab: FunctionComponent<CategoryTabProps> = memo(({ label, selected
 interface RrCategoriasProductosProps {
   espacios?: { _id?: string; descripcion?: string | null; default?: number | null }[]
   espacioSeleccionado?: string | null
-  onChangeEspacio?: (espacioId: string | null) => void
+  onChangeEspacio?: (espacioId: string | null, espacio?: any) => void
   onAddProduct?: (payload: {
     articulo: Articulo
     cantidad: number
@@ -488,11 +488,15 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
   const queryClient = useQueryClient()
   const registrarEspacioMutation = useRestEspacioRegistro({
     onSuccess: (data) => {
+      queryClient.setQueryData(['restEspacioPorSucursal', { codigoSucursal }], (old: any) => {
+        if (!old) return [data]
+        return [...old, data]
+      })
       queryClient.invalidateQueries({ queryKey: ['restEspacioPorSucursal'] })
       setOpenEspacioModal(false)
       setNuevoEspacioNombre('')
       setNuevoEspacioMesas(10)
-      onChangeEspacio?.(data._id as string)
+      onChangeEspacio?.(data._id as string, data)
     },
     onError: (err) => {
       alert('Error al crear espacio: ' + err.message)
