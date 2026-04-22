@@ -1,9 +1,4 @@
-import {
-  CancelOutlined,
-  DescriptionOutlined,
-  ManageAccountsOutlined,
-  PrintOutlined,
-} from '@mui/icons-material'
+import { CancelOutlined, DescriptionOutlined, Gesture, PrintOutlined } from '@mui/icons-material'
 import { Box, Chip, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
 import { FunctionComponent, useMemo, useState } from 'react'
 
@@ -26,6 +21,7 @@ import { ArticuloOperacion, RestPedido, RestPedidoConnection, RestPedidoFinaliza
 import { tableColumns } from './listado/TableRestPedidoHeaders.tsx'
 import RrCobroDialog, { PagoRealizado } from './registrar/RrCobroDialog'
 import RrGestionPedidoDialog from './registrar/RrGestionPedidoDialog'
+import RestAnularPedidoDialog from './RestAnularPedidoDialog'
 
 const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => {
   if (!productos.length) return <Typography variant="body2">Sin productos</Typography>
@@ -110,6 +106,8 @@ const RestGestion: FunctionComponent<Props> = () => {
   const [openCobro, setOpenCobro] = useState(false)
   const [openGestion, setOpenGestion] = useState(false)
   const [pedidoGestion, setPedidoGestion] = useState<RestPedido | null>(null)
+  const [openAnular, setOpenAnular] = useState(false)
+  const [pedidoAnular, setPedidoAnular] = useState<RestPedido | null>(null)
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
   const [descuento, setDescuento] = useState(0)
   const [giftcard, setGiftcard] = useState(0)
@@ -281,7 +279,7 @@ const RestGestion: FunctionComponent<Props> = () => {
       rowMenuActions: [
         {
           label: 'Gestionar',
-          icon: <ManageAccountsOutlined />,
+          icon: <Gesture />,
           onClick: ({ row }) => {
             if (row.state === 'COMPLETADO') {
               setPedidoGestion(row)
@@ -290,23 +288,32 @@ const RestGestion: FunctionComponent<Props> = () => {
               handleAbrirFacturar(row)
             }
           },
-          disabled: (row) => row.tipoDocumento !== 'NOTA_VENTA',
+          disabled: (row) =>
+            row.tipoDocumento !== 'NOTA_VENTA' || row.state === 'ANULADO' || row.state === 'CANCELADO',
         },
         {
           label: 'Generar Comanda',
           icon: <PrintOutlined />,
           onClick: () => {},
+          disabled: (row) => row.tipoDocumento !== 'NOTA_VENTA' || row.state !== 'COMPLETADO',
         },
         {
           label: 'Generar E. de Cuenta',
           icon: <DescriptionOutlined />,
-          onClick: () => {},
+          onClick: ({ row }) => {
+            // generar PDF
+          },
+          disabled: (row) => row.tipoDocumento !== 'NOTA_VENTA' || row.state !== 'COMPLETADO',
         },
         {
           label: 'Anular',
           icon: <CancelOutlined />,
           color: 'error' as const,
-          onClick: () => {},
+          onClick: ({ row }) => {
+            setPedidoAnular(row)
+            setOpenAnular(true)
+          },
+          // disabled: (row) => row.state !== 'FINALIZADO' || row.tipoDocumento !== 'NOTA_VENTA',
         },
       ],
       renderDetailPanel: (row) => <ProductosDetalle productos={row.productos ?? []} />,
@@ -369,6 +376,15 @@ const RestGestion: FunctionComponent<Props> = () => {
       <Box>
         <MrtDynamicTable config={config} {...restGestion} />
       </Box>
+
+      <RestAnularPedidoDialog
+        open={openAnular}
+        pedido={pedidoAnular}
+        onClose={(anulado) => {
+          setOpenAnular(false)
+          if (anulado) restGestion.refetch()
+        }}
+      />
 
       <RrGestionPedidoDialog
         open={openGestion}

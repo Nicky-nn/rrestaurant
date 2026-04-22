@@ -504,6 +504,18 @@ export interface KardexPeriodo {
 }
 
 /**
+ * Datos de entrada para registro de lotes en inventario
+ */
+export interface LoteInventarioInput {
+  /** Identificador interno del Lote */
+  loteId: string;
+  /** Código del lote */
+  codigoLote: string;
+  /** Cantidad de operacion - La sumatoria de cantidades debe ser igual a articuloPrecio.cantidad */
+  cantidad: number;
+}
+
+/**
  * Datos del tipo de articulo.
  */
 export interface Lote {
@@ -1108,8 +1120,10 @@ export interface ArticuloOperacionInput {
   codigoArticulo: string;
   /** Codigo de almacen */
   codigoAlmacen: string;
-  /** En caso de tener un lote */
+  /** En caso de tener un lote - Se deprecará en el futuro y se reemplaza por lotes */
   codigoLote?: string;
+  /** Lista de lotes que se debe afectar para el debito de stock */
+  lotes?: LoteInventarioInput[];
   /** Definición de cantidad, precios, unidad medida. */
   articuloPrecio: ArticuloPrecioOperacionInput;
   /** Reglas de negocio que permiten la modificación de la receta - Array vacío [] significa que es receta estandar sin modificaciones. */
@@ -1854,14 +1868,4 @@ export interface RestEspacioInput {
   atributo2?: string;
   atributo3?: string;
   atributo4?: string;
-}
-
-/**
- * Extensión de ArticuloOperacion con campos temporales que solo existen en el estado local del frontend.
- * Estos campos NUNCA se envían al backend — se usan solo para mover datos entre componentes React.
- */
-export interface ArticuloOperacionUI extends Omit<ArticuloOperacion, 'variacionReceta'> {
-  variacionReceta?: ArticuloOperacionReceta[] | ArticuloRecetaOperacionInput[];
-  _modificadoresInput?: ArticuloModificadorOperacionInput[];
-  _forceSnapshotUpdate?: number;
 }
