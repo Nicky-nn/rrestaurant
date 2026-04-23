@@ -53,9 +53,12 @@ const getPrecio = (art: Articulo): number => art.articuloPrecioBase?.monedaPrima
 
 const getSigla = (art: Articulo): string => art.articuloPrecioBase?.monedaPrimaria?.moneda?.sigla ?? 'Bs'
 
-// ─── Selección de modificador: articuloId → cantidad ─────────────────────────
+// ─── Selección de modificador: "gIdx::articuloId" → cantidad ────────────────
+// Clave compuesta para evitar colisiones cuando dos grupos tienen el mismo artículo.
 
 type ModificadorSeleccion = Record<string, number>
+
+const mkKey = (gIdx: number, artId: string) => `${gIdx}::${artId}`
 
 // ─── Stepper inline para cantidad ─────────────────────────────────────────────
 
@@ -271,9 +274,9 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     // Separar opciones elegibles y no elegibles seleccionadas
     const opcionesSeleccionadas = (grupo.opciones ?? [])
       .map((op, oIdx) => ({
-        artId: op.articulo?._id ?? `op-${gIdx}-${oIdx}`,
+        artId: mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`),
         precio: op.articulo ? getPrecio(op.articulo) : 0,
-        qty: modificadorSeleccion[op.articulo?._id ?? `op-${gIdx}-${oIdx}`] ?? 0,
+        qty: modificadorSeleccion[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0,
         // elegibleParaGratis siempre es boolean (nunca null/undefined)
         elegible: op.elegibleParaGratis === true,
       }))
@@ -350,45 +353,50 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
 
   // ── Handlers: modificadores (validación por grupo) ────────────────────────
   const setOpcionQty = (
+    gIdx: number,
     artId: string,
     delta: number,
     grupoOpciones: ArticuloModificadorOpcionOperacion[],
     maxSeleccion: number,
   ) => {
+    const key = mkKey(gIdx, artId)
     setModificadorSeleccion((prev) => {
-      const current = prev[artId] ?? 0
+      const current = prev[key] ?? 0
       const next = Math.max(0, current + delta)
 
       // Verificar límite máximo del GRUPO (no global)
       if (delta > 0 && maxSeleccion > 0) {
-        const totalGrupo = grupoOpciones.reduce((s, op) => s + (prev[op.articulo?._id ?? ''] ?? 0), 0)
+        const totalGrupo = grupoOpciones.reduce(
+          (s, op, oIdx) => s + (prev[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0),
+          0,
+        )
         if (totalGrupo >= maxSeleccion) return prev
       }
 
       // Actualizar orden de selección
       if (current === 0 && next > 0) {
         // Recién seleccionado: añadir al final del orden
-        setModificadorOrden((ord) => (ord.includes(artId) ? ord : [...ord, artId]))
+        setModificadorOrden((ord) => (ord.includes(key) ? ord : [...ord, key]))
       } else if (next === 0) {
         // Deseleccionado: quitar del orden
-        setModificadorOrden((ord) => ord.filter((id) => id !== artId))
+        setModificadorOrden((ord) => ord.filter((id) => id !== key))
       }
 
       if (next === 0) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { [artId]: _removed, ...rest } = prev
+        const { [key]: _removed, ...rest } = prev
         return rest
       }
-      return { ...prev, [artId]: next }
+      return { ...prev, [key]: next }
     })
   }
 
   // ── Validación: grupos obligatorios (minSeleccion > 0) ───────────────────
-  const puedeAgregar = (composicion?.modificadores ?? []).every((grupo) => {
+  const puedeAgregar = (composicion?.modificadores ?? []).every((grupo, gIdx) => {
     const minSel = grupo.minSeleccion ?? 0
     if (minSel === 0) return true
     const total = (grupo.opciones ?? []).reduce(
-      (s, op) => s + (modificadorSeleccion[op.articulo?._id ?? ''] ?? 0),
+      (s, op, oIdx) => s + (modificadorSeleccion[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0),
       0,
     )
     return total >= minSel
@@ -641,7 +649,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     const grupoOpciones = grupo.opciones ?? []
                     const totalSelGrupo = grupoOpciones.reduce(
                       (s, op, oIdx) =>
-                        s + (modificadorSeleccion[op.articulo?._id ?? `op-${gIdx}-${oIdx}`] ?? 0),
+                        s +
+                        (modificadorSeleccion[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0),
                       0,
                     )
                     const grupoLleno = maxSel > 0 && totalSelGrupo >= maxSel
@@ -653,8 +662,9 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     if (cuposGratisDisplay > 0) {
                       const candidatas = grupoOpciones
                         .map((op, oIdx) => ({
-                          artId: op.articulo?._id ?? `op-${gIdx}-${oIdx}`,
-                          qty: modificadorSeleccion[op.articulo?._id ?? `op-${gIdx}-${oIdx}`] ?? 0,
+                          artId: mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`),
+                          qty:
+                            modificadorSeleccion[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0,
                           precio: op.articulo ? getPrecio(op.articulo) : 0,
                           elegible: op.elegibleParaGratis === true,
                         }))
@@ -730,8 +740,9 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         >
                           {grupoOpciones.map((op: ArticuloModificadorOpcionOperacion, oIdx: number) => {
                             const artId = op.articulo?._id ?? `op-${gIdx}-${oIdx}`
+                            const selKey = mkKey(gIdx, artId)
                             const nombre = op.articulo?.nombreArticulo ?? 'Opción'
-                            const qty = modificadorSeleccion[artId] ?? 0
+                            const qty = modificadorSeleccion[selKey] ?? 0
                             const selected = qty > 0
                             const precio = op.articulo ? getPrecio(op.articulo) : 0
                             const opSigla = op.articulo ? getSigla(op.articulo) : sigla
@@ -760,14 +771,14 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             const maxAlcanzado = grupoLleno && !selected
                             const disabled = maxAlcanzado || sinStock
                             // Cuántas unidades cubiertas por el cupo gratuito del grupo
-                            const cubiertoPorGratis = freeQtyPerArt[artId] ?? 0
+                            const cubiertoPorGratis = freeQtyPerArt[selKey] ?? 0
                             const esCompletamenteGratis = selected && cubiertoPorGratis >= qty
                             const esParcialmenteGratis =
                               selected && cubiertoPorGratis > 0 && cubiertoPorGratis < qty
 
                             return (
                               <Box
-                                key={artId}
+                                key={selKey}
                                 sx={{
                                   display: 'flex',
                                   flexDirection: 'column',
@@ -796,7 +807,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                   userSelect: 'none',
                                 }}
                                 onClick={() => {
-                                  if (!disabled) setOpcionQty(artId, 1, grupoOpciones, maxSel)
+                                  if (!disabled) setOpcionQty(gIdx, artId, 1, grupoOpciones, maxSel)
                                 }}
                               >
                                 {/* Fila superior: nombre (izq) + precio (der) */}
@@ -901,8 +912,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                   <QtyStepperInline
                                     qty={qty}
                                     maxReached={grupoLleno || sinStock}
-                                    onIncrement={() => setOpcionQty(artId, 1, grupoOpciones, maxSel)}
-                                    onDecrement={() => setOpcionQty(artId, -1, grupoOpciones, maxSel)}
+                                    onIncrement={() => setOpcionQty(gIdx, artId, 1, grupoOpciones, maxSel)}
+                                    onDecrement={() => setOpcionQty(gIdx, artId, -1, grupoOpciones, maxSel)}
                                   />
                                 </Box>
                               </Box>
@@ -1087,7 +1098,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
 
                 // ── 3. modificadoresInput: opciones seleccionadas del grupo de modificador ──
                 const modificadoresInput: ArticuloModificadorOperacionInput[] = []
-                ;(composicion?.modificadores ?? []).forEach((grupo) => {
+                ;(composicion?.modificadores ?? []).forEach((grupo, gIdx) => {
                   // ── Calcular gratuidad POR GRUPO (una sola vez, no por opción) ──────────
                   // Regla backend: esOpcionGratuita:true solo si op.elegibleParaGratis=true
                   // y cabe dentro de los cupos disponibles del grupo.
@@ -1098,12 +1109,12 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                       (o) =>
                         // elegibleParaGratis siempre es boolean (nunca null/undefined)
                         o.elegibleParaGratis === true &&
-                        (modificadorSeleccion[o.articulo?._id ?? ''] ?? 0) > 0,
+                        (modificadorSeleccion[mkKey(gIdx, o.articulo?._id ?? '')] ?? 0) > 0,
                     )
                     .map((o) => ({
-                      artId: o.articulo?._id ?? '',
+                      artId: mkKey(gIdx, o.articulo?._id ?? ''),
                       precio: o.articulo ? getPrecio(o.articulo) : 0,
-                      qty: modificadorSeleccion[o.articulo?._id ?? ''] ?? 0,
+                      qty: modificadorSeleccion[mkKey(gIdx, o.articulo?._id ?? '')] ?? 0,
                     }))
                     .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId)) // primer seleccionado = primero en gratis
 
@@ -1122,7 +1133,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     opcionesConElegibilidad: (grupo.opciones ?? []).map((o) => ({
                       nombre: o.articulo?.nombreArticulo,
                       elegibleParaGratis: o.elegibleParaGratis,
-                      seleccionado: modificadorSeleccion[o.articulo?._id ?? ''] ?? 0,
+                      seleccionado: modificadorSeleccion[mkKey(gIdx, o.articulo?._id ?? '')] ?? 0,
                     })),
                     cuposAsignados: Object.fromEntries(cuposAsignados),
                   })
@@ -1130,7 +1141,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                   // ── Construir payload por cada opción seleccionada ────────────────────
                   ;(grupo.opciones ?? []).forEach((op) => {
                     const artId = op.articulo?._id ?? ''
-                    const qty = modificadorSeleccion[artId] ?? 0
+                    const qty = modificadorSeleccion[mkKey(gIdx, artId)] ?? 0
                     if (qty === 0 || !op.articulo) return
 
                     const baseComp = articuloToArticuloOperacionInputService(

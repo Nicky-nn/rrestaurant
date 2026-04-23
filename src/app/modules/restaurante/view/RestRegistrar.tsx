@@ -565,6 +565,7 @@ const RestRegistrar: FunctionComponent = () => {
           const pedidoEnriquecido = pedidoRetornado
             ? {
                 ...pedidoRetornado,
+                nota: pedidoRetornado.nota || prev.pedido?.nota || '',
                 productos: (pedidoRetornado.productos ?? []).map((serverProd: any) => {
                   if (!serverProd.modificadores?.length) return serverProd
 
@@ -680,6 +681,21 @@ const RestRegistrar: FunctionComponent = () => {
     })
   }, [])
 
+  const handleNotaChange = useCallback((nota: string) => {
+    setIsPedidoDirty(true)
+    setMesaSeleccionada((prev) => {
+      if (!prev) return prev
+      const pedidoActual = prev.pedido || { productos: [] }
+      return {
+        ...prev,
+        pedido: {
+          ...pedidoActual,
+          nota,
+        } as any,
+      }
+    })
+  }, [])
+
   return (
     <>
       <AperturaCajaDialog open={sinCaja} onSuccess={() => {}} />
@@ -737,6 +753,7 @@ const RestRegistrar: FunctionComponent = () => {
               onUpdateProduct={handleUpdateProduct}
               onRemoveProduct={handleRemoveProduct}
               onClientChange={handleClientChange}
+              onNotaChange={handleNotaChange}
             />
           </Box>
           <Box sx={{ flexShrink: 0, mt: 'auto' }}>

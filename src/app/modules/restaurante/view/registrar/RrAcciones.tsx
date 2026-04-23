@@ -34,10 +34,12 @@ import {
   ArticuloOperacionReceta,
   ArticuloOperacionUI,
   ArticuloRecetaOperacionInput,
+  RestPedido,
   RestPedidoExpressInput,
   RestPedidoFinalizarInput,
 } from '../../types'
 import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
+import RrComandaAutoViewer from './RrComandaAutoViewer'
 import RrDividirCuentaDialog from './RrDividirCuentaDialog'
 import RrTransferirMesaDialog from './RrTransferirMesaDialog'
 
@@ -131,7 +133,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             const pUI = p as ArticuloOperacionUI
             const vrArr = pUI.variacionReceta ?? []
             if (vrArr.length === 0) return undefined
-            return vrArr.map((v) => {
+            return vrArr.map((v: ArticuloOperacionReceta) => {
               // Items locales (de UI) son ArticuloRecetaOperacionInput; items del servidor son ArticuloOperacionReceta
               const asInput = v as ArticuloRecetaOperacionInput
               const asServer = v as ArticuloOperacionReceta
@@ -262,6 +264,10 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       }
 
       if (onSuccess) onSuccess(response)
+      setComandaPedido({
+        ...(response as RestPedido),
+        nota: input.nota || (response as RestPedido)?.nota || '',
+      })
       return response
     } catch (error) {
       console.error('Error al registrar pedido', error)
@@ -398,7 +404,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             const pUI = p as ArticuloOperacionUI
             const vrArr = pUI.variacionReceta ?? []
             if (vrArr.length === 0) return undefined
-            return vrArr.map((v) => {
+            return vrArr.map((v: ArticuloOperacionReceta) => {
               const asInput = v as ArticuloRecetaOperacionInput
               const asServer = v as ArticuloOperacionReceta
               const codigoAlmacen = asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0'
@@ -704,6 +710,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   }
 
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
+  const [comandaPedido, setComandaPedido] = useState<RestPedido | null>(null)
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1007,6 +1014,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           isPending={isActualizarPending}
         />
       )}
+
+      {/* Comanda automática al registrar/actualizar */}
+      <RrComandaAutoViewer pedido={comandaPedido} onClose={() => setComandaPedido(null)} />
     </Box>
   )
 }

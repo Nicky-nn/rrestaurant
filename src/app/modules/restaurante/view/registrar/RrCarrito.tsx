@@ -64,6 +64,7 @@ interface RrCarritoProps {
   onUpdateProduct?: (index: number, updatedItem: ArticuloOperacion) => void
   onRemoveProduct?: (index: number) => void
   onClientChange?: (cliente: any) => void
+  onNotaChange?: (nota: string) => void
 }
 
 const RrCarrito: FunctionComponent<RrCarritoProps> = ({
@@ -71,6 +72,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
   onUpdateProduct,
   onRemoveProduct,
   onClientChange,
+  onNotaChange,
 }) => {
   const theme = useTheme()
   const [openOpciones, setOpenOpciones] = useState(false)
@@ -421,7 +423,10 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
               maxRows={4}
               placeholder="Notas"
               value={notaGeneral}
-              onChange={(e) => setNotaGeneral(e.target.value)}
+              onChange={(e) => {
+                setNotaGeneral(e.target.value)
+                onNotaChange?.(e.target.value)
+              }}
               InputProps={{
                 sx: {
                   fontSize: '0.85rem',
@@ -558,13 +563,19 @@ const CartItem = ({
     nota !== originalNota ||
     descuentoNum !== 0
 
-  const extras =
-    item.modificadores
-      ?.map((m) => ({
-        nombre: m.nombreArticulo,
-        cantidad: m.articuloPrecio?.cantidad ?? 1,
-      }))
-      .filter((extra) => Boolean(extra.nombre)) ?? []
+  const extras = Object.values(
+    (item.modificadores ?? [])
+      .filter((m) => Boolean(m.nombreArticulo))
+      .reduce<Record<string, { nombre: string; cantidad: number }>>((acc, m) => {
+        const key = m.nombreArticulo!
+        if (acc[key]) {
+          acc[key].cantidad += m.articuloPrecio?.cantidad ?? 1
+        } else {
+          acc[key] = { nombre: key, cantidad: m.articuloPrecio?.cantidad ?? 1 }
+        }
+        return acc
+      }, {}),
+  )
   const notaRapidas = item.notaRapida?.map((nr) => nr.valor).filter(Boolean) || []
 
   // Custom notes separated by comma or dot

@@ -222,12 +222,32 @@ const RrGestionPedidoDialog: FunctionComponent<RrGestionPedidoDialogProps> = ({ 
     })
   }, [])
 
+  const handleNotaChange = useCallback((nota: string) => {
+    setIsPedidoDirty(true)
+    setMesaSeleccionada((prev) => {
+      if (!prev) return null
+      return {
+        ...prev,
+        pedido: {
+          ...(prev.pedido || { productos: [] }),
+          nota,
+        } as any,
+      }
+    })
+  }, [])
+
   const handleSuccess = useCallback((pedidoRetornado?: any) => {
     setSnackbar((s) => ({ open: true, message: 'Pedido actualizado exitosamente', key: s.key + 1 }))
     setIsPedidoDirty(false)
     if (pedidoRetornado) {
       setMesaSeleccionada((prev) =>
-        prev ? { ...prev, _id: pedidoRetornado._id || prev._id, pedido: pedidoRetornado } : prev,
+        prev
+          ? {
+              ...prev,
+              _id: pedidoRetornado._id || prev._id,
+              pedido: { ...pedidoRetornado, nota: pedidoRetornado.nota || prev?.pedido?.nota || '' },
+            }
+          : prev,
       )
     }
   }, [])
@@ -263,6 +283,7 @@ const RrGestionPedidoDialog: FunctionComponent<RrGestionPedidoDialogProps> = ({ 
                 onUpdateProduct={handleUpdateProduct}
                 onRemoveProduct={handleRemoveProduct}
                 onClientChange={handleClientChange}
+                onNotaChange={handleNotaChange}
               />
             </Box>
             <Box sx={{ flexShrink: 0 }}>
