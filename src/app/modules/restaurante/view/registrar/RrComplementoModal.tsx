@@ -269,7 +269,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   //     (el campo siempre llega como boolean desde el servidor)
   //   - Los cupos se asignan según el orden de selección (primero en marcar = primero en gratis)
   const precioModificadoresExtra = (composicion?.modificadores ?? []).reduce((accGrupo, grupo, gIdx) => {
-    const cuposGratis = grupo.opcionesGratuitas ?? 0
+    const cuposGratis = (grupo.opcionesGratuitas ?? 0) * cantidad
 
     // Separar opciones elegibles y no elegibles seleccionadas
     const opcionesSeleccionadas = (grupo.opciones ?? [])
@@ -399,7 +399,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
       (s, op, oIdx) => s + (modificadorSeleccion[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0),
       0,
     )
-    return total >= minSel
+    return total >= minSel * cantidad
   })
 
   // ── Imagen del artículo ───────────────────────────────────────────────────
@@ -645,7 +645,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                 <Box sx={{ mb: 2.5 }}>
                   {(composicion?.modificadores ?? []).map((grupo, gIdx) => {
                     const esObligatorio = (grupo.minSeleccion ?? 0) > 0
-                    const maxSel = grupo.maxSeleccion ?? 0
+                    const maxSel = (grupo.maxSeleccion ?? 0) * cantidad
                     const grupoOpciones = grupo.opciones ?? []
                     const totalSelGrupo = grupoOpciones.reduce(
                       (s, op, oIdx) =>
@@ -654,10 +654,10 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                       0,
                     )
                     const grupoLleno = maxSel > 0 && totalSelGrupo >= maxSel
-                    const minAlcanzado = totalSelGrupo >= (grupo.minSeleccion ?? 0)
+                    const minAlcanzado = totalSelGrupo >= (grupo.minSeleccion ?? 0) * cantidad
 
                     // Calcular cuántas unidades de cada opción son cubiertas por los cupos gratuitos
-                    const cuposGratisDisplay = grupo.opcionesGratuitas ?? 0
+                    const cuposGratisDisplay = (grupo.opcionesGratuitas ?? 0) * cantidad
                     const freeQtyPerArt: Record<string, number> = {}
                     if (cuposGratisDisplay > 0) {
                       const candidatas = grupoOpciones
@@ -703,7 +703,9 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                           {esObligatorio && (
                             <Chip
                               label={
-                                minAlcanzado ? `✓ Mín. ${grupo.minSeleccion}` : `Mín. ${grupo.minSeleccion}`
+                                minAlcanzado
+                                  ? `✓ Mín. ${(grupo.minSeleccion ?? 0) * cantidad}`
+                                  : `Mín. ${(grupo.minSeleccion ?? 0) * cantidad}`
                               }
                               size="small"
                               color={minAlcanzado ? 'success' : 'warning'}
@@ -722,7 +724,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                           )}
                           {(grupo.opcionesGratuitas ?? 0) > 0 && (
                             <Chip
-                              label={`${grupo.opcionesGratuitas} gratis`}
+                              label={`${(grupo.opcionesGratuitas ?? 0) * cantidad} gratis`}
                               size="small"
                               color="success"
                               sx={{ height: 18, fontSize: '0.6rem' }}
