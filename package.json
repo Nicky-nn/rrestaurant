@@ -65,6 +65,7 @@
     "mui-file-input": "^7.0.0",
     "nanoid": "^5.1.5",
     "pdfmake": "^0.3.7",
+    "print-js": "^1.6.0",
     "rc-input-number": "^9.5.0",
     "react": "^19.1.1",
     "react-datepicker": "^8.7.0",

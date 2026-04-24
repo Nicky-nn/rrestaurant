@@ -39,9 +39,9 @@ import {
   RestPedidoFinalizarInput,
 } from '../../types'
 import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
-import RrComandaAutoViewer from './RrComandaAutoViewer'
 import RrDividirCuentaDialog from './RrDividirCuentaDialog'
 import RrTransferirMesaDialog from './RrTransferirMesaDialog'
+import { useComandaPdf } from './useComandaPdf'
 
 interface RrAccionesProps {
   mesaSeleccionada?: MesaUI | null
@@ -257,19 +257,21 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       }
 
       if (isNuevo) {
-        console.log('Registrando nuevo pedido con datos', basePayload)
         response = await registrarPedido(basePayload)
-        console.log('Pedido registrado con datos', response)
       } else {
         response = await actualizarPedido({ id: pedido._id!, ...basePayload })
-        console.log('Pedido actualizado con datos', basePayload)
       }
 
       if (onSuccess) onSuccess(response)
-      setComandaPedido({
+      const pedidoParaComanda: RestPedido = {
         ...(response as RestPedido),
         nota: input.nota || (response as RestPedido)?.nota || '',
-      })
+      }
+      try {
+        await imprimirComanda(pedidoParaComanda)
+      } catch (err) {
+        showError(new MyGraphQlError(err instanceof Error ? err : new Error('Error al imprimir comanda')))
+      }
       return response
     } catch (error) {
       console.error('Error al registrar pedido', error)
@@ -716,7 +718,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   }
 
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
-  const [comandaPedido, setComandaPedido] = useState<RestPedido | null>(null)
+  const { imprimirComanda } = useComandaPdf()
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1020,9 +1022,6 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           isPending={isActualizarPending}
         />
       )}
-
-      {/* Comanda automática al registrar/actualizar */}
-      <RrComandaAutoViewer pedido={comandaPedido} onClose={() => setComandaPedido(null)} />
     </Box>
   )
 }
