@@ -21,7 +21,11 @@ export interface RrTransferirMesaDialogProps {
   open: boolean
   onClose: () => void
   mesaSeleccionada: MesaUI
-  onTransferir: (nuevaMesaNombre: string, nuevoUbicacionId: string | null) => Promise<any>
+  onTransferir: (
+    nuevaMesaNombre: string,
+    nuevoUbicacionId: string | null,
+    nuevoUbicacionNombre: string | null,
+  ) => Promise<any>
   user: any
   isPending?: boolean
 }
@@ -175,7 +179,11 @@ const RrTransferirMesaDialog: FunctionComponent<RrTransferirMesaDialogProps> = (
         </Button>
         <Button
           variant="contained"
-          onClick={() => onTransferir(mesaDestino, espacioId === 'salon_principal' ? null : espacioId)}
+          onClick={() => {
+            const isMain = espacioId === 'salon_principal'
+            const nombre = isMain ? null : (espacios.find((e) => e._id === espacioId)?.descripcion ?? null)
+            onTransferir(mesaDestino, isMain ? null : espacioId, nombre)
+          }}
           disabled={!mesaDestino || isPending}
           disableElevation
         >

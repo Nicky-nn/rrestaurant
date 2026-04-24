@@ -298,25 +298,29 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
       direccion: clienteDividido?.direccion,
     }
 
-    // 1. Registrar NUEVO pedido
+    // Leer ubicación una sola vez para usarla en ambos pedidos
+    const cachedUbicacion = localStorage.getItem('ubicacion')
+    const ubicacionParsed = cachedUbicacion ? JSON.parse(cachedUbicacion) : null
+    const ubicacionId = ubicacionParsed?._id ?? null
+    const ubicacionNombre = ubicacionParsed?.descripcion ?? undefined
+
+    // 1. Registrar NUEVO pedido (misma ubicación que el original)
     const nuevoPedido = await registrarPedido({
       entidad,
       cliente: clienteInput,
       input: {
-        mesa: { nombre: mesaNuevaNombre, ubicacion: null, nroComensales: 1 },
+        mesa: { nombre: mesaNuevaNombre, ubicacion: ubicacionNombre, nroComensales: 1 },
         productos: buildProductosInput(productosSeleccionados),
         codigoMoneda: user.moneda.codigo,
         tipoCambio: user.moneda.tipoCambio || 1,
         tipo: null,
         nota: `División de ${mesaSeleccionada.label}`,
-        espacioId: null,
+        espacioId: ubicacionId,
         atributo4: 'fromDivision:true',
       },
     })
 
     // 2. Actualizar pedido ORIGINAL
-    const cachedUbicacion = localStorage.getItem('ubicacion')
-    const ubicacionId = cachedUbicacion ? JSON.parse(cachedUbicacion)._id : null
 
     const pedidoActualizado = await actualizarPedido({
       id: mesaSeleccionada.pedido._id,
@@ -331,7 +335,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
       input: {
         mesa: {
           nombre: mesaSeleccionada.value,
-          ubicacion: ubicacionId,
+          ubicacion: ubicacionNombre,
           nroComensales: 1,
         },
         productos: buildProductosInput(productosRestantes),
@@ -516,7 +520,6 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
     if (c) setClienteDividido(c)
   }, [])
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChangeEditable = useCallback((mods: any) => {
     if (mods) {
       setClienteDividido((prev) => {

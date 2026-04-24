@@ -97,12 +97,14 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
     console.log('Preparando datos para registrar/actualizar pedido', { pedido })
     try {
       const cachedUbicacion = localStorage.getItem('ubicacion')
-      const ubicacionId = cachedUbicacion ? JSON.parse(cachedUbicacion)._id : null
+      const ubicacionParsed = cachedUbicacion ? JSON.parse(cachedUbicacion) : null
+      const ubicacionId = ubicacionParsed?._id ?? null
+      const ubicacionNombre = ubicacionParsed?.descripcion ?? undefined
 
       const input: RestPedidoExpressInput = {
         mesa: {
           nombre: mesaNombre,
-          ubicacion: ubicacionId ?? undefined,
+          ubicacion: ubicacionNombre,
           nroComensales: 1,
         },
         productos: (pedido.productos ?? []).map((p) => ({
@@ -364,7 +366,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
     }
   }
 
-  const handleTransferirSubmit = async (nuevoMesaNombre: string, nuevoUbicacionId: string | null) => {
+  const handleTransferirSubmit = async (
+    nuevoMesaNombre: string,
+    nuevoUbicacionId: string | null,
+    nuevoUbicacionNombre: string | null,
+  ) => {
     if (!mesaSeleccionada?.pedido) return false
     const { pedido } = mesaSeleccionada
 
@@ -372,7 +378,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       const input: RestPedidoExpressInput = {
         mesa: {
           nombre: nuevoMesaNombre,
-          ubicacion: nuevoUbicacionId ?? undefined,
+          ubicacion: nuevoUbicacionNombre ?? undefined,
           nroComensales: 1,
         },
         productos: (pedido.productos ?? []).map((p) => ({

@@ -33,17 +33,30 @@ const formatFechaHora = (raw?: string) => {
 
 const getUbicacionLabel = (pedido: RestPedido): string => {
   // Intentar obtener descripción del área desde localStorage
+  const rawUbicacion = pedido.mesa?.ubicacion
+  // Detectar si el valor es un ObjectId de MongoDB (24 chars hex) — nunca mostrarlo
+  const isObjectId = (val?: string) => Boolean(val && /^[0-9a-fA-F]{24}$/.test(val))
+
   try {
     const cached = localStorage.getItem('ubicacion')
     if (cached) {
       const parsed = JSON.parse(cached)
-      if (parsed?.descripcion) return parsed.descripcion
+      if (rawUbicacion) {
+        // Si el ID coincide con el del localStorage, usar descripción
+        if (parsed?._id === rawUbicacion && parsed?.descripcion) return parsed.descripcion
+        // Si el valor es un ObjectId crudo sin coincidencia en cache, usar 'Salón'
+        if (isObjectId(rawUbicacion)) return parsed?.descripcion ?? 'Salón'
+      } else if (parsed?.descripcion) {
+        // Sin ubicacion en el pedido (salón principal)
+        return parsed.descripcion
+      }
     }
   } catch {
     // ignorar
   }
-  // Fallback: ubicacion de mesa, espacio o tipo
-  return pedido.mesa?.ubicacion ?? pedido.espacio ?? pedido.tipo ?? 'Salón'
+  // Nunca exponer un ObjectId crudo al usuario
+  if (isObjectId(rawUbicacion)) return 'Salón'
+  return rawUbicacion ?? pedido.espacio ?? pedido.tipo ?? 'Salón'
 }
 
 const buildComandaDefinition = (pedido: RestPedido) => {

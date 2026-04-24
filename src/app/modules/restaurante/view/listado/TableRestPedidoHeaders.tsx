@@ -19,6 +19,13 @@ export const tableColumns: MRT_ColumnDef<RestPedido>[] = [
     Cell: ({ row }) => `${row.original.numeroOrden ?? '-'} / ${row.original.mesa?.nombre ?? '-'}`,
   },
   {
+    accessorKey: 'Ubicacion',
+    header: 'Ubicación',
+    size: 130,
+    enableSorting: false,
+    Cell: ({ row }) => row.original.mesa?.ubicacion ?? 'S. Principal',
+  },
+  {
     id: 'productos',
     accessorFn: (row) => (row.productos?.length ? `${row.productos.length} producto(s)` : 'Sin productos'),
     header: 'Producto',

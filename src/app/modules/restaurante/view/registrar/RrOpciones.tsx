@@ -627,16 +627,24 @@ const RrOpciones: FunctionComponent<RrOpcionesProps> = ({
         {tipoPedidoLocal === TIPO_PEDIDO.SALON &&
           (() => {
             const getAreaUbicacion = (): string => {
-              if (mesaSeleccionada?.pedido?.mesa?.ubicacion) {
-                return mesaSeleccionada.pedido.mesa.ubicacion
-              }
+              const rawUbicacion = mesaSeleccionada?.pedido?.mesa?.ubicacion
+              const isObjectId = (val?: string) => Boolean(val && /^[0-9a-fA-F]{24}$/.test(val))
               try {
                 const cached = localStorage.getItem('ubicacion')
-                if (cached) return JSON.parse(cached)?.descripcion || 'Principal'
+                if (cached) {
+                  const parsed = JSON.parse(cached)
+                  if (rawUbicacion) {
+                    if (parsed?._id === rawUbicacion && parsed?.descripcion) return parsed.descripcion
+                    if (isObjectId(rawUbicacion)) return parsed?.descripcion ?? 'Principal'
+                  } else if (parsed?.descripcion) {
+                    return parsed.descripcion
+                  }
+                }
               } catch {
                 /* ignorar */
               }
-              return 'Principal'
+              if (isObjectId(rawUbicacion)) return 'Principal'
+              return rawUbicacion ?? 'Principal'
             }
 
             return (
