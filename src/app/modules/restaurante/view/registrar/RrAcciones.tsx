@@ -258,6 +258,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
       if (isNuevo) {
         response = await registrarPedido(basePayload)
+        console.log('Pedido registrado exitosamente', { response })
       } else {
         response = await actualizarPedido({ id: pedido._id!, ...basePayload })
       }

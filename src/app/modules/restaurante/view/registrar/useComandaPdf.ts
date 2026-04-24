@@ -87,7 +87,7 @@ const buildComandaDefinition = (pedido: RestPedido) => {
     pageSize: { width: 180, height: 'auto' },
     pageMargins: [0, 0, 0, 0],
     content: [
-      { text: 'COMANDA', style: 'header' },
+      { text: 'COMANDA', style: 'headerStar' },
       { text: `CLIENTE: ${cliente}`, style: 'subheader' },
       { text: `MESA: ${mesa} - ORDEN: ${orden}`, style: 'subheader' },
       { text: `Ubc.: ${ubicacion}`, style: 'subheader' },
@@ -118,6 +118,13 @@ const buildComandaDefinition = (pedido: RestPedido) => {
         bold: true,
         alignment: 'center',
         margin: [0, 0, 0, 2],
+      },
+      headerStar: {
+        fontSize: 9,
+        bold: true,
+        alignment: 'center',
+        margin: [0, 0, 0, 2],
+        decoration: 'underline',
       },
       subheader: {
         fontSize: 7,
