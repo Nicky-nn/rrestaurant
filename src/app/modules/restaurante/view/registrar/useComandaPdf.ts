@@ -43,6 +43,53 @@ const buildComandaDefinition = (pedido: RestPedido) => {
   const nota = pedido.nota ?? ''
   const usuario = pedido.usucre ?? ''
 
+  // Regla backend:
+  // - ultimaTransaccion.articulos guarda snapshot ANTES del cambio
+  // - productos guarda estado ACTUAL
+  // Para detectar cambio real, comparar snapshot vs actual en tiempo real.
+  const snapshotArticulos = pedido.ultimaTransaccion?.articulos ?? []
+  const productosActuales = pedido.productos ?? []
+
+  const getKey = (prod: any) => `${prod.articuloId ?? ''}-${prod.nroItem ?? 0}-${prod.codigoArticulo ?? ''}`
+  const getCantidad = (prod: any) => prod.articuloPrecio?.cantidad ?? prod.articuloPrecioBase?.cantidad ?? 1
+
+  const buildIndex = (items: any[]) => {
+    const index = new Map<string, { prod: any; cantidad: number }>()
+    items.forEach((prod) => {
+      const key = getKey(prod)
+      const prev = index.get(key)
+      const cantidad = getCantidad(prod)
+      if (prev) {
+        prev.cantidad += cantidad
+      } else {
+        index.set(key, { prod, cantidad })
+      }
+    })
+    return index
+  }
+
+  const snapshotIndex = buildIndex(snapshotArticulos)
+  const actualIndex = buildIndex(productosActuales)
+
+  const keys = new Set([...snapshotIndex.keys(), ...actualIndex.keys()])
+  const cambios = Array.from(keys)
+    .map((key) => {
+      const prev = snapshotIndex.get(key)
+      const curr = actualIndex.get(key)
+      const cantPrev = prev?.cantidad ?? 0
+      const cantCurr = curr?.cantidad ?? 0
+
+      if (cantPrev === cantCurr) return null
+      if (cantPrev === 0) return { tipo: 'NUEVO' as const, delta: cantCurr, prod: curr?.prod }
+      if (cantCurr === 0) return { tipo: 'ELIMINADO' as const, delta: -cantPrev, prod: prev?.prod }
+      return { tipo: 'ACTUALIZADO' as const, delta: cantCurr - cantPrev, prod: curr?.prod }
+    })
+    .filter(Boolean) as Array<{ tipo: 'NUEVO' | 'ACTUALIZADO' | 'ELIMINADO'; delta: number; prod: any }>
+
+  const esModificacion = snapshotArticulos.length > 0 && cambios.length > 0
+
+  const subTituloMod = esModificacion ? '** MODIFICACION **' : null
+
   const body: any[] = [
     [
       { text: 'CANT', style: 'tableHeader' },
@@ -50,14 +97,10 @@ const buildComandaDefinition = (pedido: RestPedido) => {
     ],
   ]
 
-  ;(pedido.productos ?? []).forEach((prod) => {
-    const nombre = prod.nombreArticulo ?? 'Producto'
-    const cantidad = prod.articuloPrecio?.cantidad ?? prod.articuloPrecioBase?.cantidad ?? 1
-
-    let detalle = nombre
-
+  const buildDetalle = (prod: any, detallePrefijo = '') => {
+    let detalle = detallePrefijo + (prod.nombreArticulo ?? 'Producto')
     const mods = Object.entries(
-      (prod.modificadores ?? []).reduce<Record<string, number>>((acc, m) => {
+      ((prod.modificadores ?? []) as any[]).reduce((acc: Record<string, number>, m: any) => {
         const key = m.nombreArticulo ?? ''
         if (!key) return acc
         acc[key] = (acc[key] || 0) + (m.articuloPrecio?.cantidad ?? 1)
@@ -69,25 +112,70 @@ const buildComandaDefinition = (pedido: RestPedido) => {
       detalle += `\n  + ${mods.join(', ')}`
     }
 
-    const notas = (prod.notaRapida ?? []).map((n) => n.valor).filter(Boolean)
-
+    const notas = ((prod.notaRapida ?? []) as any[]).map((n: any) => n.valor).filter(Boolean)
     if (prod.nota) notas.unshift(prod.nota)
-
     if (notas.length) {
       detalle += `\n  ※ ${notas.join(' | ')}`
     }
 
-    body.push([
-      { text: String(cantidad), style: 'tdCant' },
-      { text: detalle, style: 'tdDet' },
-    ])
-  })
+    return detalle
+  }
+
+  // Organizar por categoría para mejor claridad al chef
+  const itemsPorCategoria = {
+    nuevos: [] as any[],
+    cambios: [] as any[],
+    cancelados: [] as any[],
+    normales: [] as any[],
+  }
+
+  if (esModificacion) {
+    cambios.forEach((cambio) => {
+      const prod = cambio.prod
+      if (!prod) return
+
+      if (cambio.tipo === 'NUEVO') {
+        itemsPorCategoria.nuevos.push([
+          { text: `+${cambio.delta}`, style: 'tdCantNuevo' },
+          { text: buildDetalle(prod), style: 'tdDetNuevo' },
+        ])
+      } else if (cambio.tipo === 'ELIMINADO') {
+        itemsPorCategoria.cancelados.push([
+          { text: String(cambio.delta), style: 'tdCantElim' },
+          { text: buildDetalle(prod), style: 'tdDetElim' },
+        ])
+      } else {
+        itemsPorCategoria.cambios.push([
+          { text: cambio.delta > 0 ? `+${cambio.delta}` : String(cambio.delta), style: 'tdCantEdit' },
+          { text: buildDetalle(prod), style: 'tdDetEdit' },
+        ])
+      }
+    })
+  } else {
+    productosActuales.forEach((prod) => {
+      const cant = getCantidad(prod)
+      itemsPorCategoria.normales.push([
+        { text: String(cant), style: 'tdCant' },
+        { text: buildDetalle(prod), style: 'tdDet' },
+      ])
+    })
+  }
+
+  // Agregar items de forma compacta (sin secciones) para ahorrar espacio de papel
+  if (esModificacion) {
+    body.push(...itemsPorCategoria.nuevos)
+    body.push(...itemsPorCategoria.cambios)
+    body.push(...itemsPorCategoria.cancelados)
+  } else {
+    body.push(...itemsPorCategoria.normales)
+  }
 
   return {
     pageSize: { width: 180, height: 'auto' },
     pageMargins: [0, 0, 0, 0],
     content: [
-      { text: 'COMANDA', style: 'headerStar' },
+      { text: 'COMANDA', style: 'header' },
+      subTituloMod ? { text: subTituloMod, style: 'subMod' } : {},
       { text: `CLIENTE: ${cliente}`, style: 'subheader' },
       { text: `MESA: ${mesa} - ORDEN: ${orden}`, style: 'subheader' },
       { text: `Ubc.: ${ubicacion}`, style: 'subheader' },
@@ -119,12 +207,12 @@ const buildComandaDefinition = (pedido: RestPedido) => {
         alignment: 'center',
         margin: [0, 0, 0, 2],
       },
-      headerStar: {
-        fontSize: 9,
+      subMod: {
+        fontSize: 8,
         bold: true,
         alignment: 'center',
         margin: [0, 0, 0, 2],
-        decoration: 'underline',
+        italics: true,
       },
       subheader: {
         fontSize: 7,
@@ -139,15 +227,31 @@ const buildComandaDefinition = (pedido: RestPedido) => {
         bold: true,
         alignment: 'center',
       },
-      tdCant: {
+      seccionHeader: {
+        fontSize: 8,
+        bold: true,
+        alignment: 'left',
+        margin: [0, 2, 0, 1],
+        fillColor: '#f5f5f5',
+      },
+      // --- Normal ---
+      tdCant: { fontSize: 8, bold: true, alignment: 'center' },
+      tdDet: { fontSize: 7, bold: true },
+      // --- NUEVO ---
+      tdCantNuevo: { fontSize: 10, bold: true, alignment: 'center' },
+      tdDetNuevo: { fontSize: 8, bold: true },
+      // --- ACTUALIZADO ---
+      tdCantEdit: { fontSize: 9, bold: true, alignment: 'center', italics: true },
+      tdDetEdit: { fontSize: 8, bold: true, italics: true },
+      // --- ELIMINADO ---
+      tdCantElim: {
         fontSize: 8,
         bold: true,
         alignment: 'center',
+        decoration: 'lineThrough',
+        color: '#999999',
       },
-      tdDet: {
-        fontSize: 7,
-        bold: true,
-      },
+      tdDetElim: { fontSize: 7, bold: true, decoration: 'lineThrough', color: '#999999' },
     },
     defaultStyle: {
       fontSize: 6,
