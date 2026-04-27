@@ -513,7 +513,7 @@ const CartItem = ({
 
   const originalCortesia = !!item.cortesia
   const originalPrecio = item.articuloPrecio?.valor ?? 0
-  const originalNota = item.nota || ''
+  const originalNota = item.nota || (item as any).detalleExtra || ''
 
   // Leemos la cantidad siempre desde el prop (estado global de RestRegistrar)
   const cantidad = item.articuloPrecio?.cantidad ?? item.articuloPrecioBase?.cantidad ?? 1
@@ -838,6 +838,7 @@ const CartItem = ({
                 onUpdate({
                   ...item,
                   nota: nota,
+                    detalleExtra: nota || undefined,
                   cortesia: isCortesia,
                   articuloPrecio: {
                     ...(item.articuloPrecio || {}),

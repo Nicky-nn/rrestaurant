@@ -245,7 +245,33 @@ const RrGestionPedidoDialog: FunctionComponent<RrGestionPedidoDialogProps> = ({ 
           ? {
               ...prev,
               _id: pedidoRetornado._id || prev._id,
-              pedido: { ...pedidoRetornado, nota: pedidoRetornado.nota || prev?.pedido?.nota || '' },
+              pedido: {
+                ...pedidoRetornado,
+                nota: pedidoRetornado.nota || prev?.pedido?.nota || '',
+                productos: (pedidoRetornado.productos ?? []).map((serverProd: any) => {
+                  const localProd =
+                    (prev?.pedido?.productos ?? []).find(
+                      (lp: any) =>
+                        lp.nroItem != null &&
+                        serverProd.nroItem != null &&
+                        String(lp.nroItem) === String(serverProd.nroItem),
+                    ) ??
+                    (prev?.pedido?.productos ?? []).find(
+                      (lp: any) =>
+                        lp.codigoArticulo === serverProd.codigoArticulo &&
+                        (lp.articuloId === serverProd.articuloId || !lp.articuloId || !serverProd.articuloId),
+                    )
+
+                  const notaProducto =
+                    serverProd.nota || serverProd.detalleExtra || localProd?.nota || localProd?.detalleExtra || ''
+
+                  return {
+                    ...serverProd,
+                    nota: notaProducto,
+                    detalleExtra: serverProd.detalleExtra || (notaProducto || undefined),
+                  }
+                }),
+              },
             }
           : prev,
       )

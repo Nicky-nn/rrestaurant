@@ -97,8 +97,15 @@ const buildComandaDefinition = (pedido: RestPedido) => {
     ],
   ]
 
-  const buildDetalle = (prod: any, detallePrefijo = '') => {
-    let detalle = detallePrefijo + (prod.nombreArticulo ?? 'Producto')
+  const buildDetalle = (prod: any, detallePrefijo = '', totalFinal?: number) => {
+    console.log('[comanda] prod nota fields:', {
+      nota: prod.nota,
+      notaRapida: prod.notaRapida,
+      detalleExtra: prod.detalleExtra,
+    })
+    const nombre = prod.nombreArticulo ?? 'Producto'
+    const sufijo = totalFinal != null ? ` (total:${totalFinal})` : ''
+    let detalle = detallePrefijo + nombre + sufijo
     const mods = Object.entries(
       ((prod.modificadores ?? []) as any[]).reduce((acc: Record<string, number>, m: any) => {
         const key = m.nombreArticulo ?? ''
@@ -114,8 +121,9 @@ const buildComandaDefinition = (pedido: RestPedido) => {
 
     const notas = ((prod.notaRapida ?? []) as any[]).map((n: any) => n.valor).filter(Boolean)
     if (prod.nota) notas.unshift(prod.nota)
+    if (prod.detalleExtra) notas.push(prod.detalleExtra)
     if (notas.length) {
-      detalle += `\n  ※ ${notas.join(' | ')}`
+      detalle += `\n  * ${notas.join(' | ')}`
     }
 
     return detalle
@@ -145,9 +153,13 @@ const buildComandaDefinition = (pedido: RestPedido) => {
           { text: buildDetalle(prod), style: 'tdDetElim' },
         ])
       } else {
+        const cantPrev =
+          snapshotIndex.get(`${prod.articuloId ?? ''}-${prod.nroItem ?? 0}-${prod.codigoArticulo ?? ''}`)
+            ?.cantidad ?? 0
+        const totalFinal = cantPrev + cambio.delta
         itemsPorCategoria.cambios.push([
           { text: cambio.delta > 0 ? `+${cambio.delta}` : String(cambio.delta), style: 'tdCantEdit' },
-          { text: buildDetalle(prod), style: 'tdDetEdit' },
+          { text: buildDetalle(prod, '', totalFinal), style: 'tdDetEdit' },
         ])
       }
     })
@@ -218,6 +230,7 @@ const buildComandaDefinition = (pedido: RestPedido) => {
         fontSize: 7,
         margin: [0, 1, 0, 0],
       },
+
       table: {
         fontSize: 7,
         margin: [0, 2, 0, 2],
@@ -261,6 +274,7 @@ const buildComandaDefinition = (pedido: RestPedido) => {
 
 export const useComandaPdf = () => {
   const imprimirComanda = async (pedido: RestPedido) => {
+    console.log('Preparando para generar PDF de comanda, pedido:', pedido)
     const documentDefinition: any = buildComandaDefinition(pedido)
     const pdfDocGenerator = pdfMake.createPdf(documentDefinition) as any
     console.log('Generando PDF con definición', documentDefinition)

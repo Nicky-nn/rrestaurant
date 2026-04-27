@@ -567,20 +567,20 @@ const RestRegistrar: FunctionComponent = () => {
                 ...pedidoRetornado,
                 nota: pedidoRetornado.nota || prev.pedido?.nota || '',
                 productos: (pedidoRetornado.productos ?? []).map((serverProd: any) => {
-                  if (!serverProd.modificadores?.length) return serverProd
+                  // Buscar producto local por nroItem (si existe) o por identidad de artículo.
+                  const localProd =
+                    localProductos.find(
+                      (lp: any) =>
+                        lp.nroItem != null && serverProd.nroItem != null && String(lp.nroItem) === String(serverProd.nroItem),
+                    ) ??
+                    localProductos.find(
+                      (lp: any) =>
+                        lp.codigoArticulo === serverProd.codigoArticulo &&
+                        (lp.articuloId === serverProd.articuloId || !lp.articuloId || !serverProd.articuloId),
+                    )
 
-                  // Buscar el producto local correspondiente (mismo artículo)
-                  const localProd = localProductos.find(
-                    (lp: any) =>
-                      lp.codigoArticulo === serverProd.codigoArticulo &&
-                      (lp.articuloId === serverProd.articuloId || !lp.articuloId || !serverProd.articuloId),
-                  ) as any
-
-                  if (!localProd) return serverProd
-
-                  const localMods: any[] = localProd._modificadoresInput ?? localProd.modificadores ?? []
-
-                  const modsEnriquecidos = serverProd.modificadores.map((m: any) => {
+                  const localMods: any[] = localProd?._modificadoresInput ?? localProd?.modificadores ?? []
+                  const modsEnriquecidos = (serverProd.modificadores ?? []).map((m: any) => {
                     if (m.nombreArticulo) return m // el servidor ya lo trae
                     const localMod = localMods.find((lm: any) => lm.codigoArticulo === m.codigoArticulo)
                     return {
@@ -589,11 +589,16 @@ const RestRegistrar: FunctionComponent = () => {
                     }
                   })
 
+                  const notaProducto =
+                    serverProd.nota || serverProd.detalleExtra || localProd?.nota || localProd?.detalleExtra || ''
+
                   return {
                     ...serverProd,
-                    modificadores: modsEnriquecidos,
+                    nota: notaProducto,
+                    detalleExtra: serverProd.detalleExtra || (notaProducto || undefined),
+                    modificadores: modsEnriquecidos.length > 0 ? modsEnriquecidos : serverProd.modificadores,
                     // Preservar _modificadoresInput para futuras comparaciones de deduplicación
-                    _modificadoresInput: localProd._modificadoresInput,
+                    _modificadoresInput: localProd?._modificadoresInput,
                   }
                 }),
               }
