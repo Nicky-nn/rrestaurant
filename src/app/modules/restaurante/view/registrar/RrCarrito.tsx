@@ -838,7 +838,7 @@ const CartItem = ({
                 onUpdate({
                   ...item,
                   nota: nota,
-                    detalleExtra: nota || undefined,
+                  detalleExtra: nota || undefined,
                   cortesia: isCortesia,
                   articuloPrecio: {
                     ...(item.articuloPrecio || {}),

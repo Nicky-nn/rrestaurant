@@ -571,7 +571,9 @@ const RestRegistrar: FunctionComponent = () => {
                   const localProd =
                     localProductos.find(
                       (lp: any) =>
-                        lp.nroItem != null && serverProd.nroItem != null && String(lp.nroItem) === String(serverProd.nroItem),
+                        lp.nroItem != null &&
+                        serverProd.nroItem != null &&
+                        String(lp.nroItem) === String(serverProd.nroItem),
                     ) ??
                     localProductos.find(
                       (lp: any) =>
@@ -590,12 +592,16 @@ const RestRegistrar: FunctionComponent = () => {
                   })
 
                   const notaProducto =
-                    serverProd.nota || serverProd.detalleExtra || localProd?.nota || localProd?.detalleExtra || ''
+                    serverProd.nota ||
+                    serverProd.detalleExtra ||
+                    localProd?.nota ||
+                    localProd?.detalleExtra ||
+                    ''
 
                   return {
                     ...serverProd,
                     nota: notaProducto,
-                    detalleExtra: serverProd.detalleExtra || (notaProducto || undefined),
+                    detalleExtra: serverProd.detalleExtra || notaProducto || undefined,
                     modificadores: modsEnriquecidos.length > 0 ? modsEnriquecidos : serverProd.modificadores,
                     // Preservar _modificadoresInput para futuras comparaciones de deduplicación
                     _modificadoresInput: localProd?._modificadoresInput,

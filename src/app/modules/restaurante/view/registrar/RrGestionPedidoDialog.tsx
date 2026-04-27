@@ -263,12 +263,16 @@ const RrGestionPedidoDialog: FunctionComponent<RrGestionPedidoDialogProps> = ({ 
                     )
 
                   const notaProducto =
-                    serverProd.nota || serverProd.detalleExtra || localProd?.nota || localProd?.detalleExtra || ''
+                    serverProd.nota ||
+                    serverProd.detalleExtra ||
+                    localProd?.nota ||
+                    localProd?.detalleExtra ||
+                    ''
 
                   return {
                     ...serverProd,
                     nota: notaProducto,
-                    detalleExtra: serverProd.detalleExtra || (notaProducto || undefined),
+                    detalleExtra: serverProd.detalleExtra || notaProducto || undefined,
                   }
                 }),
               },
