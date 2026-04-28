@@ -584,7 +584,15 @@ const RestRegistrar: FunctionComponent = () => {
                   const localMods: any[] = localProd?._modificadoresInput ?? localProd?.modificadores ?? []
                   const modsEnriquecidos = (serverProd.modificadores ?? []).map((m: any) => {
                     if (m.nombreArticulo) return m // el servidor ya lo trae
-                    const localMod = localMods.find((lm: any) => lm.codigoArticulo === m.codigoArticulo)
+                    // Buscar por codigoArticulo + UM para distinguir variantes del mismo artículo
+                    // (ej: Papas Pequeña vs Papas Grande tienen mismo codigoArticulo pero distinta UM)
+                    const localMod =
+                      localMods.find(
+                        (lm: any) =>
+                          lm.codigoArticulo === m.codigoArticulo &&
+                          (lm.articuloPrecio?.codigoArticuloUnidadMedida ?? '') ===
+                            (m.articuloPrecio?.codigoArticuloUnidadMedida ?? ''),
+                      ) ?? localMods.find((lm: any) => lm.codigoArticulo === m.codigoArticulo)
                     return {
                       ...m,
                       nombreArticulo: (localMod as any)?.nombreArticulo || m.codigoArticulo || '',

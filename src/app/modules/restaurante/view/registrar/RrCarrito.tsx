@@ -567,11 +567,17 @@ const CartItem = ({
     (item.modificadores ?? [])
       .filter((m) => Boolean(m.nombreArticulo))
       .reduce<Record<string, { nombre: string; cantidad: number }>>((acc, m) => {
-        const key = m.nombreArticulo!
+        // Incluir codigoUnidadMedida en la clave para distinguir variantes del mismo artículo
+        // (ej: Papas Pequeña y Papas Grande tienen mismo nombreArticulo pero distinta UM)
+        const umCodigo =
+          (m.articuloPrecio as any)?.articuloUnidadMedida?.codigoUnidadMedida ||
+          (m.articuloPrecio as any)?.codigoArticuloUnidadMedida ||
+          ''
+        const key = `${m.nombreArticulo}::${umCodigo}`
         if (acc[key]) {
           acc[key].cantidad += m.articuloPrecio?.cantidad ?? 1
         } else {
-          acc[key] = { nombre: key, cantidad: m.articuloPrecio?.cantidad ?? 1 }
+          acc[key] = { nombre: m.nombreArticulo!, cantidad: m.articuloPrecio?.cantidad ?? 1 }
         }
         return acc
       }, {}),

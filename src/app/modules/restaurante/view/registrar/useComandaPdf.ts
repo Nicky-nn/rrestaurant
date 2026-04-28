@@ -107,10 +107,16 @@ const buildComandaDefinition = (pedido: RestPedido) => {
       ((prod.modificadores ?? []) as any[]).reduce((acc: Record<string, number>, m: any) => {
         const key = m.nombreArticulo ?? ''
         if (!key) return acc
-        acc[key] = (acc[key] || 0) + (m.articuloPrecio?.cantidad ?? 1)
+        // UM en la clave para distinguir variantes del mismo artículo
+        const um =
+          m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ||
+          m.articuloPrecio?.codigoArticuloUnidadMedida ||
+          ''
+        const groupKey = um ? `${key}::${um}` : key
+        acc[groupKey] = (acc[groupKey] || 0) + (m.articuloPrecio?.cantidad ?? 1)
         return acc
       }, {}),
-    ) as [string, number][]
+    ).map(([k, qty]) => [k.split('::')[0], qty]) as [string, number][]
 
     if (mods.length) {
       detalle += `\n  + ${mods.join(', ')}`
