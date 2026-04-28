@@ -53,12 +53,26 @@ const getPrecio = (art: Articulo): number => art.articuloPrecioBase?.monedaPrima
 
 const getSigla = (art: Articulo): string => art.articuloPrecioBase?.monedaPrimaria?.moneda?.sigla ?? 'Bs'
 
-// ─── Selección de modificador: "gIdx::articuloId" → cantidad ────────────────
-// Clave compuesta para evitar colisiones cuando dos grupos tienen el mismo artículo.
+/** Precio según UM específica; busca en articuloPrecioBase y articuloPrecio[]; fallback a articuloPrecioBase */
+const getPrecioParaUM = (art: Articulo, codigoUM?: string): number => {
+  if (!codigoUM) return getPrecio(art)
+  if (art.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida === codigoUM) {
+    return art.articuloPrecioBase.monedaPrimaria?.precio ?? 0
+  }
+  const found = (art.articuloPrecio ?? []).find(
+    (ap) => ap.articuloUnidadMedida?.codigoUnidadMedida === codigoUM,
+  )
+  return found?.monedaPrimaria?.precio ?? getPrecio(art)
+}
+
+// ─── Selección de modificador: "gIdx::oIdx" → cantidad ────────────────────────
+// Clave compuesta por índice de grupo + índice de opción dentro del grupo.
+// NO usar articuloId: cuando un mismo artículo aparece con distintas UM (ej. PAP-01 Regular/Grande/XL)
+// todos compartirían la misma clave y un clic activaría todas.
 
 type ModificadorSeleccion = Record<string, number>
 
-const mkKey = (gIdx: number, artId: string) => `${gIdx}::${artId}`
+const mkKey = (gIdx: number, oIdx: number) => `${gIdx}::${oIdx}`
 
 // ─── Stepper inline para cantidad ─────────────────────────────────────────────
 
@@ -254,6 +268,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     },
     { enabled: open && Boolean(articulo._id), staleTime: 0 },
   )
+  console.log('Composición venta:', { composicion })
 
   // ── Notas rápidas del tipo de artículo ───────────────────────────────────
   const notas: string[] = articulo.tipoArticulo?.notas ?? []
@@ -271,39 +286,42 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   const precioModificadoresExtra = (composicion?.modificadores ?? []).reduce((accGrupo, grupo, gIdx) => {
     const cuposGratis = (grupo.opcionesGratuitas ?? 0) * cantidad
 
-    // Separar opciones elegibles y no elegibles seleccionadas
+    // Ancla del grupo: opción base para calcular delta de agrandados
+    const anclaOpCalc = (grupo.opciones ?? []).find((o) => o.esOpcionAncla === true)
+    const precioAnclaCalc = anclaOpCalc?.articulo
+      ? getPrecioParaUM(anclaOpCalc.articulo, anclaOpCalc.articuloUnidadMedida?.codigoUnidadMedida)
+      : null
+    const tieneAnclaCalc = precioAnclaCalc !== null
+
+    // Todas las opciones seleccionadas, ordenadas por orden de selección
     const opcionesSeleccionadas = (grupo.opciones ?? [])
       .map((op, oIdx) => ({
-        artId: mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`),
-        precio: op.articulo ? getPrecio(op.articulo) : 0,
-        qty: modificadorSeleccion[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0,
-        // elegibleParaGratis siempre es boolean (nunca null/undefined)
+        artId: mkKey(gIdx, oIdx),
+        precio: op.articulo ? getPrecioParaUM(op.articulo, op.articuloUnidadMedida?.codigoUnidadMedida) : 0,
+        qty: modificadorSeleccion[mkKey(gIdx, oIdx)] ?? 0,
         elegible: op.elegibleParaGratis === true,
       }))
       .filter((o) => o.qty > 0)
-
-    // Las no elegibles siempre pagan el precio completo
-    let costoGrupo = opcionesSeleccionadas
-      .filter((o) => !o.elegible)
-      .reduce((s, o) => s + o.precio * o.qty, 0)
-
-    // Las elegibles: asignar cupos según orden de selección (primero en marcar = primero en gratis)
-    const elegiblesOrdenadas = opcionesSeleccionadas
-      .filter((o) => o.elegible)
       .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId))
 
+    let costoGrupo = 0
     let cuposRestantes = cuposGratis
-    for (const op of elegiblesOrdenadas) {
-      if (cuposRestantes <= 0) {
-        // Sin cupos: paga todo
-        costoGrupo += op.precio * op.qty
-      } else if (cuposRestantes >= op.qty) {
-        // Los cupos cubren toda la cantidad: gratis
-        cuposRestantes -= op.qty
+
+    for (const op of opcionesSeleccionadas) {
+      if (op.elegible) {
+        // Eligible: consume cupos; excedente paga completo
+        const gratisQty = Math.min(cuposRestantes, op.qty)
+        costoGrupo += op.precio * (op.qty - gratisQty)
+        cuposRestantes -= gratisQty
+      } else if (tieneAnclaCalc && cuposRestantes > 0) {
+        // No eligible + ancla: paga delta (agrandado), consume cupos
+        const anclaQty = Math.min(cuposRestantes, op.qty)
+        costoGrupo += Math.max(0, op.precio - precioAnclaCalc!) * anclaQty
+        costoGrupo += op.precio * (op.qty - anclaQty)
+        cuposRestantes -= anclaQty
       } else {
-        // Cupos parciales
-        costoGrupo += op.precio * (op.qty - cuposRestantes)
-        cuposRestantes = 0
+        // No eligible sin ancla o sin cupos: paga completo
+        costoGrupo += op.precio * op.qty
       }
     }
 
@@ -354,22 +372,19 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   // ── Handlers: modificadores (validación por grupo) ────────────────────────
   const setOpcionQty = (
     gIdx: number,
-    artId: string,
+    oIdx: number,
     delta: number,
     grupoOpciones: ArticuloModificadorOpcionOperacion[],
     maxSeleccion: number,
   ) => {
-    const key = mkKey(gIdx, artId)
+    const key = mkKey(gIdx, oIdx)
     setModificadorSeleccion((prev) => {
       const current = prev[key] ?? 0
       const next = Math.max(0, current + delta)
 
       // Verificar límite máximo del GRUPO (no global)
       if (delta > 0 && maxSeleccion > 0) {
-        const totalGrupo = grupoOpciones.reduce(
-          (s, op, oIdx) => s + (prev[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0),
-          0,
-        )
+        const totalGrupo = grupoOpciones.reduce((s, _op, opIdx) => s + (prev[mkKey(gIdx, opIdx)] ?? 0), 0)
         if (totalGrupo >= maxSeleccion) return prev
       }
 
@@ -396,7 +411,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     const minSel = grupo.minSeleccion ?? 0
     if (minSel === 0) return true
     const total = (grupo.opciones ?? []).reduce(
-      (s, op, oIdx) => s + (modificadorSeleccion[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0),
+      (s, _op, oIdx) => s + (modificadorSeleccion[mkKey(gIdx, oIdx)] ?? 0),
       0,
     )
     return total >= minSel * cantidad
@@ -648,39 +663,54 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     const maxSel = (grupo.maxSeleccion ?? 0) * cantidad
                     const grupoOpciones = grupo.opciones ?? []
                     const totalSelGrupo = grupoOpciones.reduce(
-                      (s, op, oIdx) =>
-                        s +
-                        (modificadorSeleccion[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0),
+                      (s, _op, oIdx) => s + (modificadorSeleccion[mkKey(gIdx, oIdx)] ?? 0),
                       0,
                     )
                     const grupoLleno = maxSel > 0 && totalSelGrupo >= maxSel
                     const minAlcanzado = totalSelGrupo >= (grupo.minSeleccion ?? 0) * cantidad
 
-                    // Calcular cuántas unidades de cada opción son cubiertas por los cupos gratuitos
+                    // Ancla del grupo para agrandados
+                    const anclaOpDisplay = grupoOpciones.find((o) => o.esOpcionAncla === true)
+                    const precioAnclaDisplay = anclaOpDisplay?.articulo
+                      ? getPrecioParaUM(
+                          anclaOpDisplay.articulo,
+                          anclaOpDisplay.articuloUnidadMedida?.codigoUnidadMedida,
+                        )
+                      : null
+                    const tieneAnclaDisplay = precioAnclaDisplay !== null
+
+                    // Cupos cubiertos por gratuidad (eligible) y por ancla (no-eligible con agrandado)
                     const cuposGratisDisplay = (grupo.opcionesGratuitas ?? 0) * cantidad
                     const freeQtyPerArt: Record<string, number> = {}
+                    const anclaQtyPerArt: Record<string, number> = {}
                     if (cuposGratisDisplay > 0) {
                       const candidatas = grupoOpciones
                         .map((op, oIdx) => ({
-                          artId: mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`),
-                          qty:
-                            modificadorSeleccion[mkKey(gIdx, op.articulo?._id ?? `op-${gIdx}-${oIdx}`)] ?? 0,
-                          precio: op.articulo ? getPrecio(op.articulo) : 0,
+                          artId: mkKey(gIdx, oIdx),
+                          qty: modificadorSeleccion[mkKey(gIdx, oIdx)] ?? 0,
                           elegible: op.elegibleParaGratis === true,
                         }))
-                        .filter((o) => o.qty > 0 && o.elegible)
-                        .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId)) // primer seleccionado = primero en gratis
+                        .filter((o) => o.qty > 0)
+                        .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId))
                       let restantes = cuposGratisDisplay
                       for (const o of candidatas) {
                         if (restantes <= 0) break
-                        const gratisQty = Math.min(restantes, o.qty)
-                        freeQtyPerArt[o.artId] = gratisQty
-                        restantes -= gratisQty
+                        if (o.elegible) {
+                          const gratisQty = Math.min(restantes, o.qty)
+                          freeQtyPerArt[o.artId] = gratisQty
+                          restantes -= gratisQty
+                        } else if (tieneAnclaDisplay) {
+                          const anclaQty = Math.min(restantes, o.qty)
+                          anclaQtyPerArt[o.artId] = anclaQty
+                          restantes -= anclaQty
+                        }
                       }
                     }
 
-                    // Cuántos cupos gratuitos del grupo todavía no están asignados a ningún item seleccionado
-                    const cuposUsadosGrupo = Object.values(freeQtyPerArt).reduce((s, v) => s + v, 0)
+                    // Cupos libres (sin asignar) para mostrar en UI
+                    const cuposUsadosGrupo =
+                      Object.values(freeQtyPerArt).reduce((s, v) => s + v, 0) +
+                      Object.values(anclaQtyPerArt).reduce((s, v) => s + v, 0)
                     const cuposLibresGrupo = cuposGratisDisplay - cuposUsadosGrupo
 
                     return (
@@ -741,12 +771,17 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                           }}
                         >
                           {grupoOpciones.map((op: ArticuloModificadorOpcionOperacion, oIdx: number) => {
-                            const artId = op.articulo?._id ?? `op-${gIdx}-${oIdx}`
-                            const selKey = mkKey(gIdx, artId)
-                            const nombre = op.articulo?.nombreArticulo ?? 'Opción'
+                            const artId = op.articulo?._id ?? ''
+                            const selKey = mkKey(gIdx, oIdx)
+                            // nombreOpcion es alias visual; se concatena con nombreArticulo según la arquitectura
+                            const nombre = op.nombreOpcion
+                              ? `${op.articulo?.nombreArticulo ?? ''} ${op.nombreOpcion}`.trim()
+                              : (op.articulo?.nombreArticulo ?? 'Opción')
                             const qty = modificadorSeleccion[selKey] ?? 0
                             const selected = qty > 0
-                            const precio = op.articulo ? getPrecio(op.articulo) : 0
+                            const precio = op.articulo
+                              ? getPrecioParaUM(op.articulo, op.articuloUnidadMedida?.codigoUnidadMedida)
+                              : 0
                             const opSigla = op.articulo ? getSigla(op.articulo) : sigla
                             // Verificar disponibilidad de stock para artículos gestionados por lotes (gestionArticulo === 'LOTE')
                             // Solo se activa para artículos que verifican stock Y gestionan por lotes.
@@ -763,12 +798,13 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                   {
                                     cantidad: 1,
                                     autoAlmacen: true,
-                                    autoLote: true,
-                                    mostrarLoteConStock: true,
+                                    // FIX: autoLote:false evita iterar detalle.lotes (no incluido en GQL fragment)
+                                    autoLote: false,
+                                    mostrarLoteConStock: false,
                                   },
                                 )
                               : null
-                            const sinStock = necesitaLote && stockCheck?.lote === null
+                            const sinStock = necesitaLote && stockCheck?.almacen === null
                             // Max del grupo alcanzado Y esta opción ya tiene 0 → deshabilitado
                             const maxAlcanzado = grupoLleno && !selected
                             const disabled = maxAlcanzado || sinStock
@@ -777,6 +813,13 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             const esCompletamenteGratis = selected && cubiertoPorGratis >= qty
                             const esParcialmenteGratis =
                               selected && cubiertoPorGratis > 0 && cubiertoPorGratis < qty
+                            // Agrandado: no-eligible cubierto por ancla del grupo
+                            const cubiertoPorAncla = anclaQtyPerArt[selKey] ?? 0
+                            const esDescuentoAncla = cubiertoPorAncla > 0 && op.elegibleParaGratis !== true
+                            const precioDisplay =
+                              esDescuentoAncla && precioAnclaDisplay !== null
+                                ? Math.max(0, precio - precioAnclaDisplay)
+                                : precio
 
                             return (
                               <Box
@@ -809,7 +852,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                   userSelect: 'none',
                                 }}
                                 onClick={() => {
-                                  if (!disabled) setOpcionQty(gIdx, artId, 1, grupoOpciones, maxSel)
+                                  if (!disabled) setOpcionQty(gIdx, oIdx, 1, grupoOpciones, maxSel)
                                 }}
                               >
                                 {/* Fila superior: nombre (izq) + precio (der) */}
@@ -847,12 +890,16 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                     <Typography
                                       variant="body2"
                                       fontWeight={700}
-                                      color={selected ? 'primary.main' : 'text.secondary'}
+                                      color={
+                                        selected
+                                          ? esDescuentoAncla
+                                            ? 'warning.main'
+                                            : 'primary.main'
+                                          : 'text.secondary'
+                                      }
                                       sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
                                     >
-                                      {esParcialmenteGratis
-                                        ? `+${opSigla}${precio.toFixed(2)}`
-                                        : `+${opSigla}${precio.toFixed(2)}`}
+                                      {`+${opSigla}${precioDisplay.toFixed(2)}`}
                                     </Typography>
                                   )}
                                 </Box>
@@ -894,6 +941,18 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                             sx={{ height: 18, fontSize: '0.6rem' }}
                                           />
                                         )}
+                                        {esDescuentoAncla && precioAnclaDisplay !== null && (
+                                          <Chip
+                                            label={`-${opSigla}${precioAnclaDisplay.toFixed(2)}`}
+                                            size="small"
+                                            color="warning"
+                                            sx={{
+                                              height: 18,
+                                              fontSize: '0.6rem',
+                                              '& .MuiChip-label': { px: 0.75 },
+                                            }}
+                                          />
+                                        )}
                                         {op.elegibleParaGratis === true && cuposLibresGrupo > 0 && (
                                           <Chip
                                             label="APTO PARA REGALO"
@@ -914,8 +973,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                   <QtyStepperInline
                                     qty={qty}
                                     maxReached={grupoLleno || sinStock}
-                                    onIncrement={() => setOpcionQty(gIdx, artId, 1, grupoOpciones, maxSel)}
-                                    onDecrement={() => setOpcionQty(gIdx, artId, -1, grupoOpciones, maxSel)}
+                                    onIncrement={() => setOpcionQty(gIdx, oIdx, 1, grupoOpciones, maxSel)}
+                                    onDecrement={() => setOpcionQty(gIdx, oIdx, -1, grupoOpciones, maxSel)}
                                   />
                                 </Box>
                               </Box>
@@ -1027,22 +1086,33 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             typeof articuloToArticuloOperacionInputService
                           >[0],
                           user.moneda,
-                          { cantidad: 1, autoAlmacen: true, autoLote: true, mostrarLoteConStock: true },
+                          // FIX: autoLote:false — fragmento GQL no incluye detalle.lotes
+                          { cantidad: 1, autoAlmacen: true, autoLote: false, mostrarLoteConStock: false },
                         )
                       : null
+
+                    const codigoUmRem =
+                      ing.articuloUnidadMedida?.codigoUnidadMedida ??
+                      baseComp?.articuloUnidadMedida?.codigoUnidadMedida ??
+                      ing.articulo?.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
+                      ing.articulo?.articuloPrecio?.find((ap) => ap.articuloUnidadMedida?.codigoUnidadMedida)
+                        ?.articuloUnidadMedida?.codigoUnidadMedida ??
+                      ''
+
+                    if (!codigoUmRem) {
+                      console.warn(
+                        '[RrComplementoModal] codigoUm vacío para ingrediente removido',
+                        ing.articulo?.codigoArticulo,
+                      )
+                      return
+                    }
 
                     variacionReceta.push({
                       codigoArticulo: baseComp?.codigoArticulo || ing.articulo?.codigoArticulo || '',
                       codigoAlmacen: baseComp?.almacen?.codigoAlmacen || '0',
-                      codigoLote: baseComp?.lote?.codigoLote,
+                      codigoLote: undefined, // FIX: lote solo aplica en monetanero, no en pedido restaurante
                       articuloPrecio: {
-                        codigoArticuloUnidadMedida:
-                          baseComp?.articuloUnidadMedida?.codigoUnidadMedida ??
-                          ing.articulo?.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
-                          ing.articulo?.articuloPrecio?.find(
-                            (ap) => ap.articuloUnidadMedida?.codigoUnidadMedida,
-                          )?.articuloUnidadMedida?.codigoUnidadMedida ??
-                          '',
+                        codigoArticuloUnidadMedida: codigoUmRem,
                         cantidad: 0, // removido:true → backend exige cantidad estrictamente 0
                         precio: 0,
                         descuento: 0,
@@ -1060,14 +1130,31 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             typeof articuloToArticuloOperacionInputService
                           >[0],
                           user.moneda,
+                          // FIX: autoLote:false — fragmento GQL no incluye detalle.lotes
                           {
                             cantidad: extraQty,
                             autoAlmacen: true,
-                            autoLote: true,
-                            mostrarLoteConStock: true,
+                            autoLote: false,
+                            mostrarLoteConStock: false,
                           },
                         )
                       : null
+
+                    const codigoUmExtra =
+                      ing.articuloUnidadMedida?.codigoUnidadMedida ??
+                      baseComp?.articuloUnidadMedida?.codigoUnidadMedida ??
+                      ing.articulo?.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
+                      ing.articulo?.articuloPrecio?.find((ap) => ap.articuloUnidadMedida?.codigoUnidadMedida)
+                        ?.articuloUnidadMedida?.codigoUnidadMedida ??
+                      ''
+
+                    if (!codigoUmExtra) {
+                      console.warn(
+                        '[RrComplementoModal] codigoUm vacío para ingrediente extra',
+                        ing.articulo?.codigoArticulo,
+                      )
+                      return
+                    }
 
                     // Las primeras `cantidadBase` porciones ya están en el precio del plato → precio=0.
                     // A partir de cantidadBase+1 en adelante se cobra el precio unitario.
@@ -1078,15 +1165,9 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     variacionReceta.push({
                       codigoArticulo: baseComp?.codigoArticulo || ing.articulo?.codigoArticulo || '',
                       codigoAlmacen: baseComp?.almacen?.codigoAlmacen || '0',
-                      codigoLote: baseComp?.lote?.codigoLote,
+                      codigoLote: undefined, // FIX: lote solo aplica en monetanero, no en pedido restaurante
                       articuloPrecio: {
-                        codigoArticuloUnidadMedida:
-                          baseComp?.articuloUnidadMedida?.codigoUnidadMedida ??
-                          ing.articulo?.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
-                          ing.articulo?.articuloPrecio?.find(
-                            (ap) => ap.articuloUnidadMedida?.codigoUnidadMedida,
-                          )?.articuloUnidadMedida?.codigoUnidadMedida ??
-                          '',
+                        codigoArticuloUnidadMedida: codigoUmExtra,
                         cantidad: extraQty,
                         precio: precioPorExtra,
                         descuento: 0,
@@ -1106,44 +1187,35 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                   // y cabe dentro de los cupos disponibles del grupo.
                   // Cupos se asignan a las opciones elegibles más baratas primero.
                   const cuposGratis = grupo.opcionesGratuitas ?? 0
-                  const elegiblesOrdenadas = (grupo.opciones ?? [])
-                    .filter(
-                      (o) =>
-                        // elegibleParaGratis siempre es boolean (nunca null/undefined)
-                        o.elegibleParaGratis === true &&
-                        (modificadorSeleccion[mkKey(gIdx, o.articulo?._id ?? '')] ?? 0) > 0,
-                    )
-                    .map((o) => ({
-                      artId: mkKey(gIdx, o.articulo?._id ?? ''),
-                      precio: o.articulo ? getPrecio(o.articulo) : 0,
-                      qty: modificadorSeleccion[mkKey(gIdx, o.articulo?._id ?? '')] ?? 0,
+                  const anclaOpPayload = (grupo.opciones ?? []).find((o) => o.esOpcionAncla === true)
+                  const tieneAnclaPayload = anclaOpPayload != null
+
+                  // Asignar cupos a todas las opciones seleccionadas por orden de selección:
+                  // eligible consumen cupo como gratis; no-eligible con ancla consumen cupo como agrandado.
+                  const todasOrdenadassPayload = (grupo.opciones ?? [])
+                    .map((o, oIdxP) => ({
+                      artId: mkKey(gIdx, oIdxP),
+                      elegible: o.elegibleParaGratis === true,
+                      qty: modificadorSeleccion[mkKey(gIdx, oIdxP)] ?? 0,
                     }))
-                    .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId)) // primer seleccionado = primero en gratis
+                    .filter((o) => o.qty > 0)
+                    .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId))
 
                   const cuposAsignados = new Map<string, number>()
                   let cuposRestantes = cuposGratis
-                  for (const el of elegiblesOrdenadas) {
+                  for (const el of todasOrdenadassPayload) {
                     if (cuposRestantes <= 0) break
-                    const gratuitas = Math.min(el.qty, cuposRestantes)
-                    cuposAsignados.set(el.artId, gratuitas)
-                    cuposRestantes -= gratuitas
+                    if (el.elegible || tieneAnclaPayload) {
+                      const gratuitas = Math.min(el.qty, cuposRestantes)
+                      cuposAsignados.set(el.artId, gratuitas)
+                      cuposRestantes -= gratuitas
+                    }
                   }
 
-                  // ── DEBUG: ver qué datos llegan del servidor ───────────────────────
-                  console.debug('[Modificador]', grupo.nombre, {
-                    cuposGratis,
-                    opcionesConElegibilidad: (grupo.opciones ?? []).map((o) => ({
-                      nombre: o.articulo?.nombreArticulo,
-                      elegibleParaGratis: o.elegibleParaGratis,
-                      seleccionado: modificadorSeleccion[mkKey(gIdx, o.articulo?._id ?? '')] ?? 0,
-                    })),
-                    cuposAsignados: Object.fromEntries(cuposAsignados),
-                  })
-
                   // ── Construir payload por cada opción seleccionada ────────────────────
-                  ;(grupo.opciones ?? []).forEach((op) => {
+                  ;(grupo.opciones ?? []).forEach((op, oIdxP) => {
                     const artId = op.articulo?._id ?? ''
-                    const qty = modificadorSeleccion[mkKey(gIdx, artId)] ?? 0
+                    const qty = modificadorSeleccion[mkKey(gIdx, oIdxP)] ?? 0
                     if (qty === 0 || !op.articulo) return
 
                     const baseComp = articuloToArticuloOperacionInputService(
@@ -1156,6 +1228,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     )
 
                     const codigoUm =
+                      op.articuloUnidadMedida?.codigoUnidadMedida ??
                       baseComp?.articuloUnidadMedida?.codigoUnidadMedida ??
                       op.articulo.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
                       op.articulo.articuloPrecio?.find((ap) => ap.articuloUnidadMedida?.codigoUnidadMedida)
@@ -1164,9 +1237,19 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     const codigoArt = baseComp?.codigoArticulo || op.articulo.codigoArticulo || ''
                     const codigoAlm = baseComp?.almacen?.codigoAlmacen || '0'
 
-                    const esElegible = op.elegibleParaGratis === true
-                    const cantGratuita = esElegible ? (cuposAsignados.get(artId) ?? 0) : 0
+                    // codigoUm es obligatorio; sin él el backend falla. Ignorar la opción si no se resuelve.
+                    if (!codigoUm) {
+                      console.warn('[RrComplementoModal] codigoUm vacío para', codigoArt, '— opción ignorada')
+                      return
+                    }
+
+                    const cantGratuita = cuposAsignados.get(mkKey(gIdx, oIdxP)) ?? 0
                     const cantPaga = qty - cantGratuita
+
+                    // Nombre compuesto: alias (nombreOpcion) + nombreArticulo, igual que en el render
+                    const nombreCompuesto = op.nombreOpcion
+                      ? `${op.articulo.nombreArticulo ?? ''} ${op.nombreOpcion}`.trim()
+                      : (op.articulo.nombreArticulo ?? '')
 
                     if (cantGratuita > 0) {
                       modificadoresInput.push({
@@ -1177,17 +1260,14 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         articuloPrecio: {
                           codigoArticuloUnidadMedida: codigoUm,
                           cantidad: cantGratuita,
-                          // precio=0: unidades cubiertas por cupo gratis del grupo
-                          // esOpcionGratuita=false: no reclamamos el cupo formalmente;
-                          // el backend valida elegibleParaGratis en mutación y puede
-                          // diferir del dato de composición, causando "no aplica para gratuidad".
-                          precio: 0,
+                          // Precio real: el backend aplica la lógica de gratuidad/ancla con esOpcionGratuita
+                          precio: getPrecioParaUM(op.articulo, codigoUm),
                           descuento: 0,
                           impuesto: 0,
                         },
-                        esOpcionGratuita: false,
+                        esOpcionGratuita: true,
                         // Extra para mostrar el nombre en el carrito (no se envía al backend)
-                        ...({ nombreArticulo: op.articulo.nombreArticulo ?? '' } as any),
+                        ...({ nombreArticulo: nombreCompuesto } as any),
                       })
                     }
 
@@ -1200,13 +1280,13 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         articuloPrecio: {
                           codigoArticuloUnidadMedida: codigoUm,
                           cantidad: cantPaga,
-                          precio: getPrecio(op.articulo),
+                          precio: getPrecioParaUM(op.articulo, codigoUm),
                           descuento: 0,
                           impuesto: 0,
                         },
                         esOpcionGratuita: false,
                         // Extra para mostrar el nombre en el carrito (no se envía al backend)
-                        ...({ nombreArticulo: op.articulo.nombreArticulo ?? '' } as any),
+                        ...({ nombreArticulo: nombreCompuesto } as any),
                       })
                     }
                   })

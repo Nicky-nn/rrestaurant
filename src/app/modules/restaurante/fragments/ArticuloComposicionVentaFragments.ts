@@ -678,6 +678,14 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
           }
           articuloPrecioBase {
             _id
+            articuloUnidadMedida {
+              _id
+              codigoUnidadMedida
+              nombreUnidadMedida
+            }
+            monedaPrimaria {
+              precio
+            }
             cantidadBase
             factorAjuste
             umVenta
@@ -686,6 +694,14 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
           }
           articuloPrecio {
             _id
+            articuloUnidadMedida {
+              _id
+              codigoUnidadMedida
+              nombreUnidadMedida
+            }
+            monedaPrimaria {
+              precio
+            }
             cantidadBase
             factorAjuste
             umVenta
@@ -704,6 +720,12 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
             totalSolicitado
             totalDisponible
             verificarStock
+            detalle {
+              almacen {
+                codigoAlmacen
+              }
+              orden
+            }
             state
             usucre
             createdAt
@@ -831,6 +853,14 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
           }
           articuloPrecioBase {
             _id
+            articuloUnidadMedida {
+              _id
+              codigoUnidadMedida
+              nombreUnidadMedida
+            }
+            monedaPrimaria {
+              precio
+            }
             cantidadBase
             factorAjuste
             umVenta
@@ -839,6 +869,14 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
           }
           articuloPrecio {
             _id
+            articuloUnidadMedida {
+              _id
+              codigoUnidadMedida
+              nombreUnidadMedida
+            }
+            monedaPrimaria {
+              precio
+            }
             cantidadBase
             factorAjuste
             umVenta
@@ -857,6 +895,12 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
             totalSolicitado
             totalDisponible
             verificarStock
+            detalle {
+              almacen {
+                codigoAlmacen
+              }
+              orden
+            }
             state
             usucre
             createdAt
