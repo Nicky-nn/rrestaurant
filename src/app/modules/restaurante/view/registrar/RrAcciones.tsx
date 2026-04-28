@@ -51,6 +51,44 @@ interface RrAccionesProps {
   onClear?: () => void
 }
 
+interface PrinterSettings {
+  comanda?: string | Record<string, string>
+  impresionAutomatica?: {
+    facturar?: boolean
+    comanda?: boolean
+    estadoDeCuenta?: boolean
+    actualizarYComandar?: boolean
+  }
+}
+
+const debeImprimirComandaAutomatica = (isNuevo: boolean): boolean => {
+  try {
+    const raw = localStorage.getItem('printers')
+    if (!raw) return false
+    const parsed = JSON.parse(raw) as PrinterSettings
+    if (isNuevo) return parsed.impresionAutomatica?.comanda === true
+    return parsed.impresionAutomatica?.actualizarYComandar === true
+  } catch {
+    return false
+  }
+}
+
+const getComandaPrinter = (): string => {
+  try {
+    const raw = localStorage.getItem('printers')
+    if (!raw) return ''
+    const parsed = JSON.parse(raw) as PrinterSettings
+
+    if (typeof parsed.comanda === 'string') {
+      return parsed.comanda
+    }
+
+    return ''
+  } catch {
+    return ''
+  }
+}
+
 /**
  * RrAcciones
  * Panel de acciones del pedido.
@@ -268,10 +306,12 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         ...(response as RestPedido),
         nota: input.nota || (response as RestPedido)?.nota || '',
       }
-      try {
-        await imprimirComanda(pedidoParaComanda)
-      } catch (err) {
-        showError(new MyGraphQlError(err instanceof Error ? err : new Error('Error al imprimir comanda')))
+      if (debeImprimirComandaAutomatica(isNuevo)) {
+        try {
+          await imprimirComanda(pedidoParaComanda, getComandaPrinter())
+        } catch (err) {
+          showError(new MyGraphQlError(err instanceof Error ? err : new Error('Error al imprimir comanda')))
+        }
       }
       return response
     } catch (error) {

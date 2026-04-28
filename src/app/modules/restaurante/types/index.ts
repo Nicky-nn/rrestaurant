@@ -880,6 +880,9 @@ export interface TipoArticulo {
   updatedAt?: DateDMYHHMMSS
 }
 
+/**
+ * Composición de articulo + receta + modificadores
+ */
 export interface ArticuloComposicionVenta {
   articulo?: Articulo
   receta?: ArticuloRecetaOperacion
@@ -1056,15 +1059,6 @@ export interface ArticuloOperacion {
   modificadores?: ArticuloOperacionModificador[]
   /** Estado del registro - ELABORADO: Articulo que no ha sufrido cambios en el ciclo de vida del item - ACTUALIZADO: Se ha modificado algún valor del item - ELIMINADO: Se ha eliminado el item - NUEVO: Nuevo ingreso de item */
   state?: string
-}
-
-/**
- * Extensión de ArticuloOperacion para uso en la capa UI (front-end).
- * Agrega campos locales que no vienen del servidor pero se usan en el estado del carrito.
- */
-export interface ArticuloOperacionUI extends ArticuloOperacion {
-  /** Modificadores tal como los envió el modal (con articuloModificadorId correcto) */
-  _modificadoresInput?: ArticuloModificadorOperacionInput[]
 }
 
 /**
@@ -1453,6 +1447,8 @@ export interface ArticuloOperacionModificador {
   elegibleParaGratis?: boolean
   /** Cuánto equivalía esta opción en la BD al momento de la venta */
   cantidadIncluida?: number
+  /** Determina si este insumo es la opción base (Ancla) para agrandados */
+  esOpcionAncla?: boolean
   /** El mismo motor pesado de la línea principal */
   articuloPrecio?: ArticuloPrecioOperacion
   nota?: string
@@ -1467,10 +1463,16 @@ export interface ArticuloOperacionModificador {
 export interface ArticuloModificadorOpcionOperacion {
   /** Código interno del articulo */
   articulo?: Articulo
+  /** Articulo Unidad de medida asociado a la opción, esto permite registrar articulos duplicados por unidad de medida - Se debe buscar codigoArticuloUnidadMedida con las listas de [articuloPrecioBase + ...articuloPrecio] */
+  articuloUnidadMedida?: ArticuloUnidadMedida
+  /** Se concatena con el nombre del articulo */
+  nombreOpcion?: string
   /** Cantidad que se descontará del inventario al seleccionar esta opción (Ej: 1 porción) */
   cantidadIncluida?: number
   /** Determina si este insumo puede aplicar para promociones de gratuidad en este grupo */
   elegibleParaGratis?: boolean
+  /** Determina si este insumo es la opción base (Ancla) para agrandados */
+  esOpcionAncla?: boolean
 }
 
 /**
@@ -1547,6 +1549,8 @@ export interface ArticuloRecetaIngredienteOperacion {
   esRemovible?: boolean
   /** Bandera de personalización: ¿El cliente puede pedir extra de este ingrediente? Si es true, el POS permitirá cobrar una porción (unidad medida) adicional. */
   permiteExtra?: boolean
+  /** Articulo unidad de medida de busqueda en articulo.articuloPrecioBase + articulo.articuloPrecio */
+  articuloUnidadMedida?: ArticuloUnidadMedida
 }
 
 /**

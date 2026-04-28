@@ -2,5 +2,4 @@
 
 export * from './client';
 export * from './types';
-export * from './mutations/useRestEspacioActualizar';
-export * from './mutations/useRestEspacioEliminar';
+export * from './queries/useArticuloComposicionVenta';

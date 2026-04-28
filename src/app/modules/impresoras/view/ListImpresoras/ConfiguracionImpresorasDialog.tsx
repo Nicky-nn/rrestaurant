@@ -135,8 +135,10 @@ const ConfiguracionImpresorasDialog: FunctionComponent<Props> = ({ open, onClose
 
   const scan = async (manual = true) => {
     setIsScanning(true)
-    const TOKEN = import.meta.env.ISI_SECRET_PRINTER_TOKEN
-    const serverUrl = TOKEN ? '/local-printers/printers' : 'http://localhost:7777/printers'
+    const isDev = import.meta.env.DEV === true
+    const TOKEN = isDev ? (import.meta.env.ISI_SECRET_PRINTER_TOKEN as string | undefined) : undefined
+    const useProxy = isDev
+    const serverUrl = useProxy ? '/local-printers/printers' : 'http://localhost:7777/printers'
     const fallbackUrl = 'AdePrint:live'
 
     const headers: Record<string, string> = {}

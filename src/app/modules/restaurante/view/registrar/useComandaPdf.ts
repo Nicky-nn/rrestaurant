@@ -2,6 +2,8 @@ import pdfMake from 'pdfmake/build/pdfmake'
 import pdfFonts from 'pdfmake/build/vfs_fonts'
 import printJS from 'print-js'
 
+import { printBlobToLocalPrinter } from '../../../../base/services/localPrinterService'
+import { notError, notSuccess } from '../../../../utils/notification'
 import { RestPedido } from '../../types'
 ;(pdfMake as any).addVirtualFileSystem(pdfFonts)
 
@@ -98,11 +100,6 @@ const buildComandaDefinition = (pedido: RestPedido) => {
   ]
 
   const buildDetalle = (prod: any, detallePrefijo = '', totalFinal?: number) => {
-    console.log('[comanda] prod nota fields:', {
-      nota: prod.nota,
-      notaRapida: prod.notaRapida,
-      detalleExtra: prod.detalleExtra,
-    })
     const nombre = prod.nombreArticulo ?? 'Producto'
     const sufijo = totalFinal != null ? ` (total:${totalFinal})` : ''
     let detalle = detallePrefijo + nombre + sufijo
@@ -273,14 +270,28 @@ const buildComandaDefinition = (pedido: RestPedido) => {
 }
 
 export const useComandaPdf = () => {
-  const imprimirComanda = async (pedido: RestPedido) => {
-    console.log('Preparando para generar PDF de comanda, pedido:', pedido)
+  const imprimirComanda = async (pedido: RestPedido, selectedPrinter = '') => {
     const documentDefinition: any = buildComandaDefinition(pedido)
     const pdfDocGenerator = pdfMake.createPdf(documentDefinition) as any
-    console.log('Generando PDF con definición', documentDefinition)
     const blob: Blob = await pdfDocGenerator.getBlob()
+
+    if (selectedPrinter) {
+      try {
+        await printBlobToLocalPrinter({
+          blob,
+          printer: selectedPrinter,
+          filename: 'comanda.pdf',
+        })
+        notSuccess('Impresión de Comanda iniciada')
+        return
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : 'la impresora no responde o no está encendida'
+        notError(`Error al imprimir: ${msg}`)
+        return
+      }
+    }
+
     const pdfUrl = URL.createObjectURL(blob)
-    console.log('PDF generado, URL:', pdfUrl)
     printJS({
       printable: pdfUrl,
       type: 'pdf',
