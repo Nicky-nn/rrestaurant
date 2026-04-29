@@ -268,7 +268,6 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     },
     { enabled: open && Boolean(articulo._id), staleTime: 0 },
   )
-  console.log('Composición venta:', { composicion })
 
   // ── Notas rápidas del tipo de artículo ───────────────────────────────────
   const notas: string[] = articulo.tipoArticulo?.notas ?? []
@@ -424,7 +423,6 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     articulo.imagen?.variants?.thumbnail ??
     null
 
-  console.log('Composición venta:', { composicion, precioBase, precioModificadoresExtra, precioRecetaExtra })
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <Dialog

@@ -32,7 +32,6 @@ import {
   ArticuloModificadorOperacionInput,
   ArticuloOperacionModificador,
   ArticuloOperacionReceta,
-  ArticuloOperacionUI,
   ArticuloRecetaOperacionInput,
   RestPedido,
   RestPedidoExpressInput,
@@ -42,6 +41,9 @@ import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
 import RrDividirCuentaDialog from './RrDividirCuentaDialog'
 import RrTransferirMesaDialog from './RrTransferirMesaDialog'
 import { useComandaPdf } from './useComandaPdf'
+
+// Tipo local para artículos UI que extienden ArticuloOperacion con campos efímeros
+type ArticuloOperacionUI = any
 
 interface RrAccionesProps {
   mesaSeleccionada?: MesaUI | null
@@ -302,9 +304,51 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       }
 
       if (onSuccess) onSuccess(response)
+
+      // Enriquecer pedidoParaComanda con nombreArticulo local (el servidor no devuelve
+      // el alias nombreOpcion — sin esto variantes del mismo artículo se muestran igual).
+      const localProductos: any[] = pedido.productos ?? []
+      const responseTyped = response as RestPedido
+      const matchedComandaIndices = new Set<number>()
+      const productosEnriquecidos = (responseTyped?.productos ?? []).map((serverProd: any) => {
+        let localIdx = localProductos.findIndex(
+          (lp: any, i) =>
+            !matchedComandaIndices.has(i) &&
+            lp.nroItem != null &&
+            serverProd.nroItem != null &&
+            String(lp.nroItem) === String(serverProd.nroItem),
+        )
+        if (localIdx < 0) {
+          localIdx = localProductos.findIndex(
+            (lp: any, i) =>
+              !matchedComandaIndices.has(i) &&
+              lp.codigoArticulo === serverProd.codigoArticulo &&
+              (lp.articuloId === serverProd.articuloId || !lp.articuloId || !serverProd.articuloId),
+          )
+        }
+        if (localIdx >= 0) matchedComandaIndices.add(localIdx)
+        const localProd = localIdx >= 0 ? localProductos[localIdx] : undefined
+        const localMods: any[] = (localProd as any)?._modificadoresInput ?? localProd?.modificadores ?? []
+        const modsEnriquecidos = (serverProd.modificadores ?? []).map((m: any) => {
+          if (m.nombreArticulo) return m
+          const localMod =
+            localMods.find(
+              (lm: any) =>
+                lm.codigoArticulo === m.codigoArticulo &&
+                (lm.articuloPrecio?.codigoArticuloUnidadMedida ?? '') ===
+                  (m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                    m.articuloPrecio?.codigoArticuloUnidadMedida ??
+                    ''),
+            ) ?? localMods.find((lm: any) => lm.codigoArticulo === m.codigoArticulo)
+          return { ...m, nombreArticulo: (localMod as any)?.nombreArticulo || m.codigoArticulo || '' }
+        })
+        return { ...serverProd, modificadores: modsEnriquecidos }
+      })
+
       const pedidoParaComanda: RestPedido = {
-        ...(response as RestPedido),
-        nota: input.nota || (response as RestPedido)?.nota || '',
+        ...responseTyped,
+        nota: input.nota || responseTyped?.nota || '',
+        productos: productosEnriquecidos,
       }
       if (debeImprimirComandaAutomatica(isNuevo)) {
         try {
@@ -698,6 +742,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
     }
 
     const metodoPrincipal = pagosFinales[0].metodoId
+    let pedidoFinalizado = false
 
     try {
       // Primero, DEBEMOS finalizar el pedido (cambio de estado a FINALIZADO) localmente
@@ -724,6 +769,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           monto: p.monto,
         })),
       })
+
+      pedidoFinalizado = true
 
       // Una vez finalizado válidamente, solicitamos emitir la FACTURA al SIAT
       await facturarPedido({
@@ -753,8 +800,23 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       if (onClear) onClear()
       if (onSuccess) onSuccess(null, true)
     } catch (error) {
-      console.error('Error al facturar pedido', error)
-      showError(new MyGraphQlError(error as Error))
+      if (pedidoFinalizado) {
+        console.error('Error al facturar pedido, pero el pedido se finalizó correctamente', error)
+        const errorMessage = new MyGraphQlError(error as Error).message
+        showError(
+          new Error(
+            'El pedido se finalizó correctamente, pero hubo un error al facturar. Puede intentar facturarlo luego desde el panel de facturación. Detalle: ' +
+              errorMessage
+          )
+        )
+        setOpenCobroDialog(false)
+        setPagosRealizados([])
+        if (onClear) onClear()
+        if (onSuccess) onSuccess(null, true)
+      } else {
+        console.error('Error al finalizar pedido', error)
+        showError(new MyGraphQlError(error as Error))
+      }
     }
   }
 

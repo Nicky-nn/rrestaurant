@@ -12,19 +12,30 @@ export const transformarArticuloPrecioService = (
   articuloPrecio: ArticuloPrecioProps | undefined | null,
   moneda: MonedaParamsProps,
 ): MonedaPrecioProps => {
-  if (articuloPrecio?.monedaPrimaria?.moneda?.codigo && moneda.codigo === articuloPrecio.monedaPrimaria.moneda.codigo) {
+  if (
+    articuloPrecio?.monedaPrimaria?.moneda?.codigo &&
+    moneda.codigo === articuloPrecio.monedaPrimaria.moneda.codigo
+  ) {
     return articuloPrecio.monedaPrimaria
   }
-  if (articuloPrecio?.monedaAdicional1?.moneda?.codigo && moneda.codigo === articuloPrecio.monedaAdicional1.moneda.codigo) {
+  if (
+    articuloPrecio?.monedaAdicional1?.moneda?.codigo &&
+    moneda.codigo === articuloPrecio.monedaAdicional1.moneda.codigo
+  ) {
     return articuloPrecio.monedaAdicional1
   }
-  if (articuloPrecio?.monedaAdicional2?.moneda?.codigo && moneda.codigo === articuloPrecio.monedaAdicional2.moneda.codigo) {
+  if (
+    articuloPrecio?.monedaAdicional2?.moneda?.codigo &&
+    moneda.codigo === articuloPrecio.monedaAdicional2.moneda.codigo
+  ) {
     return articuloPrecio.monedaAdicional2
   }
-  if (articuloPrecio?.monedaAdicional3?.moneda?.codigo && moneda.codigo === articuloPrecio.monedaAdicional3.moneda.codigo) {
+  if (
+    articuloPrecio?.monedaAdicional3?.moneda?.codigo &&
+    moneda.codigo === articuloPrecio.monedaAdicional3.moneda.codigo
+  ) {
     return articuloPrecio.monedaAdicional3
   }
-  console.info(`No se encontró la moneda ${moneda.sigla} para transformación, generado valores por estaticos`)
   return {
     moneda: {
       _id: '',

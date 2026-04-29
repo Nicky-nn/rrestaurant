@@ -99,10 +99,12 @@ const buildComandaDefinition = (pedido: RestPedido) => {
     ],
   ]
 
-  const buildDetalle = (prod: any, detallePrefijo = '', totalFinal?: number) => {
+  // Retorna un array de nodos pdfMake: nombre del plato + sublista de modificadores + notas
+  const buildDetalle = (prod: any, detallePrefijo = '', totalFinal?: number): any[] => {
     const nombre = prod.nombreArticulo ?? 'Producto'
     const sufijo = totalFinal != null ? ` (total:${totalFinal})` : ''
-    let detalle = detallePrefijo + nombre + sufijo
+    const nodos: any[] = [{ text: detallePrefijo + nombre + sufijo, bold: true }]
+
     const mods = Object.entries(
       ((prod.modificadores ?? []) as any[]).reduce((acc: Record<string, number>, m: any) => {
         const key = m.nombreArticulo ?? ''
@@ -119,17 +121,24 @@ const buildComandaDefinition = (pedido: RestPedido) => {
     ).map(([k, qty]) => [k.split('::')[0], qty]) as [string, number][]
 
     if (mods.length) {
-      detalle += `\n  + ${mods.join(', ')}`
+      nodos.push({
+        ul: mods.map(([nombre, qty]) => ({
+          text: qty > 1 ? `x${qty} ${nombre}` : nombre,
+          fontSize: 6,
+          margin: [0, 0, 0, 0],
+        })),
+        margin: [6, 1, 0, 0],
+      })
     }
 
     const notas = ((prod.notaRapida ?? []) as any[]).map((n: any) => n.valor).filter(Boolean)
     if (prod.nota) notas.unshift(prod.nota)
     if (prod.detalleExtra) notas.push(prod.detalleExtra)
     if (notas.length) {
-      detalle += `\n  * ${notas.join(' | ')}`
+      nodos.push({ text: `* ${notas.join(' | ')}`, italics: true, fontSize: 6 })
     }
 
-    return detalle
+    return nodos
   }
 
   // Organizar por categoría para mejor claridad al chef
@@ -148,12 +157,12 @@ const buildComandaDefinition = (pedido: RestPedido) => {
       if (cambio.tipo === 'NUEVO') {
         itemsPorCategoria.nuevos.push([
           { text: `+${cambio.delta}`, style: 'tdCantNuevo' },
-          { text: buildDetalle(prod), style: 'tdDetNuevo' },
+          { stack: buildDetalle(prod), style: 'tdDetNuevo' },
         ])
       } else if (cambio.tipo === 'ELIMINADO') {
         itemsPorCategoria.cancelados.push([
           { text: String(cambio.delta), style: 'tdCantElim' },
-          { text: buildDetalle(prod), style: 'tdDetElim' },
+          { stack: buildDetalle(prod), style: 'tdDetElim' },
         ])
       } else {
         const cantPrev =
@@ -162,7 +171,7 @@ const buildComandaDefinition = (pedido: RestPedido) => {
         const totalFinal = cantPrev + cambio.delta
         itemsPorCategoria.cambios.push([
           { text: cambio.delta > 0 ? `+${cambio.delta}` : String(cambio.delta), style: 'tdCantEdit' },
-          { text: buildDetalle(prod, '', totalFinal), style: 'tdDetEdit' },
+          { stack: buildDetalle(prod, '', totalFinal), style: 'tdDetEdit' },
         ])
       }
     })
@@ -171,7 +180,7 @@ const buildComandaDefinition = (pedido: RestPedido) => {
       const cant = getCantidad(prod)
       itemsPorCategoria.normales.push([
         { text: String(cant), style: 'tdCant' },
-        { text: buildDetalle(prod), style: 'tdDet' },
+        { stack: buildDetalle(prod), style: 'tdDet' },
       ])
     })
   }

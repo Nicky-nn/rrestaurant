@@ -562,24 +562,35 @@ const RestRegistrar: FunctionComponent = () => {
           // solo lleva codigoArticulo. Enriquecemos los productos del servidor con el
           // nombreArticulo que teníamos en el estado local (_modificadoresInput o modificadores).
           const localProductos: any[] = prev.pedido?.productos ?? []
+          // Rastrear qué índices locales ya fueron emparejados para evitar que dos
+          // productos del servidor (ej. mismo artículo, uno guardado y uno nuevo) lean
+          // los _modificadoresInput del mismo producto local.
+          const matchedLocalIndices = new Set<number>()
           const pedidoEnriquecido = pedidoRetornado
             ? {
                 ...pedidoRetornado,
                 nota: pedidoRetornado.nota || prev.pedido?.nota || '',
                 productos: (pedidoRetornado.productos ?? []).map((serverProd: any) => {
-                  // Buscar producto local por nroItem (si existe) o por identidad de artículo.
-                  const localProd =
-                    localProductos.find(
-                      (lp: any) =>
-                        lp.nroItem != null &&
-                        serverProd.nroItem != null &&
-                        String(lp.nroItem) === String(serverProd.nroItem),
-                    ) ??
-                    localProductos.find(
-                      (lp: any) =>
+                  // Buscar producto local: primero por nroItem (exacto), luego por codigoArticulo
+                  // excluyendo los ya emparejados (evita que dos serverProds del mismo artículo
+                  // apunten al mismo localProd y se "copie" el contenido del primero).
+                  let localIdx = localProductos.findIndex(
+                    (lp: any, i) =>
+                      !matchedLocalIndices.has(i) &&
+                      lp.nroItem != null &&
+                      serverProd.nroItem != null &&
+                      String(lp.nroItem) === String(serverProd.nroItem),
+                  )
+                  if (localIdx < 0) {
+                    localIdx = localProductos.findIndex(
+                      (lp: any, i) =>
+                        !matchedLocalIndices.has(i) &&
                         lp.codigoArticulo === serverProd.codigoArticulo &&
                         (lp.articuloId === serverProd.articuloId || !lp.articuloId || !serverProd.articuloId),
                     )
+                  }
+                  if (localIdx >= 0) matchedLocalIndices.add(localIdx)
+                  const localProd = localIdx >= 0 ? localProductos[localIdx] : undefined
 
                   const localMods: any[] = localProd?._modificadoresInput ?? localProd?.modificadores ?? []
                   const modsEnriquecidos = (serverProd.modificadores ?? []).map((m: any) => {
@@ -606,13 +617,35 @@ const RestRegistrar: FunctionComponent = () => {
                     localProd?.detalleExtra ||
                     ''
 
+                  // Enriquecer _modificadoresInput con nroItem del servidor.
+                  // Sin esto, el payload siempre envía nroItem:undefined para modificadores
+                  // y el backend los trata como nuevos en cada update → desajuste de inventario.
+                  const serverMods: any[] =
+                    modsEnriquecidos.length > 0 ? modsEnriquecidos : (serverProd.modificadores ?? [])
+                  const enrichedLocalMods = (localProd?._modificadoresInput ?? []).map((lm: any) => {
+                    const serverMod =
+                      serverMods.find(
+                        (sm: any) =>
+                          sm.articuloModificadorId && sm.articuloModificadorId === lm.articuloModificadorId,
+                      ) ??
+                      serverMods.find(
+                        (sm: any) =>
+                          sm.codigoArticulo === lm.codigoArticulo &&
+                          (sm.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                            sm.articuloPrecio?.codigoArticuloUnidadMedida ??
+                            '') === (lm.articuloPrecio?.codigoArticuloUnidadMedida ?? ''),
+                      ) ??
+                      serverMods.find((sm: any) => sm.codigoArticulo === lm.codigoArticulo)
+                    return serverMod?.nroItem != null ? { ...lm, nroItem: serverMod.nroItem } : lm
+                  })
+
                   return {
                     ...serverProd,
                     nota: notaProducto,
                     detalleExtra: serverProd.detalleExtra || notaProducto || undefined,
-                    modificadores: modsEnriquecidos.length > 0 ? modsEnriquecidos : serverProd.modificadores,
-                    // Preservar _modificadoresInput para futuras comparaciones de deduplicación
-                    _modificadoresInput: localProd?._modificadoresInput,
+                    modificadores: serverMods,
+                    // Preservar _modificadoresInput con nroItem actualizado para futuras actualizaciones
+                    _modificadoresInput: enrichedLocalMods.length > 0 ? enrichedLocalMods : undefined,
                   }
                 }),
               }

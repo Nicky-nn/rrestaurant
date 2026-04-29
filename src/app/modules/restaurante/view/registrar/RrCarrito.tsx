@@ -587,7 +587,7 @@ const CartItem = ({
   // Custom notes separated by comma or dot
   const notasPersonalizadas = nota
     .split(/[,.]/)
-    .map((n) => n.trim())
+    .map((n: any) => n.trim())
     .filter(Boolean)
 
   return (
@@ -917,7 +917,7 @@ const CartItem = ({
                   {n}
                 </Box>
               ))}
-              {notasPersonalizadas.map((notaStr, i) => (
+              {notasPersonalizadas.map((notaStr: any, i: any) => (
                 <Box
                   key={`np-${i}`}
                   sx={{
