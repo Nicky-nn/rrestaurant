@@ -301,6 +301,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         console.log('Pedido registrado exitosamente', { response })
       } else {
         response = await actualizarPedido({ id: pedido._id!, ...basePayload })
+        console.log('Pedido actualizado exitosamente', { response })
       }
 
       if (onSuccess) onSuccess(response)
@@ -806,8 +807,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         showError(
           new Error(
             'El pedido se finalizó correctamente, pero hubo un error al facturar. Puede intentar facturarlo luego desde el panel de facturación. Detalle: ' +
-              errorMessage
-          )
+              errorMessage,
+          ),
         )
         setOpenCobroDialog(false)
         setPagosRealizados([])

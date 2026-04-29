@@ -268,6 +268,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     },
     { enabled: open && Boolean(articulo._id), staleTime: 0 },
   )
+  console.log('composicion', composicion)
 
   // ── Notas rápidas del tipo de artículo ───────────────────────────────────
   const notas: string[] = articulo.tipoArticulo?.notas ?? []
