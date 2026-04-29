@@ -91,6 +91,28 @@ const getComandaPrinter = (): string => {
   }
 }
 
+const debeImprimirEstadoCuentaAuto = (): boolean => {
+  try {
+    const raw = localStorage.getItem('printers')
+    if (!raw) return false
+    const parsed = JSON.parse(raw) as PrinterSettings
+    return parsed.impresionAutomatica?.estadoDeCuenta === true
+  } catch {
+    return false
+  }
+}
+
+const getEstadoCuentaPrinter = (): string => {
+  try {
+    const raw = localStorage.getItem('printers')
+    if (!raw) return ''
+    const parsed = JSON.parse(raw) as PrinterSettings & { estadoDeCuenta?: string }
+    return typeof parsed.estadoDeCuenta === 'string' ? parsed.estadoDeCuenta : ''
+  } catch {
+    return ''
+  }
+}
+
 /**
  * RrAcciones
  * Panel de acciones del pedido.
@@ -684,7 +706,17 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
       setOpenCobroDialog(false)
       setPagosRealizados([])
-      if (onClear) onClear() // Limpia la mesa visualmente tras pagar
+
+      // Imprimir Estado de Cuenta automáticamente si está configurado
+      if (debeImprimirEstadoCuentaAuto()) {
+        try {
+          await imprimirEstadoCuenta(pedido, descuento + giftcard, getEstadoCuentaPrinter())
+        } catch (err) {
+          console.error('Error al imprimir estado de cuenta', err)
+        }
+      }
+
+      if (onClear) onClear()
       if (onSuccess) onSuccess(null, true) // isFinalizado = true
     } catch (error) {
       console.error('Error al finalizar pedido', error)
@@ -796,6 +828,16 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
       setOpenCobroDialog(false)
       setPagosRealizados([])
+
+      // Imprimir Estado de Cuenta automáticamente si está configurado
+      if (debeImprimirEstadoCuentaAuto()) {
+        try {
+          await imprimirEstadoCuenta(pedido, descuento + giftcard, getEstadoCuentaPrinter())
+        } catch (err) {
+          console.error('Error al imprimir estado de cuenta', err)
+        }
+      }
+
       if (onClear) onClear()
       if (onSuccess) onSuccess(null, true)
     } catch (error) {
@@ -820,7 +862,22 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   }
 
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
-  const { imprimirComanda } = useComandaPdf()
+  const { imprimirComanda, imprimirEstadoCuenta } = useComandaPdf()
+
+  // Handler manual del botón "Cuenta" — imprime Estado de Cuenta sin cobrar
+  const handleImprimirCuenta = async () => {
+    if (!mesaSeleccionada?.pedido) return
+    const { pedido } = mesaSeleccionada
+    if (!pedido._id || pedido._id.startsWith('nuevo-')) return
+    try {
+      console.log('imprimirEstadoCuenta', pedido, getEstadoCuentaPrinter())
+      await imprimirEstadoCuenta(pedido, descuento + giftcard, getEstadoCuentaPrinter())
+    } catch (err) {
+      showError(
+        new MyGraphQlError(err instanceof Error ? err : new Error('Error al imprimir estado de cuenta')),
+      )
+    }
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -888,7 +945,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <Button
             variant="outlined"
             size="large"
-            disabled={!mesaSeleccionada}
+            disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+            onClick={handleImprimirCuenta}
             sx={{
               flex: 1,
               flexDirection: 'column',

@@ -284,6 +284,294 @@ const buildComandaDefinition = (pedido: RestPedido) => {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Estado de Cuenta (ticket de finalización / pre-cuenta)
+// ---------------------------------------------------------------------------
+
+const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0) => {
+  console.log('pedido', pedido)
+  const mesa = pedido.mesa?.nombre ?? '-'
+  const orden = pedido.numeroOrden ?? pedido.numeroPedido ?? '-'
+  const usuario = pedido.usucre ?? ''
+  const { fecha: fechaActual, hora: horaActual } = formatFechaHora(pedido.updatedAt ?? pedido.createdAt)
+
+  // Construir la línea de extraDetalle para cada producto
+  // (modificadores + variaciones de receta + notas)
+  const buildExtraDetalle = (prod: any): string => {
+    const partes: string[] = []
+
+    // Modificadores: agrupar por nombre+UM y acumular cantidad
+    const modMap: Record<string, number> = {}
+    ;((prod.modificadores ?? []) as any[]).forEach((m: any) => {
+      const nombre = m.nombreArticulo ?? m.codigoArticulo ?? ''
+      if (!nombre) return
+      const um =
+        m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ||
+        m.articuloPrecio?.codigoArticuloUnidadMedida ||
+        ''
+      const key = um ? `${nombre}::${um}` : nombre
+      modMap[key] = (modMap[key] || 0) + (m.articuloPrecio?.cantidad ?? 1)
+    })
+    Object.entries(modMap).forEach(([k, qty]) => {
+      const nombre = k.split('::')[0]
+      partes.push(qty > 1 ? `+x${qty} ${nombre}` : `+${nombre}`)
+    })
+
+    // Variaciones de receta
+    ;((prod.variacionReceta ?? []) as any[]).forEach((v: any) => {
+      const nombre = v.nombreArticulo ?? v.codigoArticulo ?? ''
+      if (!nombre) return
+      const qty = v.articuloPrecio?.cantidad ?? 1
+      const removido = v.removido ?? false
+      if (removido) {
+        partes.push(`-${nombre}`)
+      } else {
+        partes.push(qty > 1 ? `x${qty} ${nombre}` : nombre)
+      }
+    })
+
+    // Notas rápidas y nota libre
+    const notas = ((prod.notaRapida ?? []) as any[]).map((n: any) => n.valor).filter(Boolean)
+    if (prod.nota) notas.unshift(prod.nota)
+    if (prod.detalleExtra) notas.push(prod.detalleExtra)
+    if (notas.length) partes.push(`* ${notas.join(' | ')}`)
+
+    return partes.join('  ')
+  }
+
+  // Mapear productos a la forma que espera el document definition
+  const data = (pedido.productos ?? []).map((prod: any) => {
+    const isCortesia = prod.cortesia ?? false
+    const price = isCortesia ? 0 : (prod.articuloPrecio?.valor ?? prod.articuloPrecioBase?.valor ?? 0)
+    const quantity = prod.articuloPrecio?.cantidad ?? prod.articuloPrecioBase?.cantidad ?? 1
+    const discount = isCortesia
+      ? (prod.articuloPrecio?.valor ?? prod.articuloPrecioBase?.valor ?? 0) * quantity
+      : (prod.articuloPrecio?.descuento ?? 0)
+
+    // Precio unitario de modificadores incluido en el precio base del producto
+    // (el backend ya los incluye en articuloPrecio.valor)
+    return {
+      name: prod.nombreArticulo ?? prod.codigoArticulo ?? 'Producto',
+      quantity,
+      price,
+      discount,
+      extraDetalle: buildExtraDetalle(prod) || undefined,
+    }
+  })
+
+  // Total neto: sum(qty*price - discount) - descuentoAdicional
+  const subtotalProductos = data.reduce((acc: number, p: any) => acc + (p.quantity * p.price - p.discount), 0)
+  const totalNeto = Math.max(0, subtotalProductos - descuentoAdicional)
+
+  const descuentoAdicionalStr = descuentoAdicional > 0 ? `-${descuentoAdicional.toFixed(2)}` : '0.00'
+
+  const documentDefinition: any = {
+    pageOrientation: 'portrait',
+    pageMargins: [0, 0, 0, 0],
+    pageSize: { width: 190, height: 'auto' },
+    content: [
+      // Header compacto
+      {
+        text: 'ESTADO DE CUENTA',
+        style: 'header',
+      },
+
+      // Info del pedido en una línea
+      {
+        text: `PEDIDO: ${orden} - MESA: ${mesa}`,
+        style: 'compact',
+      },
+      {
+        text: `${fechaActual} - ${horaActual}`,
+        style: 'compact',
+      },
+
+      // Ubicación compacta (condicional)
+      ...(() => {
+        const ubicacionStr = localStorage.getItem('ubicacion')
+        if (ubicacionStr) {
+          try {
+            const ubicacion = JSON.parse(ubicacionStr)
+            if (ubicacion.descripcion) {
+              return [
+                {
+                  text: `UBICACIÓN: ${ubicacion.descripcion}`,
+                  style: 'compact',
+                },
+              ]
+            }
+          } catch (e) {
+            console.error('Error al parsear la ubicación:', e)
+          }
+        }
+        return []
+      })(),
+
+      // Separador mínimo
+      { text: '--------------------------------', style: 'separator' },
+
+      // Tabla ultra compacta
+      {
+        style: 'tableCompact',
+        table: {
+          headerRows: 1,
+          widths: [20, '*', 25, 20, 30],
+          body: [
+            // Header
+            [
+              { text: 'QTY', style: 'th' },
+              { text: 'DETALLE', style: 'th' },
+              { text: 'P.U.', style: 'th' },
+              { text: 'DSC', style: 'th' },
+              { text: 'TOTAL', style: 'th' },
+            ],
+
+            // Productos
+            ...data.map((producto: any) => [
+              { text: producto.quantity.toString(), style: 'td', alignment: 'center' },
+              {
+                text: producto.extraDetalle ? `${producto.name}\n${producto.extraDetalle}` : producto.name,
+                style: 'td',
+              },
+              { text: producto.price.toFixed(2), style: 'td', alignment: 'right' },
+              { text: producto.discount.toFixed(2), style: 'td', alignment: 'right' },
+              {
+                text: (producto.quantity * producto.price - producto.discount).toFixed(2),
+                style: 'td',
+                alignment: 'right',
+              },
+            ]),
+
+            // Descuento adicional (solo si existe)
+            ...(Number(descuentoAdicional) > 0
+              ? [
+                  [
+                    { text: '', border: [false, false, false, false] },
+                    { text: '', border: [false, false, false, false] },
+                    { text: '', border: [false, false, false, false] },
+                    {
+                      text: 'DESC:',
+                      style: 'totalLabel',
+                      border: [false, true, false, false],
+                    },
+                    {
+                      text: descuentoAdicionalStr,
+                      style: 'totalValue',
+                      border: [false, true, false, false],
+                    },
+                  ],
+                ]
+              : []),
+
+            // Total final
+            [
+              { text: '', border: [false, false, false, false] },
+              { text: '', border: [false, false, false, false] },
+              { text: '', border: [false, false, false, false] },
+              { text: 'TOTAL:', style: 'totalLabel', border: [false, true, false, true] },
+              {
+                text: totalNeto.toFixed(2),
+                style: 'totalValue',
+                border: [false, true, false, true],
+              },
+            ],
+          ],
+        },
+        layout: {
+          hLineWidth: function (i: number, node: { table: { body: any[] } }) {
+            return i === 1 || i === node.table.body.length ? 0.5 : 0
+          },
+          vLineWidth: function () {
+            return 0
+          },
+          hLineColor: function () {
+            return '#000'
+          },
+          paddingLeft: function () {
+            return 1
+          },
+          paddingRight: function () {
+            return 1
+          },
+          paddingTop: function () {
+            return 0.5
+          },
+          paddingBottom: function () {
+            return 0.5
+          },
+        },
+      },
+
+      { text: ' ', style: 'footer' },
+      { text: 'PROPINA:_________________________', style: 'footer', alignment: 'right' },
+      { text: ' ', style: 'footer' },
+      { text: 'NIT:_____________________________', style: 'footer' },
+      { text: 'NOMBRE:__________________________', style: 'footer' },
+      { text: 'CORREO:__________________________', style: 'footer' },
+      { text: 'Usuario: ' + usuario, style: 'usuario' },
+    ],
+
+    styles: {
+      header: {
+        fontSize: 9,
+        bold: true,
+        alignment: 'center',
+        margin: [0, 1, 0, 1],
+      },
+      compact: {
+        fontSize: 7,
+        bold: true,
+        alignment: 'center',
+        margin: [0, 0.5, 0, 0.5],
+      },
+      separator: {
+        fontSize: 6,
+        alignment: 'center',
+        margin: [0, 1, 0, 1],
+      },
+      tableCompact: {
+        margin: [0, 1, 0, 1],
+      },
+      th: {
+        fontSize: 6,
+        bold: true,
+        alignment: 'center',
+        fillColor: '#eeeeee',
+      },
+      td: {
+        fontSize: 6,
+        margin: [0, 0.5, 0, 0.5],
+      },
+      totalLabel: {
+        fontSize: 6,
+        bold: true,
+        alignment: 'right',
+      },
+      totalValue: {
+        fontSize: 8,
+        bold: true,
+        alignment: 'right',
+      },
+      footer: {
+        fontSize: 9,
+        margin: [0, 0.5, 0, 0],
+      },
+      usuario: {
+        fontSize: 5,
+        alignment: 'center',
+        margin: [0, 1, 0, 1],
+      },
+    },
+
+    defaultStyle: {
+      fontSize: 6,
+      lineHeight: 1,
+    },
+  }
+
+  return documentDefinition
+}
+
 export const useComandaPdf = () => {
   const imprimirComanda = async (pedido: RestPedido, selectedPrinter = '') => {
     const documentDefinition: any = buildComandaDefinition(pedido)
@@ -314,5 +602,34 @@ export const useComandaPdf = () => {
     })
   }
 
-  return { imprimirComanda }
+  const imprimirEstadoCuenta = async (pedido: RestPedido, descuentoAdicional = 0, selectedPrinter = '') => {
+    const documentDefinition: any = buildEstadoCuentaDefinition(pedido, descuentoAdicional)
+    const pdfDocGenerator = pdfMake.createPdf(documentDefinition) as any
+    const blob: Blob = await pdfDocGenerator.getBlob()
+
+    if (selectedPrinter) {
+      try {
+        await printBlobToLocalPrinter({
+          blob,
+          printer: selectedPrinter,
+          filename: 'estado-cuenta.pdf',
+        })
+        notSuccess('Impresión de Estado de Cuenta iniciada')
+        return
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : 'la impresora no responde o no está encendida'
+        notError(`Error al imprimir: ${msg}`)
+        return
+      }
+    }
+
+    const pdfUrl = URL.createObjectURL(blob)
+    printJS({
+      printable: pdfUrl,
+      type: 'pdf',
+      style: '@media print { @page { size: 100%; margin: 0mm; } body { width: 100%; } }',
+    })
+  }
+
+  return { imprimirComanda, imprimirEstadoCuenta }
 }
