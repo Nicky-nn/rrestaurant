@@ -682,7 +682,6 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         })),
       })
 
-      console.log('Pedido finalizado exitosamente')
       setOpenCobroDialog(false)
       setPagosRealizados([])
       if (onClear) onClear() // Limpia la mesa visualmente tras pagar

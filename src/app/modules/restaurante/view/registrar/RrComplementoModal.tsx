@@ -1299,7 +1299,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                   modificadoresInput,
                   // Nunca enviar 0: el backend controla gratuidad; aquí solo informamos precio real.
                   precioUnitario:
-                    (precioBase + precioModificadoresExtra + precioRecetaExtra) ||
+                    precioBase + precioModificadoresExtra + precioRecetaExtra ||
                     getPrecio(articulo) ||
                     (articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0),
                 })

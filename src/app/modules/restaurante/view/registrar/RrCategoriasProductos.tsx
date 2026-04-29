@@ -370,7 +370,6 @@ const ProductCard: FunctionComponent<ProductCardProps> = memo(
               >
                 <Chip
                   icon={<ExtensionIcon sx={{ fontSize: '0.75rem !important' }} />}
-                  label={articulo.esReceta ? 'R' : 'M'}
                   size="small"
                   color="secondary"
                   onClick={(e) => {
