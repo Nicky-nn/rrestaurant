@@ -824,17 +824,6 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
             _id
             codigo
             nombre
-            direccion
-            ciudad
-            contacto
-            correo
-            telefono
-            notas
-            state
-            usucre
-            createdAt
-            usumod
-            updatedAt
           }
           imagen {
             id

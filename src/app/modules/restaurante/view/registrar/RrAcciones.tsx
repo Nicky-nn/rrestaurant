@@ -785,7 +785,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           email: pedido.cliente?.email,
           telefono: pedido.cliente?.telefono,
         },
-        numeroPedido: pedido.numeroPedido || 0,
+        pedidoId: pedido._id!,
         input: {
           codigoMoneda: user.moneda?.codigo || 1,
           codigoMetodoPago: metodoPrincipal,
@@ -795,7 +795,6 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         },
       })
 
-      console.log('Factura generada exitosamente')
       setOpenCobroDialog(false)
       setPagosRealizados([])
       if (onClear) onClear()

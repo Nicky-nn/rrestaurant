@@ -6,16 +6,16 @@ import { RESTPEDIDOFACTURAFRAGMENT } from '../fragments/RestPedidoFacturaFragmen
 import { ClienteOperacionInput, EntidadParamsInput, RestPedidoFactura, RestPedidoFacturaInput } from '../types';
 
 export interface RestPedidoFacturaRegistroVariables {
+  pedidoId: string;
   notificacion?: boolean;
   entidad: EntidadParamsInput;
   cliente: ClienteOperacionInput;
   input: RestPedidoFacturaInput;
-  numeroPedido: number;
 }
 
 export const RESTPEDIDOFACTURAREGISTRO = gql`
-  mutation RestPedidoFacturaRegistro($notificacion: Boolean, $entidad: EntidadParamsInput!, $cliente: ClienteOperacionInput!, $input: RestPedidoFacturaInput!, $numeroPedido: Int!) {
-    restPedidoFacturaRegistro(notificacion: $notificacion, entidad: $entidad, cliente: $cliente, input: $input, numeroPedido: $numeroPedido) { ...RestPedidoFacturaFragment }
+  mutation RestPedidoFacturaRegistro($pedidoId: ID!, $notificacion: Boolean, $entidad: EntidadParamsInput!, $cliente: ClienteOperacionInput!, $input: RestPedidoFacturaInput!) {
+    restPedidoFacturaRegistro(pedidoId: $pedidoId, notificacion: $notificacion, entidad: $entidad, cliente: $cliente, input: $input) { ...RestPedidoFacturaFragment }
   }
   ${RESTPEDIDOFACTURAFRAGMENT}
 `;

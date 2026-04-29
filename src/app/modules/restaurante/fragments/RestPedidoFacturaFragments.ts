@@ -647,6 +647,7 @@ export const RESTPEDIDOFACTURAFRAGMENT = gql`
                       esOpcionGratuita
                       elegibleParaGratis
                       cantidadIncluida
+                      esOpcionAncla
                       articuloPrecio {
                         # Datos simples (Tipo ya expandido previamente)
                         articuloUnidadMedida {
@@ -845,6 +846,7 @@ export const RESTPEDIDOFACTURAFRAGMENT = gql`
             esOpcionGratuita
             elegibleParaGratis
             cantidadIncluida
+            esOpcionAncla
             nota
             state
           }
@@ -979,6 +981,7 @@ export const RESTPEDIDOFACTURAFRAGMENT = gql`
                   esOpcionGratuita
                   elegibleParaGratis
                   cantidadIncluida
+                  esOpcionAncla
                   nota
                   state
                 }
