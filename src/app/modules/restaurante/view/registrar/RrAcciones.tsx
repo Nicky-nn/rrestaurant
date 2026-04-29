@@ -659,6 +659,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
     const { pedido } = mesaSeleccionada
     const totalAPagar = Math.max(0, subtotal - descuento - giftcard)
+    // esCortesiaTotal: cuando todo el pedido es cortesía, totalAPagar=0 y el backend
+    // espera montoTotal=0 y metodoPagoVenta.monto=0 (el 100% de descuento está embebido en cada ítem).
+    const esCortesiaTotal = subtotal === 0 && totalAPagar === 0
 
     let pagosFinales = pagosRealizados
 
@@ -669,11 +672,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           id: 'pago-defecto',
           metodoId: metodoDefectoId || 1, // 1 es típicamente Efectivo en SIAT si no hay seleccionado
           metodoNombre: metodoDefectoNombre || 'Efectivo',
-          monto: totalAPagar,
+          monto: totalAPagar, // 0 si es cortesía total — el backend lo espera así
           numeroTarjeta: inputNumeroTarjeta,
         },
       ]
-    } else {
+    } else if (!esCortesiaTotal) {
       const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
       if (totalPagado < totalAPagar) {
         showError(new Error('El monto pagado es menor al total a pagar.'))
@@ -702,7 +705,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         } as RestPedidoFinalizarInput & { codigoMetodoPago: number; numeroTarjeta?: string },
         metodoPagoVenta: pagosFinales.map((p) => ({
           codigoMetodoPago: p.metodoId,
-          monto: p.monto,
+          // Si es cortesía total, el backend exige que la sumatoria de montos sea 0
+          monto: esCortesiaTotal ? 0 : p.monto,
         })),
       })
 
@@ -753,6 +757,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
     const { pedido } = mesaSeleccionada
     const totalAPagar = Math.max(0, subtotal - descuento - giftcard)
+    // Ídem handleFinalizar: si es cortesía total, totalAPagar=0 y el backend lo espera así.
+    const esCortesiaTotal = subtotal === 0 && totalAPagar === 0
 
     let pagosFinales = pagosRealizados
 
@@ -763,11 +769,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           id: 'pago-defecto',
           metodoId: metodoDefectoId || 1,
           metodoNombre: metodoDefectoNombre || 'Efectivo',
-          monto: totalAPagar,
+          monto: totalAPagar, // 0 si es cortesía total
           numeroTarjeta: inputNumeroTarjeta,
         },
       ]
-    } else {
+    } else if (!esCortesiaTotal) {
       const totalPagado = pagosRealizados.reduce((acc, p) => acc + p.monto, 0)
       if (totalPagado < totalAPagar) {
         showError(new Error('El monto pagado es menor al total a pagar.'))
@@ -800,7 +806,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         } as RestPedidoFinalizarInput & { codigoMetodoPago: number; numeroTarjeta?: string },
         metodoPagoVenta: pagosFinales.map((p) => ({
           codigoMetodoPago: p.metodoId,
-          monto: p.monto,
+          // Si es cortesía total, el backend exige que la sumatoria de montos sea 0
+          monto: esCortesiaTotal ? 0 : p.monto,
         })),
       })
 

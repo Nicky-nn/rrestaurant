@@ -106,24 +106,30 @@ const buildComandaDefinition = (pedido: RestPedido) => {
     const nodos: any[] = [{ text: detallePrefijo + nombre + sufijo, bold: true }]
 
     const mods = Object.entries(
-      ((prod.modificadores ?? []) as any[]).reduce((acc: Record<string, number>, m: any) => {
+      ((prod.modificadores ?? []) as any[]).reduce((acc: Record<string, { qty: number; opcion?: string }>, m: any) => {
         const key = m.nombreArticulo ?? ''
         if (!key) return acc
-        // UM en la clave para distinguir variantes del mismo artículo
+        // UM + nombreOpcion en la clave para distinguir variantes del mismo artículo
         const um =
           m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ||
           m.articuloPrecio?.codigoArticuloUnidadMedida ||
           ''
-        const groupKey = um ? `${key}::${um}` : key
-        acc[groupKey] = (acc[groupKey] || 0) + (m.articuloPrecio?.cantidad ?? 1)
+        const opcion = m.nombreOpcion ?? ''
+        const groupKey = [key, um, opcion].filter(Boolean).join('::')
+        if (!acc[groupKey]) acc[groupKey] = { qty: 0, opcion: opcion || undefined }
+        acc[groupKey].qty += m.articuloPrecio?.cantidad ?? 1
         return acc
       }, {}),
-    ).map(([k, qty]) => [k.split('::')[0], qty]) as [string, number][]
+    ).map(([k, { qty, opcion }]) => {
+      const baseName = k.split('::')[0]
+      const label = opcion ? `${baseName} - ${opcion}` : baseName
+      return [label, qty] as [string, number]
+    })
 
     if (mods.length) {
       nodos.push({
-        ul: mods.map(([nombre, qty]) => ({
-          text: qty > 1 ? `x${qty} ${nombre}` : nombre,
+        ul: mods.map(([label, qty]) => ({
+          text: qty > 1 ? `x${qty} ${label}` : label,
           fontSize: 6,
           margin: [0, 0, 0, 0],
         })),
@@ -299,8 +305,8 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
   const buildDetalleStack = (prod: any): any[] => {
     const nodos: any[] = [{ text: prod.nombreArticulo ?? prod.codigoArticulo ?? 'Producto', style: 'td', bold: true }]
 
-    // Modificadores: agrupar por nombre+UM, mostrar como "- nombre (x2)"
-    const modMap: Record<string, number> = {}
+    // Modificadores: agrupar por nombre+UM+nombreOpcion para distinguir variantes iguales
+    const modMap: Record<string, { qty: number; opcion?: string }> = {}
     ;((prod.modificadores ?? []) as any[]).forEach((m: any) => {
       const nombre = m.nombreArticulo ?? m.codigoArticulo ?? ''
       if (!nombre) return
@@ -308,12 +314,15 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
         m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ||
         m.articuloPrecio?.codigoArticuloUnidadMedida ||
         ''
-      const key = um ? `${nombre}::${um}` : nombre
-      modMap[key] = (modMap[key] || 0) + (m.articuloPrecio?.cantidad ?? 1)
+      const opcion = m.nombreOpcion ?? ''
+      const key = [nombre, um, opcion].filter(Boolean).join('::')
+      if (!modMap[key]) modMap[key] = { qty: 0, opcion: opcion || undefined }
+      modMap[key].qty += m.articuloPrecio?.cantidad ?? 1
     })
-    Object.entries(modMap).forEach(([k, qty]) => {
+    Object.entries(modMap).forEach(([k, { qty, opcion }]) => {
       const nombre = k.split('::')[0]
-      nodos.push({ text: qty > 1 ? `- ${nombre} (x${qty})` : `- ${nombre}`, style: 'tdSub' })
+      const label = opcion ? `${nombre} - ${opcion}` : nombre
+      nodos.push({ text: qty > 1 ? `- ${label} (x${qty})` : `- ${label}`, style: 'tdSub' })
     })
 
     // Variaciones de receta: solo mostrar las que NO fueron removidas

@@ -1449,6 +1449,8 @@ export interface ArticuloOperacionModificador {
   cantidadIncluida?: number;
   /** Determina si este insumo es la opción base (Ancla) para agrandados */
   esOpcionAncla?: boolean;
+  /** Valor alias en caso de existencia de articulos modificadores duplicados -  Heredado de ArticuloModificador.opciones */
+  nombreOpcion?: string;
   /** El mismo motor pesado de la línea principal */
   articuloPrecio?: ArticuloPrecioOperacion;
   nota?: string;
