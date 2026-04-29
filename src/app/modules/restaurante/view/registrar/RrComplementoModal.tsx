@@ -1297,7 +1297,11 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                   notasIds: notasIdsFinales,
                   variacionReceta,
                   modificadoresInput,
-                  precioUnitario: precioBase + precioModificadoresExtra + precioRecetaExtra,
+                  // Nunca enviar 0: el backend controla gratuidad; aquí solo informamos precio real.
+                  precioUnitario:
+                    (precioBase + precioModificadoresExtra + precioRecetaExtra) ||
+                    getPrecio(articulo) ||
+                    (articulo.articuloPrecioBase?.monedaPrimaria?.precio ?? 0),
                 })
               }
               onClose()

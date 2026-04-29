@@ -247,7 +247,7 @@ const RestGestion: FunctionComponent<Props> = () => {
           email: selectedPedido.cliente?.email,
           telefono: selectedPedido.cliente?.telefono,
         },
-        numeroPedido: selectedPedido.numeroPedido || 0,
+        pedidoId: selectedPedido._id!,
         input: {
           codigoMoneda: user.moneda?.codigo || 1,
           codigoMetodoPago: pagosFinales[0].metodoId,

@@ -1,7 +1,9 @@
 import { WarningAmber } from '@mui/icons-material'
+import AddIcon from '@mui/icons-material/Add'
 import CallSplitOutlinedIcon from '@mui/icons-material/CallSplitOutlined'
 import CloseIcon from '@mui/icons-material/Close'
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined'
+import RemoveIcon from '@mui/icons-material/Remove'
 import {
   alpha,
   Box,
@@ -24,15 +26,21 @@ import { searchClientsApi } from '../../../clients/api/searchClients.api'
 import InputSearchClients from '../../../clients/components/InputSearchClients'
 import { ClientProps } from '../../../clients/interfaces/client'
 import { MesaUI } from '../../interfaces/mesa.interface'
+import { RestPedidoActualizarVariables } from '../../mutations/useRestPedidoActualizar'
+import { RestPedidoFacturaRegistroVariables } from '../../mutations/useRestPedidoFacturaRegistro'
+import { RestPedidoFinalizarVariables } from '../../mutations/useRestPedidoFinalizar'
+import { RestPedidoRegistrarCompletarVariables } from '../../mutations/useRestPedidoRegistrarCompletar'
 import {
   ArticuloModificadorOperacionInput,
   ArticuloOperacion,
   ArticuloOperacionModificador,
   ArticuloOperacionReceta,
-  ArticuloOperacionUI,
   ArticuloRecetaOperacionInput,
 } from '../../types'
 import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
+
+// Tipo local para artículos UI que extienden ArticuloOperacion con campos efímeros
+type ArticuloOperacionUI = ArticuloOperacion & { _modificadoresInput?: ArticuloModificadorOperacionInput[] }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -88,13 +96,13 @@ export interface RrDividirCuentaDialogProps {
   /** Se llama cuando la división se completó exitosamente. Recibe los productos QUE QUEDAN en la mesa original y el pedido actualizado del servidor. */
   onDividido: (productosRestantes: ArticuloOperacion[], pedidoActualizado: any) => void
   /** Función para registrar un pedido nuevo (los productos divididos) */
-  registrarPedido: (payload: any) => Promise<any>
+  registrarPedido: (payload: RestPedidoRegistrarCompletarVariables) => Promise<any>
   /** Función para actualizar el pedido original (quitarle los productos divididos) */
-  actualizarPedido: (payload: any) => Promise<any>
+  actualizarPedido: (payload: RestPedidoActualizarVariables) => Promise<any>
   /** Función para finalizar un pedido (cobro sin factura) */
-  finalizarPedido: (payload: any) => Promise<any>
+  finalizarPedido: (payload: RestPedidoFinalizarVariables) => Promise<any>
   /** Función para facturar un pedido */
-  facturarPedido: (payload: any) => Promise<any>
+  facturarPedido: (payload: RestPedidoFacturaRegistroVariables) => Promise<any>
   user: any
   isPending?: boolean
 }
@@ -118,8 +126,8 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
 
   const productos: ArticuloOperacion[] = mesaSeleccionada.pedido?.productos ?? []
 
-  // Set de índices seleccionados para la división
-  const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set())
+  // Diccionario de índices seleccionados a cantidades a dividir
+  const [cantidadesDividir, setCantidadesDividir] = useState<Record<number, number>>({})
 
   // Cliente para el nuevo pedido dividido.
   // Mismo patrón que RrCarrito: ref para caché, setState solo si null.
@@ -148,7 +156,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
   // Efecto 2: cuando el dialog se abre, resetear la selección y restaurar el cliente default
   useEffect(() => {
     if (open) {
-      setSeleccionados(new Set())
+      setCantidadesDividir({})
       // Restaurar el cliente 00 desde la caché (sincrónico, sin setState condicional)
       setClienteDividido(defaultClientRef.current)
     }
@@ -167,25 +175,59 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
 
   // ── Lógica de selección ───────────────────────────────────────────────────
 
-  const toggleSeleccion = (idx: number) => {
-    setSeleccionados((prev) => {
-      const next = new Set(prev)
-      if (next.has(idx)) {
-        next.delete(idx)
+  const toggleSeleccion = (idx: number, maxQty: number) => {
+    setCantidadesDividir((prev) => {
+      const next = { ...prev }
+      if (next[idx] > 0) {
+        delete next[idx]
       } else {
-        next.add(idx)
+        next[idx] = maxQty
       }
       return next
     })
   }
 
-  const productosSeleccionados = productos.filter((_, i) => seleccionados.has(i))
-  const productosRestantes = productos.filter((_, i) => !seleccionados.has(i))
+  const updateCantidad = (idx: number, diff: number, maxQty: number) => {
+    setCantidadesDividir((prev) => {
+      const current = prev[idx] || 0
+      const nextQty = current + diff
+      if (nextQty <= 0) {
+        const next = { ...prev }
+        delete next[idx]
+        return next
+      }
+      if (nextQty > maxQty) return prev
+      return { ...prev, [idx]: nextQty }
+    })
+  }
+
+  const cloneArticuloWithQty = (p: ArticuloOperacion, qty: number): ArticuloOperacion => {
+    const cloned = { ...p }
+    if (cloned.articuloPrecio) cloned.articuloPrecio = { ...cloned.articuloPrecio, cantidad: qty }
+    if (cloned.articuloPrecioBase) cloned.articuloPrecioBase = { ...cloned.articuloPrecioBase, cantidad: qty }
+    return cloned
+  }
+
+  const productosSeleccionados = productos.flatMap((p, i) => {
+    const qtyToMove = cantidadesDividir[i] || 0
+    if (qtyToMove <= 0) return []
+    const maxQty = p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1
+    if (qtyToMove === maxQty) return [p]
+    return [cloneArticuloWithQty(p, qtyToMove)]
+  })
+
+  const productosRestantes = productos.flatMap((p, i) => {
+    const qtyToMove = cantidadesDividir[i] || 0
+    const maxQty = p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1
+    if (qtyToMove <= 0) return [p]
+    if (qtyToMove >= maxQty) return []
+    return [cloneArticuloWithQty(p, maxQty - qtyToMove)]
+  })
 
   const totalSeleccionado = productosSeleccionados.reduce((sum, p) => sum + calcPrecioItem(p), 0)
 
   // Al menos 1 producto debe quedar en la mesa original
-  const puedeCobrar = seleccionados.size > 0 && productosRestantes.length >= 1
+  const puedeCobrar = Object.keys(cantidadesDividir).length > 0 && productosRestantes.length >= 1
 
   // ── Construir payload de pedido ───────────────────────────────────────────
 
@@ -313,7 +355,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
         productos: buildProductosInput(productosSeleccionados),
         codigoMoneda: user.moneda.codigo,
         tipoCambio: user.moneda.tipoCambio || 1,
-        tipo: null,
+        tipo: undefined,
         nota: `División de ${mesaSeleccionada.label}`,
         espacioId: ubicacionId,
         atributo4: 'fromDivision:true',
@@ -341,7 +383,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
         productos: buildProductosInput(productosRestantes),
         codigoMoneda: user.moneda.codigo,
         tipoCambio: user.moneda.tipoCambio || 1,
-        tipo: mesaSeleccionada.pedido.tipo ?? null,
+        tipo: mesaSeleccionada.pedido.tipo ?? undefined,
         nota: mesaSeleccionada.pedido.nota || '',
         espacioId: ubicacionId,
         atributo4: 'fromDivision:true',
@@ -418,7 +460,6 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
           codigoCliente: clienteDividido?.codigoCliente || '00',
           razonSocial: clienteDividido?.razonSocial || 'Sin Razón Social',
         },
-        numeroPedido: pedidoReal.numeroPedido || 0,
         input: {
           codigoMoneda: user.moneda?.codigo || 1,
           codigoMetodoPago: pagosFinales[0].metodoId,
@@ -470,7 +511,6 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
           codigoCliente: clienteDividido?.codigoCliente || '00',
           razonSocial: clienteDividido?.razonSocial || 'Sin Razón Social',
         },
-        numeroPedido: pedidoReal.numeroPedido || 0,
         input: {
           codigoMoneda: user.moneda?.codigo || 1,
           codigoMetodoPago: metodoPrincipal,
@@ -494,7 +534,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
           email: clienteDividido?.email,
           telefono: clienteDividido?.telefono,
         },
-        numeroPedido: pedidoReal.numeroPedido || 0,
+        pedidoId: pedidoReal._id!,
         input: {
           codigoMoneda: user.moneda?.codigo || 1,
           codigoMetodoPago: metodoPrincipal,
@@ -610,15 +650,16 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
               </Typography>
             )}
             {productos.map((producto, idx) => {
-              const isChecked = seleccionados.has(idx)
-              const precio = calcPrecioItem(producto)
-              const cantidad = producto.articuloPrecio?.cantidad ?? producto.articuloPrecioBase?.cantidad ?? 1
+              const qtyToMove = cantidadesDividir[idx] || 0
+              const isChecked = qtyToMove > 0
+              const maxQty = producto.articuloPrecio?.cantidad ?? producto.articuloPrecioBase?.cantidad ?? 1
               const isCortesia = !!producto.cortesia
+              const precio = calcPrecioItem(producto)
 
               return (
                 <Box
                   key={`${producto.articuloId || idx}-${idx}`}
-                  onClick={() => toggleSeleccion(idx)}
+                  onClick={() => toggleSeleccion(idx, maxQty)}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -640,16 +681,16 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
                 >
                   <Checkbox
                     checked={isChecked}
-                    onChange={() => toggleSeleccion(idx)}
+                    onChange={() => toggleSeleccion(idx, maxQty)}
                     onClick={(e) => e.stopPropagation()}
                     size="small"
                     sx={{ p: 0.5 }}
                   />
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body2" fontWeight={700} color="text.primary">
-                      {cantidad > 1 && (
+                      {maxQty > 1 && (
                         <Typography component="span" fontWeight={900} color="primary.main" sx={{ mr: 0.5 }}>
-                          {cantidad}x
+                          {maxQty}x
                         </Typography>
                       )}
                       {producto.nombreArticulo}
@@ -677,11 +718,35 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
                       ))}
                     </Box>
                   </Box>
+                  
+                  {maxQty > 1 && isChecked ? (
+                    <Box
+                      sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={() => updateCantidad(idx, -1, maxQty)}
+                        disabled={qtyToMove <= 1}
+                      >
+                        <RemoveIcon fontSize="small" />
+                      </IconButton>
+                      <Typography sx={{ mx: 1, fontWeight: 'bold' }}>{qtyToMove}</Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => updateCantidad(idx, 1, maxQty)}
+                        disabled={qtyToMove >= maxQty}
+                      >
+                        <AddIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ) : null}
+
                   <Typography
                     variant="body2"
                     fontWeight={800}
                     color={isCortesia ? 'success.main' : 'text.primary'}
-                    sx={{ flexShrink: 0 }}
+                    sx={{ flexShrink: 0, ml: maxQty > 1 && isChecked ? 2 : 'auto' }}
                   >
                     {isCortesia ? 'Gratis' : formatPrice(precio)}
                   </Typography>
@@ -715,7 +780,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
             <Typography
               variant="h6"
               fontWeight={900}
-              color={seleccionados.size > 0 ? 'text.primary' : 'text.disabled'}
+              color={Object.keys(cantidadesDividir).length > 0 ? 'text.primary' : 'text.disabled'}
             >
               {formatPrice(totalSeleccionado)}
             </Typography>
@@ -743,7 +808,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
           />
 
           {/* Advertencia mínimo de productos */}
-          {seleccionados.size > 0 && productosRestantes.length === 0 && (
+          {Object.keys(cantidadesDividir).length > 0 && productosRestantes.length === 0 && (
             <Box
               sx={{
                 mt: 2,
