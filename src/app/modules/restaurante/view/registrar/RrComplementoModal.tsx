@@ -782,13 +782,12 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                               ? getPrecioParaUM(op.articulo, op.articuloUnidadMedida?.codigoUnidadMedida)
                               : 0
                             const opSigla = op.articulo ? getSigla(op.articulo) : sigla
-                            // Verificar disponibilidad de stock para artículos gestionados por lotes (gestionArticulo === 'LOTE')
-                            // Solo se activa para artículos que verifican stock Y gestionan por lotes.
-                            // almacen puede ser no-null incluso sin lotes (fallback del servicio),
-                            // así que chequeamos lote === null para detectar "sin lotes disponibles con stock".
-                            const necesitaLote =
-                              op.articulo?.verificarStock === true && op.articulo?.gestionArticulo === 'LOTE'
-                            const stockCheck = necesitaLote
+                            // Verificar disponibilidad de stock para artículos que verifican stock.
+                            // NOTA: lotes está deprecated y siempre llega null desde el servidor,
+                            // por eso la verificación se hace exclusivamente por disponible del almacén
+                            // (mostrarAlmacenConStock:true → filtra almacenes con disponible > 0).
+                            const necesitaVerificarStock = op.articulo?.verificarStock === true
+                            const stockCheck = necesitaVerificarStock
                               ? articuloToArticuloOperacionInputService(
                                   op.articulo! as unknown as Parameters<
                                     typeof articuloToArticuloOperacionInputService
@@ -797,13 +796,14 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                   {
                                     cantidad: 1,
                                     autoAlmacen: true,
-                                    // FIX: autoLote:false evita iterar detalle.lotes (no incluido en GQL fragment)
                                     autoLote: false,
                                     mostrarLoteConStock: false,
+                                    mostrarAlmacenConStock: true,
                                   },
                                 )
                               : null
-                            const sinStock = necesitaLote && stockCheck?.almacen === null
+                            // Sin stock: no hay almacén con disponible > 0
+                            const sinStock = necesitaVerificarStock && stockCheck?.almacen === null
                             // Max del grupo alcanzado Y esta opción ya tiene 0 → deshabilitado
                             const maxAlcanzado = grupoLleno && !selected
                             const disabled = maxAlcanzado || sinStock

@@ -806,6 +806,7 @@ const RestRegistrar: FunctionComponent = () => {
               onRemoveProduct={handleRemoveProduct}
               onClientChange={handleClientChange}
               onNotaChange={handleNotaChange}
+              isPedidoDirty={isPedidoDirty}
             />
           </Box>
           <Box sx={{ flexShrink: 0, mt: 'auto' }}>
@@ -815,6 +816,7 @@ const RestRegistrar: FunctionComponent = () => {
               onSuccess={handleSuccess}
               onCancel={handleCancel}
               onClear={handleClear}
+              onDescuentoChange={() => setIsPedidoDirty(true)}
             />
           </Box>
         </Grid>

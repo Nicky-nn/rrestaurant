@@ -886,8 +886,16 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
             verificarStock
             detalle {
               almacen {
+                _id
                 codigoAlmacen
+                nombre
+                activo
+                prioridad
               }
+              stock
+              comprometido
+              solicitado
+              disponible
               orden
             }
             state

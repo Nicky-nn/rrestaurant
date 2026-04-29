@@ -65,6 +65,7 @@ interface RrCarritoProps {
   onRemoveProduct?: (index: number) => void
   onClientChange?: (cliente: any) => void
   onNotaChange?: (nota: string) => void
+  isPedidoDirty?: boolean
 }
 
 const RrCarrito: FunctionComponent<RrCarritoProps> = ({
@@ -73,6 +74,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
   onRemoveProduct,
   onClientChange,
   onNotaChange,
+  isPedidoDirty = false,
 }) => {
   const theme = useTheme()
   const [openOpciones, setOpenOpciones] = useState(false)
@@ -324,7 +326,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
               {/* Textos Mesa y Área */}
               <Box>
                 <Typography variant="body1" fontWeight="700" color={headerColor} lineHeight={1.2}>
-                  {isOrderEdited && (
+                  {(isOrderEdited || isPedidoDirty) && (
                     <Typography component="span" sx={{ color: 'primary.main', fontWeight: 900, mr: 0.5 }}>
                       *
                     </Typography>
@@ -786,7 +788,7 @@ const CartItem = ({
                   textTransform: 'uppercase',
                 }}
               >
-                Descuento ($)
+                Descuento (BOB)
               </Typography>
               {isCortesia ? (
                 <OutlinedInput

@@ -289,18 +289,17 @@ const buildComandaDefinition = (pedido: RestPedido) => {
 // ---------------------------------------------------------------------------
 
 const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0) => {
-  console.log('pedido', pedido)
   const mesa = pedido.mesa?.nombre ?? '-'
   const orden = pedido.numeroOrden ?? pedido.numeroPedido ?? '-'
   const usuario = pedido.usucre ?? ''
   const { fecha: fechaActual, hora: horaActual } = formatFechaHora(pedido.updatedAt ?? pedido.createdAt)
 
-  // Construir la línea de extraDetalle para cada producto
-  // (modificadores + variaciones de receta + notas)
-  const buildExtraDetalle = (prod: any): string => {
-    const partes: string[] = []
+  // Construye un stack pdfMake para la celda DETALLE:
+  // nombre en negrita + cada modificador/receta como "- item" + comentarios como "* nota"
+  const buildDetalleStack = (prod: any): any[] => {
+    const nodos: any[] = [{ text: prod.nombreArticulo ?? prod.codigoArticulo ?? 'Producto', style: 'td', bold: true }]
 
-    // Modificadores: agrupar por nombre+UM y acumular cantidad
+    // Modificadores: agrupar por nombre+UM, mostrar como "- nombre (x2)"
     const modMap: Record<string, number> = {}
     ;((prod.modificadores ?? []) as any[]).forEach((m: any) => {
       const nombre = m.nombreArticulo ?? m.codigoArticulo ?? ''
@@ -314,29 +313,26 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
     })
     Object.entries(modMap).forEach(([k, qty]) => {
       const nombre = k.split('::')[0]
-      partes.push(qty > 1 ? `+x${qty} ${nombre}` : `+${nombre}`)
+      nodos.push({ text: qty > 1 ? `- ${nombre} (x${qty})` : `- ${nombre}`, style: 'tdSub' })
     })
 
-    // Variaciones de receta
+    // Variaciones de receta: solo mostrar las que NO fueron removidas
     ;((prod.variacionReceta ?? []) as any[]).forEach((v: any) => {
       const nombre = v.nombreArticulo ?? v.codigoArticulo ?? ''
-      if (!nombre) return
+      if (!nombre || v.removido) return
       const qty = v.articuloPrecio?.cantidad ?? 1
-      const removido = v.removido ?? false
-      if (removido) {
-        partes.push(`-${nombre}`)
-      } else {
-        partes.push(qty > 1 ? `x${qty} ${nombre}` : nombre)
-      }
+      nodos.push({ text: qty > 1 ? `- ${nombre} (x${qty})` : `- ${nombre}`, style: 'tdSub' })
     })
 
-    // Notas rápidas y nota libre
+    // Notas rápidas y nota libre: "* nota"
     const notas = ((prod.notaRapida ?? []) as any[]).map((n: any) => n.valor).filter(Boolean)
     if (prod.nota) notas.unshift(prod.nota)
     if (prod.detalleExtra) notas.push(prod.detalleExtra)
-    if (notas.length) partes.push(`* ${notas.join(' | ')}`)
+    notas.forEach((nota: string) => {
+      nodos.push({ text: `* ${nota}`, style: 'tdSub', italics: true })
+    })
 
-    return partes.join('  ')
+    return nodos
   }
 
   // Mapear productos a la forma que espera el document definition
@@ -348,14 +344,12 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
       ? (prod.articuloPrecio?.valor ?? prod.articuloPrecioBase?.valor ?? 0) * quantity
       : (prod.articuloPrecio?.descuento ?? 0)
 
-    // Precio unitario de modificadores incluido en el precio base del producto
-    // (el backend ya los incluye en articuloPrecio.valor)
     return {
       name: prod.nombreArticulo ?? prod.codigoArticulo ?? 'Producto',
       quantity,
       price,
       discount,
-      extraDetalle: buildExtraDetalle(prod) || undefined,
+      detalleStack: buildDetalleStack(prod),
     }
   })
 
@@ -429,10 +423,7 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
             // Productos
             ...data.map((producto: any) => [
               { text: producto.quantity.toString(), style: 'td', alignment: 'center' },
-              {
-                text: producto.extraDetalle ? `${producto.name}\n${producto.extraDetalle}` : producto.name,
-                style: 'td',
-              },
+              { stack: producto.detalleStack },
               { text: producto.price.toFixed(2), style: 'td', alignment: 'right' },
               { text: producto.discount.toFixed(2), style: 'td', alignment: 'right' },
               {
@@ -507,7 +498,7 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
       { text: ' ', style: 'footer' },
       { text: 'NIT:_____________________________', style: 'footer' },
       { text: 'NOMBRE:__________________________', style: 'footer' },
-      { text: 'CORREO:__________________________', style: 'footer' },
+      { text: 'CORREO/CELULAR:__________________________', style: 'footer' },
       { text: 'Usuario: ' + usuario, style: 'usuario' },
     ],
 
@@ -541,6 +532,11 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
       td: {
         fontSize: 6,
         margin: [0, 0.5, 0, 0.5],
+      },
+      tdSub: {
+        fontSize: 5.5,
+        margin: [2, 0, 0, 0],
+        color: '#444444',
       },
       totalLabel: {
         fontSize: 6,

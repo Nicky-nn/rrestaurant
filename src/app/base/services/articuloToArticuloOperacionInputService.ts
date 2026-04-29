@@ -116,7 +116,7 @@ const recolectarLotesDisponibles = (
   const lotesDisponibles: LoteConAlmacen[] = []
 
   for (const detalle of detalles) {
-    for (const inventarioLote of detalle.lotes) {
+    for (const inventarioLote of (detalle.lotes ?? [])) {
       const fechaVencimiento = dateDMYToDate(inventarioLote.lote.fechaVencimiento)
       if (!fechaVencimiento) continue
 
@@ -157,7 +157,7 @@ const buscarLotePorCodigo = (
   codigoLote: string,
 ): { lote: LoteProps; almacen: AlmacenProps } | null => {
   for (const detalle of detalles) {
-    const loteEncontrado = detalle.lotes.find((l) => l.lote.codigoLote === codigoLote)
+    const loteEncontrado = (detalle.lotes ?? []).find((l) => l.lote.codigoLote === codigoLote)
     if (loteEncontrado) {
       return {
         lote: loteEncontrado.lote,

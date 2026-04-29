@@ -51,6 +51,7 @@ interface RrAccionesProps {
   onSuccess?: (pedidoRetornado?: any, isFinalizado?: boolean) => void
   onCancel?: () => void
   onClear?: () => void
+  onDescuentoChange?: () => void
 }
 
 interface PrinterSettings {
@@ -124,6 +125,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   onSuccess,
   onCancel,
   onClear,
+  onDescuentoChange,
 }) => {
   const theme = useTheme()
   const { user } = useAuth()
@@ -864,19 +866,61 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
   const { imprimirComanda, imprimirEstadoCuenta } = useComandaPdf()
 
-  // Handler manual del botón "Cuenta" — imprime Estado de Cuenta sin cobrar
+  // Handler manual del botón "Cuenta" — guarda si hay cambios y luego imprime Estado de Cuenta
   const handleImprimirCuenta = async () => {
     if (!mesaSeleccionada?.pedido) return
     const { pedido } = mesaSeleccionada
     if (!pedido._id || pedido._id.startsWith('nuevo-')) return
+
+    // Si hay cambios sin guardar, actualizamos primero para que el estado de cuenta sea exacto
+    let pedidoActual = pedido
+    if (isPedidoDirty) {
+      const response = await handleRegistrar()
+      if (!response) return // Error al guardar — handleRegistrar ya muestra el error
+      if (onSuccess) onSuccess(response) // Actualizar el carrito
+      pedidoActual = response as typeof pedido
+    }
+
     try {
-      console.log('imprimirEstadoCuenta', pedido, getEstadoCuentaPrinter())
-      await imprimirEstadoCuenta(pedido, descuento + giftcard, getEstadoCuentaPrinter())
+      console.log('imprimirEstadoCuenta', pedidoActual, getEstadoCuentaPrinter())
+      await imprimirEstadoCuenta(pedidoActual, descuento + giftcard, getEstadoCuentaPrinter())
     } catch (err) {
       showError(
         new MyGraphQlError(err instanceof Error ? err : new Error('Error al imprimir estado de cuenta')),
       )
     }
+  }
+
+  // Abre el diálogo de dividir — guarda cambios primero si los hay
+  const handleOpenDividir = async () => {
+    if (!mesaSeleccionada?.pedido) return
+    const { pedido } = mesaSeleccionada
+    const isNuevo = !pedido._id || pedido._id.startsWith('nuevo-')
+    if (isNuevo) return // Pedido no registrado aún, el botón está disabled
+
+    if (isPedidoDirty) {
+      const response = await handleRegistrar()
+      if (!response) return
+      if (onSuccess) onSuccess(response) // Actualizar el carrito con la respuesta del servidor
+    }
+
+    setOpenDividirDialog(true)
+  }
+
+  // Abre el diálogo de transferir — guarda cambios primero si los hay
+  const handleOpenTransferir = async () => {
+    if (!mesaSeleccionada?.pedido) return
+    const { pedido } = mesaSeleccionada
+    const isNuevo = !pedido._id || pedido._id.startsWith('nuevo-')
+    if (isNuevo) return // Pedido no registrado aún, el botón está disabled
+
+    if (isPedidoDirty) {
+      const response = await handleRegistrar()
+      if (!response) return
+      if (onSuccess) onSuccess(response) // Actualizar el carrito con la respuesta del servidor
+    }
+
+    setOpenTransferirDialog(true)
   }
 
   return (
@@ -907,7 +951,10 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <MontoMonedaTexto
             monto={descuento}
             editar={true}
-            onChange={(val) => setDescuento(val || 0)}
+            onChange={(val) => {
+              setDescuento(val || 0)
+              if ((val || 0) > 0 && onDescuentoChange) onDescuentoChange()
+            }}
             sigla="BOB"
             montoProps={{ sx: { color: 'error.main', fontWeight: 600, fontSize: '0.875rem' } }}
             siglaProps={{ sx: { color: 'error.main', fontSize: '0.75rem' } }}
@@ -921,7 +968,10 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <MontoMonedaTexto
             monto={giftcard}
             editar={true}
-            onChange={(val) => setGiftcard(val || 0)}
+            onChange={(val) => {
+              setGiftcard(val || 0)
+              if ((val || 0) > 0 && onDescuentoChange) onDescuentoChange()
+            }}
             sigla="BOB"
             montoProps={{ sx: { color: 'error.main', fontWeight: 600, fontSize: '0.875rem' } }}
             siglaProps={{ sx: { color: 'error.main', fontSize: '0.75rem' } }}
@@ -971,7 +1021,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             variant="outlined"
             size="large"
             disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
-            onClick={() => setOpenDividirDialog(true)}
+            onClick={handleOpenDividir}
             sx={{
               flex: 1,
               flexDirection: 'column',
@@ -996,7 +1046,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             variant="outlined"
             size="large"
             disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
-            onClick={() => setOpenTransferirDialog(true)}
+            onClick={handleOpenTransferir}
             sx={{
               flex: 1,
               flexDirection: 'column',

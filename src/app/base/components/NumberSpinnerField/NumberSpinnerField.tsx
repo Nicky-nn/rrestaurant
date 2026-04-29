@@ -302,13 +302,12 @@ const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(fu
               {!hideActionButtons && (
                 <StyledIconButton
                   aria-label="incrementar valor"
-                  onClick={() => increment(true)}
                   edge="end"
                   disabled={disabled || (Number(stateValue) || 0) + step > max}
                   tabIndex={spinnerTabIndex ? undefined : -1}
                   onPointerDown={(e) => {
                     e.preventDefault()
-                    startSpin('DOWN')
+                    startSpin('UP')
                   }}
                   onPointerUp={stopSpin}
                   onPointerLeave={stopSpin}
