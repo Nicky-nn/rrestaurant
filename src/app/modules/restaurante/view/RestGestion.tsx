@@ -21,6 +21,7 @@ import { ArticuloOperacion, RestPedido, RestPedidoConnection, RestPedidoFinaliza
 import { tableColumns } from './listado/TableRestPedidoHeaders.tsx'
 import RrCobroDialog, { PagoRealizado } from './registrar/RrCobroDialog'
 import RrGestionPedidoDialog from './registrar/RrGestionPedidoDialog'
+import { useComandaPdf } from './registrar/useComandaPdf'
 import RestAnularPedidoDialog from './RestAnularPedidoDialog'
 
 const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => {
@@ -101,6 +102,7 @@ const RestGestion: FunctionComponent<Props> = () => {
   const { mutateAsync: finalizarPedido, isPending: isFinalizarPending } = useRestPedidoFinalizar()
   const { mutateAsync: facturarPedido, isPending: isFacturarPending } = useRestPedidoFacturaRegistro()
   const isPending = isFinalizarPending || isFacturarPending
+  const { imprimirComanda, imprimirEstadoCuenta } = useComandaPdf()
 
   const [selectedPedido, setSelectedPedido] = useState<RestPedido | null>(null)
   const [openCobro, setOpenCobro] = useState(false)
@@ -294,14 +296,16 @@ const RestGestion: FunctionComponent<Props> = () => {
         {
           label: 'Generar Comanda',
           icon: <PrintOutlined />,
-          onClick: () => {},
+          onClick: ({ row }) => {
+            imprimirComanda(row, '', { titulo: 'COMANDA (Desde Gestión)', ignorarHistorico: true })
+          },
           disabled: (row) => row.tipoDocumento !== 'NOTA_VENTA' || row.state !== 'COMPLETADO',
         },
         {
           label: 'Generar E. de Cuenta',
           icon: <DescriptionOutlined />,
           onClick: ({ row }) => {
-            // generar PDF
+            imprimirEstadoCuenta(row, 0)
           },
           disabled: (row) => row.tipoDocumento !== 'NOTA_VENTA' || row.state !== 'COMPLETADO',
         },

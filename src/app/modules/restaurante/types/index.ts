@@ -1122,9 +1122,9 @@ export interface ArticuloOperacionInput {
   /** Código del articulo */
   codigoArticulo: string;
   /** Codigo de almacen */
-  codigoAlmacen: string;
+  codigoAlmacen: string | null;
   /** En caso de tener un lote - Se deprecará en el futuro y se reemplaza por lotes */
-  codigoLote?: string;
+  codigoLote?: string | null;
   /** Lista de lotes que se debe afectar para el debito de stock */
   lotes?: LoteInventarioInput[];
   /** Definición de cantidad, precios, unidad medida. */
@@ -1159,9 +1159,9 @@ export interface ArticuloOperacionComplementoInput {
   /** Código del articulo */
   codigoArticulo: string;
   /** Codigo de almacen */
-  codigoAlmacen: string;
+  codigoAlmacen: string | null;
   /** En caso de tener un lote */
-  codigoLote?: string;
+  codigoLote?: string | null;
   /** Definición de cantidad, precios, unidad medida. */
   articuloPrecio: ArticuloPrecioOperacionInput;
   /** Detalle extra para el item */
@@ -1488,9 +1488,9 @@ export interface ArticuloModificadorOperacionInput {
   /** Código del articulo */
   codigoArticulo: string;
   /** Codigo de almacen */
-  codigoAlmacen: string;
+  codigoAlmacen: string | null;
   /** En caso de tener un lote */
-  codigoLote?: string;
+  codigoLote?: string | null;
   /** Definición de cantidad, precios, unidad medida. */
   articuloPrecio: ArticuloPrecioOperacionInput;
   /** true = Consume un cupo de 'opcionesGratuitas' de ArticuloModificador */
@@ -1564,9 +1564,9 @@ export interface ArticuloRecetaOperacionInput {
   /** Código del articulo */
   codigoArticulo: string;
   /** Codigo de almacen */
-  codigoAlmacen: string;
+  codigoAlmacen: string | null;
   /** En caso de tener un lote */
-  codigoLote?: string;
+  codigoLote?: string | null;
   /** Definición de cantidad, precios, unidad medida. */
   articuloPrecio: ArticuloPrecioOperacionInput;
   /** Nota rapida asociada al item */

@@ -175,8 +175,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         productos: (pedido.productos ?? []).map((p) => ({
           nroItem: p.nroItem ?? undefined,
           codigoArticulo: p.codigoArticulo || '',
-          codigoAlmacen: p.almacen?.codigoAlmacen || '0',
-          ...(p.verificarStock && p.lote ? { codigoLote: p.lote?.codigoLote || '' } : {}),
+          codigoAlmacen: null,
+          codigoLote: null,
           articuloPrecio: {
             codigoArticuloUnidadMedida:
               p.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
@@ -204,14 +204,12 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
               // Items locales (de UI) son ArticuloRecetaOperacionInput; items del servidor son ArticuloOperacionReceta
               const asInput = v as ArticuloRecetaOperacionInput
               const asServer = v as ArticuloOperacionReceta
-              const codigoAlmacen = asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0'
-              const codigoLote = asInput.codigoLote ?? asServer.lote?.codigoLote
               return {
                 nroItem: v.nroItem,
                 // codigoArticulo: asServer.codigoArticulo era redundante (asServer = v)
                 codigoArticulo: v.codigoArticulo ?? '',
-                codigoAlmacen,
-                ...(codigoLote ? { codigoLote } : {}),
+                codigoAlmacen: null,
+                codigoLote: null,
                 articuloPrecio: {
                   codigoArticuloUnidadMedida:
                     (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
@@ -259,8 +257,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                     asInput.articuloModificadorId || asServer.articuloModificadorId || '',
                   nroItem: m.nroItem,
                   codigoArticulo: m.codigoArticulo || '',
-                  codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
-                  // codigoLote omitido: el backend de RestPedido falla con lote.codigoArticulo requerido
+                  codigoAlmacen: null,
+                  codigoLote: null,
                   articuloPrecio: {
                     codigoArticuloUnidadMedida:
                       (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
@@ -501,8 +499,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           nroItem: p.nroItem ?? undefined,
 
           codigoArticulo: p.codigoArticulo || '',
-          codigoAlmacen: p.almacen?.codigoAlmacen || '0',
-          ...(p.verificarStock && p.lote ? { codigoLote: p.lote?.codigoLote || '' } : {}),
+          codigoAlmacen: null,
+          codigoLote: null,
           articuloPrecio: {
             codigoArticuloUnidadMedida:
               p.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
@@ -529,13 +527,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             return vrArr.map((v: ArticuloOperacionReceta) => {
               const asInput = v as ArticuloRecetaOperacionInput
               const asServer = v as ArticuloOperacionReceta
-              const codigoAlmacen = asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0'
-              const codigoLote = asInput.codigoLote ?? asServer.lote?.codigoLote
               return {
                 nroItem: v.nroItem,
                 codigoArticulo: v.codigoArticulo ?? '',
-                codigoAlmacen,
-                ...(codigoLote ? { codigoLote } : {}),
+                codigoAlmacen: null,
+                codigoLote: null,
                 articuloPrecio: {
                   codigoArticuloUnidadMedida:
                     (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)
@@ -578,8 +574,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                     asInput.articuloModificadorId || asServer.articuloModificadorId || '',
                   nroItem: m.nroItem,
                   codigoArticulo: m.codigoArticulo || '',
-                  codigoAlmacen: asInput.codigoAlmacen ?? asServer.almacen?.codigoAlmacen ?? '0',
-                  // codigoLote omitido: el backend de RestPedido falla con lote.codigoArticulo requerido
+                  codigoAlmacen: null,
+                  codigoLote: null,
                   articuloPrecio: {
                     codigoArticuloUnidadMedida:
                       (asInput.articuloPrecio as { codigoArticuloUnidadMedida?: string } | undefined)

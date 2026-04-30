@@ -36,7 +36,7 @@ const getUbicacionLabel = (pedido: RestPedido): string => {
   return rawUbicacion
 }
 
-const buildComandaDefinition = (pedido: RestPedido) => {
+const buildComandaDefinition = (pedido: RestPedido, options?: { titulo?: string, ignorarHistorico?: boolean }) => {
   const cliente = pedido.cliente?.razonSocial ?? 'Sin Razón Social'
   const mesa = pedido.mesa?.nombre ?? '-'
   const orden = pedido.numeroOrden ?? pedido.numeroPedido ?? '-'
@@ -49,7 +49,7 @@ const buildComandaDefinition = (pedido: RestPedido) => {
   // - ultimaTransaccion.articulos guarda snapshot ANTES del cambio
   // - productos guarda estado ACTUAL
   // Para detectar cambio real, comparar snapshot vs actual en tiempo real.
-  const snapshotArticulos = pedido.ultimaTransaccion?.articulos ?? []
+  const snapshotArticulos = options?.ignorarHistorico ? [] : (pedido.ultimaTransaccion?.articulos ?? [])
   const productosActuales = pedido.productos ?? []
 
   const getKey = (prod: any) => `${prod.articuloId ?? ''}-${prod.nroItem ?? 0}-${prod.codigoArticulo ?? ''}`
@@ -207,7 +207,7 @@ const buildComandaDefinition = (pedido: RestPedido) => {
     pageSize: { width: 180, height: 'auto' },
     pageMargins: [0, 0, 0, 0],
     content: [
-      { text: 'COMANDA', style: 'header' },
+      { text: options?.titulo || 'COMANDA', style: 'header' },
       subTituloMod ? { text: subTituloMod, style: 'subMod' } : {},
       { text: `CLIENTE: ${cliente}`, style: 'subheader' },
       { text: `MESA: ${mesa} - ORDEN: ${orden}`, style: 'subheader' },
@@ -583,8 +583,8 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
 }
 
 export const useComandaPdf = () => {
-  const imprimirComanda = async (pedido: RestPedido, selectedPrinter = '') => {
-    const documentDefinition: any = buildComandaDefinition(pedido)
+  const imprimirComanda = async (pedido: RestPedido, selectedPrinter = '', options?: { titulo?: string, ignorarHistorico?: boolean }) => {
+    const documentDefinition: any = buildComandaDefinition(pedido, options)
     const pdfDocGenerator = pdfMake.createPdf(documentDefinition) as any
     const blob: Blob = await pdfDocGenerator.getBlob()
 
