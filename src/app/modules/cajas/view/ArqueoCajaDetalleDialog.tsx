@@ -24,6 +24,7 @@ import { FC, useMemo, useState } from 'react'
 
 import PdfViewerDialog from '../../reporte/components/PdfViewerDialog'
 import { ArqueoCaja, ArqueoCajaIngreso, ArqueoCajaMetodoPago, ArqueoCajaRetiro } from '../types'
+import ArqueoCajaWhatsappDialog from './ArqueoCajaWhatsappDialog'
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -111,6 +112,7 @@ const ArqueoCajaDetalleDialog: FC<ArqueoCajaDetalleDialogProps> = ({
   onNext,
 }) => {
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null)
+  const [openWhatsappDialog, setOpenWhatsappDialog] = useState(false)
   const obsApertura = caja?.observaciones?.find((o) => o.accion === 'APERTURA_CAJA')
   const obsCierre = caja?.observaciones?.find((o) => o.accion === 'CIERRE_CAJA')
 
@@ -621,7 +623,8 @@ const ArqueoCajaDetalleDialog: FC<ArqueoCajaDetalleDialogProps> = ({
             size="small"
             variant="outlined"
             startIcon={<WhatsApp sx={{ fontSize: '1rem !important' }} />}
-            disabled
+            disabled={!hasRollo && !hasPdf}
+            onClick={() => setOpenWhatsappDialog(true)}
             sx={{
               textTransform: 'none',
               borderRadius: 2,
@@ -640,6 +643,13 @@ const ArqueoCajaDetalleDialog: FC<ArqueoCajaDetalleDialogProps> = ({
 
       {/* Viewer PDF/Rollo */}
       <PdfViewerDialog open={!!pdfViewerUrl} pdfUrl={pdfViewerUrl} onClose={() => setPdfViewerUrl(null)} />
+
+      {/* WhatsApp Dialog */}
+      <ArqueoCajaWhatsappDialog 
+        open={openWhatsappDialog} 
+        onClose={() => setOpenWhatsappDialog(false)} 
+        caja={caja} 
+      />
     </>
   )
 }

@@ -42,6 +42,7 @@ import RrDividirCuentaDialog from './RrDividirCuentaDialog'
 import RrFacturacionExitosaDialog from './RrFacturacionExitosaDialog'
 import RrTransferirMesaDialog from './RrTransferirMesaDialog'
 import { useComandaPdf } from './useComandaPdf'
+import { useEnviarFacturaWhatsapp } from './useEnviarFacturaWhatsapp'
 
 // Tipo local para artículos UI que extienden ArticuloOperacion con campos efímeros
 type ArticuloOperacionUI = any
@@ -140,6 +141,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   const { mutateAsync: cancelarPedido, isPending: isCancelarPending } = useRestPedidoCancelar()
   const { mutateAsync: finalizarPedido, isPending: isFinalizarPending } = useRestPedidoFinalizar()
   const { mutateAsync: facturarPedido, isPending: isFacturarPending } = useRestPedidoFacturaRegistro()
+  const { sendFactura } = useEnviarFacturaWhatsapp()
 
   const isPending =
     isRegistrarPending || isActualizarPending || isCancelarPending || isFinalizarPending || isFacturarPending
@@ -456,6 +458,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   const [openFacturacionExitosaDialog, setOpenFacturacionExitosaDialog] = useState(false)
   const [facturacionExitosaTelefono, setFacturacionExitosaTelefono] = useState('')
   const [facturacionExitosaEmail, setFacturacionExitosaEmail] = useState('')
+  const [facturaPdfUrl, setFacturaPdfUrl] = useState('')
 
   const handleOpenCobro = async () => {
     if (!mesaSeleccionada?.pedido) return
@@ -849,6 +852,10 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
       setFacturacionExitosaTelefono(pedido.cliente?.telefono || '')
       setFacturacionExitosaEmail(pedido.cliente?.email || '')
+
+      const pdfUrl = facturaResponse?.factura?.representacionGrafica?.pdf || ''
+      setFacturaPdfUrl(pdfUrl)
+
       setOpenFacturacionExitosaDialog(true)
 
       // Imprimir factura automáticamente si está configurado
@@ -1227,9 +1234,18 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         }}
         initialTelefono={facturacionExitosaTelefono}
         initialEmail={facturacionExitosaEmail}
-        onSendWhatsapp={(telefono) => {
-          // TODO: Implement whatsapp sending
-          console.log('Sending whatsapp to', telefono)
+        onSendWhatsapp={async (telefono) => {
+          try {
+            await sendFactura({
+              telefono,
+              urlPdf: facturaPdfUrl,
+              nombreFactura: `Factura ${mesaSeleccionada?.pedido?.cliente?.razonSocial || ''}`.trim(),
+            })
+            onSuccess?.('Factura enviada correctamente')
+          } catch (error) {
+            console.error('Error al enviar WhatsApp', error)
+            showError(new MyGraphQlError(error as Error))
+          }
         }}
         onSendEmail={(email) => {
           // TODO: Implement email sending

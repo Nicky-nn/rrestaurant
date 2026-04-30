@@ -60,36 +60,55 @@ const RrFacturacionExitosaDialog: React.FC<RrFacturacionExitosaDialogProps> = ({
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, pt: 4 }}>
         {/* Check Icon */}
         <Box
-          sx={{
+          sx={(theme) => ({
             width: 80,
             height: 80,
             borderRadius: '50%',
-            bgcolor: '#e6f8ef', // light green background
+            bgcolor: theme.palette.mode === 'dark' ? theme.palette.success.dark : theme.palette.success.light,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mb: 3,
-          }}
+          })}
         >
           <Box
-            sx={{
+            sx={(theme) => ({
               width: 40,
               height: 40,
               borderRadius: '50%',
-              border: '3px solid #00c875', // green border
+              border: `3px solid ${theme.palette.success.main}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-            }}
+            })}
           >
-            <CheckIcon sx={{ color: '#00c875', fontSize: 24, strokeWidth: 2 }} />
+            <CheckIcon
+              sx={(theme) => ({
+                color: theme.palette.success.main,
+                fontSize: 24,
+              })}
+            />
           </Box>
         </Box>
 
-        <Typography variant="h5" fontWeight={800} sx={{ mb: 1, color: '#111827' }}>
+        <Typography
+          variant="h5"
+          fontWeight={800}
+          sx={(theme) => ({
+            mb: 1,
+            color: theme.palette.primary.main,
+          })}
+        >
           Facturación Exitosa
         </Typography>
-        <Typography variant="body1" sx={{ color: '#6b7280', mb: 4 }}>
+
+        <Typography
+          variant="body1"
+          sx={(theme) => ({
+            color: theme.palette.text.secondary,
+            mb: 4,
+          })}
+        >
           ¡Orden facturada con éxito!
         </Typography>
 
@@ -97,45 +116,52 @@ const RrFacturacionExitosaDialog: React.FC<RrFacturacionExitosaDialogProps> = ({
           <Box sx={{ width: '100%', mb: 3 }}>
             <Typography
               variant="caption"
-              sx={{
+              sx={(theme) => ({
                 fontWeight: 700,
-                color: '#6b7280',
+                color: theme.palette.text.secondary,
                 mb: 1,
                 display: 'block',
                 letterSpacing: '0.5px',
-              }}
+              })}
             >
               WHATSAPP DEL CLIENTE
             </Typography>
+
             <Box sx={{ display: 'flex', gap: 1 }}>
               <TextField
                 fullWidth
                 size="small"
-                placeholder="+51 999 000 000"
+                placeholder="+591 71234567"
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
                 InputProps={{
-                  sx: {
+                  sx: (theme) => ({
                     borderRadius: 3,
-                    bgcolor: '#ffffff',
+                    bgcolor: theme.palette.background.paper,
                     '& fieldset': {
-                      borderColor: '#e5e7eb',
+                      borderColor: theme.palette.divider,
                     },
-                  },
+                    '&:hover fieldset': {
+                      borderColor: theme.palette.text.primary,
+                    },
+                  }),
                 }}
               />
+
               <IconButton
                 onClick={() => onSendWhatsapp && onSendWhatsapp(telefono)}
-                sx={{
-                  bgcolor: '#f0fdf4',
-                  color: '#22c55e',
+                sx={(theme) => ({
+                  bgcolor:
+                    theme.palette.mode === 'dark' ? theme.palette.success.dark : theme.palette.success.light,
+                  color: theme.palette.success.main,
                   borderRadius: 3,
                   p: 1.5,
-                  border: '1px solid transparent',
+                  border: `1px solid ${theme.palette.divider}`,
                   '&:hover': {
-                    bgcolor: '#dcfce7',
+                    bgcolor: theme.palette.success.main,
+                    color: theme.palette.success.contrastText,
                   },
-                }}
+                })}
               >
                 <ChatBubbleOutlineIcon fontSize="small" />
               </IconButton>

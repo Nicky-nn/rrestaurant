@@ -18,6 +18,7 @@ import { RestFacturaConnection, SalidaFactura, SalidaFacturaDetalle } from '../t
 import { tableFacturaColumns } from './listado/TableRestFacturaHeaders.tsx'
 import RestAnularFacturaDialog from './RestAnularFacturaDialog.tsx'
 import RestConsultaFacturaDialog from './RestConsultaFacturaDialog.tsx'
+import RestEnviarFacturaWhatsappDialog from './RestEnviarFacturaWhatsappDialog.tsx'
 import RestReenviarFacturaDialog from './RestReenviarFacturaDialog.tsx'
 
 const ProductosDetalle = ({ productos }: { productos: SalidaFacturaDetalle[] }) => {
@@ -189,6 +190,14 @@ const RestFacturas: FunctionComponent<Props> = () => {
       <RestReenviarFacturaDialog
         open={openReenviarFactura}
         onClose={() => setOpenReenviarFactura(false)}
+        factura={factura}
+      />
+      <RestEnviarFacturaWhatsappDialog
+        open={openEnviarWhats}
+        onClose={(sent) => {
+          setOpenEnviarWhats(false)
+          if (sent) restFacturas.refetch()
+        }}
         factura={factura}
       />
       <RestAnularFacturaDialog
