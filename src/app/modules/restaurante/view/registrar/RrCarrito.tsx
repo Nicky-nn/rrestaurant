@@ -568,19 +568,24 @@ const CartItem = ({
   const extras = Object.values(
     (item.modificadores ?? [])
       .filter((m) => Boolean(m.nombreArticulo))
-      .reduce<Record<string, { nombre: string; cantidad: number }>>((acc, m) => {
-        // Incluir codigoUnidadMedida en la clave para distinguir variantes del mismo artículo
-        // (ej: Papas Pequeña y Papas Grande tienen mismo nombreArticulo pero distinta UM)
+      .reduce<Record<string, { nombre: string; nombreOpcion?: string; cantidad: number }>>((acc, m) => {
         const umCodigo =
           (m.articuloPrecio as any)?.articuloUnidadMedida?.codigoUnidadMedida ||
           (m.articuloPrecio as any)?.codigoArticuloUnidadMedida ||
           ''
+
         const key = `${m.nombreArticulo}::${umCodigo}`
+
         if (acc[key]) {
           acc[key].cantidad += m.articuloPrecio?.cantidad ?? 1
         } else {
-          acc[key] = { nombre: m.nombreArticulo!, cantidad: m.articuloPrecio?.cantidad ?? 1 }
+          acc[key] = {
+            nombre: m.nombreArticulo!,
+            nombreOpcion: m.nombreOpcion,
+            cantidad: m.articuloPrecio?.cantidad ?? 1,
+          }
         }
+
         return acc
       }, {}),
   )
@@ -869,34 +874,39 @@ const CartItem = ({
       {/* Extras y Notas (Pills) */}
       {(extras.length > 0 || notaRapidas.length > 0 || notasPersonalizadas.length > 0) && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.5 }}>
-          {extras.length > 0 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-              <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', letterSpacing: 0.5 }}>
-                EXTRAS:
-              </Typography>
-              {extras.map((extra: any, i: number) => (
-                <Box
-                  key={`extra-${i}`}
-                  sx={{
-                    px: 1,
-                    py: 0.15,
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                    color: 'primary.dark',
-                    borderRadius: 1,
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                  }}
-                >
-                  {extra.cantidad > 1 && (
-                    <Typography component="span" sx={{ fontWeight: 800, mr: 0.5, color: 'primary.main' }}>
-                      {extra.cantidad}x
-                    </Typography>
-                  )}
-                  {extra.nombre}
-                </Box>
-              ))}
-            </Box>
-          )}
+          {extras.length > 0 &&
+            (console.log(extras),
+            (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', letterSpacing: 0.5 }}>
+                  EXTRAS:
+                </Typography>
+                {extras.map((extra: any, i: number) => (
+                  <Box
+                    key={`extra-${i}`}
+                    sx={{
+                      px: 1,
+                      py: 0.15,
+                      bgcolor: alpha(theme.palette.primary.main, 0.08),
+                      color: 'primary.dark',
+                      borderRadius: 1,
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {extra.cantidad > 1 && (
+                      <Typography component="span" sx={{ fontWeight: 800, mr: 0.5, color: 'primary.main' }}>
+                        {extra.cantidad}x
+                      </Typography>
+                    )}
+                    <span>
+                      {extra.nombre}
+                      {extra.nombreOpcion && ` (${extra.nombreOpcion})`}
+                    </span>
+                  </Box>
+                ))}
+              </Box>
+            ))}
 
           {(notaRapidas.length > 0 || notasPersonalizadas.length > 0) && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>

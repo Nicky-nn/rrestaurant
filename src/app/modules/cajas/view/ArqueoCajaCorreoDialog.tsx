@@ -23,17 +23,17 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import { notError, notSuccess } from '../../../utils/notification'
 import { swalException } from '../../../utils/swal'
 import { apiUsuariosListado } from '../../restaurante/mutations/apiUsuariosListado'
-import { useEnviarFacturaWhatsapp } from '../../restaurante/view/registrar/useEnviarFacturaWhatsapp'
+import { apiArqueoCajaCorreo } from '../../restaurante/mutations/apiArqueoCajaCorreo'
 import { ArqueoCaja } from '../types'
 
-interface ArqueoCajaWhatsappDialogProps {
+interface ArqueoCajaCorreoDialogProps {
   id?: string
   open: boolean
   caja: ArqueoCaja | null
   onClose: () => void
 }
 
-const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps> = ({
+const ArqueoCajaCorreoDialog: FunctionComponent<ArqueoCajaCorreoDialogProps> = ({
   open,
   caja,
   onClose,
@@ -41,9 +41,9 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
 }) => {
   const [usuariosDisponibles, setUsuariosDisponibles] = useState<any[]>([])
   const [selectedUsuarios, setSelectedUsuarios] = useState<string[]>([])
-  const [telefonosModificados, setTelefonosModificados] = useState<Record<string, string>>({})
+  const [correosModificados, setCorreosModificados] = useState<Record<string, string>>({})
   const [formato, setFormato] = useState<'pdf' | 'rollo'>('pdf')
-  const { sendFactura, isPending } = useEnviarFacturaWhatsapp()
+  const [isPending, setIsPending] = useState(false)
 
   useEffect(() => {
     const cargarUsuarios = async () => {
@@ -70,7 +70,7 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
       cargarUsuarios()
     } else {
       setSelectedUsuarios([])
-      setTelefonosModificados({})
+      setCorreosModificados({})
       setFormato('pdf')
     }
   }, [open, caja])
@@ -89,31 +89,46 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
     }
 
     try {
-      let enviados = 0
+      setIsPending(true)
+      
+      const emailsToSend: string[] = []
+      
       for (const usuario of selectedUsuarios) {
-        const telefono = telefonosModificados[usuario] !== undefined 
-          ? telefonosModificados[usuario] 
-          : usuariosDisponibles.find(u => u.usuario === usuario)?.telefono
+        const correo = correosModificados[usuario] !== undefined 
+          ? correosModificados[usuario] 
+          : usuariosDisponibles.find(u => u.usuario === usuario)?.correo
 
-        if (!telefono) continue
-        
-        await sendFactura({
-          telefono: telefono,
-          urlPdf: urlPdf,
-          nombreFactura: `Cierre de Caja ${caja.cajaCodigo || caja.cajaId || ''}`.trim(),
-          mensajePersonalizado: `Hola ${usuario || ''}, le adjuntamos el reporte de cierre de caja en formato ${formato.toUpperCase()}.`
-        })
-        enviados++
+        if (correo && correo.trim() !== '') {
+          emailsToSend.push(correo.trim())
+        }
       }
 
-      if (enviados === 0) {
-        notError('Ninguno de los usuarios seleccionados tiene un número de teléfono válido registrado.')
-      } else {
-        notSuccess(`Reporte enviado correctamente a ${enviados} usuario(s) por WhatsApp.`)
-        onClose()
+      if (emailsToSend.length === 0) {
+        notError('Ninguno de los usuarios seleccionados tiene un correo electrónico válido registrado.')
+        setIsPending(false)
+        return
       }
+
+      const nombreArchivo = `Cierre_de_Caja_${caja.cajaCodigo || caja.cajaId || ''}.pdf`
+      
+      await apiArqueoCajaCorreo({
+        titulo: `Cierre de Caja ${caja.cajaCodigo || caja.cajaId || ''}`,
+        mensaje: `Se adjunta el reporte de cierre de caja en formato ${formato.toUpperCase()}.`,
+        urlArchivo: [
+          {
+            filename: nombreArchivo,
+            href: urlPdf
+          }
+        ],
+        email: emailsToSend
+      })
+
+      notSuccess(`Reporte enviado correctamente a ${emailsToSend.length} correo(s).`)
+      onClose()
     } catch (err) {
       swalException(err)
+    } finally {
+      setIsPending(false)
     }
   }
 
@@ -127,7 +142,7 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
       open={open}
       onClose={onClose}
     >
-      <DialogTitle>Enviar Cierre de Caja {caja.cajaCodigo} por WhatsApp</DialogTitle>
+      <DialogTitle>Enviar Cierre de Caja {caja.cajaCodigo} por Correo</DialogTitle>
       <DialogContent dividers>
         <Box>
           <Typography variant="body1">Caja: {caja.cajaCodigo || caja.cajaId}</Typography>
@@ -135,14 +150,14 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
           <Typography variant="body1">Turno: {caja.turnoCaja?.nombre || 'S/N'}</Typography>
         </Box>
         <Alert color="info" icon={false} sx={{ mt: 2 }}>
-          Seleccione los usuarios responsables a los que desea enviar el documento y el formato del archivo.
+          Seleccione los usuarios responsables a los que desea enviar el documento por correo electrónico.
         </Alert>
         
         <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <FormControl fullWidth size="small">
-            <InputLabel id="select-usuarios-label">Usuarios a enviar</InputLabel>
+            <InputLabel id="select-usuarios-correo-label">Usuarios a enviar</InputLabel>
             <Select
-              labelId="select-usuarios-label"
+              labelId="select-usuarios-correo-label"
               multiple
               value={selectedUsuarios}
               onChange={(e) => {
@@ -171,16 +186,16 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
               {usuariosDisponibles.map((user) => (
                 <MenuItem key={user.usuario} value={user.usuario}>
                   <Checkbox checked={selectedUsuarios.indexOf(user.usuario) > -1} />
-                  <ListItemText primary={`${user.usuario} ${user.telefono ? `(${user.telefono})` : '(Sin teléfono)'}`} />
+                  <ListItemText primary={`${user.usuario} ${user.correo ? `(${user.correo})` : '(Sin correo)'}`} />
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
 
           <FormControl fullWidth size="small">
-            <InputLabel id="formato-archivo-label">Formato de Archivo</InputLabel>
+            <InputLabel id="formato-archivo-correo-label">Formato de Archivo</InputLabel>
             <Select
-              labelId="formato-archivo-label"
+              labelId="formato-archivo-correo-label"
               value={formato}
               label="Formato de Archivo"
               onChange={(e) => setFormato(e.target.value as 'pdf' | 'rollo')}
@@ -193,25 +208,25 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
           {selectedUsuarios.length > 0 && (
             <Box sx={{ mt: 1, p: 2, bgcolor: 'background.default', borderRadius: 2 }}>
               <Typography variant="caption" sx={{ fontWeight: 700, mb: 1.5, display: 'block' }}>
-                TELÉFONOS A ENVIAR (Puede modificarlos si es necesario)
+                CORREOS A ENVIAR (Puede modificarlos si es necesario)
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {selectedUsuarios.map((usuario) => {
                   const originalUser = usuariosDisponibles.find((u) => u.usuario === usuario)
-                  const telefonoActual = telefonosModificados[usuario] !== undefined 
-                    ? telefonosModificados[usuario] 
-                    : (originalUser?.telefono || '')
+                  const correoActual = correosModificados[usuario] !== undefined 
+                    ? correosModificados[usuario] 
+                    : (originalUser?.correo || '')
 
                   return (
                     <TextField
                       key={usuario}
                       fullWidth
                       size="small"
-                      label={`Teléfono de ${usuario}`}
-                      placeholder="+591 71234567"
-                      value={telefonoActual}
+                      label={`Correo de ${usuario}`}
+                      placeholder="ejemplo@correo.com"
+                      value={correoActual}
                       onChange={(e) => {
-                        setTelefonosModificados((prev) => ({
+                        setCorreosModificados((prev) => ({
                           ...prev,
                           [usuario]: e.target.value
                         }))
@@ -230,16 +245,16 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
         </Button>
         <LoadingButton
           loading={isPending}
-          color="success"
+          color="primary"
           size="small"
           variant="contained"
           onClick={onSubmit}
         >
-          Enviar WhatsApp
+          Enviar Correo
         </LoadingButton>
       </DialogActions>
     </Dialog>
   )
 }
 
-export default ArqueoCajaWhatsappDialog
+export default ArqueoCajaCorreoDialog

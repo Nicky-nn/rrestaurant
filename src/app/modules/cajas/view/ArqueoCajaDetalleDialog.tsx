@@ -24,6 +24,7 @@ import { FC, useMemo, useState } from 'react'
 
 import PdfViewerDialog from '../../reporte/components/PdfViewerDialog'
 import { ArqueoCaja, ArqueoCajaIngreso, ArqueoCajaMetodoPago, ArqueoCajaRetiro } from '../types'
+import ArqueoCajaCorreoDialog from './ArqueoCajaCorreoDialog'
 import ArqueoCajaWhatsappDialog from './ArqueoCajaWhatsappDialog'
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -113,6 +114,7 @@ const ArqueoCajaDetalleDialog: FC<ArqueoCajaDetalleDialogProps> = ({
 }) => {
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null)
   const [openWhatsappDialog, setOpenWhatsappDialog] = useState(false)
+  const [openCorreoDialog, setOpenCorreoDialog] = useState(false)
   const obsApertura = caja?.observaciones?.find((o) => o.accion === 'APERTURA_CAJA')
   const obsCierre = caja?.observaciones?.find((o) => o.accion === 'CIERRE_CAJA')
 
@@ -606,7 +608,8 @@ const ArqueoCajaDetalleDialog: FC<ArqueoCajaDetalleDialogProps> = ({
             variant="outlined"
             color="info"
             startIcon={<Email sx={{ fontSize: '1rem !important' }} />}
-            disabled
+            disabled={!hasRollo && !hasPdf}
+            onClick={() => setOpenCorreoDialog(true)}
             sx={{
               textTransform: 'none',
               borderRadius: 2,
@@ -648,6 +651,13 @@ const ArqueoCajaDetalleDialog: FC<ArqueoCajaDetalleDialogProps> = ({
       <ArqueoCajaWhatsappDialog 
         open={openWhatsappDialog} 
         onClose={() => setOpenWhatsappDialog(false)} 
+        caja={caja} 
+      />
+
+      {/* Correo Dialog */}
+      <ArqueoCajaCorreoDialog 
+        open={openCorreoDialog} 
+        onClose={() => setOpenCorreoDialog(false)} 
         caja={caja} 
       />
     </>

@@ -505,6 +505,7 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           }
           esOpcionGratuita
           elegibleParaGratis
+          nombreOpcion
           cantidadIncluida
           articuloPrecio {
             # Datos simples (Tipo ya expandido previamente)
@@ -703,6 +704,7 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
           nombreArticulo
           esOpcionGratuita
           elegibleParaGratis
+          nombreOpcion
           cantidadIncluida
           nota
           state
@@ -837,6 +839,7 @@ export const RESTPEDIDOCONNECTIONFRAGMENT = gql`
             nombreArticulo
             esOpcionGratuita
             elegibleParaGratis
+            nombreOpcion
             cantidadIncluida
             nota
             state
