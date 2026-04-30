@@ -41,6 +41,7 @@ import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
 import RrDividirCuentaDialog from './RrDividirCuentaDialog'
 import RrTransferirMesaDialog from './RrTransferirMesaDialog'
 import { useComandaPdf } from './useComandaPdf'
+import RrFacturacionExitosaDialog from './RrFacturacionExitosaDialog'
 
 // Tipo local para artículos UI que extienden ArticuloOperacion con campos efímeros
 type ArticuloOperacionUI = any
@@ -454,6 +455,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   const [openCobroDialog, setOpenCobroDialog] = useState(false)
   const [openDividirDialog, setOpenDividirDialog] = useState(false)
   const [openTransferirDialog, setOpenTransferirDialog] = useState(false)
+  const [openFacturacionExitosaDialog, setOpenFacturacionExitosaDialog] = useState(false)
+  const [facturacionExitosaTelefono, setFacturacionExitosaTelefono] = useState('')
+  const [facturacionExitosaEmail, setFacturacionExitosaEmail] = useState('')
 
   const handleOpenCobro = async () => {
     if (!mesaSeleccionada?.pedido) return
@@ -869,8 +873,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         }
       }
 
-      if (onClear) onClear()
-      if (onSuccess) onSuccess(null, true)
+      setFacturacionExitosaTelefono(pedido.cliente?.telefono || '')
+      setFacturacionExitosaEmail(pedido.cliente?.email || '')
+      setOpenFacturacionExitosaDialog(true)
     } catch (error) {
       if (pedidoFinalizado) {
         console.error('Error al facturar pedido, pero el pedido se finalizó correctamente', error)
@@ -1228,6 +1233,25 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         onRemovePago={(id) => setPagosRealizados((prev) => prev.filter((p) => p.id !== id))}
         onFinalizar={handleFinalizar}
         onFacturar={handleFacturar}
+      />
+      {/* Dialogo Facturacion Exitosa */}
+      <RrFacturacionExitosaDialog
+        open={openFacturacionExitosaDialog}
+        onClose={() => {
+          setOpenFacturacionExitosaDialog(false)
+          if (onClear) onClear()
+          if (onSuccess) onSuccess(null, true)
+        }}
+        initialTelefono={facturacionExitosaTelefono}
+        initialEmail={facturacionExitosaEmail}
+        onSendWhatsapp={(telefono) => {
+           // TODO: Implement whatsapp sending
+           console.log('Sending whatsapp to', telefono)
+        }}
+        onSendEmail={(email) => {
+           // TODO: Implement email sending
+           console.log('Sending email to', email)
+        }}
       />
       {/* Dialogo Dividir Cuenta */}
       {mesaSeleccionada?.pedido && (
