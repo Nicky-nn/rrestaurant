@@ -710,6 +710,28 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         })),
       })
 
+      console.log('INput para facturarPedido', {
+        entidad: {
+          codigoSucursal: user.sucursal.codigo,
+          codigoPuntoVenta: user.puntoVenta.codigo,
+        },
+        cliente: {
+          codigoCliente: pedido.cliente?.codigoCliente || '00',
+          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
+          email: pedido.cliente?.email,
+          telefono: pedido.cliente?.telefono,
+        },
+        pedidoId: pedido._id!,
+        input: {
+          codigoMoneda: user.moneda?.codigo || 1,
+          codigoMetodoPago: pagosFinales[0]?.metodoId || 1,
+          numeroTarjeta:
+            pagosFinales[0]?.metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
+          tipoCambio: user.moneda?.tipoCambio || 1,
+          usuario: user.correo || '',
+        },
+      })
+
       setOpenCobroDialog(false)
       setPagosRealizados([])
 

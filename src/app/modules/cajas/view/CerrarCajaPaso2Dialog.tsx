@@ -1,4 +1,4 @@
-import { LockOutlined } from '@mui/icons-material'
+import { LockOutlined, Payments } from '@mui/icons-material'
 import {
   alpha,
   Box,
@@ -17,7 +17,7 @@ import AppSelect, { AppSelectOption } from '../../../base/components/MySelect/Ap
 import useAuth from '../../../base/hooks/useAuth'
 import useCajas from '../../../base/hooks/useCajas'
 import { useAperturaCajaCerrar } from '../mutations/useAperturaCajaCerrar'
-import { ArqueoCaja } from '../types'
+import { ArqueoCaja, ArqueoCajaMetodoPago } from '../types'
 
 interface CerrarCajaPaso2DialogProps {
   open: boolean
@@ -72,17 +72,20 @@ const CerrarCajaPaso2Dialog: FC<CerrarCajaPaso2DialogProps> = ({
     }
     setError(null)
 
+    const metodos = caja.metodoPagoVenta ?? []
+
+    // When no methods registered send empty array; montoReal goes at root level
+    const metodoPagoPayload = metodos.map((m: ArqueoCajaMetodoPago) => ({
+      codigoMetodoPago: m.metodoPago?.codigoClasificador ?? 1,
+      monto: m.monto ?? 0,
+    }))
+
     cerrarCaja(
       {
         id: caja._id!,
         input: {
-          metodoPago: [
-            {
-              codigoMetodoPago: caja.metodoPagoVenta?.[0]?.metodoPago?.codigoClasificador || 1,
-              monto: (caja.montoInicial || 0) + (caja.totalIngresos || 0) - (caja.totalRetiros || 0),
-              montoReal,
-            },
-          ],
+          metodoPago: metodoPagoPayload,
+          montoReal,
           observacion: observacion.trim(),
           supervisor,
         },
@@ -101,6 +104,8 @@ const CerrarCajaPaso2Dialog: FC<CerrarCajaPaso2DialogProps> = ({
       },
     )
   }
+
+  const metodos = caja.metodoPagoVenta ?? []
 
   return (
     <Dialog
@@ -154,6 +159,55 @@ const CerrarCajaPaso2Dialog: FC<CerrarCajaPaso2DialogProps> = ({
               fullWidth
               sx={{ mt: 0.5 }}
             />
+          </Box>
+
+          {/* Montos por método de pago */}
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 3,
+              bgcolor: alpha(theme.palette.primary.main, 0.04),
+              border: '1px solid',
+              borderColor: alpha(theme.palette.primary.main, 0.16),
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <Payments sx={{ fontSize: 18, color: 'primary.main' }} />
+              <Typography
+                variant="overline"
+                color="primary.main"
+                fontWeight={700}
+                sx={{ letterSpacing: 0.5 }}
+              >
+                Registrar Monto por Método de Pago
+              </Typography>
+            </Box>
+
+            {metodos.length === 0 ? (
+              <Typography variant="caption" color="text.disabled" fontStyle="italic">
+                No existen métodos de pago registrados
+              </Typography>
+            ) : (
+              <Stack spacing={1.5}>
+                {metodos.map((m: ArqueoCajaMetodoPago) => {
+                  const label = m.metodoPago?.descripcion ?? 'Otro'
+                  const montoSistema = m.monto ?? 0
+                  return (
+                    <Box
+                      key={m.metodoPago?.codigoClasificador}
+                      sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                        {label}
+                      </Typography>
+                      <Typography variant="body2" fontWeight={700} color="primary.main">
+                        {montoSistema.toFixed(2)} BOB
+                      </Typography>
+                    </Box>
+                  )
+                })}
+              </Stack>
+            )}
           </Box>
 
           {/* Comentario obligatorio */}

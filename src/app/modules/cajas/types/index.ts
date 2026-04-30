@@ -122,8 +122,6 @@ export interface MetodoPagoVentaInput {
   codigoMetodoPago: number
   /** Monto Asignado al metodo de pago */
   monto: number
-  /** Monto real contado por el usuario */
-  montoReal: number
 }
 
 /**
@@ -251,6 +249,8 @@ export interface AperturaCajaRegistroInput {
 export interface AperturaCajaCerrarInput {
   /** Registro de montos para cada método de pago - Codigo metodo de pago debe pertenecer al conjunto de metodos de pago registrados en el ciclo de vida del arqueo caja. - Monto que se registra pertenece al nuevo reporte de ventas generado */
   metodoPago: MetodoPagoVentaInput[]
+  /** Monto real contado por el usuario en el arqueo */
+  montoReal: number
   /** Observación de cierre de caja */
   observacion?: string
   /** Supervisor de caja - Debe ser un elemento del dominio de responsables de apertura de caja */

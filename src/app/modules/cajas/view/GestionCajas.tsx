@@ -24,6 +24,7 @@ import {
 } from '@mui/material'
 import React, { FunctionComponent, useState } from 'react'
 
+import { useNavigate } from 'react-router-dom'
 import { SimpleContainerBox } from '../../../base/components/Container/SimpleBox'
 import Breadcrumb from '../../../base/components/Template/Breadcrumb/Breadcrumb'
 import useCajas from '../../../base/hooks/useCajas'
@@ -150,6 +151,8 @@ const GestionCajas: FunctionComponent = () => {
   const [montoRealCierre, setMontoRealCierre] = useState(0)
 
   const { aperturaCajaActivo, refetchArqueoActivo, refetchCajas } = useCajas()
+
+  const navigate = useNavigate()
 
   const handleTabChange = (event: React.MouseEvent<HTMLElement>, newTab: string | null) => {
     if (newTab !== null) setTab(newTab)
@@ -348,7 +351,7 @@ const GestionCajas: FunctionComponent = () => {
                     variant="caption"
                     sx={{ opacity: 0.85, fontWeight: 700, letterSpacing: 0.8, textTransform: 'uppercase' }}
                   >
-                    Monto Esperado en Caja
+                    Monto en Caja
                   </Typography>
                   <Typography variant="h2" sx={{ fontWeight: 800, mt: 0.5, mb: 3 }}>
                     {formatMoney(caja?.montoTeorico)}
@@ -403,6 +406,7 @@ const GestionCajas: FunctionComponent = () => {
                     <Button
                       variant="contained"
                       endIcon={<ArrowForward sx={{ transform: 'rotate(-45deg)' }} />}
+                      onClick={() => navigate('/pedidos/registrar')}
                       fullWidth
                       size="small"
                       sx={{
@@ -416,7 +420,7 @@ const GestionCajas: FunctionComponent = () => {
                         boxShadow: 'none',
                       }}
                     >
-                      Ir al Punto de Venta
+                      Ir al Restaurante
                     </Button>
                   </Box>
                 </PrimaryCard>

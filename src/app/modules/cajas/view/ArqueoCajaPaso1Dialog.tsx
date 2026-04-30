@@ -1,4 +1,4 @@
-import { AccountBalanceWallet, Calculate, Close } from '@mui/icons-material'
+import { AccountBalanceWallet, Calculate, Close, InfoOutlined, Payments } from '@mui/icons-material'
 import {
   alpha,
   Box,
@@ -19,7 +19,7 @@ import { FC, useEffect, useState } from 'react'
 
 import useCajas from '../../../base/hooks/useCajas'
 import { useAperturaCajaArquear } from '../mutations/useAperturaCajaArquear'
-import { ArqueoCaja } from '../types'
+import { ArqueoCaja, ArqueoCajaMetodoPago } from '../types'
 import CalculadoraEfectivoDialog from './CalculadoraEfectivoDialog'
 
 interface ArqueoCajaPaso1DialogProps {
@@ -147,6 +147,50 @@ const ArqueoCajaPaso1Dialog: FC<ArqueoCajaPaso1DialogProps> = ({ open, onClose, 
           </Box>
 
           <Stack spacing={3}>
+            {/* Métodos de Pago Registrados */}
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 3,
+                bgcolor: alpha(theme.palette.success.main, 0.04),
+                border: '1px solid',
+                borderColor: alpha(theme.palette.success.main, 0.18),
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                <Payments sx={{ fontSize: 18, color: 'success.main' }} />
+                <Typography
+                  variant="overline"
+                  color="success.main"
+                  fontWeight={700}
+                  sx={{ letterSpacing: 0.5 }}
+                >
+                  Métodos de Pago Registrados
+                </Typography>
+              </Box>
+              {(caja?.metodoPagoVenta ?? []).length === 0 ? (
+                <Typography variant="body2" color="text.disabled" fontStyle="italic">
+                  Sin métodos de pago registrados
+                </Typography>
+              ) : (
+                <Stack spacing={1}>
+                  {(caja.metodoPagoVenta ?? []).map((m: ArqueoCajaMetodoPago, i: number) => (
+                    <Box
+                      key={i}
+                      sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                        {m.metodoPago?.descripcion ?? 'Otro'}
+                      </Typography>
+                      <Typography variant="body2" fontWeight={700} color="success.main">
+                        {Number(m.monto ?? 0).toFixed(2)} BOB
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
+              )}
+            </Box>
+
             {/* Breakdown box */}
             <Box
               sx={{
@@ -185,7 +229,7 @@ const ArqueoCajaPaso1Dialog: FC<ArqueoCajaPaso1DialogProps> = ({ open, onClose, 
                 <Box sx={{ my: 1, borderBottom: '1px dashed', borderColor: 'divider' }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                    TOTAL SISTEMA ESPERADO:
+                    TOTAL SISTEMA:
                   </Typography>
                   <Typography variant="subtitle1" color="primary.main" fontWeight={800}>
                     ${formatMoney(montoSist)}
@@ -201,7 +245,7 @@ const ArqueoCajaPaso1Dialog: FC<ArqueoCajaPaso1DialogProps> = ({ open, onClose, 
                 fontWeight={700}
                 sx={{ letterSpacing: 0.5 }}
               >
-                CONTADO REAL
+                CONTADO
               </Typography>
               <FormControl fullWidth size="small">
                 <OutlinedInput
@@ -276,6 +320,36 @@ const ArqueoCajaPaso1Dialog: FC<ArqueoCajaPaso1DialogProps> = ({ open, onClose, 
                   sx: { borderRadius: 2, bgcolor: 'background.paper' },
                 }}
               />
+            </Box>
+
+            {/* Información del Arqueo */}
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 3,
+                bgcolor: alpha(theme.palette.info.main, 0.05),
+                border: '1px solid',
+                borderColor: alpha(theme.palette.info.main, 0.18),
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.2 }}>
+                <InfoOutlined sx={{ fontSize: 16, color: 'info.main' }} />
+                <Typography variant="overline" color="info.main" fontWeight={700} sx={{ letterSpacing: 0.5 }}>
+                  Información del Arqueo
+                </Typography>
+              </Box>
+              <Stack spacing={0.6}>
+                {[
+                  'Cuente todo el dinero físico en caja',
+                  'El arqueo actualiza el estado de la caja',
+                  'Puede agregar observaciones opcionales',
+                  'Asegúrese de que los montos coincidan',
+                ].map((tip, i) => (
+                  <Typography key={i} variant="caption" color="text.secondary" display="block">
+                    • {tip}
+                  </Typography>
+                ))}
+              </Stack>
             </Box>
 
             {error && (
