@@ -39,9 +39,9 @@ import {
 } from '../../types'
 import RrCobroDialog, { PagoRealizado } from './RrCobroDialog'
 import RrDividirCuentaDialog from './RrDividirCuentaDialog'
+import RrFacturacionExitosaDialog from './RrFacturacionExitosaDialog'
 import RrTransferirMesaDialog from './RrTransferirMesaDialog'
 import { useComandaPdf } from './useComandaPdf'
-import RrFacturacionExitosaDialog from './RrFacturacionExitosaDialog'
 
 // Tipo local para artículos UI que extienden ArticuloOperacion con campos efímeros
 type ArticuloOperacionUI = any
@@ -714,28 +714,6 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         })),
       })
 
-      console.log('INput para facturarPedido', {
-        entidad: {
-          codigoSucursal: user.sucursal.codigo,
-          codigoPuntoVenta: user.puntoVenta.codigo,
-        },
-        cliente: {
-          codigoCliente: pedido.cliente?.codigoCliente || '00',
-          razonSocial: pedido.cliente?.razonSocial || 'Sin Razón Social',
-          email: pedido.cliente?.email,
-          telefono: pedido.cliente?.telefono,
-        },
-        pedidoId: pedido._id!,
-        input: {
-          codigoMoneda: user.moneda?.codigo || 1,
-          codigoMetodoPago: pagosFinales[0]?.metodoId || 1,
-          numeroTarjeta:
-            pagosFinales[0]?.metodoId === 2 ? formatTarjeta(pagosFinales[0].numeroTarjeta) : undefined,
-          tipoCambio: user.moneda?.tipoCambio || 1,
-          usuario: user.correo || '',
-        },
-      })
-
       setOpenCobroDialog(false)
       setPagosRealizados([])
 
@@ -840,7 +818,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       pedidoFinalizado = true
 
       // Una vez finalizado válidamente, solicitamos emitir la FACTURA al SIAT
-      await facturarPedido({
+      const facturaResponse = await facturarPedido({
         entidad: {
           codigoSucursal: user.sucursal.codigo,
           codigoPuntoVenta: user.puntoVenta.codigo,
@@ -876,6 +854,15 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       setFacturacionExitosaTelefono(pedido.cliente?.telefono || '')
       setFacturacionExitosaEmail(pedido.cliente?.email || '')
       setOpenFacturacionExitosaDialog(true)
+
+      // Imprimir factura automáticamente si está configurado
+      if (facturaResponse) {
+        try {
+          await imprimirFactura(facturaResponse, user.tipoRepresentacionGrafica || 'rollo')
+        } catch (err) {
+          console.error('Error al llamar a imprimirFactura', err)
+        }
+      }
     } catch (error) {
       if (pedidoFinalizado) {
         console.error('Error al facturar pedido, pero el pedido se finalizó correctamente', error)
@@ -898,7 +885,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   }
 
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
-  const { imprimirComanda, imprimirEstadoCuenta } = useComandaPdf()
+  const { imprimirComanda, imprimirEstadoCuenta, imprimirFactura } = useComandaPdf()
 
   // Handler manual del botón "Cuenta" — guarda si hay cambios y luego imprime Estado de Cuenta
   const handleImprimirCuenta = async () => {
@@ -1245,13 +1232,19 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         initialTelefono={facturacionExitosaTelefono}
         initialEmail={facturacionExitosaEmail}
         onSendWhatsapp={(telefono) => {
-           // TODO: Implement whatsapp sending
-           console.log('Sending whatsapp to', telefono)
+          // TODO: Implement whatsapp sending
+          console.log('Sending whatsapp to', telefono)
         }}
         onSendEmail={(email) => {
-           // TODO: Implement email sending
-           console.log('Sending email to', email)
+          // TODO: Implement email sending
+          console.log('Sending email to', email)
         }}
+        isClienteReal={
+          mesaSeleccionada?.pedido?.cliente?.codigoCliente !== '00' &&
+          !!mesaSeleccionada?.pedido?.cliente?.razonSocial &&
+          mesaSeleccionada?.pedido?.cliente?.razonSocial.trim().toLowerCase() !== 'sin razón social' &&
+          mesaSeleccionada?.pedido?.cliente?.razonSocial.trim() !== ''
+        }
       />
       {/* Dialogo Dividir Cuenta */}
       {mesaSeleccionada?.pedido && (

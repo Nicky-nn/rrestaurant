@@ -72,11 +72,6 @@ const AperturaCajaDialog: FC<AperturaCajaDialogProps> = ({ open, onSuccess, onCl
   const [error, setError] = useState<string | null>(null)
   const [openCalc, setOpenCalc] = useState(false)
 
-  // Auto-seleccionar caja si hay solo una
-  useEffect(() => {
-    if (cajas.length === 1 && !cajaId) setCajaId(cajas[0]._id ?? '')
-  }, [cajas, cajaId])
-
   // Auto-seleccionar turno por hora actual
   useEffect(() => {
     if (turnos.length > 0 && !turnoId) {
@@ -85,7 +80,10 @@ const AperturaCajaDialog: FC<AperturaCajaDialogProps> = ({ open, onSuccess, onCl
   }, [turnos, turnoId])
 
   const cajaOptions: AppSelectOption[] = useMemo(
-    () => cajas.map((c) => ({ value: c._id ?? '', label: `Caja ${c.codigo}` })),
+    () => [
+      { value: '', label: '— Selecciona una caja —' },
+      ...cajas.map((c) => ({ value: c._id ?? '', label: `Caja ${c.codigo}` })),
+    ],
     [cajas],
   )
 

@@ -1,18 +1,18 @@
-import React, { useState } from 'react'
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
+import CheckIcon from '@mui/icons-material/Check'
 import {
+  Box,
+  Button,
   Dialog,
   DialogContent,
-  Typography,
-  Box,
-  TextField,
   IconButton,
-  Button,
+  TextField,
+  Typography,
   useTheme,
 } from '@mui/material'
-import CheckIcon from '@mui/icons-material/Check'
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
-import MailOutlineIcon from '@mui/icons-material/MailOutline'
+import React, { useState } from 'react'
 
+import useAuth from '../../../../base/hooks/useAuth'
 interface RrFacturacionExitosaDialogProps {
   open: boolean
   onClose: () => void
@@ -20,6 +20,7 @@ interface RrFacturacionExitosaDialogProps {
   initialEmail?: string
   onSendWhatsapp?: (telefono: string) => void
   onSendEmail?: (email: string) => void
+  isClienteReal?: boolean
 }
 
 const RrFacturacionExitosaDialog: React.FC<RrFacturacionExitosaDialogProps> = ({
@@ -29,8 +30,10 @@ const RrFacturacionExitosaDialog: React.FC<RrFacturacionExitosaDialogProps> = ({
   initialEmail = '',
   onSendWhatsapp,
   onSendEmail,
+  isClienteReal = false,
 }) => {
   const theme = useTheme()
+  const { lw } = useAuth()
   const [telefono, setTelefono] = useState(initialTelefono)
   const [email, setEmail] = useState(initialEmail)
 
@@ -90,55 +93,57 @@ const RrFacturacionExitosaDialog: React.FC<RrFacturacionExitosaDialogProps> = ({
           ¡Orden facturada con éxito!
         </Typography>
 
-        <Box sx={{ width: '100%', mb: 3 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              fontWeight: 700,
-              color: '#6b7280',
-              mb: 1,
-              display: 'block',
-              letterSpacing: '0.5px',
-            }}
-          >
-            WHATSAPP DEL CLIENTE
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="+51 999 000 000"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              InputProps={{
-                sx: { 
-                  borderRadius: 3, 
-                  bgcolor: '#ffffff',
-                  '& fieldset': {
-                    borderColor: '#e5e7eb',
-                  }
-                },
-              }}
-            />
-            <IconButton
-              onClick={() => onSendWhatsapp && onSendWhatsapp(telefono)}
+        {lw && isClienteReal && (
+          <Box sx={{ width: '100%', mb: 3 }}>
+            <Typography
+              variant="caption"
               sx={{
-                bgcolor: '#f0fdf4',
-                color: '#22c55e',
-                borderRadius: 3,
-                p: 1.5,
-                border: '1px solid transparent',
-                '&:hover': {
-                  bgcolor: '#dcfce7',
-                },
+                fontWeight: 700,
+                color: '#6b7280',
+                mb: 1,
+                display: 'block',
+                letterSpacing: '0.5px',
               }}
             >
-              <ChatBubbleOutlineIcon fontSize="small" />
-            </IconButton>
+              WHATSAPP DEL CLIENTE
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="+51 999 000 000"
+                value={telefono}
+                onChange={(e) => setTelefono(e.target.value)}
+                InputProps={{
+                  sx: {
+                    borderRadius: 3,
+                    bgcolor: '#ffffff',
+                    '& fieldset': {
+                      borderColor: '#e5e7eb',
+                    },
+                  },
+                }}
+              />
+              <IconButton
+                onClick={() => onSendWhatsapp && onSendWhatsapp(telefono)}
+                sx={{
+                  bgcolor: '#f0fdf4',
+                  color: '#22c55e',
+                  borderRadius: 3,
+                  p: 1.5,
+                  border: '1px solid transparent',
+                  '&:hover': {
+                    bgcolor: '#dcfce7',
+                  },
+                }}
+              >
+                <ChatBubbleOutlineIcon fontSize="small" />
+              </IconButton>
+            </Box>
           </Box>
-        </Box>
+        )}
 
-        <Box sx={{ width: '100%', mb: 4 }}>
+        {/* <Box sx={{ width: '100%', mb: 4 }}>
           <Typography
             variant="caption"
             sx={{
@@ -159,8 +164,8 @@ const RrFacturacionExitosaDialog: React.FC<RrFacturacionExitosaDialogProps> = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               InputProps={{
-                sx: { 
-                  borderRadius: 3, 
+                sx: {
+                  borderRadius: 3,
                   bgcolor: '#ffffff',
                   '& fieldset': {
                     borderColor: '#e5e7eb',
@@ -184,7 +189,7 @@ const RrFacturacionExitosaDialog: React.FC<RrFacturacionExitosaDialogProps> = ({
               <MailOutlineIcon fontSize="small" />
             </IconButton>
           </Box>
-        </Box>
+        </Box> */}
 
         <Button
           onClick={onClose}

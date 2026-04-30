@@ -106,20 +106,23 @@ const buildComandaDefinition = (pedido: RestPedido) => {
     const nodos: any[] = [{ text: detallePrefijo + nombre + sufijo, bold: true }]
 
     const mods = Object.entries(
-      ((prod.modificadores ?? []) as any[]).reduce((acc: Record<string, { qty: number; opcion?: string }>, m: any) => {
-        const key = m.nombreArticulo ?? ''
-        if (!key) return acc
-        // UM + nombreOpcion en la clave para distinguir variantes del mismo artículo
-        const um =
-          m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ||
-          m.articuloPrecio?.codigoArticuloUnidadMedida ||
-          ''
-        const opcion = m.nombreOpcion ?? ''
-        const groupKey = [key, um, opcion].filter(Boolean).join('::')
-        if (!acc[groupKey]) acc[groupKey] = { qty: 0, opcion: opcion || undefined }
-        acc[groupKey].qty += m.articuloPrecio?.cantidad ?? 1
-        return acc
-      }, {}),
+      ((prod.modificadores ?? []) as any[]).reduce(
+        (acc: Record<string, { qty: number; opcion?: string }>, m: any) => {
+          const key = m.nombreArticulo ?? ''
+          if (!key) return acc
+          // UM + nombreOpcion en la clave para distinguir variantes del mismo artículo
+          const um =
+            m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ||
+            m.articuloPrecio?.codigoArticuloUnidadMedida ||
+            ''
+          const opcion = m.nombreOpcion ?? ''
+          const groupKey = [key, um, opcion].filter(Boolean).join('::')
+          if (!acc[groupKey]) acc[groupKey] = { qty: 0, opcion: opcion || undefined }
+          acc[groupKey].qty += m.articuloPrecio?.cantidad ?? 1
+          return acc
+        },
+        {},
+      ),
     ).map(([k, { qty, opcion }]) => {
       const baseName = k.split('::')[0]
       const label = opcion ? `${baseName} - ${opcion}` : baseName
@@ -303,7 +306,9 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
   // Construye un stack pdfMake para la celda DETALLE:
   // nombre en negrita + cada modificador/receta como "- item" + comentarios como "* nota"
   const buildDetalleStack = (prod: any): any[] => {
-    const nodos: any[] = [{ text: prod.nombreArticulo ?? prod.codigoArticulo ?? 'Producto', style: 'td', bold: true }]
+    const nodos: any[] = [
+      { text: prod.nombreArticulo ?? prod.codigoArticulo ?? 'Producto', style: 'td', bold: true },
+    ]
 
     // Modificadores: agrupar por nombre+UM+nombreOpcion para distinguir variantes iguales
     const modMap: Record<string, { qty: number; opcion?: string }> = {}
@@ -636,5 +641,88 @@ export const useComandaPdf = () => {
     })
   }
 
-  return { imprimirComanda, imprimirEstadoCuenta }
+  const imprimirFactura = async (facturaResponse: any, tipoRepresentacionGrafica: string) => {
+    if (!facturaResponse?.factura) return
+
+    console.log('Imprimiendo factura con representación gráfica tipo:', tipoRepresentacionGrafica)
+    const { representacionGrafica } = facturaResponse.factura
+
+    // Configuración de impresión automática
+    const printerSettings = JSON.parse(localStorage.getItem('printers') || '{}')
+    const impresionAutomatica = printerSettings.impresionAutomatica || {}
+
+    if (impresionAutomatica.facturar) {
+      if (tipoRepresentacionGrafica === 'pdf') {
+        setTimeout(async () => {
+          try {
+            const res = await fetch(representacionGrafica.pdf)
+            const blob = await res.blob()
+            const localPdfUrl = URL.createObjectURL(blob)
+            printJS({ printable: localPdfUrl, type: 'pdf' })
+          } catch (error) {
+            console.error('Error al obtener el PDF de la factura', error)
+            window.open(representacionGrafica.pdf, '_blank')
+          }
+        }, 1500)
+      } else if (
+        tipoRepresentacionGrafica === 'rollo' ||
+        tipoRepresentacionGrafica === 'rolloResumen' ||
+        tipoRepresentacionGrafica === 'rolloReducido'
+      ) {
+        const pdfUrl =
+          tipoRepresentacionGrafica === 'rollo'
+            ? representacionGrafica.rollo
+            : tipoRepresentacionGrafica === 'rolloResumen'
+              ? representacionGrafica.rolloResumen || representacionGrafica.rollo
+              : representacionGrafica.rolloReducido || representacionGrafica.rollo
+
+        const selectedPrinter = printerSettings.facturar || ''
+
+        if (selectedPrinter) {
+          fetch('http://localhost:7777/printPDF', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              pdf_url: pdfUrl,
+              printer: selectedPrinter,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.message) {
+                notSuccess('Impresión iniciada')
+              } else {
+                notError('Error al iniciar la impresión')
+              }
+            })
+            .catch((error) => {
+              console.error('Error al imprimir el PDF:', error)
+              notError('Error al imprimir el PDF')
+            })
+        } else {
+          console.log('No se ha seleccionado una impresora para facturación. Mostrando vista previa en PDF.')
+          setTimeout(async () => {
+            try {
+              const res = await fetch(pdfUrl)
+              const blob = await res.blob()
+              const localPdfUrl = URL.createObjectURL(blob)
+              
+              printJS({
+                printable: localPdfUrl,
+                type: 'pdf',
+                style: '@media print { @page { size: 100%; margin: 0mm; } body { width: 100%; } }',
+              })
+            } catch (error) {
+              console.error('Error al obtener el PDF de la factura en rollo', error)
+              window.open(pdfUrl, '_blank') // Fallback
+            }
+          }, 1500)
+        }
+      }
+    }
+  }
+
+  return { imprimirComanda, imprimirEstadoCuenta, imprimirFactura }
 }

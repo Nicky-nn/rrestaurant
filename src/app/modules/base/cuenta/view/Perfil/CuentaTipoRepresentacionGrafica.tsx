@@ -80,7 +80,7 @@ const CuentaTipoRepresentacionGrafica: FunctionComponent<Props> = (props) => {
                 <FormControlLabel
                   value="rolloReducido"
                   control={<Radio />}
-                  label="Pdf Formato Rollo Resumido"
+                  label="Pdf Formato Rollo Reducido"
                 />
               </RadioGroup>
               <FormHelperText>
