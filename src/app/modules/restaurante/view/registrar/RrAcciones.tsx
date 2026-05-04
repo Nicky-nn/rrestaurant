@@ -322,6 +322,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       }
 
       if (isNuevo) {
+        console.log('Registrando nuevo pedido con payload', { basePayload })
         response = await registrarPedido(basePayload)
         console.log('Pedido registrado exitosamente', { response })
       } else {

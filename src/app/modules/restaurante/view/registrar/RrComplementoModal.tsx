@@ -545,7 +545,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
           ) : (
             <>
               {/* ── Sección: Receta (ingredientes) ─────────────────────────── */}
-              {esReceta && composicion?.receta && (
+              {composicion?.receta && (
                 <Box sx={{ mb: 2.5 }}>
                   <Typography
                     variant="overline"
@@ -564,6 +564,57 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         const nombre = ing.articulo?.nombreArticulo ?? 'Ingrediente'
                         const removido = ingredientesRemovidos.has(artId)
                         const extraQty = ingredientesExtra[artId] ?? 0
+                        const stockDisp =
+                          ing.articulo?.verificarStock === true
+                            ? (ing.articulo.inventario?.[0]?.totalDisponible ?? 0)
+                            : null
+
+                        // Ingrediente no interactivo: mostrar chip informativo + stock si aplica
+                        if (!ing.esRemovible && !ing.permiteExtra) {
+                          const sinStockIng = stockDisp !== null && stockDisp === 0
+                          return (
+                            <Box
+                              key={artId}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                border: '1px solid',
+                                borderColor: sinStockIng ? 'error.light' : 'divider',
+                                borderRadius: '16px',
+                                px: 1.5,
+                                py: 0.25,
+                                bgcolor: sinStockIng
+                                  ? (theme) => alpha(theme.palette.error.main, 0.04)
+                                  : 'transparent',
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontSize: '0.78rem',
+                                  color: sinStockIng ? 'error.main' : 'text.disabled',
+                                  userSelect: 'none',
+                                }}
+                              >
+                                {nombre}
+                              </Typography>
+                              {stockDisp !== null && (
+                                <Chip
+                                  label={sinStockIng ? 'Sin stock' : `${stockDisp}`}
+                                  size="small"
+                                  color={sinStockIng ? 'error' : 'default'}
+                                  variant="outlined"
+                                  sx={{
+                                    height: 16,
+                                    fontSize: '0.6rem',
+                                    flexShrink: 0,
+                                    '& .MuiChip-label': { px: 0.5 },
+                                  }}
+                                />
+                              )}
+                            </Box>
+                          )
+                        }
 
                         return (
                           <Fragment key={artId}>
@@ -635,6 +686,20 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                 >
                                   Extra {nombre}
                                 </Typography>
+                                {stockDisp !== null && (
+                                  <Chip
+                                    label={stockDisp === 0 ? 'Sin stock' : `${stockDisp}`}
+                                    size="small"
+                                    color={stockDisp === 0 ? 'error' : 'default'}
+                                    variant="outlined"
+                                    sx={{
+                                      height: 16,
+                                      fontSize: '0.6rem',
+                                      flexShrink: 0,
+                                      '& .MuiChip-label': { px: 0.5 },
+                                    }}
+                                  />
+                                )}
                                 <QtyStepperInline
                                   qty={extraQty}
                                   colorName="secondary"
@@ -1005,57 +1070,58 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
         </Box>
 
         {/* ── Resumen de variaciones de receta ── */}
-        {esReceta && (ingredientesRemovidos.size > 0 || Object.keys(ingredientesExtra).length > 0) && (
-          <Box
-            sx={{
-              px: 3,
-              py: 0.75,
-              flexShrink: 0,
-              borderTop: '1px solid',
-              borderColor: 'divider',
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 0.5,
-              alignItems: 'center',
-            }}
-          >
-            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'text.secondary', mr: 0.5 }}>
-              NOTA:
-            </Typography>
-            {(composicion?.receta?.ingredientes ?? []).map((ing, idx) => {
-              const artId = ing.articulo?._id ?? `ing-${idx}`
-              const nombre = ing.articulo?.nombreArticulo ?? ''
-              const removido = ingredientesRemovidos.has(artId)
-              const extraQty = ingredientesExtra[artId] ?? 0
-              const chips: ReactNode[] = []
-              if (removido && ing.esRemovible) {
-                chips.push(
-                  <Chip
-                    key={`rem-${idx}`}
-                    label={`Sin ${nombre}`}
-                    size="small"
-                    variant="outlined"
-                    color="secondary"
-                    sx={{ height: 20, fontSize: '0.7rem' }}
-                  />,
-                )
-              }
-              if (extraQty > 0 && ing.permiteExtra) {
-                chips.push(
-                  <Chip
-                    key={`ext-${idx}`}
-                    label={extraQty > 1 ? `${nombre} extra x ${extraQty}` : `${nombre} extra`}
-                    size="small"
-                    variant="outlined"
-                    color="info"
-                    sx={{ height: 20, fontSize: '0.7rem' }}
-                  />,
-                )
-              }
-              return chips
-            })}
-          </Box>
-        )}
+        {composicion?.receta &&
+          (ingredientesRemovidos.size > 0 || Object.keys(ingredientesExtra).length > 0) && (
+            <Box
+              sx={{
+                px: 3,
+                py: 0.75,
+                flexShrink: 0,
+                borderTop: '1px solid',
+                borderColor: 'divider',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 0.5,
+                alignItems: 'center',
+              }}
+            >
+              <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'text.secondary', mr: 0.5 }}>
+                NOTA:
+              </Typography>
+              {(composicion?.receta?.ingredientes ?? []).map((ing, idx) => {
+                const artId = ing.articulo?._id ?? `ing-${idx}`
+                const nombre = ing.articulo?.nombreArticulo ?? ''
+                const removido = ingredientesRemovidos.has(artId)
+                const extraQty = ingredientesExtra[artId] ?? 0
+                const chips: ReactNode[] = []
+                if (removido && ing.esRemovible) {
+                  chips.push(
+                    <Chip
+                      key={`rem-${idx}`}
+                      label={`Sin ${nombre}`}
+                      size="small"
+                      variant="outlined"
+                      color="secondary"
+                      sx={{ height: 20, fontSize: '0.7rem' }}
+                    />,
+                  )
+                }
+                if (extraQty > 0 && ing.permiteExtra) {
+                  chips.push(
+                    <Chip
+                      key={`ext-${idx}`}
+                      label={extraQty > 1 ? `${nombre} extra x ${extraQty}` : `${nombre} extra`}
+                      size="small"
+                      variant="outlined"
+                      color="info"
+                      sx={{ height: 20, fontSize: '0.7rem' }}
+                    />,
+                  )
+                }
+                return chips
+              })}
+            </Box>
+          )}
 
         {/* ── Footer: cantidad + agregar ── */}
         <Box
