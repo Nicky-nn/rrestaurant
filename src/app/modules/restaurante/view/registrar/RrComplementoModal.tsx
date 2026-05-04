@@ -568,10 +568,10 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                           ing.articulo?.verificarStock === true
                             ? (ing.articulo.inventario?.[0]?.totalDisponible ?? 0)
                             : null
+                        const sinStockIng = stockDisp !== null && stockDisp <= 0
 
                         // Ingrediente no interactivo: mostrar chip informativo + stock si aplica
                         if (!ing.esRemovible && !ing.permiteExtra) {
-                          const sinStockIng = stockDisp !== null && stockDisp === 0
                           return (
                             <Box
                               key={artId}
@@ -622,6 +622,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                               <Chip
                                 label={`Sin ${nombre}`}
                                 onClick={() => {
+                                  if (sinStockIng) return
                                   toggleRemovido(artId)
                                   if (extraQty > 0 && !removido) {
                                     setIngredientesExtra((prev) => {
@@ -636,7 +637,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                 sx={{
                                   fontWeight: removido ? 600 : 400,
                                   fontSize: '0.78rem',
-                                  cursor: 'pointer',
+                                  cursor: sinStockIng ? 'not-allowed' : 'pointer',
+                                  opacity: sinStockIng ? 0.5 : 1,
                                   transition: 'all 0.15s ease',
                                   borderColor: removido ? 'secondary.main' : 'divider',
                                   color: removido ? 'secondary.main' : 'text.primary',
@@ -654,6 +656,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             {ing.permiteExtra && (
                               <Box
                                 onClick={() => {
+                                  if (sinStockIng) return
                                   setExtraQty(artId, 1)
                                   if (removido) toggleRemovido(artId)
                                 }}
@@ -672,7 +675,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                       ? (theme) => alpha(theme.palette.secondary.main, 0.1)
                                       : 'transparent',
                                   transition: 'all 0.15s ease',
-                                  cursor: 'pointer',
+                                  cursor: sinStockIng ? 'not-allowed' : 'pointer',
+                                  opacity: sinStockIng ? 0.5 : 1,
                                 }}
                               >
                                 <Typography
@@ -703,7 +707,9 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                 <QtyStepperInline
                                   qty={extraQty}
                                   colorName="secondary"
+                                  maxReached={sinStockIng}
                                   onIncrement={() => {
+                                    if (sinStockIng) return
                                     setExtraQty(artId, 1)
                                     if (removido) toggleRemovido(artId)
                                   }}
@@ -880,8 +886,13 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             // Agrandado: no-eligible cubierto por ancla del grupo
                             const cubiertoPorAncla = anclaQtyPerArt[selKey] ?? 0
                             const esDescuentoAncla = cubiertoPorAncla > 0 && op.elegibleParaGratis !== true
+                            const aplicaAgrandadoPreview =
+                              !selected &&
+                              op.elegibleParaGratis !== true &&
+                              tieneAnclaDisplay &&
+                              cuposLibresGrupo > 0
                             const precioDisplay =
-                              esDescuentoAncla && precioAnclaDisplay !== null
+                              (esDescuentoAncla || aplicaAgrandadoPreview) && precioAnclaDisplay !== null
                                 ? Math.max(0, precio - precioAnclaDisplay)
                                 : precio
 
@@ -1010,6 +1021,19 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                             label={`-${opSigla}${precioAnclaDisplay.toFixed(2)}`}
                                             size="small"
                                             color="warning"
+                                            sx={{
+                                              height: 18,
+                                              fontSize: '0.6rem',
+                                              '& .MuiChip-label': { px: 0.75 },
+                                            }}
+                                          />
+                                        )}
+                                        {aplicaAgrandadoPreview && precioAnclaDisplay !== null && (
+                                          <Chip
+                                            label={`Agrandar +${opSigla}${Math.max(0, precio - precioAnclaDisplay).toFixed(2)}`}
+                                            size="small"
+                                            color="warning"
+                                            variant="outlined"
                                             sx={{
                                               height: 18,
                                               fontSize: '0.6rem',
