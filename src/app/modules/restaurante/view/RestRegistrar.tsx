@@ -1,4 +1,18 @@
-import { Alert, Box, Grid, Snackbar } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
+import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined'
+import {
+  Alert,
+  Badge,
+  Box,
+  Dialog,
+  Fab,
+  Grid,
+  IconButton,
+  Snackbar,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material'
 import { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import useAuth from '../../../base/hooks/useAuth'
@@ -30,6 +44,8 @@ import RrMesas from './registrar/RrMesas'
  *  - Columna derecha:    RrCarrito + RrAcciones
  */
 const RestRegistrar: FunctionComponent = () => {
+  const theme = useTheme()
+  const isMobileCart = useMediaQuery(theme.breakpoints.down('md'))
   const { user } = useAuth()
   const { cajaActiva, aperturaCajaActivo } = useCajas()
   const sinCaja = !cajaActiva || !aperturaCajaActivo
@@ -44,10 +60,12 @@ const RestRegistrar: FunctionComponent = () => {
   })
   const [ultimoPedidoExitoso, setUltimoPedidoExitoso] = useState<any>(null)
   const [isPedidoDirty, setIsPedidoDirty] = useState(false)
+  const [openMobileCart, setOpenMobileCart] = useState(false)
 
   const handleMesaSeleccionada = useCallback((mesa: MesaUI | null) => {
     setMesaSeleccionada(mesa)
     setIsPedidoDirty(false)
+    if (!mesa) setOpenMobileCart(false)
   }, [])
 
   // Obtener la lista de espacios de la sucursal actual
@@ -748,6 +766,8 @@ const RestRegistrar: FunctionComponent = () => {
     })
   }, [])
 
+  const cantidadItemsCarrito = mesaSeleccionada?.pedido?.productos?.length ?? 0
+
   return (
     <>
       <AperturaCajaDialog open={sinCaja} onSuccess={() => {}} />
@@ -797,7 +817,7 @@ const RestRegistrar: FunctionComponent = () => {
 
         <Grid
           size={{ xs: 12, md: 4 }}
-          sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}
+          sx={{ display: { xs: 'none', md: 'flex' }, flexDirection: 'column', gap: 1, height: '100%' }}
         >
           <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <RrCarrito
@@ -821,6 +841,105 @@ const RestRegistrar: FunctionComponent = () => {
           </Box>
         </Grid>
       </Grid>
+      {isMobileCart && (
+        <>
+          <Fab
+            color="primary"
+            onClick={() => setOpenMobileCart(true)}
+            sx={{
+              position: 'fixed',
+              right: 16,
+              bottom: 24,
+              zIndex: 1200,
+              boxShadow: 4,
+            }}
+          >
+            <Badge badgeContent={cantidadItemsCarrito} color="error" max={99}>
+              <ShoppingCartOutlinedIcon />
+            </Badge>
+          </Fab>
+
+          <Dialog
+            open={openMobileCart}
+            onClose={() => setOpenMobileCart(false)}
+            fullScreen
+            PaperProps={{ sx: { display: 'flex', flexDirection: 'column' } }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                px: 2,
+                py: 1.25,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <ShoppingCartOutlinedIcon color="primary" fontSize="small" />
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Carrito
+                </Typography>
+                <Badge badgeContent={cantidadItemsCarrito} color="error" max={99} />
+              </Box>
+              <IconButton size="small" onClick={() => setOpenMobileCart(false)}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                p: 1,
+              }}
+            >
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  minHeight: 0,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  mb: 1,
+                }}
+              >
+                <RrCarrito
+                  mesaSeleccionada={mesaSeleccionada}
+                  onUpdateProduct={handleUpdateProduct}
+                  onRemoveProduct={handleRemoveProduct}
+                  onClientChange={handleClientChange}
+                  onNotaChange={handleNotaChange}
+                  isPedidoDirty={isPedidoDirty}
+                />
+              </Box>
+              <Box sx={{ flexShrink: 0 }}>
+                <RrAcciones
+                  mesaSeleccionada={mesaSeleccionada}
+                  isPedidoDirty={isPedidoDirty}
+                  onSuccess={(pedidoRetornado, isFinalizado) => {
+                    handleSuccess(pedidoRetornado, isFinalizado)
+                    setOpenMobileCart(false)
+                  }}
+                  onCancel={() => {
+                    handleCancel()
+                    setOpenMobileCart(false)
+                  }}
+                  onClear={() => {
+                    handleClear()
+                    setOpenMobileCart(false)
+                  }}
+                  onDescuentoChange={() => setIsPedidoDirty(true)}
+                />
+              </Box>
+            </Box>
+          </Dialog>
+        </>
+      )}
       <Snackbar
         key={`snackbar-${snackbar.key}`}
         open={snackbar.open}
