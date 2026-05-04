@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { Fragment, FunctionComponent, useEffect, useRef, useState } from 'react'
+import { Fragment, FunctionComponent, ReactNode, useEffect, useRef, useState } from 'react'
 
 import useAuth from '../../../../base/hooks/useAuth'
 import { articuloToArticuloOperacionInputService } from '../../../../base/services/articuloToArticuloOperacionInputService'
@@ -1003,6 +1003,59 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
             open={open}
           />
         </Box>
+
+        {/* ── Resumen de variaciones de receta ── */}
+        {esReceta && (ingredientesRemovidos.size > 0 || Object.keys(ingredientesExtra).length > 0) && (
+          <Box
+            sx={{
+              px: 3,
+              py: 0.75,
+              flexShrink: 0,
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 0.5,
+              alignItems: 'center',
+            }}
+          >
+            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'text.secondary', mr: 0.5 }}>
+              NOTA:
+            </Typography>
+            {(composicion?.receta?.ingredientes ?? []).map((ing, idx) => {
+              const artId = ing.articulo?._id ?? `ing-${idx}`
+              const nombre = ing.articulo?.nombreArticulo ?? ''
+              const removido = ingredientesRemovidos.has(artId)
+              const extraQty = ingredientesExtra[artId] ?? 0
+              const chips: ReactNode[] = []
+              if (removido && ing.esRemovible) {
+                chips.push(
+                  <Chip
+                    key={`rem-${idx}`}
+                    label={`Sin ${nombre}`}
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                    sx={{ height: 20, fontSize: '0.7rem' }}
+                  />,
+                )
+              }
+              if (extraQty > 0 && ing.permiteExtra) {
+                chips.push(
+                  <Chip
+                    key={`ext-${idx}`}
+                    label={extraQty > 1 ? `${nombre} extra x ${extraQty}` : `${nombre} extra`}
+                    size="small"
+                    variant="outlined"
+                    color="info"
+                    sx={{ height: 20, fontSize: '0.7rem' }}
+                  />,
+                )
+              }
+              return chips
+            })}
+          </Box>
+        )}
 
         {/* ── Footer: cantidad + agregar ── */}
         <Box

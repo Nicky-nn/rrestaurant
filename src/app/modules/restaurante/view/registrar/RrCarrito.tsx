@@ -597,6 +597,16 @@ const CartItem = ({
     .map((n: any) => n.trim())
     .filter(Boolean)
 
+  // Variaciones de receta: extras y removidos
+  const notasVariacionReceta: string[] = ((item.variacionReceta ?? []) as any[])
+    .filter((v: any) => Boolean(v.nombreArticulo ?? v.codigoArticulo))
+    .map((v: any) => {
+      const nombre = v.nombreArticulo ?? v.codigoArticulo ?? ''
+      if (v.removido) return `Sin ${nombre}`
+      const qty = v.articuloPrecio?.cantidad ?? 1
+      return qty > 1 ? `${nombre} extra x ${qty}` : `${nombre} extra`
+    })
+
   return (
     <Box
       sx={{
@@ -872,43 +882,44 @@ const CartItem = ({
       )}
 
       {/* Extras y Notas (Pills) */}
-      {(extras.length > 0 || notaRapidas.length > 0 || notasPersonalizadas.length > 0) && (
+      {(extras.length > 0 ||
+        notaRapidas.length > 0 ||
+        notasPersonalizadas.length > 0 ||
+        notasVariacionReceta.length > 0) && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.5 }}>
-          {extras.length > 0 &&
-            (console.log(extras),
-            (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', letterSpacing: 0.5 }}>
-                  EXTRAS:
-                </Typography>
-                {extras.map((extra: any, i: number) => (
-                  <Box
-                    key={`extra-${i}`}
-                    sx={{
-                      px: 1,
-                      py: 0.15,
-                      bgcolor: alpha(theme.palette.primary.main, 0.08),
-                      color: 'primary.dark',
-                      borderRadius: 1,
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {extra.cantidad > 1 && (
-                      <Typography component="span" sx={{ fontWeight: 800, mr: 0.5, color: 'primary.main' }}>
-                        {extra.cantidad}x
-                      </Typography>
-                    )}
-                    <span>
-                      {extra.nombre}
-                      {extra.nombreOpcion && ` (${extra.nombreOpcion})`}
-                    </span>
-                  </Box>
-                ))}
-              </Box>
-            ))}
+          {extras.length > 0 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', letterSpacing: 0.5 }}>
+                EXTRAS:
+              </Typography>
+              {extras.map((extra: any, i: number) => (
+                <Box
+                  key={`extra-${i}`}
+                  sx={{
+                    px: 1,
+                    py: 0.15,
+                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                    color: 'primary.dark',
+                    borderRadius: 1,
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {extra.cantidad > 1 && (
+                    <Typography component="span" sx={{ fontWeight: 800, mr: 0.5, color: 'primary.main' }}>
+                      {extra.cantidad}x
+                    </Typography>
+                  )}
+                  <span>
+                    {extra.nombre}
+                    {extra.nombreOpcion && ` (${extra.nombreOpcion})`}
+                  </span>
+                </Box>
+              ))}
+            </Box>
+          )}
 
-          {(notaRapidas.length > 0 || notasPersonalizadas.length > 0) && (
+          {(notaRapidas.length > 0 || notasPersonalizadas.length > 0 || notasVariacionReceta.length > 0) && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
               <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', letterSpacing: 0.5 }}>
                 NOTA:
@@ -943,6 +954,22 @@ const CartItem = ({
                   }}
                 >
                   {notaStr}
+                </Box>
+              ))}
+              {notasVariacionReceta.map((vr, i) => (
+                <Box
+                  key={`vr-${i}`}
+                  sx={{
+                    px: 1,
+                    py: 0.15,
+                    bgcolor: alpha(theme.palette.info.main, 0.1),
+                    color: 'info.dark',
+                    borderRadius: 1,
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {vr}
                 </Box>
               ))}
             </Box>
