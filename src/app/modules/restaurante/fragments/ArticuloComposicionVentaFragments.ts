@@ -55,7 +55,6 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
           }
           inventario {
             totalDisponible
-            verificarStock
             detalle {
               almacen {
                 _id
@@ -128,7 +127,6 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
           }
           inventario {
             totalDisponible
-            verificarStock
             detalle {
               almacen {
                 _id

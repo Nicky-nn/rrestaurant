@@ -1612,6 +1612,8 @@ export interface ArticuloRecetaOperacionInput {
   nroItem?: number
   /** Código del articulo */
   codigoArticulo: string
+  /** Nombre del articulo (campo local para display en carrito, no se envía al backend) */
+  nombreArticulo?: string
   /** Codigo de almacen */
   codigoAlmacen: string | null
   /** En caso de tener un lote */
