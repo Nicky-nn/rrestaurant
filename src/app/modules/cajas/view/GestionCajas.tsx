@@ -393,7 +393,7 @@ const GestionCajas: FunctionComponent = () => {
                           pointerEvents: 'none',
                         }}
                       >
-                        -{formatMoney(caja?.totalRetiros)}
+                        -{formatMoney(caja?.totalVentas).replace(/\d/g, '*')}
                       </Typography>
                     </MontoRow>
                   </Tooltip>
