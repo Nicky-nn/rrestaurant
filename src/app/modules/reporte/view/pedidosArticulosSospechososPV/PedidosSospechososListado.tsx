@@ -1,266 +1,202 @@
 import { CheckCircleOutline } from '@mui/icons-material'
-import { Alert, AlertTitle, Box, CircularProgress, Divider, Grid, Paper, Typography } from '@mui/material'
-import { useTheme } from '@mui/material/styles'
-import { useQuery } from '@tanstack/react-query'
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  CircularProgress,
+  Divider,
+  Grid,
+  Paper,
+  Typography,
+} from '@mui/material'
 import dayjs from 'dayjs'
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 
+import { useQuery } from '@tanstack/react-query'
 import AnomaliasGrafico from '../../../pos/view/listado/AnomaliasGrafico'
-import { client } from '../../../restaurante/client'
-import { RESTPEDIDOLISTADO } from '../../../restaurante/queries/useRestPedidoListado'
 import AnomaliasListado from './AnomaliasListado'
+import { client } from '../../../restaurante/client'
+import { RestPedidoAuditoria } from '../../types'
+import { RESTPEDIDOAUDITORIAREPORTEANOMALIA } from '../../queries/useRestPedidoAuditoriaReporteAnomalia'
 
 type Props = {
   fechaInicial: Date
   fechaFinal: Date
   codigoSucursal: number
-  codigoPuntoVenta: number[]
-  umbral: number
-}
-
-// 📊 Calcula media, varianza y desviación estándar por artículo
-const calcularEstadisticas = (pedidos: any[], historial: any[]) => {
-  const cantidadesPorArticulo: Record<string, number[]> = {}
-
-  const agrupar = (fuente: any[]) => {
-    fuente.forEach((pedido) => {
-      pedido.articulos?.forEach((item: any) => {
-        const id = String(item.articuloId).trim()
-        if (!cantidadesPorArticulo[id]) {
-          cantidadesPorArticulo[id] = []
-        }
-        cantidadesPorArticulo[id].push(item.cantidad)
-      })
-    })
-  }
-
-  agrupar(pedidos)
-  agrupar(historial)
-
-  const estadisticas: Record<string, { media: number; varianza: number; desviacion: number }> = {}
-
-  for (const [id, cantidades] of Object.entries(cantidadesPorArticulo)) {
-    const n = cantidades.length
-    const media = cantidades.reduce((a, b) => a + b, 0) / n
-    const varianza = cantidades.reduce((suma, valor) => suma + (valor - media) ** 2, 0) / n
-    const desviacion = Math.sqrt(varianza)
-    estadisticas[id] = { media, varianza, desviacion }
-  }
-
-  return estadisticas
-}
-
-// ⚠️ Detecta artículos con cantidades fuera del rango esperado
-const detectarAnomalias = (pedidos: any[], historial: any[], umbral: number): any[] => {
-  const estadisticas = calcularEstadisticas(pedidos, historial)
-  const anomalias: any[] = []
-
-  pedidos.forEach((pedido) => {
-    const ultimoEstadoPorArticulo = new Map<string, any>()
-
-    pedido.historial?.forEach((registro: any) => {
-      registro.articuloOperacion?.forEach((art: any) => {
-        const id = String(art.articuloId).trim()
-        const previo = ultimoEstadoPorArticulo.get(id)
-
-        if (!previo || registro.nro > previo.nro) {
-          ultimoEstadoPorArticulo.set(id, { ...art, nro: registro.nro })
-        }
-      })
-    })
-
-    ultimoEstadoPorArticulo.forEach((art, id) => {
-      const codigo = String(art.codigoArticulo).trim()
-      const precioActual = art?.articuloPrecio?.monedaPrecio?.precio ?? null
-      const stat = estadisticas[id]
-
-      // 🔴 Artículo eliminado
-      if (art.state?.toUpperCase() === 'ELIMINADO') {
-        anomalias.push({
-          pedidoId: pedido.pedidoId,
-          numeroPedido: pedido.numeroPedido,
-          orden: pedido.numeroOrden,
-          historial: pedido.historial,
-          productos: pedido.productos,
-          sucursal: pedido.sucursal,
-          puntoVenta: pedido.puntoVenta,
-          fecha: pedido.fecha,
-          nombre: art.nombreArticulo,
-          articuloId: id,
-          cantidad: 0,
-          precio: precioActual,
-          autor: pedido.autor,
-          tipo: 'ELIMINADO',
-          descripcion: 'Artículo eliminado del pedido',
-          estadoArticulo: 'ELIMINADO',
-        })
-        return
-      }
-
-      // 🟡 Verificar solo disminuciones fuera del rango normal
-      if (stat?.desviacion) {
-        const limiteInferior = stat.media - umbral * stat.desviacion
-        const limiteSuperior = stat.media + umbral * stat.desviacion
-
-        // Buscar producto actual por código
-        const productoActual = pedido.productos?.find((p: any) => String(p.codigoArticulo).trim() === codigo)
-
-        const cantidadActual = productoActual?.articuloPrecio?.cantidad ?? 0
-        const cantidadAnterior = art.articuloPrecio?.cantidad ?? 0
-
-        if (cantidadActual < cantidadAnterior && cantidadActual < limiteInferior) {
-          anomalias.push({
-            pedidoId: pedido.pedidoId,
-            numeroPedido: pedido.numeroPedido,
-            orden: pedido.numeroOrden,
-            historial: pedido.historial,
-            productos: pedido.productos,
-            sucursal: pedido.sucursal,
-            puntoVenta: pedido.puntoVenta,
-            fecha: pedido.fecha,
-            nombre: art.nombreArticulo,
-            articuloId: id,
-            cantidad: cantidadActual,
-            precio: precioActual,
-            autor: pedido.autor,
-            promedio: stat.media.toFixed(2),
-            desviacion: stat.desviacion.toFixed(2),
-            limiteInferior: limiteInferior.toFixed(2),
-            limiteSuperior: limiteSuperior.toFixed(2),
-            score: Math.abs(cantidadActual - stat.media) / stat.desviacion,
-            tipo: 'ACTUALIZACION',
-            descripcion: 'Disminución de cantidad',
-            estadoArticulo: art.state?.toUpperCase() || 'DESCONOCIDO',
-          })
-        }
-      }
-    })
-  })
-
-  return anomalias
+  stats?: any
+  triggerSearch: number
 }
 
 const PedidosSospechososListado = ({
   fechaInicial,
   fechaFinal,
   codigoSucursal,
-  codigoPuntoVenta,
-  umbral,
+  stats,
+  triggerSearch,
 }: Props) => {
-  const theme = useTheme()
-  const inicio = dayjs(fechaInicial).startOf('day').format('YYYY-MM-DD HH:mm:ss')
-  const fin = dayjs(fechaFinal).endOf('day').format('YYYY-MM-DD HH:mm:ss')
-  const query = `fechaDocumento>=${inicio}&fechaDocumento<=${fin}&historial.0&state=FINALIZADO`
-  const paginacion = { pageIndex: 0, pageSize: 50 }
-
   const {
-    data: pedidos,
+    data: pedidosAuditoria,
+    isError,
     isLoading,
-    error,
+    isFetching,
+    refetch,
   } = useQuery({
-    queryKey: ['pedidos', codigoSucursal, codigoPuntoVenta, inicio, fin, umbral],
+    queryKey: ['pedidos-anomalias', fechaInicial, fechaFinal, codigoSucursal],
     queryFn: async () => {
-      const fetchPagination = {
-        page: paginacion.pageIndex + 1,
-        limit: paginacion.pageSize,
-        reverse: true,
-        query,
-      }
+      const inicioDMY = dayjs(fechaInicial).startOf('day').format('DD/MM/YYYY HH:mm:ss')
+      const finDMY = dayjs(fechaFinal).endOf('day').format('DD/MM/YYYY HH:mm:ss')
 
-      const resultados = await Promise.all(
-        codigoPuntoVenta.map(async (pv) => {
-          const entidad = {
-            codigoSucursal,
-            codigoPuntoVenta: pv,
-          }
-          const response = await client.request<{ restPedidoListado: { docs?: any[] } }>(RESTPEDIDOLISTADO, {
-            ...fetchPagination,
-            entidad,
-          })
-          const docs = response.restPedidoListado.docs ?? []
-
-          // Excluir pedidos provenientes de divisiones
-          return docs.filter((pedido: any) => !pedido.atributo4?.includes('fromDivision:true'))
-        }),
+      const data = await client.request<{ restPedidoAuditoriaReporteAnomalia: RestPedidoAuditoria[] }>(
+        RESTPEDIDOAUDITORIAREPORTEANOMALIA,
+        {
+          codigoSucursal,
+          fechaInicial: inicioDMY,
+          fechaFinal: finDMY,
+        }
       )
 
-      return resultados.flat()
+      return data.restPedidoAuditoriaReporteAnomalia || []
     },
-    enabled: codigoPuntoVenta.length > 0,
+    enabled: false, // Wait for trigger
   })
 
-  const pedidosConHistorial = useMemo(
-    () => pedidos?.filter((p: any) => p.historial && p.historial.length > 0) ?? [],
-    [pedidos],
-  )
+  useEffect(() => {
+    if (triggerSearch > 0) {
+      refetch()
+    }
+  }, [triggerSearch, refetch])
 
-  const pedidosRecientes = pedidosConHistorial.map((pedido: any) => ({
-    pedidoId: pedido._id,
-    fecha: pedido.fechaDocumento,
-    numeroPedido: pedido.numeroPedido,
-    numeroOrden: pedido.numeroOrden,
-    autor: pedido.usucre,
-    sucursal: pedido.sucursal.codigo,
-    puntoVenta: pedido.puntoVenta.codigo,
-    productos: pedido.productos,
-    historial: pedido.historial,
-    articulos: (pedido.productos || []).map((prod: any) => ({
-      articuloId: prod.articuloId,
-      nombre: prod.nombreArticulo,
-      cantidad: prod.articuloPrecio?.cantidad,
-      precio: prod.articuloPrecio?.monedaPrecio.precio,
-    })),
-  }))
+  const pedidosDocs = pedidosAuditoria ?? []
 
-  const historialPedidos = pedidosConHistorial.flatMap((pedido: any) =>
-    (pedido.historial || []).map((registro: any) => ({
-      fecha: pedido.fechaDocumento,
-      articulos: (registro.articuloOperacion || [])
-        .filter((a: any) => a.state?.toUpperCase() === 'ELIMINADO' || a.articuloPrecio?.cantidad != null)
-        .map((a: any) => ({
-          articuloId: a.articuloId,
-          nombre: a.nombreArticulo,
-          cantidad: a.articuloPrecio?.cantidad,
-          estado: a.state ?? 'DESCONOCIDO',
-        })),
-    })),
-  )
+  const anomalias = useMemo(() => {
+    const list: any[] = []
+    pedidosDocs.forEach((auditoria: RestPedidoAuditoria) => {
+      const puntaje = auditoria.riesgoPuntaje || 0
+      const nivel = auditoria.riesgoNivel || (puntaje < 15 ? 'BAJO' : 'OTRO')
 
-  const anomalias = useMemo(
-    () => detectarAnomalias(pedidosRecientes, historialPedidos, umbral),
-    [pedidosRecientes, historialPedidos, umbral],
-  )
+      // Ignorar eventos normales (Riesgo BAJO: 0 a 14 puntos)
+      if (nivel === 'BAJO' || puntaje < 15) {
+        return
+      }
+        
+      // Iteramos los artículos para reportar las causas si son por artículo
+        const modis = auditoria.articulos ?? []
+        let hasDetalle = false
+
+        modis.forEach(art => {
+           const cant = art.articuloPrecio?.cantidad ?? 0
+           const cantAnt = art.articuloPrecio?.cantidadAnterior ?? cant
+           const precio = art.articuloPrecio?.valor ?? 0
+           console.log(art.state)
+
+           const resumenLower = auditoria.resumenCambios?.toLowerCase() || ''
+           const nombreLower = art.nombreArticulo?.toLowerCase() || ''
+           const nameInSummary = nombreLower && resumenLower.includes(nombreLower)
+
+           if (art.state === 'ELIMINADO' || cant < cantAnt || nameInSummary) {
+               hasDetalle = true
+               const resumenPartes = auditoria.resumenCambios?.split('.') || []
+               const coincidenciaResumen = art.nombreArticulo 
+                 ? resumenPartes.map(s => s.trim()).filter(s => s.toLowerCase().includes(art.nombreArticulo!.toLowerCase())).join('. ')
+                 : ''
+               const resumenFinal = coincidenciaResumen || auditoria.resumenCambios
+
+               list.push({
+                 pedidoId: auditoria.pedidoId,
+                 numeroPedido: auditoria.numeroPedido,
+                 orden: auditoria.numeroOrden,
+                 sucursal: auditoria.codigoSucursal,
+                 puntoVenta: auditoria.codigoPuntoVenta,
+                 fecha: auditoria.fechaRegistro,
+                 nombre: art.nombreArticulo || 'General',
+                 articuloId: art.articuloId || auditoria.pedidoId,
+                 cantidad: cant,
+                 precio: precio,
+                 autor: auditoria.usuario,
+                 descripcion: auditoria.accion !== 'ANULACION' ? (resumenFinal || 'Modificación de artículo') : (auditoria.motivosSospecha?.join(', ') || 'Anomalía en artículo'),
+                 resumenCambios: resumenFinal,
+                 motivosSospecha: auditoria.motivosSospecha,
+                 accion: auditoria.accion,
+                 estadoArticulo: auditoria.accion || 'ACTUALIZACION',
+                 riesgoNivel: auditoria.riesgoNivel,
+                 riesgoPuntaje: auditoria.riesgoPuntaje,
+                 duracionMinutos: auditoria.duracionMinutos,
+               })
+           }
+        })
+
+        // Si no fue un artículo específico el anómalo (ej: tiempo muy corto, monto muy bajo), lo metemos global
+        if (!hasDetalle) {
+             list.push({
+                 pedidoId: auditoria.pedidoId,
+                 numeroPedido: auditoria.numeroPedido,
+                 orden: auditoria.numeroOrden,
+                 sucursal: auditoria.codigoSucursal,
+                 puntoVenta: auditoria.codigoPuntoVenta,
+                 fecha: auditoria.fechaRegistro,
+                 nombre: (auditoria.accion === 'ANULACION' || auditoria.accion === 'CANCELACION') ? 'PEDIDO COMPLETO' : (auditoria.articulos?.map(art => art.nombreArticulo).filter(Boolean).join(', ') || 'PEDIDO COMPLETO'),
+                 articuloId: auditoria.pedidoId,
+                 cantidad: 1,
+                 precio: auditoria.totales?.operacion?.totalFinal || 0,
+                 autor: auditoria.usuario,
+                 descripcion: (auditoria.accion !== 'ANULACION' && auditoria.accion !== 'CANCELACION') ? (auditoria.resumenCambios || `Evento: ${auditoria.accion}`) : (auditoria.motivosSospecha?.join(', ') || auditoria.resumenCambios || `Evento: ${auditoria.accion}`),
+                 resumenCambios: auditoria.resumenCambios,
+                 motivosSospecha: auditoria.motivosSospecha,
+                 accion: auditoria.accion,
+                 estadoArticulo: auditoria.accion || 'REVISION',
+                 riesgoNivel: auditoria.riesgoNivel,
+                 riesgoPuntaje: auditoria.riesgoPuntaje,
+                 duracionMinutos: auditoria.duracionMinutos,
+             })
+        }
+    })
+    return list
+  }, [pedidosDocs, stats])
 
   return (
     <Box>
-      {isLoading && (
-        <Box display="flex" justifyContent="center" p={4}>
+      {isFetching && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
           <CircularProgress size={40} />
         </Box>
       )}
 
-      {error && (
+      {isError && (
         <Alert severity="error" sx={{ m: 2 }}>
           <AlertTitle>Error</AlertTitle>
           Error al cargar pedidos
         </Alert>
       )}
 
-      {!isLoading && !anomalias.length && (
+      {triggerSearch === 0 || (!pedidosAuditoria && !isFetching) ? (
+        <Paper
+          elevation={0}
+          sx={{ p: 4, textAlign: 'center', border: '1px dashed #ccc', borderRadius: 2 }}
+        >
+          <Typography variant="body1" color="text.secondary">
+            Selecciona un rango de fechas y haz clic en <strong>"Consultar Anomalías"</strong> para analizar los pedidos.
+          </Typography>
+        </Paper>
+      ) : null}
+
+      {!isFetching && pedidosAuditoria && !anomalias.length && triggerSearch > 0 && (
         <Paper
           elevation={0}
           sx={{
             p: 4,
             textAlign: 'center',
-            backgroundColor: theme.palette.action.hover,
-            border: `2px dashed ${theme.palette.divider}`,
+            border: '2px dashed #e0e0e0',
             borderRadius: 2,
           }}
         >
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+            Asegúrate de haber presionado <strong>"Generar Stats"</strong> previamente para que el análisis sea preciso.
+          </Typography>
+          
           <CheckCircleOutline
             sx={{
               fontSize: 64,
-              color: theme.palette.success.main,
+              color: '#4caf50',
               mb: 2,
             }}
           />
@@ -278,7 +214,6 @@ const PedidosSospechososListado = ({
           <Grid size={{ xs: 12, md: 7 }}>
             <AnomaliasListado anomalias={anomalias} />
           </Grid>
-
           <Grid size={{ xs: 12, md: 5 }}>
             <Divider sx={{ mb: 2 }}>Anomalías</Divider>
             <AnomaliasGrafico anomalias={anomalias} />

@@ -22,6 +22,7 @@ import useAuth from '../../../base/hooks/useAuth'
 import useCajas from '../../../base/hooks/useCajas'
 import { useAperturaCajaIngresar } from '../mutations/useAperturaCajaIngresar'
 import CalculadoraEfectivoDialog from './CalculadoraEfectivoDialog'
+import NumberSpinnerField from '../../../base/components/NumberSpinnerField/NumberSpinnerField'
 
 interface IngresoCajaDialogProps {
   open: boolean
@@ -38,14 +39,14 @@ const IngresoCajaDialog: FC<IngresoCajaDialogProps> = ({ open, onClose, cajaId, 
 
   const { mutate: registrarIngreso, isPending } = useAperturaCajaIngresar()
 
-  const [monto, setMonto] = useState<string>('')
+  const [monto, setMonto] = useState<number | null>(null)
   const [motivo, setMotivo] = useState('')
   const [aprobador, setAprobador] = useState(supervisores[0] || user.usuario)
   const [error, setError] = useState<string | null>(null)
   const [openCalc, setOpenCalc] = useState(false)
 
   const resetForm = () => {
-    setMonto('')
+    setMonto(null)
     setMotivo('')
     setAprobador(supervisores[0] || user.usuario)
     setError(null)
@@ -60,7 +61,7 @@ const IngresoCajaDialog: FC<IngresoCajaDialogProps> = ({ open, onClose, cajaId, 
 
   const handleSubmit = () => {
     setError(null)
-    const numericMonto = parseFloat(monto)
+    const numericMonto = monto || 0
 
     if (isNaN(numericMonto) || numericMonto <= 0) {
       setError('Por favor, ingresa un monto válido mayor a 0.')
@@ -155,58 +156,39 @@ const IngresoCajaDialog: FC<IngresoCajaDialogProps> = ({ open, onClose, cajaId, 
               >
                 MONTO DEL INGRESO
               </Typography>
-              <FormControl fullWidth size="small">
-                <OutlinedInput
+              <Box display="flex" gap={1} alignItems="center">
+                <NumberSpinnerField
+                  fullWidth
                   value={monto}
-                  onChange={(e) => {
-                    let val = e.target.value
-                    if (val.includes('.')) {
-                      const parts = val.split('.')
-                      if (parts[1].length > 2) {
-                        val = `${parts[0]}.${parts[1].slice(0, 2)}`
-                      }
-                    }
-                    setMonto(val)
-                  }}
-                  onBlur={() => {
-                    const val = parseFloat(monto)
-                    if (!isNaN(val)) {
-                      const parts = monto.split('.')
-                      if (!parts[1]) setMonto(`${Math.floor(val)}.00`)
-                      else if (parts[1].length === 1) setMonto(`${parts[0]}.${parts[1]}0`)
-                    }
-                  }}
-                  type="number"
-                  inputProps={{ min: 0, step: '0.1' }}
+                  onChange={(val) => setMonto(val)}
+                  min={0}
+                  step={10}
+                  unit="BOB"
                   placeholder="0.00"
-                  startAdornment={
-                    <InputAdornment position="start">
-                      <Typography variant="body1" color="text.secondary" fontWeight={700}>
-                        BOB
-                      </Typography>
-                    </InputAdornment>
-                  }
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => setOpenCalc(true)}
-                        title="Calculadora de efectivo"
-                        sx={{ color: 'text.secondary' }}
-                      >
-                        <Calculate fontSize="small" />
-                      </IconButton>
-                    </InputAdornment>
-                  }
                   sx={{
-                    borderRadius: 2,
-                    bgcolor: 'background.paper',
-                    fontWeight: 700,
-                    fontSize: '1.2rem',
-                    py: 0.5,
+                    '& .MuiInputBase-root': {
+                      borderRadius: 2,
+                      bgcolor: 'background.paper',
+                      fontWeight: 700,
+                      fontSize: '1.2rem',
+                      py: 0.5,
+                    }
                   }}
                 />
-              </FormControl>
+                <IconButton 
+                  onClick={() => setOpenCalc(true)} 
+                  title="Calculadora de efectivo"
+                  color="primary"
+                  sx={{ 
+                    bgcolor: (theme) => `${theme.palette.primary.main}1A`, 
+                    borderRadius: 2,
+                    width: 53,
+                    height: 53
+                  }}
+                >
+                  <Calculate />
+                </IconButton>
+              </Box>
             </Box>
 
             <Box>
@@ -317,7 +299,7 @@ const IngresoCajaDialog: FC<IngresoCajaDialogProps> = ({ open, onClose, cajaId, 
         open={openCalc}
         onClose={() => setOpenCalc(false)}
         onConfirm={(total) => {
-          setMonto(total.toFixed(2))
+          setMonto(total)
           setOpenCalc(false)
         }}
       />
