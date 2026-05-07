@@ -87,7 +87,6 @@ const PedidosSospechososListado = ({
            const cant = art.articuloPrecio?.cantidad ?? 0
            const cantAnt = art.articuloPrecio?.cantidadAnterior ?? cant
            const precio = art.articuloPrecio?.valor ?? 0
-           console.log(art.state)
 
            const resumenLower = auditoria.resumenCambios?.toLowerCase() || ''
            const nombreLower = art.nombreArticulo?.toLowerCase() || ''
