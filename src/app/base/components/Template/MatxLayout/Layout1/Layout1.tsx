@@ -1,7 +1,7 @@
 import { Box, styled, ThemeProvider, useMediaQuery, useTheme } from '@mui/material'
 import { BoxProps } from '@mui/material/Box'
 import React, { useEffect, useRef } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 
 import LayoutRestriccionV2 from '../../../../../modules/base/components/LayoutRestriccion/LayoutRestriccionV2.tsx'
 import { sidenavCompactWidth, sideNavWidth } from '../../../../../utils/constant'
@@ -53,6 +53,7 @@ const LayoutContainer = styled(Box)(({ width, open }: LayoutContainerProps) => (
 }))
 
 const Layout1 = () => {
+  const location = useLocation()
   const { settings, updateSettings } = useSettings()
   const { layout1Settings, secondarySidebar } = settings
   const topbarTheme = settings.themes[layout1Settings.topbar.theme]
@@ -73,9 +74,10 @@ const Layout1 = () => {
     }
   }
 
-  const sidenavWidth = getSidenavWidth()
   const theme = useTheme()
   const isMdScreen = useMediaQuery(theme.breakpoints.down('md'))
+  const isCocina = location.pathname === '/cocina'
+  const sidenavWidth = isCocina ? '0px' : getSidenavWidth()
 
   const ref = useRef({ isMdScreen, settings })
   const layoutClasses = `theme-${theme.palette.primary}`
@@ -92,14 +94,14 @@ const Layout1 = () => {
   return (
     <CajasProvider>
       <Layout1Root className={layoutClasses}>
-        {showSidenav && sidenavMode !== 'close' && (
+        {!isCocina && showSidenav && sidenavMode !== 'close' && (
           <SidenavTheme>
             <Layout1Sidenav />
           </SidenavTheme>
         )}
 
         <LayoutContainer width={sidenavWidth} open={secondarySidebar.open}>
-          {layout1Settings.topbar.show && layout1Settings.topbar.fixed && (
+          {!isCocina && layout1Settings.topbar.show && layout1Settings.topbar.fixed && (
             <>
               <ThemeProvider theme={topbarTheme}>
                 <Layout1Topbar fixed={true} className="elevation-z8" />
@@ -110,7 +112,7 @@ const Layout1 = () => {
 
           {settings.perfectScrollbar && (
             <StyledScrollBarSidenav>
-              {layout1Settings.topbar.show && !layout1Settings.topbar.fixed && (
+              {!isCocina && layout1Settings.topbar.show && !layout1Settings.topbar.fixed && (
                 <ThemeProvider theme={topbarTheme}>
                   <Layout1Topbar />
                   <LayoutRestriccionV2 />
@@ -128,7 +130,7 @@ const Layout1 = () => {
 
           {!settings.perfectScrollbar && (
             <ContentBox>
-              {layout1Settings.topbar.show && !layout1Settings.topbar.fixed && (
+              {!isCocina && layout1Settings.topbar.show && !layout1Settings.topbar.fixed && (
                 <ThemeProvider theme={topbarTheme}>
                   <Layout1Topbar />
                   <LayoutRestriccionV2 />

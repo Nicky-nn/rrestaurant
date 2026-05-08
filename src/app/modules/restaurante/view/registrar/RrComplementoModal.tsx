@@ -53,6 +53,34 @@ const getPrecio = (art: Articulo): number => art.articuloPrecioBase?.monedaPrima
 
 const getSigla = (art: Articulo): string => art.articuloPrecioBase?.monedaPrimaria?.moneda?.sigla ?? 'Bs'
 
+/** Obtiene nombre de unidad de medida del artículo */
+const getNombreUnidadMedida = (art: Articulo): string =>
+  art.articuloPrecioBase?.articuloUnidadMedida?.nombreUnidadMedida ?? ''
+
+/**
+ * Convierte el stock crudo (en unidad base) a la UM del ingrediente.
+ * Retorna { stockConvertido, umNombre }
+ */
+const getStockConvertido = (ing: {
+  articulo?: Articulo
+  articuloUnidadMedida?: { codigoUnidadMedida?: string; nombreUnidadMedida?: string }
+}): { stockDisp: number | null; umNombre: string } => {
+  if (!ing.articulo || ing.articulo.verificarStock !== true) return { stockDisp: null, umNombre: '' }
+  const totalDispRaw = ing.articulo.inventario?.[0]?.totalDisponible ?? 0
+  const codigoUM = ing.articuloUnidadMedida?.codigoUnidadMedida
+  const allPrecios = [ing.articulo.articuloPrecioBase, ...(ing.articulo.articuloPrecio ?? [])].filter(Boolean)
+  const articuloPrecio = codigoUM
+    ? allPrecios.find((ap) => ap?.articuloUnidadMedida?.codigoUnidadMedida === codigoUM)
+    : ing.articulo.articuloPrecioBase
+  const cantidadBase = (articuloPrecio?.cantidadBase ?? 0) > 0 ? articuloPrecio!.cantidadBase! : 1
+  const stockConvertido = Number((totalDispRaw / cantidadBase).toFixed(7))
+  const umNombre =
+    articuloPrecio?.articuloUnidadMedida?.nombreUnidadMedida ??
+    ing.articuloUnidadMedida?.nombreUnidadMedida ??
+    ''
+  return { stockDisp: stockConvertido, umNombre }
+}
+
 /** Precio según UM específica; busca en articuloPrecioBase y articuloPrecio[]; fallback a articuloPrecioBase */
 const getPrecioParaUM = (art: Articulo, codigoUM?: string): number => {
   if (!codigoUM) return getPrecio(art)
@@ -206,6 +234,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   const { user } = useAuth()
   const codigoSucursal = user.sucursal.codigo
   const containerRef = useRef<HTMLDivElement>(null)
+  // Evita re-aplicar auto-removidos si el usuario ya interactuó
+  const autoRemovidosSeedadoRef = useRef(false)
 
   const esReceta = Boolean(articulo.esReceta)
   const tieneModificadores = Boolean(articulo.tieneModificadores)
@@ -234,6 +264,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
       setModificadorOrden([])
       setSelectedNotas(new Set()) // notas siempre vacías al abrir, LS solo ordena
       setCantidad(1)
+      autoRemovidosSeedadoRef.current = false // resetear para nueva sesión
     }
   }, [open, articulo._id])
 
@@ -269,6 +300,23 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     { enabled: open && Boolean(articulo._id), staleTime: 0 },
   )
   console.log('composicion', composicion)
+
+  // ── Auto-remover ingredientes sin stock al cargar composicion ─────────────
+  useEffect(() => {
+    if (!open || !composicion?.receta || autoRemovidosSeedadoRef.current) return
+    autoRemovidosSeedadoRef.current = true
+    const autoRemov = new Set<string>()
+    ;(composicion.receta.ingredientes ?? []).forEach((ing, idx) => {
+      if (!ing.esRemovible) return
+      const totalDisp = ing.articulo?.inventario?.[0]?.totalDisponible ?? 0
+      if (totalDisp <= 0) {
+        autoRemov.add(ing.articulo?._id ?? `ing-${idx}`)
+      }
+    })
+    if (autoRemov.size > 0) {
+      setIngredientesRemovidos(autoRemov)
+    }
+  }, [open, composicion, articulo._id])
 
   // ── Notas rápidas del tipo de artículo ───────────────────────────────────
   const notas: string[] = articulo.tipoArticulo?.notas ?? []
@@ -624,6 +672,40 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     </Box>
                   )}
 
+                  {/* ── Aviso de ingredientes auto-removidos por stock cero ── */}
+                  {(composicion.receta.ingredientes ?? []).some(
+                    (ing, idx) =>
+                      ing.esRemovible &&
+                      (ing.articulo?.inventario?.[0]?.totalDisponible ?? 0) <= 0 &&
+                      ingredientesRemovidos.has(ing.articulo?._id ?? `ing-${idx}`),
+                  ) && (
+                    <Box
+                      sx={{
+                        mb: 1.25,
+                        px: 1.25,
+                        py: 0.9,
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: 'info.light',
+                        bgcolor: (theme) => alpha(theme.palette.info.main, 0.06),
+                      }}
+                    >
+                      <Typography sx={{ fontSize: '0.76rem', fontWeight: 700, color: 'info.dark' }}>
+                        Sin stock —{' '}
+                        {(composicion.receta.ingredientes ?? [])
+                          .filter(
+                            (ing, idx) =>
+                              ing.esRemovible &&
+                              (ing.articulo?.inventario?.[0]?.totalDisponible ?? 0) <= 0 &&
+                              ingredientesRemovidos.has(ing.articulo?._id ?? `ing-${idx}`),
+                          )
+                          .map((ing) => `Sin ${ing.articulo?.nombreArticulo ?? 'ingrediente'}`)
+                          .join(', ')}{' '}
+                        activado por defecto.
+                      </Typography>
+                    </Box>
+                  )}
+
                   {/* ── Ingredientes fijos (sin interacción): primera fila ── */}
                   {(composicion.receta.ingredientes ?? []).some(
                     (ing) => !ing.esRemovible && !ing.permiteExtra,
@@ -634,11 +716,13 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         .map((ing, idx) => {
                           const artId = ing.articulo?._id ?? `fijo-${idx}`
                           const nombre = ing.articulo?.nombreArticulo ?? 'Ingrediente'
-                          const stockDisp =
-                            ing.articulo?.verificarStock === true
-                              ? (ing.articulo.inventario?.[0]?.totalDisponible ?? 0)
-                              : null
+                          const { stockDisp, umNombre } = getStockConvertido(ing)
                           const sinStockIng = stockDisp !== null && stockDisp <= 0
+                          const labelStock = sinStockIng
+                            ? 'Sin stock'
+                            : umNombre
+                              ? `${stockDisp} ${umNombre}`
+                              : `${stockDisp}`
                           return (
                             <Box
                               key={artId}
@@ -667,7 +751,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                               </Typography>
                               {stockDisp !== null && (
                                 <Chip
-                                  label={sinStockIng ? 'Sin stock' : `${stockDisp}`}
+                                  label={labelStock}
                                   size="small"
                                   color={sinStockIng ? 'error' : 'default'}
                                   variant="outlined"
@@ -689,11 +773,13 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         const nombre = ing.articulo?.nombreArticulo ?? 'Ingrediente'
                         const removido = ingredientesRemovidos.has(artId)
                         const extraQty = ingredientesExtra[artId] ?? 0
-                        const stockDisp =
-                          ing.articulo?.verificarStock === true
-                            ? (ing.articulo.inventario?.[0]?.totalDisponible ?? 0)
-                            : null
+                        const { stockDisp, umNombre } = getStockConvertido(ing)
                         const sinStockIng = stockDisp !== null && stockDisp <= 0
+                        const labelStock = sinStockIng
+                          ? 'Sin stock'
+                          : umNombre
+                            ? `${stockDisp} ${umNombre}`
+                            : `${stockDisp}`
 
                         // ── Control unificado [- Nombre +] ──────────────────
                         // Estado: removido=-1, normal=0, extra=N>0
@@ -725,7 +811,14 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
 
                         const canDecrement =
                           !sinStockIng && !bloqueado && (extraQty > 0 || (!removido && ing.esRemovible))
-                        const canIncrement = !bloqueado && (removido || (ing.permiteExtra && !sinStockIng))
+                        // sinStockReal: stock cero aunque verificarStock=false (cubre auto-removidos)
+                        const sinStockReal = (ing.articulo?.inventario?.[0]?.totalDisponible ?? -1) <= 0
+                        // Si sin stock → nunca se puede volver a agregar (prohibido)
+                        const canIncrement =
+                          !bloqueado &&
+                          !sinStockIng &&
+                          !sinStockReal &&
+                          (removido || (ing.permiteExtra && !sinStockIng))
 
                         const handleDecrement = () => {
                           if (!canDecrement) return
@@ -845,7 +938,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                 </Typography>
                                 {stockDisp !== null && (
                                   <Chip
-                                    label={sinStockIng ? 'Sin stock' : `${stockDisp}`}
+                                    label={labelStock}
                                     size="small"
                                     color={sinStockIng ? 'error' : 'default'}
                                     variant="outlined"
@@ -1326,35 +1419,41 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
           }}
         >
           {/* Selector de cantidad del pedido */}
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              border: '1.5px solid',
-              borderColor: 'divider',
-              borderRadius: 2,
-              overflow: 'hidden',
-              flexShrink: 0,
-            }}
-          >
-            <IconButton
-              size="small"
-              onClick={() => setCantidad((v) => Math.max(1, v - 1))}
-              disabled={cantidad <= 1}
-              sx={{ borderRadius: 0, width: 34, height: 34 }}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                border: '1.5px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                overflow: 'hidden',
+                flexShrink: 0,
+              }}
             >
-              <RemoveIcon fontSize="small" />
-            </IconButton>
-            <Typography variant="body1" fontWeight={700} sx={{ minWidth: 28, textAlign: 'center', px: 0.5 }}>
-              {cantidad}
-            </Typography>
-            <IconButton
-              size="small"
-              onClick={() => setCantidad((v) => v + 1)}
-              sx={{ borderRadius: 0, width: 34, height: 34 }}
-            >
-              <AddIcon fontSize="small" />
-            </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => setCantidad((v) => Math.max(1, v - 1))}
+                disabled={cantidad <= 1}
+                sx={{ borderRadius: 0, width: 34, height: 34 }}
+              >
+                <RemoveIcon fontSize="small" />
+              </IconButton>
+              <Typography
+                variant="body1"
+                fontWeight={700}
+                sx={{ minWidth: 28, textAlign: 'center', px: 0.5 }}
+              >
+                {cantidad}
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => setCantidad((v) => v + 1)}
+                sx={{ borderRadius: 0, width: 34, height: 34 }}
+              >
+                <AddIcon fontSize="small" />
+              </IconButton>
+            </Box>
           </Box>
 
           {/* Botón agregar */}

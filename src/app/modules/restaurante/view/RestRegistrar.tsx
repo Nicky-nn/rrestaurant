@@ -23,6 +23,7 @@ import { ESTADO_MESA, MesaUI } from '../interfaces/mesa.interface'
 import { useRestEspacioPorSucursal } from '../queries/useRestEspacioPorSucursal'
 import { useRestPedidoListado } from '../queries/useRestPedidoListado'
 import { useRestPedidoMesasOcupadas } from '../queries/useRestPedidoMesasOcupadas'
+import { COCINA_PEDIDO_LISTO_EVENT, COCINA_PEDIDO_LISTO_KEY } from './cocinaEvents'
 import {
   Articulo,
   ArticuloModificadorOperacionInput,
@@ -61,6 +62,38 @@ const RestRegistrar: FunctionComponent = () => {
   const [ultimoPedidoExitoso, setUltimoPedidoExitoso] = useState<any>(null)
   const [isPedidoDirty, setIsPedidoDirty] = useState(false)
   const [openMobileCart, setOpenMobileCart] = useState(false)
+
+  useEffect(() => {
+    const mostrarPedidoListo = (payload?: any) => {
+      if (!payload?.numero) return
+      setSnackbar((s) => ({
+        open: true,
+        message: `Orden #${payload.numero} lista (${payload.salon || 'Salón'} - ${payload.mesa || 'Mesa'})`,
+        key: s.key + 1,
+      }))
+    }
+
+    const onPedidoListo = (event: Event) => {
+      mostrarPedidoListo((event as CustomEvent).detail)
+    }
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== COCINA_PEDIDO_LISTO_KEY || !event.newValue) return
+      try {
+        mostrarPedidoListo(JSON.parse(event.newValue))
+      } catch {
+        // Si el evento llega corrupto no rompemos el registro de pedidos.
+      }
+    }
+
+    window.addEventListener(COCINA_PEDIDO_LISTO_EVENT, onPedidoListo)
+    window.addEventListener('storage', onStorage)
+
+    return () => {
+      window.removeEventListener(COCINA_PEDIDO_LISTO_EVENT, onPedidoListo)
+      window.removeEventListener('storage', onStorage)
+    }
+  }, [])
 
   const handleMesaSeleccionada = useCallback((mesa: MesaUI | null) => {
     setMesaSeleccionada(mesa)

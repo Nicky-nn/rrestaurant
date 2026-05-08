@@ -6,6 +6,7 @@ import { SucursalProps } from './sucursal.ts'
 /**
  * Inventario de articulo para operaciones
  * @author isi-template
+ * @deprecated
  */
 export interface InventarioOperacionProps {
   _id: string
@@ -24,4 +25,38 @@ export interface InventarioOperacionProps {
   comprometido: number // Existencia segun el tipo de busqueda, almacen u lote
   solicitado: number // Existencia segun el tipo de busqueda, almacen u lote
   disponible: number // Existencia segun el tipo de busqueda, almacen u lote
+}
+
+/**
+ * Inventario de articulo para operaciones
+ * Version 2026.4
+ * @author isi-template
+ */
+export interface ArticuloInventarioOperacionProps {
+  /** Id del inventario */
+  _id: string
+  /** Id del articulo */
+  articuloId: string
+  /** Código del articulo */
+  codigoArticulo: string
+  /** Nombre del articulo */
+  nombreArticulo: string
+  /** Sucursal segun sesión */
+  sucursal: SucursalProps
+  /** Articulo precio para realizar la transacción */
+  articuloPrecio: ArticuloPrecioProps
+  /** Articulo precio segun la unida de medida báse */
+  articuloPrecioBase: ArticuloPrecioProps
+  /** Almacen con inventario según articulo precio */
+  almacen: AlmacenInventarioProps | null
+  /** Lote con inventario según articulo precio */
+  lote: LoteInventarioProps | null
+  /** Total stock segun articulo precio */
+  totalStock: number
+  /** Total comprometido segun articulo precio */
+  totalComprometido: number
+  /** Total solicitado segun articulo precio */
+  totalSolicitado: number
+  /** Total disponible segun articulo precio */
+  totalDisponible: number
 }
