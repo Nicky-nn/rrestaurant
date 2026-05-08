@@ -1,6 +1,5 @@
 import { MRT_ColumnDef } from 'material-react-table'
 import { numberWithCommas } from '../../../../base/components/MyInputs/NumberInput'
-import { genReplaceEmpty } from '../../../../utils/helper'
 import { SalidaFactura } from '../../../restaurante/types'
 
 export const NcdFacturaColumns: MRT_ColumnDef<SalidaFactura>[] = [
