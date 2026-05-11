@@ -1,5 +1,5 @@
 import { CancelOutlined, DescriptionOutlined, Gesture, PrintOutlined } from '@mui/icons-material'
-import { Box, Chip, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
+import { Box, Button, Chip, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
 import { FunctionComponent, useMemo, useState } from 'react'
 
 import { SimpleContainerBox } from '../../../base/components/Container/SimpleBox'
@@ -23,6 +23,7 @@ import RrCobroDialog, { PagoRealizado } from './registrar/RrCobroDialog'
 import RrGestionPedidoDialog from './registrar/RrGestionPedidoDialog'
 import { useComandaPdf } from './registrar/useComandaPdf'
 import RestAnularPedidoDialog from './RestAnularPedidoDialog'
+import { HistorialPedido } from './listado/historialPedido'
 
 const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => {
   if (!productos.length) return <Typography variant="body2">Sin productos</Typography>
@@ -87,6 +88,32 @@ const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => 
           })}
         </TableBody>
       </Table>
+    </Box>
+  )
+}
+
+const DetalleConHistorial = ({ row, isAdmin }: { row: RestPedido; isAdmin: boolean }) => {
+  const [showHistorial, setShowHistorial] = useState(false)
+
+  return (
+    <Box sx={{ p: 2 }}>
+      {isAdmin && (
+        <Box sx={{ display: 'flex',}}>
+          <Button 
+            variant="outlined" 
+            size="small" 
+            onClick={() => setShowHistorial(!showHistorial)}
+          >
+            {showHistorial ? 'Ver Productos' : 'Ver Historial '}
+          </Button>
+        </Box>
+      )}
+      
+      {showHistorial ? (
+        <HistorialPedido pedidoId={row._id!} />
+      ) : (
+        <ProductosDetalle productos={row.productos ?? []} />
+      )}
     </Box>
   )
 }
@@ -320,9 +347,12 @@ const RestGestion: FunctionComponent<Props> = () => {
           disabled: (row) => row.state !== 'FINALIZADO',
         },
       ],
-      renderDetailPanel: (row) => <ProductosDetalle productos={row.productos ?? []} />,
+      renderDetailPanel: (row) => {
+        const isAdmin = user?.tipo === 'ADMIN' || user?.tipo === 'SA'
+        return <DetalleConHistorial row={row} isAdmin={isAdmin} />
+      },
     }),
-    [columns],
+    [columns, user],
   )
 
   const REST_GESTION_FILTER_TYPES: FilterTypeMap<RestPedido> = {

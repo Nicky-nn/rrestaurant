@@ -7,6 +7,7 @@ import {
   Lock,
   LockOpen,
   ReceiptLong,
+  Print,
 } from '@mui/icons-material'
 import {
   alpha,
@@ -21,6 +22,7 @@ import {
   ToggleButtonGroup,
   Tooltip,
   Typography,
+  IconButton,
 } from '@mui/material'
 import React, { FunctionComponent, useState } from 'react'
 
@@ -38,6 +40,7 @@ import HistorialCajas from './HistorialCajas'
 import IngresoCajaDialog from './IngresoCajaDialog'
 import RetiroCajaDialog from './RetiroCajaDialog'
 import UltimaCaja from './UltimaCaja'
+import PdfViewerDialog from '../../reporte/components/PdfViewerDialog'
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
   backgroundColor: theme.palette.background.default,
@@ -149,6 +152,7 @@ const GestionCajas: FunctionComponent = () => {
   const [openArquearPaso1, setOpenArquearPaso1] = useState(false)
   const [openCerrarPaso2, setOpenCerrarPaso2] = useState(false)
   const [montoRealCierre, setMontoRealCierre] = useState(0)
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null)
 
   const { aperturaCajaActivo, refetchArqueoActivo, refetchCajas } = useCajas()
 
@@ -351,20 +355,12 @@ const GestionCajas: FunctionComponent = () => {
                     variant="caption"
                     sx={{ opacity: 0.85, fontWeight: 700, letterSpacing: 0.8, textTransform: 'uppercase' }}
                   >
-                    Monto en Caja
+                    Monto Inicial en Caja
                   </Typography>
                   <Typography variant="h2" sx={{ fontWeight: 800, mt: 0.5, mb: 3 }}>
-                    {formatMoney(caja?.montoTeorico)}
+                    {formatMoney(caja?.montoInicial)}
                   </Typography>
 
-                  <MontoRow>
-                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Fondo Inicial
-                    </Typography>
-                    <Typography variant="body2" fontWeight={700}>
-                      {formatMoney(caja?.montoInicial)}
-                    </Typography>
-                  </MontoRow>
                   <MontoRow>
                     <Typography variant="body2" sx={{ opacity: 0.9 }}>
                       Otros Ingresos
@@ -397,7 +393,7 @@ const GestionCajas: FunctionComponent = () => {
                           pointerEvents: 'none',
                         }}
                       >
-                        -{formatMoney(caja?.totalRetiros)}
+                        -{formatMoney(caja?.totalVentas).replace(/\d/g, '*')}
                       </Typography>
                     </MontoRow>
                   </Tooltip>
@@ -551,6 +547,20 @@ const GestionCajas: FunctionComponent = () => {
                             </Typography>
                           )}
                         </Box>
+                        {isRetiro && (() => {
+                          const matchingRetiro = caja?.retiros?.find((r: any) => r.fecha === obs.fecha)
+                          const url = matchingRetiro?.representacionGrafica?.rollo || matchingRetiro?.representacionGrafica?.pdf
+                          if (url) {
+                            return (
+                              <Tooltip title="Ver Comprobante">
+                                <IconButton size="small" onClick={() => setPdfViewerUrl(url)} sx={{ ml: 1, color: 'primary.main', bgcolor: (t) => alpha(t.palette.primary.main, 0.1) }}>
+                                  <Print fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )
+                          }
+                          return null
+                        })()}
                       </Box>
                     )
                   })}
@@ -585,7 +595,7 @@ const GestionCajas: FunctionComponent = () => {
           open={openIngreso}
           onClose={() => setOpenIngreso(false)}
           cajaId={aperturaCajaActivo._id}
-          supervisores={caja?.supervisor ?? []}
+          supervisores={caja?.responsables ?? []}
         />
       )}
       {aperturaCajaActivo?._id && (
@@ -593,7 +603,7 @@ const GestionCajas: FunctionComponent = () => {
           open={openRetiro}
           onClose={() => setOpenRetiro(false)}
           cajaId={aperturaCajaActivo._id}
-          supervisores={caja?.supervisor ?? []}
+          supervisores={caja?.responsables ?? []}
         />
       )}
 
@@ -620,9 +630,11 @@ const GestionCajas: FunctionComponent = () => {
           }}
           caja={caja}
           montoReal={montoRealCierre}
-          supervisores={caja?.supervisor ?? []}
+          supervisores={caja?.responsables ?? []}
         />
       )}
+
+      <PdfViewerDialog open={!!pdfViewerUrl} pdfUrl={pdfViewerUrl} onClose={() => setPdfViewerUrl(null)} />
     </SimpleContainerBox>
   )
 }

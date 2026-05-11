@@ -11,6 +11,7 @@ import homeRoutes, { homeRoutesMap } from '../modules/home/HomeRoutes'
 import impresorasRoutes from '../modules/impresoras/impresorasRoutes'
 import reporteRoutes from '../modules/reporte/reporteRoutes'
 import restaurantRoutes from '../modules/restaurante/restauranteRoutes'
+import ncdGestionRoutes from '../modules/notaCreditoDebito/notaCreditoDebitoRoutes'
 
 export const appRoutes = [
   {
@@ -27,6 +28,7 @@ export const appRoutes = [
       ...restaurantRoutes,
       ...impresorasRoutes,
       ...reporteRoutes,
+      ...ncdGestionRoutes,
     ],
   },
   ...sessionRoutes,

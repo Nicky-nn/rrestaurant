@@ -13,6 +13,7 @@ import {
   TextField,
   Typography,
   useTheme,
+  Chip,
 } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
 import { FC, useEffect, useState } from 'react'
@@ -66,12 +67,6 @@ const ArqueoCajaPaso1Dialog: FC<ArqueoCajaPaso1DialogProps> = ({ open, onClose, 
 
   const handleSubmit = () => {
     setError(null)
-    const numericMontoReal = parseFloat(montoReal)
-
-    if (isNaN(numericMontoReal) || numericMontoReal < 0) {
-      setError('Por favor, ingresa el efectivo contado real.')
-      return
-    }
 
     // Wait, since the GraphQL mutation schema expects:
     // export interface AperturaCajaArquearInput { observacion?: string }
@@ -104,7 +99,7 @@ const ArqueoCajaPaso1Dialog: FC<ArqueoCajaPaso1DialogProps> = ({ open, onClose, 
       <Dialog
         open={open}
         onClose={handleClose}
-        maxWidth="xs"
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -141,264 +136,196 @@ const ArqueoCajaPaso1Dialog: FC<ArqueoCajaPaso1DialogProps> = ({ open, onClose, 
             <Typography variant="h5" fontWeight={800} color="text.primary">
               Paso 1: Arqueo de Caja
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Ingresa el efectivo físico que hay en la caja registradora.
-            </Typography>
           </Box>
 
-          <Stack spacing={3}>
-            {/* Métodos de Pago Registrados */}
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 3,
-                bgcolor: alpha(theme.palette.success.main, 0.04),
-                border: '1px solid',
-                borderColor: alpha(theme.palette.success.main, 0.18),
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                <Payments sx={{ fontSize: 18, color: 'success.main' }} />
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+            {/* Left Column: Form & Methods */}
+            <Stack spacing={3} sx={{ flex: 1 }}>
+              {/* Métodos de Pago Registrados */}
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  bgcolor: alpha(theme.palette.success.main, 0.04),
+                  border: '1px solid',
+                  borderColor: alpha(theme.palette.success.main, 0.18),
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                  <Payments sx={{ fontSize: 18, color: 'success.main' }} />
+                  <Typography
+                    variant="overline"
+                    color="success.main"
+                    fontWeight={700}
+                    sx={{ letterSpacing: 0.5 }}
+                  >
+                    Métodos de Pago Involucrados
+                  </Typography>
+                </Box>
+                {(caja?.metodoPagoVenta ?? []).length === 0 ? (
+                  <Typography variant="body2" color="text.disabled" fontStyle="italic">
+                    Sin métodos de pago registrados
+                  </Typography>
+                ) : (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {(caja.metodoPagoVenta ?? []).map((m: ArqueoCajaMetodoPago, i: number) => (
+                      <Chip
+                        key={i}
+                        label={m.metodoPago?.descripcion ?? 'Otro'}
+                        size="small"
+                        sx={{
+                          fontWeight: 600,
+                          bgcolor: (t) => alpha(t.palette.success.main, 0.1),
+                          color: 'success.dark',
+                          borderRadius: '6px',
+                        }}
+                      />
+                    ))}
+                  </Box>
+                )}
+              </Box>
+
+              <Box>
                 <Typography
                   variant="overline"
-                  color="success.main"
+                  color="text.secondary"
                   fontWeight={700}
                   sx={{ letterSpacing: 0.5 }}
                 >
-                  Métodos de Pago Registrados
+                  OBSERVACIÓN DE ARQUEO (OPCIONAL)
                 </Typography>
-              </Box>
-              {(caja?.metodoPagoVenta ?? []).length === 0 ? (
-                <Typography variant="body2" color="text.disabled" fontStyle="italic">
-                  Sin métodos de pago registrados
-                </Typography>
-              ) : (
-                <Stack spacing={1}>
-                  {(caja.metodoPagoVenta ?? []).map((m: ArqueoCajaMetodoPago, i: number) => (
-                    <Box
-                      key={i}
-                      sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                    >
-                      <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                        {m.metodoPago?.descripcion ?? 'Otro'}
-                      </Typography>
-                      <Typography variant="body2" fontWeight={700} color="success.main">
-                        {Number(m.monto ?? 0).toFixed(2)} BOB
-                      </Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              )}
-            </Box>
-
-            {/* Breakdown box */}
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 3,
-                bgcolor: alpha(theme.palette.divider, 0.04),
-                border: '1px solid',
-                borderColor: alpha(theme.palette.divider, 0.1),
-              }}
-            >
-              <Stack spacing={1.5}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                    Monto Inicial:
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    ${formatMoney(caja?.montoInicial || 0)}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                    Total Ingresos:
-                  </Typography>
-                  <Typography variant="body2" color="success.main" fontWeight={600}>
-                    +${formatMoney(caja?.totalIngresos || 0)}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                    Total Retiros:
-                  </Typography>
-                  <Typography variant="body2" color="error.main" fontWeight={600}>
-                    -${formatMoney(caja?.totalRetiros || 0)}
-                  </Typography>
-                </Box>
-                <Box sx={{ my: 1, borderBottom: '1px dashed', borderColor: 'divider' }} />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                    TOTAL SISTEMA:
-                  </Typography>
-                  <Typography variant="subtitle1" color="primary.main" fontWeight={800}>
-                    ${formatMoney(montoSist)}
-                  </Typography>
-                </Box>
-              </Stack>
-            </Box>
-
-            <Box>
-              <Typography
-                variant="overline"
-                color="text.secondary"
-                fontWeight={700}
-                sx={{ letterSpacing: 0.5 }}
-              >
-                CONTADO
-              </Typography>
-              <FormControl fullWidth size="small">
-                <OutlinedInput
-                  value={montoReal}
-                  onChange={(e) => {
-                    let val = e.target.value
-                    if (val.includes('.')) {
-                      const parts = val.split('.')
-                      if (parts[1].length > 2) {
-                        val = `${parts[0]}.${parts[1].slice(0, 2)}`
-                      }
-                    }
-                    setMontoReal(val)
-                  }}
-                  onBlur={() => {
-                    const val = parseFloat(montoReal)
-                    if (!isNaN(val)) {
-                      const parts = montoReal.split('.')
-                      if (!parts[1]) setMontoReal(`${Math.floor(val)}.00`)
-                      else if (parts[1].length === 1) setMontoReal(`${parts[0]}.${parts[1]}0`)
-                    }
-                  }}
-                  type="number"
-                  inputProps={{ min: 0, step: '0.1' }}
-                  placeholder="0.00"
-                  startAdornment={
-                    <InputAdornment position="start">
-                      <Typography variant="body1" color="text.secondary" fontWeight={700}>
-                        BOB
-                      </Typography>
-                    </InputAdornment>
-                  }
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => setOpenCalc(true)}
-                        title="Calculadora de efectivo"
-                        sx={{ color: 'text.secondary' }}
-                      >
-                        <Calculate fontSize="small" />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                  sx={{
-                    borderRadius: 2,
-                    bgcolor: 'background.paper',
-                    fontWeight: 700,
-                    fontSize: '1.2rem',
-                    py: 0.5,
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Justificación si hay sobrante/faltante u otra novedad..."
+                  value={observacion}
+                  onChange={(e) => setObservacion(e.target.value)}
+                  InputProps={{
+                    sx: { borderRadius: 2, bgcolor: 'background.paper' },
                   }}
                 />
-              </FormControl>
-            </Box>
-
-            <Box>
-              <Typography
-                variant="overline"
-                color="text.secondary"
-                fontWeight={700}
-                sx={{ letterSpacing: 0.5 }}
-              >
-                OBSERVACIÓN DE ARQUEO (OPCIONAL)
-              </Typography>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Justificación si hay sobrante/faltante u otra novedad..."
-                value={observacion}
-                onChange={(e) => setObservacion(e.target.value)}
-                InputProps={{
-                  sx: { borderRadius: 2, bgcolor: 'background.paper' },
-                }}
-              />
-            </Box>
-
-            {/* Información del Arqueo */}
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 3,
-                bgcolor: alpha(theme.palette.info.main, 0.05),
-                border: '1px solid',
-                borderColor: alpha(theme.palette.info.main, 0.18),
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.2 }}>
-                <InfoOutlined sx={{ fontSize: 16, color: 'info.main' }} />
-                <Typography variant="overline" color="info.main" fontWeight={700} sx={{ letterSpacing: 0.5 }}>
-                  Información del Arqueo
-                </Typography>
               </Box>
-              <Stack spacing={0.6}>
-                {[
-                  'Cuente todo el dinero físico en caja',
-                  'El arqueo actualiza el estado de la caja',
-                  'Puede agregar observaciones opcionales',
-                  'Asegúrese de que los montos coincidan',
-                ].map((tip, i) => (
-                  <Typography key={i} variant="caption" color="text.secondary" display="block">
-                    • {tip}
-                  </Typography>
-                ))}
-              </Stack>
-            </Box>
 
-            {error && (
-              <Typography variant="body2" color="error.main" fontWeight={600}>
-                {error}
-              </Typography>
-            )}
+              {error && (
+                <Typography variant="body2" color="error.main" fontWeight={600}>
+                  {error}
+                </Typography>
+              )}
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-              <Button
-                variant="outlined"
-                fullWidth
-                size="large"
-                color="inherit"
-                disabled={isPending}
-                onClick={handleClose}
-                sx={{
-                  borderRadius: '10px',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  bgcolor: 'background.paper',
-                  color: 'text.secondary',
-                  borderColor: alpha(theme.palette.divider, 1),
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button
-                variant="contained"
-                fullWidth
-                size="large"
-                disabled={isPending}
-                onClick={handleSubmit}
-                sx={{
-                  borderRadius: '10px',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  bgcolor: 'primary.main',
-                  color: 'primary.contrastText',
-                  boxShadow: 'none',
-                  '&:hover': {
-                    bgcolor: 'primary.dark',
+              <Box sx={{ display: 'flex', gap: 2, mt: 'auto', pt: 2 }}>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  size="large"
+                  color="inherit"
+                  disabled={isPending}
+                  onClick={handleClose}
+                  sx={{
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    bgcolor: 'background.paper',
+                    color: 'text.secondary',
+                    borderColor: alpha(theme.palette.divider, 1),
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  disabled={isPending}
+                  onClick={handleSubmit}
+                  sx={{
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
                     boxShadow: 'none',
-                  },
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                      boxShadow: 'none',
+                    },
+                  }}
+                >
+                  {isPending ? 'Procesando...' : 'Siguiente'}
+                </Button>
+              </Box>
+            </Stack>
+
+            {/* Right Column: Breakdown & Info */}
+            <Stack spacing={3} sx={{ width: { xs: '100%', md: 320 } }}>
+              {/* Breakdown box */}
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  bgcolor: alpha(theme.palette.divider, 0.04),
+                  border: '1px solid',
+                  borderColor: alpha(theme.palette.divider, 0.1),
                 }}
               >
-                {isPending ? 'Procesando...' : 'Siguiente'}
-              </Button>
-            </Box>
+                <Stack spacing={1.5}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                      Monto Inicial:
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      ${formatMoney(caja?.montoInicial || 0)}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                      Total Ingresos:
+                    </Typography>
+                    <Typography variant="body2" color="success.main" fontWeight={600}>
+                      +${formatMoney(caja?.totalIngresos || 0)}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                      Total Retiros:
+                    </Typography>
+                    <Typography variant="body2" color="error.main" fontWeight={600}>
+                      -${formatMoney(caja?.totalRetiros || 0)}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ my: 1, borderBottom: '1px dashed', borderColor: 'divider' }} />
+                </Stack>
+              </Box>
+
+              {/* Información del Arqueo */}
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  bgcolor: alpha(theme.palette.info.main, 0.05),
+                  border: '1px solid',
+                  borderColor: alpha(theme.palette.info.main, 0.18),
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.2 }}>
+                  <InfoOutlined sx={{ fontSize: 16, color: 'info.main' }} />
+                  <Typography variant="overline" color="info.main" fontWeight={700} sx={{ letterSpacing: 0.5 }}>
+                    Información del Arqueo
+                  </Typography>
+                </Box>
+                <Stack spacing={0.6}>
+                  {[
+                    'Cuente todo el dinero físico en caja',
+                    'El arqueo actualiza el estado de la caja',
+                    'Puede agregar observaciones opcionales',
+                    'Asegúrese de que los montos coincidan',
+                  ].map((tip, i) => (
+                    <Typography key={i} variant="caption" color="text.secondary" display="block">
+                      • {tip}
+                    </Typography>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
           </Stack>
         </DialogContent>
       </Dialog>
