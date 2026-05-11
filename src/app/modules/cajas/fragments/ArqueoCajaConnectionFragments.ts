@@ -44,6 +44,7 @@ export const ARQUEOCAJACONNECTIONFRAGMENT = gql`
         usuarioCierre
         modulo
         supervisor
+        supervisorCierre
         responsables
         montoInicial
         nroVentas

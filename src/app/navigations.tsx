@@ -2,6 +2,7 @@ import { cajasRoutesMap } from './modules/cajas/cajasRoutes'
 import { clientsRoutesMap } from './modules/clients/clientsRoutes'
 import { homeRoutesMap } from './modules/home/HomeRoutes'
 import { impresorasRoutesMap } from './modules/impresoras/impresorasRoutes'
+import { ncdGestionRoutesMap } from './modules/notaCreditoDebito/notaCreditoDebitoRoutes'
 import { reporteRoutesMap } from './modules/reporte/reporteRoutes'
 import { restauranteRoutesMap } from './modules/restaurante/restauranteRoutes'
 
@@ -45,6 +46,17 @@ export const navigations: NavigationProps[] = [
         name: restauranteRoutesMap.facturas.name,
         iconText: 'FA',
         path: restauranteRoutesMap.facturas.path,
+      },
+    ],
+  },
+  {
+    name: 'Notas de Credito Debito',
+    icon: 'description',
+    children: [
+      {
+        name: ncdGestionRoutesMap.ncdGestion.name,
+        iconText: 'NGD',
+        path: ncdGestionRoutesMap.ncdGestion.path,
       },
     ],
   },

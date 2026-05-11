@@ -1,11 +1,14 @@
-import { Assessment, CheckCircle, History, TrendingUp, Wallet, Warning } from '@mui/icons-material'
+import { Assessment, CheckCircle, History, TrendingUp, Wallet, Warning, Download, PictureAsPdf, Email, WhatsApp } from '@mui/icons-material'
 import { alpha, Box, Button, Card, Chip, Divider, Grid, Skeleton, Typography, useTheme } from '@mui/material'
-import React, { FC, useMemo } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import { Cell, Pie, PieChart, Tooltip as RechartsTooltip } from 'recharts'
 
 import useAuth from '../../../base/hooks/useAuth'
 import { useArqueoCajaListado } from '../queries/useArqueoCajaListado'
 import { ArqueoCajaMetodoPago } from '../types'
+import PdfViewerDialog from '../../reporte/components/PdfViewerDialog'
+import ArqueoCajaWhatsappDialog from './ArqueoCajaWhatsappDialog'
+import ArqueoCajaCorreoDialog from './ArqueoCajaCorreoDialog'
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -184,10 +187,13 @@ const UltimaCaja: FC = () => {
     const docs = data?.docs ?? []
     return (
       docs.find(
-        (d) => d.puntoVenta?.codigo === puntoVenta.codigo && d.sucursal?.codigo === sucursal.codigo,
+        (d) =>
+          d.puntoVenta?.codigo === puntoVenta.codigo &&
+          d.sucursal?.codigo === sucursal.codigo &&
+          d.usuarioApertura === user.usuario,
       ) ?? null
     )
-  }, [data?.docs, puntoVenta.codigo, sucursal.codigo])
+  }, [data?.docs, puntoVenta.codigo, sucursal.codigo, user.usuario])
 
   const pieData = useMemo(() => {
     const metodos = caja?.metodoPagoVenta ?? []
@@ -208,8 +214,15 @@ const UltimaCaja: FC = () => {
   const hayDiferencia = diferencia !== 0
   const diferenciaPositiva = diferencia > 0
 
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null)
+  const [openWhatsappDialog, setOpenWhatsappDialog] = useState(false)
+  const [openCorreoDialog, setOpenCorreoDialog] = useState(false)
+
   if (isLoading) return <UltimaCajaSkeleton />
   if (!caja) return <UltimaCajaEmpty />
+
+  const hasPdf = !!caja.representacionGrafica?.pdf
+  const hasRollo = !!caja.representacionGrafica?.rollo
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -259,30 +272,107 @@ const UltimaCaja: FC = () => {
           </Box>
         </Box>
 
-        {caja.representacionGrafica?.pdf && (
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1,
+            flexWrap: 'nowrap',
+            overflowX: 'auto',
+            '&::-webkit-scrollbar': {
+              height: 6,
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(0,0,0,0.2)',
+              borderRadius: 3,
+            },
+          }}
+        >
+          {hasPdf && (
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Assessment sx={{ fontSize: '1rem !important' }} />}
+              href={caja.representacionGrafica!.pdf!}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                color: 'primary.main',
+                borderColor: (t) => alpha(t.palette.primary.main, 0.35),
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  bgcolor: (t) => alpha(t.palette.primary.main, 0.06),
+                },
+                flex: '1 0 auto',
+                minWidth: 160,
+              }}
+            >
+              Ver Arqueo Completo
+            </Button>
+          )}
+
+          {hasRollo && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="error"
+              startIcon={<Download sx={{ fontSize: '1rem !important' }} />}
+              onClick={() => setPdfViewerUrl(caja.representacionGrafica!.rollo!)}
+              sx={{
+                textTransform: 'none',
+                borderRadius: 2,
+                fontWeight: 600,
+                fontSize: '0.8rem',
+                flex: '1 0 auto',
+                minWidth: 140,
+              }}
+            >
+              Descargar Rollo
+            </Button>
+          )}
+
           <Button
-            variant="outlined"
             size="small"
-            startIcon={<Assessment sx={{ fontSize: '1rem !important' }} />}
-            href={caja.representacionGrafica.pdf}
-            target="_blank"
-            rel="noopener noreferrer"
+            variant="outlined"
+            color="info"
+            startIcon={<Email sx={{ fontSize: '1rem !important' }} />}
+            disabled={!hasRollo && !hasPdf}
+            onClick={() => setOpenCorreoDialog(true)}
             sx={{
-              borderRadius: 2,
               textTransform: 'none',
+              borderRadius: 2,
               fontWeight: 600,
-              fontSize: '0.82rem',
-              color: 'primary.main',
-              borderColor: (t) => alpha(t.palette.primary.main, 0.35),
-              '&:hover': {
-                borderColor: 'primary.main',
-                bgcolor: (t) => alpha(t.palette.primary.main, 0.06),
-              },
+              fontSize: '0.8rem',
+              flex: '1 0 auto',
+              minWidth: 160,
             }}
           >
-            Ver Arqueo Completo
+            Enviar Correo
           </Button>
-        )}
+
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<WhatsApp sx={{ fontSize: '1rem !important' }} />}
+            disabled={!hasRollo && !hasPdf}
+            onClick={() => setOpenWhatsappDialog(true)}
+            sx={{
+              textTransform: 'none',
+              borderRadius: 2,
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              flex: '1 0 auto',
+              minWidth: 140,
+              color: '#25D366',
+              borderColor: alpha('#25D366', 0.4),
+            }}
+          >
+            WhatsApp
+          </Button>
+        </Box>
       </Card>
 
       {/* TIEMPOS Y REGISTRO */}
@@ -375,9 +465,14 @@ const UltimaCaja: FC = () => {
                   justifyContent: 'space-between',
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
-                  Total Cortesias
-                </Typography>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Cortesias
+                  </Typography>
+                  <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: -0.2 }}>
+                    {caja.cortesia?.conteoPedidos || 0} pedidos, {caja.cortesia?.conteoArticulos || 0} artículos
+                  </Typography>
+                </Box>
                 <Typography variant="body1" fontWeight={600} color="text.secondary">
                   {fmtMoney(caja.cortesia?.montoTotal)}
                 </Typography>
@@ -646,6 +741,23 @@ const UltimaCaja: FC = () => {
           {fmtMoney(diferencia)}
         </Typography>
       </Card>
+
+      {/* Viewer PDF/Rollo */}
+      <PdfViewerDialog open={!!pdfViewerUrl} pdfUrl={pdfViewerUrl} onClose={() => setPdfViewerUrl(null)} />
+
+      {/* WhatsApp Dialog */}
+      <ArqueoCajaWhatsappDialog 
+        open={openWhatsappDialog} 
+        onClose={() => setOpenWhatsappDialog(false)} 
+        caja={caja} 
+      />
+
+      {/* Correo Dialog */}
+      <ArqueoCajaCorreoDialog 
+        open={openCorreoDialog} 
+        onClose={() => setOpenCorreoDialog(false)} 
+        caja={caja} 
+      />
     </Box>
   )
 }

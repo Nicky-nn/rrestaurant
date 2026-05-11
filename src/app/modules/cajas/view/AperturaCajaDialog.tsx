@@ -22,6 +22,7 @@ import { useAperturaCajaRegistro } from '../mutations/useAperturaCajaRegistro'
 import { useCajaListado } from '../queries/useCajaListado'
 import { useTurnoCajaListado } from '../queries/useTurnoCajaListado'
 import CalculadoraEfectivoDialog from './CalculadoraEfectivoDialog'
+import NumberSpinnerField from '../../../base/components/NumberSpinnerField/NumberSpinnerField'
 
 /**
  * Selecciona el turno más apropiado según la hora actual.
@@ -34,7 +35,13 @@ const seleccionarTurnoPorHora = (
   for (const turno of turnos) {
     const inicio = turno.horaInicio ?? 0
     const cierre = turno.horaCierre ?? 24
-    if (horaActual >= inicio && horaActual < cierre) return turno._id ?? ''
+    
+    if (inicio <= cierre) {
+      if (horaActual >= inicio && horaActual < cierre) return turno._id ?? ''
+    } else {
+      // Turno que cruza la medianoche (ej. inicio 18, cierre 02)
+      if (horaActual >= inicio || horaActual < cierre) return turno._id ?? ''
+    }
   }
   return turnos[0]?._id ?? ''
 }
@@ -67,7 +74,7 @@ const AperturaCajaDialog: FC<AperturaCajaDialogProps> = ({ open, onSuccess, onCl
   // Form state
   const [cajaId, setCajaId] = useState('')
   const [turnoId, setTurnoId] = useState('')
-  const [montoInicial, setMontoInicial] = useState<string>('0')
+  const [montoInicial, setMontoInicial] = useState<number>(0)
   const [observacion, setObservacion] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [openCalc, setOpenCalc] = useState(false)
@@ -97,7 +104,7 @@ const AperturaCajaDialog: FC<AperturaCajaDialogProps> = ({ open, onSuccess, onCl
     if (!cajaId) return setError('Selecciona una caja')
     if (!turnoId) return setError('Selecciona un turno')
 
-    const monto = parseFloat(montoInicial) || 0
+    const monto = montoInicial || 0
 
     abrirCaja(
       {
@@ -296,51 +303,39 @@ const AperturaCajaDialog: FC<AperturaCajaDialogProps> = ({ open, onSuccess, onCl
             >
               MONTO INICIAL EN EFECTIVO
             </Typography>
-            <FormControl fullWidth size="small">
-              <OutlinedInput
+            <Box display="flex" gap={1} alignItems="center">
+              <NumberSpinnerField
+                fullWidth
                 value={montoInicial}
-                onChange={(e) => {
-                  let val = e.target.value
-                  if (val.includes('.')) {
-                    const parts = val.split('.')
-                    if (parts[1].length > 2) {
-                      val = `${parts[0]}.${parts[1].slice(0, 2)}`
-                    }
-                  }
-                  setMontoInicial(val)
-                }}
-                onBlur={() => {
-                  const val = parseFloat(montoInicial)
-                  if (!isNaN(val)) {
-                    // Formatear si falta algún cero, pero ya no redondea si está limitado a 2 decimales
-                    const parts = montoInicial.split('.')
-                    if (!parts[1]) setMontoInicial(`${Math.floor(val)}.00`)
-                    else if (parts[1].length === 1) setMontoInicial(`${parts[0]}.${parts[1]}0`)
-                  }
-                }}
-                type="number"
-                inputProps={{ min: 0, step: '10' }}
+                onChange={(val) => setMontoInicial(val ?? 0)}
+                min={0}
+                step={10}
+                unit="BOB"
                 placeholder="0.00"
                 sx={{
-                  borderRadius: 2,
-                  bgcolor: (theme) => theme.palette.action.hover,
-                  fontWeight: 700,
-                  color: 'text.secondary',
-                  fontSize: '1.2rem',
-                  py: 0.5,
+                  '& .MuiInputBase-root': {
+                    borderRadius: 2,
+                    bgcolor: (theme) => theme.palette.action.hover,
+                    fontWeight: 700,
+                    color: 'text.secondary',
+                    fontSize: '1.2rem',
+                    py: 0.5,
+                  }
                 }}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ mr: 1 }}>
-                      BOB
-                    </Typography>
-                    <IconButton onClick={() => setOpenCalc(true)} edge="end">
-                      <Calculate sx={{ color: 'text.secondary' }} />
-                    </IconButton>
-                  </InputAdornment>
-                }
               />
-            </FormControl>
+              <IconButton 
+                onClick={() => setOpenCalc(true)} 
+                color="primary"
+                sx={{ 
+                  bgcolor: (theme) => `${theme.palette.primary.main}1A`, 
+                  borderRadius: 2,
+                  width: 53,
+                  height: 53
+                }}
+              >
+                <Calculate />
+              </IconButton>
+            </Box>
           </Box>
 
           {/* OBSERVACION */}
@@ -405,7 +400,7 @@ const AperturaCajaDialog: FC<AperturaCajaDialogProps> = ({ open, onSuccess, onCl
       <CalculadoraEfectivoDialog
         open={openCalc}
         onClose={() => setOpenCalc(false)}
-        onConfirm={(total) => setMontoInicial(total.toFixed(2))}
+        onConfirm={(total) => setMontoInicial(total)}
       />
     </Dialog>
   )
