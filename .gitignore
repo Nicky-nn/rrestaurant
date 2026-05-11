@@ -100,3 +100,7 @@ requirements.txt
 .schema-check.json
 schema.json
 src/app/modules/restaurante/generated/
+
+
+#Readme
+!README.md
