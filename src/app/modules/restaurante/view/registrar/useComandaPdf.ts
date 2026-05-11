@@ -36,7 +36,10 @@ const getUbicacionLabel = (pedido: RestPedido): string => {
   return rawUbicacion
 }
 
-const buildComandaDefinition = (pedido: RestPedido, options?: { titulo?: string, ignorarHistorico?: boolean }) => {
+const buildComandaDefinition = (
+  pedido: RestPedido,
+  options?: { titulo?: string; ignorarHistorico?: boolean },
+) => {
   const cliente = pedido.cliente?.razonSocial ?? 'Sin Razón Social'
   const mesa = pedido.mesa?.nombre ?? '-'
   const orden = pedido.numeroOrden ?? pedido.numeroPedido ?? '-'
@@ -129,23 +132,71 @@ const buildComandaDefinition = (pedido: RestPedido, options?: { titulo?: string,
       return [label, qty] as [string, number]
     })
 
-    if (mods.length) {
-      nodos.push({
-        ul: mods.map(([label, qty]) => ({
-          text: qty > 1 ? `x${qty} ${label}` : label,
-          fontSize: 6,
-          margin: [0, 0, 0, 0],
-        })),
-        margin: [6, 1, 0, 0],
-      })
-    }
+    const variacionAgrupada = ((prod.variacionReceta ?? []) as any[]).reduce(
+      (
+        acc: { sin: Record<string, number>; extra: Record<string, number>; receta: Record<string, number> },
+        v: any,
+      ) => {
+        const nombreVar = v.nombreArticulo ?? v.codigoArticulo ?? ''
+        if (!nombreVar) return acc
 
-    const notas = ((prod.notaRapida ?? []) as any[]).map((n: any) => n.valor).filter(Boolean)
-    if (prod.nota) notas.unshift(prod.nota)
-    if (prod.detalleExtra) notas.push(prod.detalleExtra)
-    if (notas.length) {
-      nodos.push({ text: `* ${notas.join(' | ')}`, italics: true, fontSize: 6 })
-    }
+        if (v.removido) {
+          acc.sin[nombreVar] = (acc.sin[nombreVar] ?? 0) + 1
+          return acc
+        }
+
+        const qty = v.articuloPrecio?.cantidad ?? 1
+        if (v.esExtra) {
+          acc.extra[nombreVar] = (acc.extra[nombreVar] ?? 0) + qty
+        } else {
+          acc.receta[nombreVar] = (acc.receta[nombreVar] ?? 0) + qty
+        }
+
+        return acc
+      },
+      { sin: {}, extra: {}, receta: {} },
+    )
+
+    // Notas del usuario (una por línea)
+    const notasUsuario = ((prod.notaRapida ?? []) as any[]).map((n: any) => n.valor).filter(Boolean)
+    if (prod.nota) notasUsuario.unshift(prod.nota)
+    if (prod.detalleExtra) notasUsuario.push(prod.detalleExtra)
+    notasUsuario.forEach((nota: string) => {
+      nodos.push({ text: `* ${nota}`, italics: true, fontSize: 6 })
+    })
+
+    // MOD: una línea por cada modificador
+    mods.forEach(([label, qty]) => {
+      nodos.push({
+        text: qty > 1 ? `+ ${label} x${qty}` : `+ ${label}`,
+        italics: true,
+        fontSize: 6,
+        bold: true,
+      })
+    })
+
+    // SIN: una línea por ingrediente removido
+    Object.keys(variacionAgrupada.sin).forEach((label) => {
+      nodos.push({ text: `* SIN ${label}`, italics: true, fontSize: 6 })
+    })
+
+    // EXTRA: una línea por ingrediente extra
+    Object.entries(variacionAgrupada.extra).forEach(([label, qty]) => {
+      nodos.push({
+        text: qty > 1 ? `* EXTRA ${label} x${qty}` : `* EXTRA ${label}`,
+        italics: true,
+        fontSize: 6,
+      })
+    })
+
+    // RECETA: variaciones sin flag extra ni removido
+    Object.entries(variacionAgrupada.receta).forEach(([label, qty]) => {
+      nodos.push({
+        text: qty > 1 ? `~ ${label} x${qty}` : `~ ${label}`,
+        italics: true,
+        fontSize: 6,
+      })
+    })
 
     return nodos
   }
@@ -583,7 +634,11 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
 }
 
 export const useComandaPdf = () => {
-  const imprimirComanda = async (pedido: RestPedido, selectedPrinter = '', options?: { titulo?: string, ignorarHistorico?: boolean }) => {
+  const imprimirComanda = async (
+    pedido: RestPedido,
+    selectedPrinter = '',
+    options?: { titulo?: string; ignorarHistorico?: boolean },
+  ) => {
     const documentDefinition: any = buildComandaDefinition(pedido, options)
     const pdfDocGenerator = pdfMake.createPdf(documentDefinition) as any
     const blob: Blob = await pdfDocGenerator.getBlob()
@@ -708,7 +763,7 @@ export const useComandaPdf = () => {
               const res = await fetch(pdfUrl)
               const blob = await res.blob()
               const localPdfUrl = URL.createObjectURL(blob)
-              
+
               printJS({
                 printable: localPdfUrl,
                 type: 'pdf',

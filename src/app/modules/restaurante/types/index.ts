@@ -1615,9 +1615,11 @@ export interface ArticuloRecetaOperacionInput {
   /** Nro de item en caso de contar con un item - Si envía null se asume nuevo registro - Si se envía un valor, busca el articulo en base a este nroItem */
   nroItem?: number;
   /** Código del articulo */
-  codigoArticulo: string;
-  /** Codigo de almacen - Para salidas es posible enviar null - Para entradas es obligatorio el envio de almacen - Si se envía null, el sistema asignará el almacen (DESPACHO, PRODUCCION) y lotes(si corresponde) con stock disponible, si verificarStock=true - Asocia el almacen virtual si verificarStock=false y no aplica lotes. */
-  codigoAlmacen?: string;
+  codigoArticulo: string
+  /** Nombre del articulo (campo local para display en carrito, no se envía al backend) */
+  nombreArticulo?: string
+  /** Codigo de almacen */
+  codigoAlmacen: string | null
   /** En caso de tener un lote */
   codigoLote?: string;
   /** Lista de lotes que se debe afectar para el debito de stock */

@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { Fragment, FunctionComponent, ReactNode, useEffect, useRef, useState } from 'react'
+import { Fragment, FunctionComponent, useEffect, useMemo, useRef, useState } from 'react'
 
 import useAuth from '../../../../base/hooks/useAuth'
 import { articuloToArticuloOperacionInputService } from '../../../../base/services/articuloToArticuloOperacionInputService'
@@ -52,6 +52,34 @@ export interface RrComplementoModalProps {
 const getPrecio = (art: Articulo): number => art.articuloPrecioBase?.monedaPrimaria?.precio ?? 0
 
 const getSigla = (art: Articulo): string => art.articuloPrecioBase?.monedaPrimaria?.moneda?.sigla ?? 'Bs'
+
+/** Obtiene nombre de unidad de medida del artículo */
+const getNombreUnidadMedida = (art: Articulo): string =>
+  art.articuloPrecioBase?.articuloUnidadMedida?.nombreUnidadMedida ?? ''
+
+/**
+ * Convierte el stock crudo (en unidad base) a la UM del ingrediente.
+ * Retorna { stockConvertido, umNombre }
+ */
+const getStockConvertido = (ing: {
+  articulo?: Articulo
+  articuloUnidadMedida?: { codigoUnidadMedida?: string; nombreUnidadMedida?: string }
+}): { stockDisp: number | null; umNombre: string } => {
+  if (!ing.articulo || ing.articulo.verificarStock !== true) return { stockDisp: null, umNombre: '' }
+  const totalDispRaw = ing.articulo.inventario?.[0]?.totalDisponible ?? 0
+  const codigoUM = ing.articuloUnidadMedida?.codigoUnidadMedida
+  const allPrecios = [ing.articulo.articuloPrecioBase, ...(ing.articulo.articuloPrecio ?? [])].filter(Boolean)
+  const articuloPrecio = codigoUM
+    ? allPrecios.find((ap) => ap?.articuloUnidadMedida?.codigoUnidadMedida === codigoUM)
+    : ing.articulo.articuloPrecioBase
+  const cantidadBase = (articuloPrecio?.cantidadBase ?? 0) > 0 ? articuloPrecio!.cantidadBase! : 1
+  const stockConvertido = Number((totalDispRaw / cantidadBase).toFixed(7))
+  const umNombre =
+    articuloPrecio?.articuloUnidadMedida?.nombreUnidadMedida ??
+    ing.articuloUnidadMedida?.nombreUnidadMedida ??
+    ''
+  return { stockDisp: stockConvertido, umNombre }
+}
 
 /** Precio según UM específica; busca en articuloPrecioBase y articuloPrecio[]; fallback a articuloPrecioBase */
 const getPrecioParaUM = (art: Articulo, codigoUM?: string): number => {
@@ -206,6 +234,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   const { user } = useAuth()
   const codigoSucursal = user.sucursal.codigo
   const containerRef = useRef<HTMLDivElement>(null)
+  // Evita re-aplicar auto-removidos si el usuario ya interactuó
+  const autoRemovidosSeedadoRef = useRef(false)
 
   const esReceta = Boolean(articulo.esReceta)
   const tieneModificadores = Boolean(articulo.tieneModificadores)
@@ -234,6 +264,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
       setModificadorOrden([])
       setSelectedNotas(new Set()) // notas siempre vacías al abrir, LS solo ordena
       setCantidad(1)
+      autoRemovidosSeedadoRef.current = false // resetear para nueva sesión
     }
   }, [open, articulo._id])
 
@@ -269,6 +300,23 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     { enabled: open && Boolean(articulo._id), staleTime: 0 },
   )
   console.log('composicion', composicion)
+
+  // ── Auto-remover ingredientes sin stock al cargar composicion ─────────────
+  useEffect(() => {
+    if (!open || !composicion?.receta || autoRemovidosSeedadoRef.current) return
+    autoRemovidosSeedadoRef.current = true
+    const autoRemov = new Set<string>()
+    ;(composicion.receta.ingredientes ?? []).forEach((ing, idx) => {
+      if (!ing.esRemovible) return
+      const totalDisp = ing.articulo?.inventario?.[0]?.totalDisponible ?? 0
+      if (totalDisp <= 0) {
+        autoRemov.add(ing.articulo?._id ?? `ing-${idx}`)
+      }
+    })
+    if (autoRemov.size > 0) {
+      setIngredientesRemovidos(autoRemov)
+    }
+  }, [open, composicion, articulo._id])
 
   // ── Notas rápidas del tipo de artículo ───────────────────────────────────
   const notas: string[] = articulo.tipoArticulo?.notas ?? []
@@ -344,6 +392,45 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     return acc
   }, 0)
 
+  const ingredientesRecetaSinStock = useMemo(
+    () =>
+      (composicion?.receta?.ingredientes ?? []).filter((ing, idx) => {
+        const artId = ing.articulo?._id ?? `ing-${idx}`
+        const stockDisp =
+          ing.articulo?.verificarStock === true ? (ing.articulo.inventario?.[0]?.totalDisponible ?? 0) : null
+        return artId && stockDisp !== null && stockDisp <= 0
+      }),
+    [composicion?.receta?.ingredientes],
+  )
+
+  const ingredientesRecetaSinStockIds = useMemo(
+    () => new Set(ingredientesRecetaSinStock.map((ing, idx) => ing.articulo?._id ?? `ing-${idx}`)),
+    [ingredientesRecetaSinStock],
+  )
+
+  const recetaBloqueadaPorStock = ingredientesRecetaSinStock.some((ing, idx) => {
+    const artId = ing.articulo?._id ?? `ing-${idx}`
+    // Bloquea solo si: no es removible, o es removible pero aún no fue removido
+    return !ing.esRemovible || !ingredientesRemovidos.has(artId)
+  })
+
+  useEffect(() => {
+    if (!open || ingredientesRecetaSinStock.length === 0) return
+
+    setIngredientesRemovidos((prev) => {
+      const next = new Set(prev)
+      let changed = false
+      ingredientesRecetaSinStock.forEach((ing, idx) => {
+        const artId = ing.articulo?._id ?? `ing-${idx}`
+        if (ing.esRemovible && !next.has(artId)) {
+          next.add(artId)
+          changed = true
+        }
+      })
+      return changed ? next : prev
+    })
+  }, [open, ingredientesRecetaSinStock])
+
   const precioTotal = (precioBase + precioModificadoresExtra + precioRecetaExtra) * cantidad
 
   // ── Handlers: receta ──────────────────────────────────────────────────────
@@ -407,15 +494,16 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   }
 
   // ── Validación: grupos obligatorios (minSeleccion > 0) ───────────────────
-  const puedeAgregar = (composicion?.modificadores ?? []).every((grupo, gIdx) => {
-    const minSel = grupo.minSeleccion ?? 0
-    if (minSel === 0) return true
-    const total = (grupo.opciones ?? []).reduce(
-      (s, _op, oIdx) => s + (modificadorSeleccion[mkKey(gIdx, oIdx)] ?? 0),
-      0,
-    )
-    return total >= minSel * cantidad
-  })
+  const puedeAgregar =
+    (composicion?.modificadores ?? []).every((grupo, gIdx) => {
+      const minSel = grupo.minSeleccion ?? 0
+      if (minSel === 0) return true
+      const total = (grupo.opciones ?? []).reduce(
+        (s, _op, oIdx) => s + (modificadorSeleccion[mkKey(gIdx, oIdx)] ?? 0),
+        0,
+      )
+      return total >= minSel * cantidad
+    }) && !recetaBloqueadaPorStock
 
   // ── Imagen del artículo ───────────────────────────────────────────────────
   const imagenUrl =
@@ -557,21 +645,84 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                     Ingredientes — {composicion.receta.nombre}
                   </Typography>
 
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {(composicion.receta.ingredientes ?? []).map(
-                      (ing: ArticuloRecetaIngredienteOperacion, idx: number) => {
-                        const artId = ing.articulo?._id ?? `ing-${idx}`
-                        const nombre = ing.articulo?.nombreArticulo ?? 'Ingrediente'
-                        const removido = ingredientesRemovidos.has(artId)
-                        const extraQty = ingredientesExtra[artId] ?? 0
-                        const stockDisp =
-                          ing.articulo?.verificarStock === true
-                            ? (ing.articulo.inventario?.[0]?.totalDisponible ?? 0)
-                            : null
-                        const sinStockIng = stockDisp !== null && stockDisp <= 0
+                  {ingredientesRecetaSinStock.length > 0 && (
+                    <Box
+                      sx={{
+                        mb: 1.25,
+                        px: 1.25,
+                        py: 0.9,
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: 'warning.light',
+                        bgcolor: (theme) => alpha(theme.palette.warning.main, 0.08),
+                      }}
+                    >
+                      <Typography sx={{ fontSize: '0.76rem', fontWeight: 700, color: 'warning.dark' }}>
+                        Este producto contiene{' '}
+                        {ingredientesRecetaSinStock
+                          .map((ing) => ing.articulo?.nombreArticulo)
+                          .filter(Boolean)
+                          .join(', ')}
+                        , pero no hay stock disponible en este momento.
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.72rem', mt: 0.35, color: 'warning.dark' }}>
+                        Los ingredientes sin stock se marcan como quitados y el producto no se puede agregar
+                        mientras falte stock.
+                      </Typography>
+                    </Box>
+                  )}
 
-                        // Ingrediente no interactivo: mostrar chip informativo + stock si aplica
-                        if (!ing.esRemovible && !ing.permiteExtra) {
+                  {/* ── Aviso de ingredientes auto-removidos por stock cero ── */}
+                  {(composicion.receta.ingredientes ?? []).some(
+                    (ing, idx) =>
+                      ing.esRemovible &&
+                      (ing.articulo?.inventario?.[0]?.totalDisponible ?? 0) <= 0 &&
+                      ingredientesRemovidos.has(ing.articulo?._id ?? `ing-${idx}`),
+                  ) && (
+                    <Box
+                      sx={{
+                        mb: 1.25,
+                        px: 1.25,
+                        py: 0.9,
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: 'info.light',
+                        bgcolor: (theme) => alpha(theme.palette.info.main, 0.06),
+                      }}
+                    >
+                      <Typography sx={{ fontSize: '0.76rem', fontWeight: 700, color: 'info.dark' }}>
+                        Sin stock —{' '}
+                        {(composicion.receta.ingredientes ?? [])
+                          .filter(
+                            (ing, idx) =>
+                              ing.esRemovible &&
+                              (ing.articulo?.inventario?.[0]?.totalDisponible ?? 0) <= 0 &&
+                              ingredientesRemovidos.has(ing.articulo?._id ?? `ing-${idx}`),
+                          )
+                          .map((ing) => `Sin ${ing.articulo?.nombreArticulo ?? 'ingrediente'}`)
+                          .join(', ')}{' '}
+                        activado por defecto.
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* ── Ingredientes fijos (sin interacción): primera fila ── */}
+                  {(composicion.receta.ingredientes ?? []).some(
+                    (ing) => !ing.esRemovible && !ing.permiteExtra,
+                  ) && (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1 }}>
+                      {(composicion.receta.ingredientes ?? [])
+                        .filter((ing) => !ing.esRemovible && !ing.permiteExtra)
+                        .map((ing, idx) => {
+                          const artId = ing.articulo?._id ?? `fijo-${idx}`
+                          const nombre = ing.articulo?.nombreArticulo ?? 'Ingrediente'
+                          const { stockDisp, umNombre } = getStockConvertido(ing)
+                          const sinStockIng = stockDisp !== null && stockDisp <= 0
+                          const labelStock = sinStockIng
+                            ? 'Sin stock'
+                            : umNombre
+                              ? `${stockDisp} ${umNombre}`
+                              : `${stockDisp}`
                           return (
                             <Box
                               key={artId}
@@ -600,127 +751,234 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                               </Typography>
                               {stockDisp !== null && (
                                 <Chip
-                                  label={sinStockIng ? 'Sin stock' : `${stockDisp}`}
+                                  label={labelStock}
                                   size="small"
                                   color={sinStockIng ? 'error' : 'default'}
                                   variant="outlined"
-                                  sx={{
-                                    height: 16,
-                                    fontSize: '0.6rem',
-                                    flexShrink: 0,
-                                    '& .MuiChip-label': { px: 0.5 },
-                                  }}
+                                  sx={{ height: 16, fontSize: '0.6rem', '& .MuiChip-label': { px: 0.5 } }}
                                 />
                               )}
                             </Box>
                           )
+                        })}
+                    </Box>
+                  )}
+
+                  {/* ── Ingredientes interactivos: segunda fila ── */}
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {(composicion.receta.ingredientes ?? [])
+                      .filter((ing) => ing.esRemovible || ing.permiteExtra)
+                      .map((ing: ArticuloRecetaIngredienteOperacion, idx: number) => {
+                        const artId = ing.articulo?._id ?? `ing-${idx}`
+                        const nombre = ing.articulo?.nombreArticulo ?? 'Ingrediente'
+                        const removido = ingredientesRemovidos.has(artId)
+                        const extraQty = ingredientesExtra[artId] ?? 0
+                        const { stockDisp, umNombre } = getStockConvertido(ing)
+                        const sinStockIng = stockDisp !== null && stockDisp <= 0
+                        const labelStock = sinStockIng
+                          ? 'Sin stock'
+                          : umNombre
+                            ? `${stockDisp} ${umNombre}`
+                            : `${stockDisp}`
+
+                        // ── Control unificado [- Nombre +] ──────────────────
+                        // Estado: removido=-1, normal=0, extra=N>0
+                        // Label cambia: "Sin X" | "X" | "Extra X"
+                        // Botón [-] se oculta si no es removible y extraQty=0
+                        // Botón [+] se oculta si no permiteExtra y no está removido
+                        const bloqueado = ingredientesRecetaSinStockIds.has(artId)
+                        const estadoLabel = removido
+                          ? `Sin ${nombre}`
+                          : extraQty > 0
+                            ? `Extra ${nombre}`
+                            : nombre
+                        const colorEstado: 'error' | 'success' | 'default' = removido
+                          ? 'error'
+                          : extraQty > 0
+                            ? 'success'
+                            : 'default'
+
+                        // Visibilidad de botones (no se deshabilitan, se ocultan)
+                        const showDecrement = ing.esRemovible || extraQty > 0
+                        const showIncrement = ing.permiteExtra || removido
+
+                        // Label más largo posible → reserva ese ancho siempre
+                        const labelMaximo = ing.permiteExtra
+                          ? `Extra ${nombre}`
+                          : ing.esRemovible
+                            ? `Sin ${nombre}`
+                            : nombre
+
+                        const canDecrement =
+                          !sinStockIng && !bloqueado && (extraQty > 0 || (!removido && ing.esRemovible))
+                        // sinStockReal: stock cero aunque verificarStock=false (cubre auto-removidos)
+                        const sinStockReal = (ing.articulo?.inventario?.[0]?.totalDisponible ?? -1) <= 0
+                        // Si sin stock → nunca se puede volver a agregar (prohibido)
+                        const canIncrement =
+                          !bloqueado &&
+                          !sinStockIng &&
+                          !sinStockReal &&
+                          (removido || (ing.permiteExtra && !sinStockIng))
+
+                        const handleDecrement = () => {
+                          if (!canDecrement) return
+                          if (extraQty > 0) setExtraQty(artId, -1)
+                          else if (!removido && ing.esRemovible) toggleRemovido(artId)
                         }
+                        const handleIncrement = () => {
+                          if (!canIncrement) return
+                          if (removido) {
+                            toggleRemovido(artId)
+                          } else if (ing.permiteExtra && !sinStockIng) {
+                            setExtraQty(artId, 1)
+                          }
+                        }
+
+                        // Color del stepper según estado
+                        const colorStepper: 'error' | 'success' | 'primary' = removido
+                          ? 'error'
+                          : extraQty > 0
+                            ? 'success'
+                            : 'primary'
 
                         return (
                           <Fragment key={artId}>
-                            {ing.esRemovible && (
-                              <Chip
-                                label={`Sin ${nombre}`}
-                                onClick={() => {
-                                  if (sinStockIng) return
-                                  toggleRemovido(artId)
-                                  if (extraQty > 0 && !removido) {
-                                    setIngredientesExtra((prev) => {
-                                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                      const { [artId]: _, ...rest } = prev
-                                      return rest
-                                    })
-                                  }
-                                }}
-                                variant="outlined"
-                                size="medium"
-                                sx={{
-                                  fontWeight: removido ? 600 : 400,
-                                  fontSize: '0.78rem',
-                                  cursor: sinStockIng ? 'not-allowed' : 'pointer',
-                                  opacity: sinStockIng ? 0.5 : 1,
-                                  transition: 'all 0.15s ease',
-                                  borderColor: removido ? 'secondary.main' : 'divider',
-                                  color: removido ? 'secondary.main' : 'text.primary',
-                                  bgcolor: removido
-                                    ? (theme) => alpha(theme.palette.secondary.main, 0.1)
-                                    : 'transparent',
-                                  '&:hover': {
-                                    bgcolor: removido
-                                      ? (theme) => alpha(theme.palette.secondary.main, 0.15)
-                                      : 'action.hover',
-                                  },
-                                }}
-                              />
-                            )}
-                            {ing.permiteExtra && (
+                            <Box
+                              sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                bgcolor: 'background.paper',
+                                border: '1.5px solid',
+                                borderColor:
+                                  colorStepper === 'error'
+                                    ? 'error.main'
+                                    : colorStepper === 'success'
+                                      ? 'success.main'
+                                      : 'primary.main',
+                                borderRadius: 2,
+                                p: 0.5,
+                                opacity: sinStockIng ? 0.5 : 1,
+                                transition: 'border-color 0.15s ease',
+                                flexShrink: 0,
+                              }}
+                            >
+                              {/* Botón [-] — oculto si no aplica */}
+                              {showDecrement && (
+                                <Box
+                                  component="button"
+                                  onClick={handleDecrement}
+                                  sx={{
+                                    width: 24,
+                                    height: 24,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: 'none',
+                                    bgcolor: (theme) =>
+                                      alpha(theme.palette[colorStepper].main, canDecrement ? 0.12 : 0.04),
+                                    color: canDecrement ? `${colorStepper}.main` : 'action.disabled',
+                                    borderRadius: 1.5,
+                                    cursor: canDecrement ? 'pointer' : 'default',
+                                    flexShrink: 0,
+                                    p: 0,
+                                    '&:hover': {
+                                      bgcolor: canDecrement
+                                        ? (theme) => alpha(theme.palette[colorStepper].main, 0.22)
+                                        : undefined,
+                                    },
+                                  }}
+                                >
+                                  <RemoveIcon sx={{ fontSize: 16 }} />
+                                </Box>
+                              )}
+
+                              {/* Label + contador: ancho fijo basado en label más largo */}
                               <Box
-                                onClick={() => {
-                                  if (sinStockIng) return
-                                  setExtraQty(artId, 1)
-                                  if (removido) toggleRemovido(artId)
-                                }}
                                 sx={{
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: 0.5,
-                                  border: '1px solid',
-                                  borderColor: extraQty > 0 ? 'secondary.main' : 'divider',
-                                  borderRadius: '16px',
-                                  pl: 1.5,
-                                  pr: extraQty > 0 ? 0.25 : 0.5,
-                                  py: 0.25,
-                                  bgcolor:
-                                    extraQty > 0
-                                      ? (theme) => alpha(theme.palette.secondary.main, 0.1)
-                                      : 'transparent',
-                                  transition: 'all 0.15s ease',
-                                  cursor: sinStockIng ? 'not-allowed' : 'pointer',
-                                  opacity: sinStockIng ? 0.5 : 1,
+                                  gap: 0.4,
+                                  px: 0.25,
+                                  position: 'relative',
                                 }}
                               >
+                                {/* Texto invisible que reserva el ancho máximo */}
                                 <Typography
+                                  aria-hidden
+                                  variant="body2"
                                   sx={{
-                                    fontWeight: extraQty > 0 ? 600 : 400,
-                                    color: extraQty > 0 ? 'secondary.main' : 'text.primary',
                                     fontSize: '0.78rem',
-                                    userSelect: 'none',
+                                    fontWeight: 700,
+                                    visibility: 'hidden',
+                                    position: 'absolute',
                                     whiteSpace: 'nowrap',
+                                    pointerEvents: 'none',
                                   }}
                                 >
-                                  Extra {nombre}
+                                  {labelMaximo}
+                                </Typography>
+                                {/* Texto visible encima */}
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={colorEstado !== 'default' ? 700 : 400}
+                                  color={`${colorStepper}.main`}
+                                  sx={{
+                                    fontSize: '0.78rem',
+                                    textAlign: 'center',
+                                    lineHeight: 1,
+                                    userSelect: 'none',
+                                    whiteSpace: 'nowrap',
+                                    // Mismo ancho que el texto invisible de referencia
+                                    minWidth: `${labelMaximo.length * 0.48}rem`,
+                                  }}
+                                >
+                                  {estadoLabel}
+                                  {extraQty > 1 && ` ×${extraQty}`}
                                 </Typography>
                                 {stockDisp !== null && (
                                   <Chip
-                                    label={stockDisp === 0 ? 'Sin stock' : `${stockDisp}`}
+                                    label={labelStock}
                                     size="small"
-                                    color={stockDisp === 0 ? 'error' : 'default'}
+                                    color={sinStockIng ? 'error' : 'default'}
                                     variant="outlined"
-                                    sx={{
-                                      height: 16,
-                                      fontSize: '0.6rem',
-                                      flexShrink: 0,
-                                      '& .MuiChip-label': { px: 0.5 },
-                                    }}
+                                    sx={{ height: 16, fontSize: '0.6rem', '& .MuiChip-label': { px: 0.5 } }}
                                   />
                                 )}
-                                <QtyStepperInline
-                                  qty={extraQty}
-                                  colorName="secondary"
-                                  maxReached={sinStockIng}
-                                  onIncrement={() => {
-                                    if (sinStockIng) return
-                                    setExtraQty(artId, 1)
-                                    if (removido) toggleRemovido(artId)
-                                  }}
-                                  onDecrement={() => setExtraQty(artId, -1)}
-                                />
                               </Box>
-                            )}
+
+                              {/* Botón [+] — oculto si no aplica */}
+                              {showIncrement && (
+                                <Box
+                                  component="button"
+                                  onClick={handleIncrement}
+                                  sx={{
+                                    width: 24,
+                                    height: 24,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: 'none',
+                                    bgcolor: canIncrement
+                                      ? `${colorStepper}.main`
+                                      : 'action.disabledBackground',
+                                    color: canIncrement ? `${colorStepper}.contrastText` : 'action.disabled',
+                                    borderRadius: 1.5,
+                                    cursor: canIncrement ? 'pointer' : 'default',
+                                    flexShrink: 0,
+                                    p: 0,
+                                    '&:hover': {
+                                      bgcolor: canIncrement ? `${colorStepper}.dark` : undefined,
+                                    },
+                                  }}
+                                >
+                                  <AddIcon sx={{ fontSize: 16 }} />
+                                </Box>
+                              )}
+                            </Box>
                           </Fragment>
                         )
-                      },
-                    )}
+                      })}
                   </Box>
                 </Box>
               )}
@@ -1094,7 +1352,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
         </Box>
 
         {/* ── Resumen de variaciones de receta ── */}
-        {composicion?.receta &&
+        {/* {composicion?.receta &&
           (ingredientesRemovidos.size > 0 || Object.keys(ingredientesExtra).length > 0) && (
             <Box
               sx={{
@@ -1145,7 +1403,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                 return chips
               })}
             </Box>
-          )}
+          )} */}
 
         {/* ── Footer: cantidad + agregar ── */}
         <Box
@@ -1161,35 +1419,41 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
           }}
         >
           {/* Selector de cantidad del pedido */}
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              border: '1.5px solid',
-              borderColor: 'divider',
-              borderRadius: 2,
-              overflow: 'hidden',
-              flexShrink: 0,
-            }}
-          >
-            <IconButton
-              size="small"
-              onClick={() => setCantidad((v) => Math.max(1, v - 1))}
-              disabled={cantidad <= 1}
-              sx={{ borderRadius: 0, width: 34, height: 34 }}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                border: '1.5px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                overflow: 'hidden',
+                flexShrink: 0,
+              }}
             >
-              <RemoveIcon fontSize="small" />
-            </IconButton>
-            <Typography variant="body1" fontWeight={700} sx={{ minWidth: 28, textAlign: 'center', px: 0.5 }}>
-              {cantidad}
-            </Typography>
-            <IconButton
-              size="small"
-              onClick={() => setCantidad((v) => v + 1)}
-              sx={{ borderRadius: 0, width: 34, height: 34 }}
-            >
-              <AddIcon fontSize="small" />
-            </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => setCantidad((v) => Math.max(1, v - 1))}
+                disabled={cantidad <= 1}
+                sx={{ borderRadius: 0, width: 34, height: 34 }}
+              >
+                <RemoveIcon fontSize="small" />
+              </IconButton>
+              <Typography
+                variant="body1"
+                fontWeight={700}
+                sx={{ minWidth: 28, textAlign: 'center', px: 0.5 }}
+              >
+                {cantidad}
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => setCantidad((v) => v + 1)}
+                sx={{ borderRadius: 0, width: 34, height: 34 }}
+              >
+                <AddIcon fontSize="small" />
+              </IconButton>
+            </Box>
           </Box>
 
           {/* Botón agregar */}
@@ -1202,14 +1466,8 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
               guardarUsoNotasLocal(selectedNotas, articulo.tipoArticulo?._id ?? articulo._id)
 
               if (onAdd) {
-                // ── 1. Notas finales: notas rápidas + ingredientes removidos como texto ──
+                // ── 1. Notas finales: solo notas rápidas (removidos se manejan via variacionReceta) ──
                 const notasIdsFinales = Array.from(selectedNotas)
-                ;(composicion?.receta?.ingredientes ?? []).forEach((ing) => {
-                  const artId = ing.articulo?._id ?? ''
-                  if (ingredientesRemovidos.has(artId) && ing.esRemovible && ing.articulo) {
-                    notasIdsFinales.push(`Sin ${ing.articulo.nombreArticulo}`)
-                  }
-                })
 
                 // ── 2. variacionReceta: un item por ingrediente modificado (removido o extra) ──
                 const variacionReceta: ArticuloRecetaOperacionInput[] = []
@@ -1251,6 +1509,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
 
                     variacionReceta.push({
                       codigoArticulo: baseComp?.codigoArticulo || ing.articulo?.codigoArticulo || '',
+                      nombreArticulo: ing.articulo?.nombreArticulo,
                       codigoAlmacen: baseComp?.almacen?.codigoAlmacen || '0',
                       codigoLote: undefined, // FIX: lote solo aplica en monetanero, no en pedido restaurante
                       articuloPrecio: {
@@ -1306,6 +1565,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
 
                     variacionReceta.push({
                       codigoArticulo: baseComp?.codigoArticulo || ing.articulo?.codigoArticulo || '',
+                      nombreArticulo: ing.articulo?.nombreArticulo,
                       codigoAlmacen: baseComp?.almacen?.codigoAlmacen || '0',
                       codigoLote: undefined, // FIX: lote solo aplica en monetanero, no en pedido restaurante
                       articuloPrecio: {
