@@ -2,6 +2,7 @@ import pdfMake from 'pdfmake/build/pdfmake'
 import pdfFonts from 'pdfmake/build/vfs_fonts'
 import printJS from 'print-js'
 
+//
 import { printBlobToLocalPrinter } from '../../../../base/services/localPrinterService'
 import { notError, notSuccess } from '../../../../utils/notification'
 import { RestPedido } from '../../types'
@@ -634,12 +635,175 @@ const buildEstadoCuentaDefinition = (pedido: RestPedido, descuentoAdicional = 0)
   return documentDefinition
 }
 
+// ---------------------------------------------------------------------------
+// Helpers para impresión por categorías
+// ---------------------------------------------------------------------------
+
+const getPrinterAssignments = (): {
+  impresoPorCategorias: boolean
+  categoriaAsigan: Record<string, string>
+} => {
+  try {
+    const raw = localStorage.getItem('printers')
+    if (!raw) return { impresoPorCategorias: false, categoriaAsigan: {} }
+    const data = JSON.parse(raw)
+    return {
+      impresoPorCategorias: Boolean(data.impresionPorCategorias),
+      categoriaAsigan: (data.categoriasAsignadas as Record<string, string>) ?? {},
+    }
+  } catch {
+    return { impresoPorCategorias: false, categoriaAsigan: {} }
+  }
+}
+
+/** Devuelve los nombres de impresoras físicas asignadas a un producto según categoriaAsigan */
+const getPrintersForProduct = (prod: any, categoriaAsigan: Record<string, string>): string[] => {
+  const imps: any[] = prod?.impresoras ?? []
+  const result = new Set<string>()
+  for (const imp of imps) {
+    const name = imp._id ? categoriaAsigan[imp._id] : undefined
+    if (name) result.add(name)
+  }
+  return Array.from(result)
+}
+
+/**
+ * Verifica si un pedido filtrado tiene cambios reales respecto a su snapshot.
+ * Si el pedido es nuevo (sin snapshot) siempre retorna true.
+ * Si es modificación, retorna true solo si hay al menos un producto con delta != 0.
+ */
+const hasRealChanges = (filteredPedido: RestPedido, ignorarHistorico?: boolean): boolean => {
+  const snapshot = ignorarHistorico ? [] : (filteredPedido.ultimaTransaccion?.articulos ?? [])
+  const actuales = filteredPedido.productos ?? []
+
+  // Sin snapshot → pedido nuevo, siempre imprimir
+  if (snapshot.length === 0) return true
+
+  const getKey = (prod: any) => `${prod.articuloId ?? ''}-${prod.nroItem ?? 0}-${prod.codigoArticulo ?? ''}`
+  const getCantidad = (prod: any) => prod.articuloPrecio?.cantidad ?? prod.articuloPrecioBase?.cantidad ?? 1
+
+  const snapMap = new Map<string, number>()
+  snapshot.forEach((p: any) => {
+    const k = getKey(p)
+    snapMap.set(k, (snapMap.get(k) ?? 0) + getCantidad(p))
+  })
+  const actMap = new Map<string, number>()
+  actuales.forEach((p: any) => {
+    const k = getKey(p)
+    actMap.set(k, (actMap.get(k) ?? 0) + getCantidad(p))
+  })
+
+  const keys = new Set([...snapMap.keys(), ...actMap.keys()])
+  for (const k of keys) {
+    if ((snapMap.get(k) ?? 0) !== (actMap.get(k) ?? 0)) return true
+  }
+  return false
+}
+
 export const useComandaPdf = () => {
   const imprimirComanda = async (
     pedido: RestPedido,
     selectedPrinter = '',
     options?: { titulo?: string; ignorarHistorico?: boolean },
   ) => {
+    const { impresoPorCategorias, categoriaAsigan } = getPrinterAssignments()
+
+    console.log('[ComandaPDF] impresoPorCategorias:', impresoPorCategorias)
+    console.log('[ComandaPDF] categoriaAsigan:', categoriaAsigan)
+    console.log('[ComandaPDF] productos[0].impresoras:', (pedido.productos ?? [])[0]?.impresoras)
+
+    if (impresoPorCategorias && Object.keys(categoriaAsigan).length > 0) {
+      // Recopilar todos los productos (actuales + snapshot) para encontrar impresoras únicas
+      const snapshotProds = options?.ignorarHistorico ? [] : (pedido.ultimaTransaccion?.articulos ?? [])
+      const allProds = [...(pedido.productos ?? []), ...snapshotProds]
+
+      const allPrinters = new Set<string>()
+      for (const prod of allProds) {
+        for (const name of getPrintersForProduct(prod, categoriaAsigan)) {
+          allPrinters.add(name)
+        }
+      }
+      console.log('[ComandaPDF] allPrinters encontradas:', Array.from(allPrinters))
+
+      const hasAnyPrinter = (prod: any) => getPrintersForProduct(prod, categoriaAsigan).length > 0
+
+      if (allPrinters.size > 0) {
+        await Promise.all(
+          Array.from(allPrinters).map(async (printerName) => {
+            const matchesPrinter = (prod: any) =>
+              getPrintersForProduct(prod, categoriaAsigan).includes(printerName)
+
+            const filteredPedido: RestPedido = {
+              ...pedido,
+              productos: (pedido.productos ?? []).filter(matchesPrinter),
+              ultimaTransaccion: pedido.ultimaTransaccion
+                ? {
+                    ...pedido.ultimaTransaccion,
+                    articulos: (pedido.ultimaTransaccion.articulos ?? []).filter(matchesPrinter),
+                  }
+                : pedido.ultimaTransaccion,
+            }
+
+            const hasItems =
+              (filteredPedido.productos ?? []).length > 0 ||
+              (filteredPedido.ultimaTransaccion?.articulos ?? []).length > 0
+            if (!hasItems) return
+
+            // Si es modificación y este subset no tiene cambios reales, no imprimir
+            if (!hasRealChanges(filteredPedido, options?.ignorarHistorico)) return
+
+            const def: any = buildComandaDefinition(filteredPedido, {
+              ...options,
+              titulo: 'COMANDA POR AREA',
+            })
+            const gen = pdfMake.createPdf(def) as any
+            const blob: Blob = await gen.getBlob()
+
+            try {
+              await printBlobToLocalPrinter({ blob, printer: printerName, filename: 'comanda.pdf' })
+              notSuccess(`Comanda → ${printerName}`)
+            } catch (error) {
+              const msg = error instanceof Error ? error.message : 'impresora no responde'
+              notError(`Error al imprimir en ${printerName}: ${msg}`)
+            }
+          }),
+        )
+
+        // Productos sin impresora asignada → printJS
+        const sinImpresora: RestPedido = {
+          ...pedido,
+          productos: (pedido.productos ?? []).filter((p) => !hasAnyPrinter(p)),
+          ultimaTransaccion: pedido.ultimaTransaccion
+            ? {
+                ...pedido.ultimaTransaccion,
+                articulos: (pedido.ultimaTransaccion.articulos ?? []).filter((p) => !hasAnyPrinter(p)),
+              }
+            : pedido.ultimaTransaccion,
+        }
+
+        const hasSinImpresora =
+          (sinImpresora.productos ?? []).length > 0 ||
+          (sinImpresora.ultimaTransaccion?.articulos ?? []).length > 0
+
+        if (hasSinImpresora) {
+          // Si es modificación y ningún producto sin impresora cambió, no imprimir
+          if (!hasRealChanges(sinImpresora, options?.ignorarHistorico)) return
+          const def: any = buildComandaDefinition(sinImpresora, { ...options, titulo: 'COMANDA POR AREA' })
+          const gen = pdfMake.createPdf(def) as any
+          const blob: Blob = await gen.getBlob()
+          const pdfUrl = URL.createObjectURL(blob)
+          printJS({
+            printable: pdfUrl,
+            type: 'pdf',
+            style: '@media print { @page { size: 100%; margin: 0mm; } body { width: 100%; } }',
+          })
+        }
+
+        return
+      }
+    }
+
+    // --- Comportamiento original (impresoPorCategorias=false o sin asignaciones) ---
     const documentDefinition: any = buildComandaDefinition(pedido, options)
     const pdfDocGenerator = pdfMake.createPdf(documentDefinition) as any
     const blob: Blob = await pdfDocGenerator.getBlob()
