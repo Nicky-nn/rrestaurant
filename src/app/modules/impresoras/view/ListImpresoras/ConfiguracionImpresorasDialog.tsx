@@ -15,6 +15,7 @@ import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -36,7 +37,7 @@ import { FunctionComponent, useEffect, useRef, useState } from 'react'
 
 import useAuth from '../../../../base/hooks/useAuth'
 import { notError, notSuccess } from '../../../../utils/notification'
-import { useTipoArticuloListado } from '../../../restaurante/queries/useTipoArticuloListado'
+import { useImpresoraPorSucursal } from '../../queries/useImpresoraPorSucursal'
 
 interface OwnProps {
   open: boolean
@@ -90,13 +91,17 @@ const ConfiguracionImpresorasDialog: FunctionComponent<Props> = ({ open, onClose
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
 
+  const { user } = useAuth()
   const { li } = useAuth()
 
-  const { data: catData, isLoading: loadingCategorias } = useTipoArticuloListado(
-    { limit: 100, reverse: false },
+  const {
+    data: impresorasDestino = [],
+    isLoading: loadingCategorias,
+    refetch: refetchCategorias,
+  } = useImpresoraPorSucursal(
+    { codigoSucursal: user?.sucursal?.codigo || 0 },
     { enabled: open && impresionPorCategorias },
   )
-  const categoriasPorSucursal = catData?.docs || []
 
   const impresion = li
   const state = impresion?.licencia?.state || ''
@@ -228,12 +233,15 @@ const ConfiguracionImpresorasDialog: FunctionComponent<Props> = ({ open, onClose
         })
 
         setImpresionPorCategorias(parsedPrinters?.impresionPorCategorias || false)
-        
+
         const rawCategorias = parsedPrinters?.categoriasAsignadas || {}
-        const mappedCategorias = Object.keys(rawCategorias).reduce((acc, key) => {
-          acc[key] = getPrinterName(rawCategorias[key])
-          return acc
-        }, {} as { [key: string]: string })
+        const mappedCategorias = Object.keys(rawCategorias).reduce(
+          (acc, key) => {
+            acc[key] = getPrinterName(rawCategorias[key])
+            return acc
+          },
+          {} as { [key: string]: string },
+        )
         setCategoriasAsignadas(mappedCategorias)
       } catch (error) {
         console.error('Error parsing printers from localStorage:', error)
@@ -302,10 +310,10 @@ const ConfiguracionImpresorasDialog: FunctionComponent<Props> = ({ open, onClose
     }
   }
 
-  const handleCategoriaAsignacion = (categoriaId: string, impresora: string) => {
+  const handleCategoriaAsignacion = (printerName: string, impresora: string) => {
     setCategoriasAsignadas((prev) => ({
       ...prev,
-      [categoriaId]: impresora,
+      [printerName]: impresora,
     }))
   }
 
@@ -716,11 +724,11 @@ const ConfiguracionImpresorasDialog: FunctionComponent<Props> = ({ open, onClose
           {activeTab === 2 && (
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'text.primary' }}>
-                Áreas y Categorías (Comandas Por Separado)
+                Áreas de Impresión (Comandas Por Área)
               </Typography>
               <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-                Si tienes distintas áreas de preparación (Cocina, Bar, Parrilla), puedes enviar las comandas
-                de cada producto a su impresora específica.
+                Asigna a cada área de preparación (Cocina, Bar, Parrilla) la impresora física donde se enviará
+                la comanda de sus productos.
               </Typography>
 
               <Box
@@ -744,38 +752,84 @@ const ConfiguracionImpresorasDialog: FunctionComponent<Props> = ({ open, onClose
                   }
                   label={
                     <Typography sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                      Habilitar Envío por Categorías
+                      Habilitar Envío por Áreas
                     </Typography>
                   }
                 />
               </Box>
 
               {impresionPorCategorias && (
-                <Box>
-                  {loadingCategorias ? (
-                    <Typography variant="body2" color="textSecondary">
-                      Cargando categorías...
+                <Box
+                  sx={{
+                    mb: 3,
+                    p: 3,
+                    bgcolor: 'background.paper',
+                    borderRadius: 2,
+                    border: 1,
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                    <Settings fontSize="small" sx={{ color: 'text.secondary' }} />
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                      Configuración por Áreas
                     </Typography>
+                    <IconButton
+                      onClick={() => refetchCategorias()}
+                      size="small"
+                      sx={{ ml: 'auto', color: 'text.secondary' }}
+                    >
+                      <Refresh fontSize="small" />
+                    </IconButton>
+                  </Box>
+
+                  {loadingCategorias ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
+                      <CircularProgress size={24} sx={{ mr: 2 }} />
+                      <Typography variant="body2" color="textSecondary">
+                        Cargando áreas de impresión...
+                      </Typography>
+                    </Box>
                   ) : (
-                    (categoriasPorSucursal || []).map((cat) => (
-                      <FormControl fullWidth sx={{ mb: 2 }} size="small" key={cat._id || 'anon'}>
-                        <InputLabel>{cat.descripcion}</InputLabel>
-                        <Select
-                          value={categoriasAsignadas[cat._id || ''] || ''}
-                          label={cat.descripcion}
-                          onChange={(e) => handleCategoriaAsignacion(cat._id || '', e.target.value)}
-                        >
-                          <MenuItem value="">
-                            <em>No imprimir esta categoría</em>
-                          </MenuItem>
-                          {printers.map((p) => (
-                            <MenuItem key={p.name} value={p.name}>
-                              {p.name} {p.ip ? `(${p.ip})` : ''}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    ))
+                    <Box>
+                      {impresorasDestino.map((area) => (
+                        <FormControl fullWidth sx={{ mb: 2 }} size="small" key={area._id}>
+                          <InputLabel>
+                            {area.nombre}
+                            {area.descripcion ? ` - ${area.descripcion}` : ''}
+                          </InputLabel>
+                          <Select
+                            value={categoriasAsignadas[area._id || ''] || ''}
+                            label={`${area.nombre}${area.descripcion ? ` - ${area.descripcion}` : ''}`}
+                            onChange={(e) => handleCategoriaAsignacion(area._id || '', e.target.value)}
+                          >
+                            <MenuItem value="">Sin asignar</MenuItem>
+                            {printers.map((printer) => (
+                              <MenuItem key={printer.name} value={printer.name}>
+                                {printer.ip ? `${printer.name} (${printer.ip})` : printer.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      ))}
+                    </Box>
+                  )}
+
+                  {!loadingCategorias && impresorasDestino.length === 0 && (
+                    <Box sx={{ textAlign: 'center', p: 4 }}>
+                      <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                        No se encontraron áreas configuradas.
+                      </Typography>
+                      <Button
+                        onClick={() => refetchCategorias()}
+                        variant="outlined"
+                        size="small"
+                        startIcon={<Refresh />}
+                        sx={{ borderRadius: 2, textTransform: 'none' }}
+                      >
+                        Recargar
+                      </Button>
+                    </Box>
                   )}
                 </Box>
               )}
