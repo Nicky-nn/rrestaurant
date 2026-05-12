@@ -717,6 +717,19 @@ export const useComandaPdf = () => {
       const snapshotProds = options?.ignorarHistorico ? [] : (pedido.ultimaTransaccion?.articulos ?? [])
       const allProds = [...(pedido.productos ?? []), ...snapshotProds]
 
+      // Modificación real global: snapshot distinto al actual en al menos un producto
+      const snapshotGlobal = options?.ignorarHistorico ? [] : (pedido.ultimaTransaccion?.articulos ?? [])
+      const hasSnapshotGlobal = snapshotGlobal.length > 0
+      // true  → pedido existente con cambios reales → filtrar por subset
+      // false → pedido nuevo (sin snapshot) → imprimir todo
+      // Si hasSnapshotGlobal && !isGlobalModification → existente sin cambios → NO imprimir nada
+      const isGlobalModification = hasSnapshotGlobal && hasRealChanges(pedido, options?.ignorarHistorico)
+
+      if (hasSnapshotGlobal && !isGlobalModification) {
+        // Pedido existente sin ningún cambio — no imprimir
+        return
+      }
+
       const allPrinters = new Set<string>()
       for (const prod of allProds) {
         for (const name of getPrintersForProduct(prod, categoriaAsigan)) {
@@ -749,8 +762,8 @@ export const useComandaPdf = () => {
               (filteredPedido.ultimaTransaccion?.articulos ?? []).length > 0
             if (!hasItems) return
 
-            // Si es modificación y este subset no tiene cambios reales, no imprimir
-            if (!hasRealChanges(filteredPedido, options?.ignorarHistorico)) return
+            // Solo suprimir si es modificación real global (no en pedido nuevo)
+            if (isGlobalModification && !hasRealChanges(filteredPedido, options?.ignorarHistorico)) return
 
             const def: any = buildComandaDefinition(filteredPedido, {
               ...options,
@@ -786,8 +799,8 @@ export const useComandaPdf = () => {
           (sinImpresora.ultimaTransaccion?.articulos ?? []).length > 0
 
         if (hasSinImpresora) {
-          // Si es modificación y ningún producto sin impresora cambió, no imprimir
-          if (!hasRealChanges(sinImpresora, options?.ignorarHistorico)) return
+          // Solo suprimir si es modificación real global (no en pedido nuevo)
+          if (isGlobalModification && !hasRealChanges(sinImpresora, options?.ignorarHistorico)) return
           const def: any = buildComandaDefinition(sinImpresora, { ...options, titulo: 'COMANDA POR AREA' })
           const gen = pdfMake.createPdf(def) as any
           const blob: Blob = await gen.getBlob()
@@ -944,5 +957,16 @@ export const useComandaPdf = () => {
     }
   }
 
-  return { imprimirComanda, imprimirEstadoCuenta, imprimirFactura }
+  /** Genera un blob URL del PDF de comanda SIN imprimir (para previsualización) */
+  const generarUrlComanda = async (
+    pedido: RestPedido,
+    options?: { titulo?: string; ignorarHistorico?: boolean },
+  ): Promise<string> => {
+    const def: any = buildComandaDefinition(pedido, options)
+    const gen = pdfMake.createPdf(def) as any
+    const blob: Blob = await gen.getBlob()
+    return URL.createObjectURL(blob)
+  }
+
+  return { imprimirComanda, imprimirEstadoCuenta, imprimirFactura, generarUrlComanda }
 }

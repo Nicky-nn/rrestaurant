@@ -23,11 +23,24 @@ import { decodePrintParams } from '../../../utils/licenciaHelper'
 import { notDanger, notSuccess } from '../../../utils/notification'
 import { swalException } from '../../../utils/swal'
 
-const GRUPOS_IMPRESION = [
-  { value: 'Comanda', label: 'Comanda' },
-  { value: 'Cuenta', label: 'Cuenta' },
-  { value: 'Factura', label: 'Factura' },
-]
+const getGruposImpresion = () => {
+  const impresionPorCategorias = (() => {
+    try {
+      return Boolean(JSON.parse(localStorage.getItem('printers') || '{}').impresionPorCategorias)
+    } catch {
+      return false
+    }
+  })()
+  return [
+    {
+      value: 'Comanda',
+      label: impresionPorCategorias ? 'Comanda (por categorías)' : 'Comanda',
+      disabled: impresionPorCategorias,
+    },
+    { value: 'Cuenta', label: 'Cuenta' },
+    { value: 'Factura', label: 'Factura' },
+  ]
+}
 
 interface PdfViewerDialogProps {
   open: boolean
@@ -42,7 +55,12 @@ const PdfViewerDialog: FunctionComponent<PdfViewerDialogProps> = ({ open, pdfUrl
 
   const licenciaActiva = li?.activo === true
 
-  const [grupoSeleccionado, setGrupoSeleccionado] = useState<string>('Comanda')
+  const [gruposImpresion] = useState(getGruposImpresion)
+  const [grupoSeleccionado, setGrupoSeleccionado] = useState<string>(() => {
+    // Si Comanda está deshabilitada, iniciar en Cuenta
+    const grupos = getGruposImpresion()
+    return grupos[0].disabled ? 'Cuenta' : 'Comanda'
+  })
   const [imprimiendo, setImprimiendo] = useState(false)
   const [iframeLoading, setIframeLoading] = useState(true)
 
@@ -135,7 +153,7 @@ const PdfViewerDialog: FunctionComponent<PdfViewerDialogProps> = ({ open, pdfUrl
               <InputLabel>Grupo</InputLabel>
               <AppSelect
                 label="Grupo"
-                options={GRUPOS_IMPRESION}
+                options={gruposImpresion}
                 value={grupoSeleccionado}
                 onChange={(e) => setGrupoSeleccionado(e.target.value as string)}
               />
@@ -146,12 +164,20 @@ const PdfViewerDialog: FunctionComponent<PdfViewerDialogProps> = ({ open, pdfUrl
               variant="contained"
               size="medium"
               startIcon={imprimiendo ? <CircularProgress size={16} color="inherit" /> : <Print />}
-              disabled={imprimiendo || !pdfUrl}
+              disabled={
+                imprimiendo || !pdfUrl || (grupoSeleccionado === 'Comanda' && gruposImpresion[0].disabled)
+              }
               onClick={handleImprimir}
               sx={{ whiteSpace: 'nowrap' }}
             >
               {imprimiendo ? '...' : 'Imprimir'}
             </Button>
+
+            {grupoSeleccionado === 'Comanda' && gruposImpresion[0].disabled && (
+              <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
+                Comanda no disponible (impresión por categorías activada)
+              </Typography>
+            )}
           </Box>
         )}
 

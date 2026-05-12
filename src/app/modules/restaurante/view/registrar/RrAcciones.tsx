@@ -11,6 +11,8 @@ import {
   Button,
   CircularProgress,
   Divider,
+  Menu,
+  MenuItem,
   Stack,
   Typography,
   useTheme,
@@ -22,6 +24,7 @@ import { useAppConfirm } from '../../../../base/contexts/AppConfirmProvider'
 import { useError } from '../../../../base/contexts/ErrorProvider'
 import useAuth from '../../../../base/hooks/useAuth'
 import { MyGraphQlError } from '../../../../base/services/GraphqlError'
+import PdfViewerDialog from '../../../reporte/components/PdfViewerDialog'
 import { MesaUI } from '../../interfaces/mesa.interface'
 import { useRestPedidoActualizar } from '../../mutations/useRestPedidoActualizar'
 import { useRestPedidoCancelar } from '../../mutations/useRestPedidoCancelar'
@@ -223,11 +226,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                   cantidad: v.removido
                     ? 0
                     : Math.max(
-                      1,
-                      (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                      (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                      1,
-                    ),
+                        1,
+                        (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                          (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                          1,
+                      ),
                   precio:
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
                     (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
@@ -364,9 +367,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
               (lm: any) =>
                 lm.codigoArticulo === m.codigoArticulo &&
                 (lm.articuloPrecio?.codigoArticuloUnidadMedida ?? '') ===
-                (m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
-                  m.articuloPrecio?.codigoArticuloUnidadMedida ??
-                  ''),
+                  (m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                    m.articuloPrecio?.codigoArticuloUnidadMedida ??
+                    ''),
             ) ?? localMods.find((lm: any) => lm.codigoArticulo === m.codigoArticulo)
           return { ...m, nombreArticulo: (localMod as any)?.nombreArticulo || m.codigoArticulo || '' }
         })
@@ -547,8 +550,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                   cantidad: Math.max(
                     1,
                     (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                    (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                    1,
+                      (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      1,
                   ),
                   precio:
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
@@ -876,7 +879,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         showError(
           new Error(
             'El pedido se finalizó correctamente, pero hubo un error al facturar. Puede intentar facturarlo luego desde el panel de facturación. Detalle: ' +
-            errorMessage,
+              errorMessage,
           ),
         )
         setOpenCobroDialog(false)
@@ -891,7 +894,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   }
 
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
-  const { imprimirComanda, imprimirEstadoCuenta, imprimirFactura } = useComandaPdf()
+  const { imprimirComanda, imprimirEstadoCuenta, imprimirFactura, generarUrlComanda } = useComandaPdf()
 
   // Handler manual del botón "Cuenta" — guarda si hay cambios y luego imprime Estado de Cuenta
   const handleImprimirCuenta = async () => {
@@ -918,13 +921,31 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
     }
   }
 
+  // --- Reimprimir Comanda (click derecho en "Cuenta") ---
+  const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement | null>(null)
+  const [reimprimirComandaOpen, setReimprimirComandaOpen] = useState(false)
+  const [reimprimirComandaPdfUrl, setReimprimirComandaPdfUrl] = useState<string | null>(null)
+
+  const handleCuentaContextMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    setContextMenuAnchor(e.currentTarget)
+  }
+
+  const handleReimprimirComandaOpen = async () => {
+    setContextMenuAnchor(null)
+    if (!mesaSeleccionada?.pedido) return
+    const url = await generarUrlComanda(mesaSeleccionada.pedido, { ignorarHistorico: true })
+    setReimprimirComandaPdfUrl(url)
+    setReimprimirComandaOpen(true)
+  }
+
+  const handleReimprimirComandaExecute = async () => {
+    if (!mesaSeleccionada?.pedido) return
+    await imprimirComanda(mesaSeleccionada.pedido, getComandaPrinter(), { ignorarHistorico: true })
+  }
+
   // Abre el diálogo de dividir — guarda cambios primero si los hay
   const handleOpenDividir = async () => {
-    if (!mesaSeleccionada?.pedido) return
-    const { pedido } = mesaSeleccionada
-    const isNuevo = !pedido._id || pedido._id.startsWith('nuevo-')
-    if (isNuevo) return // Pedido no registrado aún, el botón está disabled
-
     if (isPedidoDirty) {
       const response = await handleRegistrar()
       if (!response) return
@@ -1024,6 +1045,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
             size="large"
             disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
             onClick={handleImprimirCuenta}
+            onContextMenu={handleCuentaContextMenu}
             sx={{
               flex: 1,
               flexDirection: 'column',
@@ -1261,6 +1283,29 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           mesaSeleccionada?.pedido?.cliente?.razonSocial.trim() !== ''
         }
       />
+      {/* Context menu click derecho "Cuenta" */}
+      <Menu
+        anchorEl={contextMenuAnchor}
+        open={Boolean(contextMenuAnchor)}
+        onClose={() => setContextMenuAnchor(null)}
+      >
+        <MenuItem onClick={handleReimprimirComandaOpen}>
+          <ReceiptLongOutlinedIcon fontSize="small" sx={{ mr: 1 }} />
+          Reimprimir Comanda
+        </MenuItem>
+      </Menu>
+
+      {/* Dialog previsualización comanda */}
+      <PdfViewerDialog
+        open={reimprimirComandaOpen}
+        pdfUrl={reimprimirComandaPdfUrl}
+        onClose={() => {
+          setReimprimirComandaOpen(false)
+          if (reimprimirComandaPdfUrl) URL.revokeObjectURL(reimprimirComandaPdfUrl)
+          setReimprimirComandaPdfUrl(null)
+        }}
+      />
+
       {/* Dialogo Dividir Cuenta */}
       {mesaSeleccionada?.pedido && (
         <RrDividirCuentaDialog
