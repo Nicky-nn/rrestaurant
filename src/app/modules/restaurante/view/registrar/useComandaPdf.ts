@@ -40,6 +40,7 @@ const buildComandaDefinition = (
   pedido: RestPedido,
   options?: { titulo?: string; ignorarHistorico?: boolean },
 ) => {
+  console.log('Carta de pedido:', pedido)
   const cliente = pedido.cliente?.razonSocial ?? 'Sin Razón Social'
   const mesa = pedido.mesa?.nombre ?? '-'
   const orden = pedido.numeroOrden ?? pedido.numeroPedido ?? '-'

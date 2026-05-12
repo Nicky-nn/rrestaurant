@@ -53,13 +53,17 @@ const LayoutContainer = styled(Box)(({ width, open }: LayoutContainerProps) => (
 }))
 
 const Layout1 = () => {
-  const location = useLocation()
   const { settings, updateSettings } = useSettings()
   const { layout1Settings, secondarySidebar } = settings
   const topbarTheme = settings.themes[layout1Settings.topbar.theme]
   const {
     leftSidebar: { mode: sidenavMode, show: showSidenav },
   } = layout1Settings
+
+  // Obtener la ubicación actual
+  const location = useLocation()
+  const isPedidosRegistrarPage =
+    location.pathname === '/pedidos/registrar' || location.pathname.startsWith('/pedidos/registrar#')
 
   const getSidenavWidth = () => {
     switch (sidenavMode) {
@@ -82,14 +86,72 @@ const Layout1 = () => {
   const ref = useRef({ isMdScreen, settings })
   const layoutClasses = `theme-${theme.palette.primary}`
 
+  // Estilo condicional para StyledScrollBar y ContentBox
+  const restrictedScrollStyle = isPedidosRegistrarPage
+    ? {
+        height: '100vh',
+        overflow: 'hidden',
+        [theme.breakpoints.down('md')]: {
+          overflow: 'auto',
+        },
+      }
+    : {}
+
   useEffect(() => {
-    const { settings } = ref.current
-    const sidebarMode = settings.layout1Settings.leftSidebar.mode
+    let { settings } = ref.current
+    let sidebarMode = settings.layout1Settings.leftSidebar.mode
     if (settings.layout1Settings.leftSidebar.show) {
-      const mode = isMdScreen ? 'close' : sidebarMode
+      let mode = isMdScreen ? 'close' : sidebarMode
       updateSettings({ layout1Settings: { leftSidebar: { mode } } })
     }
   }, [isMdScreen])
+
+  useEffect(() => {
+    if (isPedidosRegistrarPage) {
+      updateSettings({ layout1Settings: { leftSidebar: { mode: 'compact' } } })
+    }
+  }, [location.pathname])
+
+  // Efecto para resetear el scroll cuando se navega a /pedidos/registrar
+  useEffect(() => {
+    if (isPedidosRegistrarPage) {
+      // Función para resetear scroll más agresivamente
+      const resetScrollAggressively = () => {
+        // Resetear scroll del documento principal
+        document.documentElement.scrollTop = 0
+        document.body.scrollTop = 0
+        window.scrollTo(0, 0)
+
+        // Buscar y resetear todos los posibles contenedores de scroll
+        const scrollElements = document.querySelectorAll(
+          '.scrollbar-container, .ps, .ps__rail-y, .ps__thumb-y, .MuiBox-root, [class*="scroll"], [class*="Layout"], .layout-container',
+        )
+        scrollElements.forEach((element: any) => {
+          if (element.scrollTo) {
+            element.scrollTo(0, 0)
+          }
+          if (element.scrollTop !== undefined) {
+            element.scrollTop = 0
+          }
+          if (element.scrollLeft !== undefined) {
+            element.scrollLeft = 0
+          }
+        })
+      }
+
+      // Ejecutar múltiples veces con diferentes delays para asegurar el reset
+      resetScrollAggressively()
+      const timer1 = setTimeout(resetScrollAggressively, 10)
+      const timer2 = setTimeout(resetScrollAggressively, 100)
+      const timer3 = setTimeout(resetScrollAggressively, 300)
+
+      return () => {
+        clearTimeout(timer1)
+        clearTimeout(timer2)
+        clearTimeout(timer3)
+      }
+    }
+  }, [isPedidosRegistrarPage, location.pathname])
 
   return (
     <CajasProvider>

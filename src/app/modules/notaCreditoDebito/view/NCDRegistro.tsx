@@ -3,7 +3,6 @@ import { Save } from '@mui/icons-material'
 import { Box, Button, Grid } from '@mui/material'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
 
 import SimpleContainer from '../../../base/components/Container/SimpleContainer'
 import StackMenu from '../../../base/components/MyMenu/StackMenu'
@@ -21,14 +20,14 @@ import NcdFacturaDevolucion from './Registrar/NcdFacturaDevolucion'
 import { useRestNotaCreditoDebitoRegistro } from '../mutations/useRestNotaCreditoDebitoRegistro'
 import { ncdRegistroValidationSchema } from '../validator/ncdRegistroValidator'
 import { NcdInputProps } from '../types'
+import { toast } from 'react-toastify'
 
 const NcdRegistro = () => {
-  const mySwal = withReactContent(Swal)
 
   const {
     user: { sucursal, puntoVenta },
   } = useAuth()
-  
+
   const { mutateAsync: ncdRegistroMutate } = useRestNotaCreditoDebitoRegistro()
 
   const form = useForm<NcdInputProps>({
@@ -40,7 +39,7 @@ const NcdRegistro = () => {
       detalleFactura: [],
       detalle: [],
     },
-    resolver: yupResolver<any,any,any>(ncdRegistroValidationSchema),
+    resolver: yupResolver<any, any, any>(ncdRegistroValidationSchema),
   })
 
   /**
@@ -71,12 +70,7 @@ const NcdRegistro = () => {
         if (resp.isConfirmed) {
           const { value } = resp
           const { representacionGrafica } = value
-          mySwal.fire({
-            title: `Documento generado correctamente`,
-            html: (
-              <RepresentacionGraficaUrls representacionGrafica={representacionGrafica} />
-            ),
-          })
+          toast.success('Documento generado correctamente')
           form.reset({
             numeroFactura: '',
             fechaEmision: '',
@@ -116,7 +110,7 @@ const NcdRegistro = () => {
 
       <form>
         <Grid container spacing={2}>
-          <Grid size ={{ lg: 12, xs: 12, md: 12 }}>
+          <Grid size={{ lg: 12, xs: 12, md: 12 }}>
             <NcdFacturaOriginal form={form} />
           </Grid>
           <Grid size={{ lg: 12, xs: 12, md: 12 }}>

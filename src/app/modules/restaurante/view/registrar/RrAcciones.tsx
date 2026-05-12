@@ -174,6 +174,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           ubicacion: ubicacionNombre,
           nroComensales: 1,
         },
+        //@ts-ignore
         productos: (pedido.productos ?? []).map((p) => ({
           nroItem: p.nroItem ?? undefined,
           codigoArticulo: p.codigoArticulo || '',
@@ -222,11 +223,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                   cantidad: v.removido
                     ? 0
                     : Math.max(
-                        1,
-                        (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                          (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                          1,
-                      ),
+                      1,
+                      (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                      1,
+                    ),
                   precio:
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
                     (asInput.articuloPrecio as { precio?: number } | undefined)?.precio ??
@@ -363,9 +364,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
               (lm: any) =>
                 lm.codigoArticulo === m.codigoArticulo &&
                 (lm.articuloPrecio?.codigoArticuloUnidadMedida ?? '') ===
-                  (m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
-                    m.articuloPrecio?.codigoArticuloUnidadMedida ??
-                    ''),
+                (m.articuloPrecio?.articuloUnidadMedida?.codigoUnidadMedida ??
+                  m.articuloPrecio?.codigoArticuloUnidadMedida ??
+                  ''),
             ) ?? localMods.find((lm: any) => lm.codigoArticulo === m.codigoArticulo)
           return { ...m, nombreArticulo: (localMod as any)?.nombreArticulo || m.codigoArticulo || '' }
         })
@@ -499,6 +500,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           ubicacion: nuevoUbicacionNombre ?? undefined,
           nroComensales: 1,
         },
+        //@ts-ignore
         productos: (pedido.productos ?? []).map((p) => ({
           nroItem: p.nroItem ?? undefined,
 
@@ -545,8 +547,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                   cantidad: Math.max(
                     1,
                     (asInput.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                      (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
-                      1,
+                    (asServer.articuloPrecio as { cantidad?: number } | undefined)?.cantidad ??
+                    1,
                   ),
                   precio:
                     (asServer.articuloPrecio as { valor?: number } | undefined)?.valor ??
@@ -874,7 +876,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         showError(
           new Error(
             'El pedido se finalizó correctamente, pero hubo un error al facturar. Puede intentar facturarlo luego desde el panel de facturación. Detalle: ' +
-              errorMessage,
+            errorMessage,
           ),
         )
         setOpenCobroDialog(false)

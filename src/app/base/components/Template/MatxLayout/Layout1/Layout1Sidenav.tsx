@@ -30,10 +30,16 @@ const SidebarNavRoot = styled(Box)(({ theme, width, primarybg, bgimgurl }: Sideb
   color: theme?.palette.text.primary,
   transition: 'all 250ms ease-in-out',
   backgroundImage: `linear-gradient(to bottom, rgba(${primarybg}, 0.96), rgba(${primarybg}, 0.96)), url(${bgimgurl})`,
+  '& .inresto-logo-full': {
+    display: 'none',
+  },
   '&:hover': {
     width: sideNavWidth,
     '& .sidenavHoverShow': {
       display: 'block',
+    },
+    '& .inresto-logo-compact': {
+      display: 'none',
     },
     '& .compactNavItem': {
       width: '100%',

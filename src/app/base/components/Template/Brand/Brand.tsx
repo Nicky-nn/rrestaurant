@@ -25,6 +25,7 @@ const StyledSpan: any = styled(Span)(({ mode }: StyledSpanProps) => ({
 
 const logoMini = import.meta.env.ISI_LOGO_MINI || '/assets/images/logo_mini.png'
 const nombreComercial = import.meta.env.ISI_NOMBRE_COMERCIAL || 'ISI.INVOICE'
+const useInrestoLogo = import.meta.env.ISI_INRESTO_LOGO === 'true'
 
 /**
  * @author isi-template
@@ -39,10 +40,31 @@ const Brand = ({ children }: { children: JSX.Element | JSX.Element[] }) => {
   return (
     <BrandRoot>
       <Box display="flex" alignItems="center">
-        <img src={logoMini} style={{ height: 30 }} alt="" />
-        <StyledSpan mode={mode} className="sidenavHoverShow">
-          {nombreComercial}
-        </StyledSpan>
+        {useInrestoLogo ? (
+          <>
+            {mode === 'compact' && (
+              <img
+                src="/integrate/in resto negativo_1.svg"
+                className="inresto-logo-compact"
+                style={{ height: 30 }}
+                alt="InResto"
+              />
+            )}
+            <img
+              src="/integrate/in resto negativo_2.svg"
+              className={mode === 'compact' ? 'inresto-logo-full sidenavHoverShow' : undefined}
+              style={{ height: 30 }}
+              alt="InResto"
+            />
+          </>
+        ) : (
+          <>
+            <img src={logoMini} style={{ height: 30 }} alt="" />
+            <StyledSpan mode={mode} className="sidenavHoverShow">
+              {nombreComercial}
+            </StyledSpan>
+          </>
+        )}
       </Box>
       <Box className="sidenavHoverShow" sx={{ display: mode === 'compact' ? 'none' : 'block' }}>
         {children || null}

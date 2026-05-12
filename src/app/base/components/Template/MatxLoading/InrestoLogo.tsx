@@ -1,0 +1,59 @@
+import { useTheme } from '@mui/material'
+
+interface InrestoLogoProps {
+  width?: string | number
+  animated?: boolean
+  primaryColor?: string
+}
+
+const InrestoLogo = ({ width = '90%', animated = false, primaryColor }: InrestoLogoProps) => {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+
+  const clsDark = isDark ? '#ffffff' : '#0e1f32'
+  const clsGray = isDark ? '#c0c4d0' : '#595b6a'
+  const strokeColor = primaryColor || theme.palette.primary.main
+
+  // La clase .inresto-at está definida en src/index.css (carga global).
+  // No se usa <style> dentro del SVG — así el browser no reinicia la animación
+  // cuando MatxLoading se desmonta/remonta en cascada (JWT → Cajas → Suspense).
+  const at = animated ? 'inresto-at' : undefined
+  const pl = animated ? 100 : undefined
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 40.24 41.95"
+      style={{ width, display: 'block', color: strokeColor }}
+      aria-label="InResto"
+    >
+      <path
+        fill="#2d57a5"
+        className={at}
+        pathLength={pl}
+        d="M27.51,8.14l1.13-2.08v-.47c0-3.28-3.5-5.58-8.52-5.58s-8.52,2.3-8.52,5.58v.47l1.13,2.08C5.52,11.24.43,18.72.43,27.44c0,1.01.81,1.82,1.82,1.82h35.75c1.01,0,1.82-.81,1.82-1.82,0-8.72-5.09-16.2-12.3-19.3ZM20.12,2.81c1.7,0,3.28.35,4.27.86.65.34.85,1.17.49,1.8l-.53.96c-1.37-.29-2.78-.45-4.23-.45s-2.86.16-4.23.45l-.53-.96c-.35-.64-.15-1.47.49-1.8,1-.52,2.57-.86,4.27-.86ZM4.67,25.29c.82-8.24,6.43-15.38,15.45-15.38s14.62,7.14,15.45,15.38H4.67Z"
+      />
+      <polygon
+        fill={clsDark}
+        className={at}
+        pathLength={pl}
+        points="40.24 32.28 40.24 36.16 37.15 36.16 37.15 41.95 33.1 41.95 31.49 36.16 8.75 36.16 7.14 41.95 3.09 41.95 3.09 36.16 0 36.16 0 32.28 40.24 32.28"
+      />
+      <path fill={clsGray} className={at} pathLength={pl} d="M16.58,17.66v5.56h-2.48v-5.56h2.48Z" />
+      <path
+        fill={clsGray}
+        className={at}
+        pathLength={pl}
+        d="M20.61,15.17l.21,1.22c1.15-.96,2.3-1.43,3.45-1.43,1.52,0,2.28.74,2.28,2.23v6.03h-2.41v-5.28c0-.36-.06-.61-.2-.74s-.35-.2-.67-.2-.66.06-.99.17c-.34.11-.74.29-1.21.53v5.52h-2.39v-8.05h1.92Z"
+      />
+      <path
+        fill="#fdbf11"
+        className={at}
+        pathLength={pl}
+        d="M14.64,16.87c-.64,0-.96-.26-.96-.79v-.65c0-.53.32-.79.96-.79h1.4c.64,0,.96.26.96.79v.65c0,.53-.32.79-.96.79h-1.4Z"
+      />
+    </svg>
+  )
+}
+
+export default InrestoLogo
