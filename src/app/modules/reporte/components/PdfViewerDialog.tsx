@@ -46,9 +46,10 @@ interface PdfViewerDialogProps {
   open: boolean
   pdfUrl: string | null
   onClose: () => void
+  title?: string
 }
 
-const PdfViewerDialog: FunctionComponent<PdfViewerDialogProps> = ({ open, pdfUrl, onClose }) => {
+const PdfViewerDialog: FunctionComponent<PdfViewerDialogProps> = ({ open, pdfUrl, onClose, title }) => {
   const { li } = useAuth()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -106,7 +107,7 @@ const PdfViewerDialog: FunctionComponent<PdfViewerDialogProps> = ({ open, pdfUrl
       <AppBar position="relative" color="default" elevation={1} sx={{ flexShrink: 0 }}>
         <Toolbar variant="dense" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="subtitle1" fontWeight={700} noWrap>
-            Vista previa
+            {title ?? 'Vista previa'}
           </Typography>
           <IconButton edge="end" onClick={onClose} size="small">
             <Close />

@@ -1299,6 +1299,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       <PdfViewerDialog
         open={reimprimirComandaOpen}
         pdfUrl={reimprimirComandaPdfUrl}
+        title="Reimprimir Comanda"
         onClose={() => {
           setReimprimirComandaOpen(false)
           if (reimprimirComandaPdfUrl) URL.revokeObjectURL(reimprimirComandaPdfUrl)

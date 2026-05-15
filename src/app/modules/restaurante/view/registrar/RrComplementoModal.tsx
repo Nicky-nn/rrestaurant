@@ -309,7 +309,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     ;(composicion.receta.ingredientes ?? []).forEach((ing, idx) => {
       if (!ing.esRemovible) return
       const totalDisp = ing.articulo?.inventario?.[0]?.totalDisponible ?? 0
-      if (totalDisp <= 0) {
+      if (totalDisp < 1e-9) {
         autoRemov.add(ing.articulo?._id ?? `ing-${idx}`)
       }
     })
@@ -398,7 +398,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
         const artId = ing.articulo?._id ?? `ing-${idx}`
         const stockDisp =
           ing.articulo?.verificarStock === true ? (ing.articulo.inventario?.[0]?.totalDisponible ?? 0) : null
-        return artId && stockDisp !== null && stockDisp <= 0
+        return artId && stockDisp !== null && stockDisp < 1e-9
       }),
     [composicion?.receta?.ingredientes],
   )
@@ -717,12 +717,12 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                           const artId = ing.articulo?._id ?? `fijo-${idx}`
                           const nombre = ing.articulo?.nombreArticulo ?? 'Ingrediente'
                           const { stockDisp, umNombre } = getStockConvertido(ing)
-                          const sinStockIng = stockDisp !== null && stockDisp <= 0
+                          const sinStockIng = stockDisp !== null && stockDisp < 1e-9
                           const labelStock = sinStockIng
                             ? 'Sin stock'
                             : umNombre
-                              ? `${stockDisp} ${umNombre}`
-                              : `${stockDisp}`
+                              ? `${Math.floor(stockDisp ?? 0)} ${umNombre}`
+                              : `${Math.floor(stockDisp ?? 0)}`
                           return (
                             <Box
                               key={artId}
@@ -774,12 +774,12 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                         const removido = ingredientesRemovidos.has(artId)
                         const extraQty = ingredientesExtra[artId] ?? 0
                         const { stockDisp, umNombre } = getStockConvertido(ing)
-                        const sinStockIng = stockDisp !== null && stockDisp <= 0
+                        const sinStockIng = stockDisp !== null && stockDisp < 1e-9
                         const labelStock = sinStockIng
                           ? 'Sin stock'
                           : umNombre
-                            ? `${stockDisp} ${umNombre}`
-                            : `${stockDisp}`
+                            ? `${Math.floor(stockDisp ?? 0)} ${umNombre}`
+                            : `${Math.floor(stockDisp ?? 0)}`
 
                         // ── Control unificado [- Nombre +] ──────────────────
                         // Estado: removido=-1, normal=0, extra=N>0

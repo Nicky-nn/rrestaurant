@@ -24,6 +24,7 @@ import RrGestionPedidoDialog from './registrar/RrGestionPedidoDialog'
 import { useComandaPdf } from './registrar/useComandaPdf'
 import RestAnularPedidoDialog from './RestAnularPedidoDialog'
 import { HistorialPedido } from './listado/historialPedido'
+import PdfViewerDialog from '../../reporte/components/PdfViewerDialog'
 
 const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => {
   if (!productos.length) return <Typography variant="body2">Sin productos</Typography>
@@ -129,7 +130,27 @@ const RestGestion: FunctionComponent<Props> = () => {
   const { mutateAsync: finalizarPedido, isPending: isFinalizarPending } = useRestPedidoFinalizar()
   const { mutateAsync: facturarPedido, isPending: isFacturarPending } = useRestPedidoFacturaRegistro()
   const isPending = isFinalizarPending || isFacturarPending
-  const { imprimirComanda, imprimirEstadoCuenta } = useComandaPdf()
+  const { imprimirComanda, imprimirEstadoCuenta, generarUrlComanda } = useComandaPdf()
+
+  const [comandaPdfOpen, setComandaPdfOpen] = useState(false)
+  const [comandaPdfUrl, setComandaPdfUrl] = useState<string | null>(null)
+
+  const handleGenerarComanda = async (row: RestPedido) => {
+    const impresionPorCategorias = (() => {
+      try {
+        return Boolean(JSON.parse(localStorage.getItem('printers') || '{}').impresionPorCategorias)
+      } catch {
+        return false
+      }
+    })()
+    if (impresionPorCategorias) {
+      const url = await generarUrlComanda(row, { titulo: 'COMANDA (Desde Gestión)', ignorarHistorico: true })
+      setComandaPdfUrl(url)
+      setComandaPdfOpen(true)
+    } else {
+      imprimirComanda(row, '', { titulo: 'COMANDA (Desde Gestión)', ignorarHistorico: true })
+    }
+  }
 
   const [selectedPedido, setSelectedPedido] = useState<RestPedido | null>(null)
   const [openCobro, setOpenCobro] = useState(false)
@@ -324,7 +345,7 @@ const RestGestion: FunctionComponent<Props> = () => {
           label: 'Generar Comanda',
           icon: <PrintOutlined />,
           onClick: ({ row }) => {
-            imprimirComanda(row, '', { titulo: 'COMANDA (Desde Gestión)', ignorarHistorico: true })
+            handleGenerarComanda(row)
           },
           disabled: (row) => row.tipoDocumento !== 'NOTA_VENTA' || row.state !== 'COMPLETADO',
         },
@@ -457,6 +478,16 @@ const RestGestion: FunctionComponent<Props> = () => {
             ? `${selectedPedido.cliente.razonSocial || ''} - ${selectedPedido.cliente.numeroDocumento || ''}`
             : undefined
         }
+      />
+      <PdfViewerDialog
+        open={comandaPdfOpen}
+        pdfUrl={comandaPdfUrl}
+        title="Comanda (Gestión)"
+        onClose={() => {
+          setComandaPdfOpen(false)
+          if (comandaPdfUrl) URL.revokeObjectURL(comandaPdfUrl)
+          setComandaPdfUrl(null)
+        }}
       />
     </SimpleContainerBox>
   )
