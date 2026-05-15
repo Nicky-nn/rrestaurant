@@ -22,21 +22,29 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Create .env.production
-        run: echo "${{ secrets.ENV_PRODUCTION }}" > .env.production
+        env:
+          ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
+        run: echo "$ENV_PRODUCTION" > .env.production
 
       - name: Build project
         run: bun run build
 
       - name: Setup SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.HOST }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
       - name: Upload dist
+        env:
+          HOST: ${{ secrets.HOST }}
+          USERNAME: ${{ secrets.USERNAME }}
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" \
             dist/ \
-            ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/dev.rest.isipass.com.bo/htdocs/
+            $USERNAME@$HOST:/home/dev.rest.isipass.com.bo/htdocs/
