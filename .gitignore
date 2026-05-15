@@ -37,6 +37,10 @@
 !.gitignore
 !.gitattributes
 
+# --- GitHub Actions ---
+!.github/
+!.github/**
+
 # ========================================
 # BLOQUEAR EXPLÍCITAMENTE (dentro de carpetas permitidas)
 # ========================================
