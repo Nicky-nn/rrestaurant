@@ -11,6 +11,9 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: development
+      url: https://dev.rest.isipass.com.bo
 
     steps:
       - name: Checkout
@@ -42,12 +45,21 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
+      - name: Backup current deployment
+        env:
+          HOST: ${{ secrets.HOST }}
+          USERNAME: ${{ secrets.USERNAME }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
+            $USERNAME@$HOST \
+            "cd /home/dev-rest/htdocs && zip -qr backup_$(date +%Y%m%d_%H%M%S).zip dev.rest.isipass.com.bo/ 2>/dev/null || true"
+
       - name: Upload dist
         env:
           HOST: ${{ secrets.HOST }}
           USERNAME: ${{ secrets.USERNAME }}
         run: |
-          rsync -avz --delete \
+          rsync -rltz --delete --no-perms --no-owner --no-group \
             -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" \
             dist/ \
             $USERNAME@$HOST:/home/dev-rest/htdocs/dev.rest.isipass.com.bo/
