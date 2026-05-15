@@ -42,14 +42,6 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
-      - name: Create remote directory
-        env:
-          HOST: ${{ secrets.HOST }}
-          USERNAME: ${{ secrets.USERNAME }}
-        run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
-            $USERNAME@$HOST "mkdir -p /home/dev.rest.isipass.com.bo/htdocs"
-
       - name: Upload dist
         env:
           HOST: ${{ secrets.HOST }}
@@ -58,4 +50,4 @@ jobs:
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" \
             dist/ \
-            $USERNAME@$HOST:/home/dev.rest.isipass.com.bo/htdocs/
+            $USERNAME@$HOST:/home/dev-rest/htdocs/dev.rest.isipass.com.bo/
