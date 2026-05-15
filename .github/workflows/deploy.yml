@@ -59,7 +59,7 @@ jobs:
           HOST: ${{ secrets.HOST }}
           USERNAME: ${{ secrets.USERNAME }}
         run: |
-          rsync -rltz --delete --no-perms --no-owner --no-group \
+          rsync -rltz --delete --no-perms --no-owner --no-group --omit-dir-times \
             -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" \
             dist/ \
             $USERNAME@$HOST:/home/dev-rest/htdocs/dev.rest.isipass.com.bo/
