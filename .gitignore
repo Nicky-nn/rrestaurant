@@ -104,3 +104,5 @@ src/app/modules/restaurante/generated/
 
 #Readme
 !README.md
+
+!.env.production
