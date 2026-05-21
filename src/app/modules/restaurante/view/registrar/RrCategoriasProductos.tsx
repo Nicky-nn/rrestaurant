@@ -48,6 +48,7 @@ import Swal from 'sweetalert2'
 
 import useAuth from '../../../../base/hooks/useAuth'
 import { useHorizontalDragScroll } from '../../../../base/hooks/useHorizontalDragScroll'
+import { SecureComponent } from '../../../../security'
 import { swalException } from '../../../../utils/swal'
 import { client } from '../../client'
 import { useRestEspacioActualizar } from '../../mutations/useRestEspacioActualizar'
@@ -1267,99 +1268,105 @@ const RrCategoriasProductos: FunctionComponent<RrCategoriasProductosProps> = ({
               }}
               onClick={(ev) => ev.stopPropagation()}
             >
-              <IconButton
-                size="small"
-                onClick={() => {
-                  if (!e._id) return
-                  setModoEspacioModal('editar')
-                  setEspacioEditandoId(e._id)
-                  setNuevoEspacioNombre(e.descripcion || '')
-                  setNuevoEspacioMesas(e.nroMesas && e.nroMesas > 0 ? e.nroMesas : 10)
-                  setErrorMesas(false)
-                  setHelperMesas('')
-                  setOpenEspacioModal(true)
-                  setMoreAnchorEl(null)
-                }}
-                sx={{
-                  color: 'text.disabled',
-                  '&:hover': { color: 'primary.main' },
-                }}
-              >
-                <Edit fontSize="small" />
-              </IconButton>
+              <SecureComponent action="EDITAR_ESPACIO">
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    if (!e._id) return
+                    setModoEspacioModal('editar')
+                    setEspacioEditandoId(e._id)
+                    setNuevoEspacioNombre(e.descripcion || '')
+                    setNuevoEspacioMesas(e.nroMesas && e.nroMesas > 0 ? e.nroMesas : 10)
+                    setErrorMesas(false)
+                    setHelperMesas('')
+                    setOpenEspacioModal(true)
+                    setMoreAnchorEl(null)
+                  }}
+                  sx={{
+                    color: 'text.disabled',
+                    '&:hover': { color: 'primary.main' },
+                  }}
+                >
+                  <Edit fontSize="small" />
+                </IconButton>
+              </SecureComponent>
 
-              <Tooltip
-                title={
-                  espacioSeleccionado === e._id
-                    ? 'Eliminar espacio'
-                    : 'Seleccione este espacio para habilitar eliminación'
-                }
-              >
-                <span>
-                  <IconButton
-                    size="small"
-                    disabled={espacioSeleccionado !== e._id || eliminarEspacioMutation.isPending}
-                    onClick={async () => {
-                      if (!e._id) return
-                      if (espacioSeleccionado !== e._id) return
+              <SecureComponent action="ELIMINAR_ESPACIO">
+                <Tooltip
+                  title={
+                    espacioSeleccionado === e._id
+                      ? 'Eliminar espacio'
+                      : 'Seleccione este espacio para habilitar eliminación'
+                  }
+                >
+                  <span>
+                    <IconButton
+                      size="small"
+                      disabled={espacioSeleccionado !== e._id || eliminarEspacioMutation.isPending}
+                      onClick={async () => {
+                        if (!e._id) return
+                        if (espacioSeleccionado !== e._id) return
 
-                      const response = await client.request<{
-                        restPedidoMesasOcupadas: Array<{ _id?: string }>
-                      }>(RESTPEDIDOMESASOCUPADAS, {
-                        codigoSucursal,
-                        espacioId: e._id,
-                      })
-                      const tieneMesasOcupadas = (response.restPedidoMesasOcupadas?.length ?? 0) > 0
-                      if (tieneMesasOcupadas) {
-                        await Swal.fire({
-                          icon: 'warning',
-                          title: 'No permitido',
-                          text: 'No puede eliminar espacio con mesas ocupadas.',
-                          confirmButtonText: 'Entendido',
+                        const response = await client.request<{
+                          restPedidoMesasOcupadas: Array<{ _id?: string }>
+                        }>(RESTPEDIDOMESASOCUPADAS, {
+                          codigoSucursal,
+                          espacioId: e._id,
                         })
-                        return
-                      }
+                        const tieneMesasOcupadas = (response.restPedidoMesasOcupadas?.length ?? 0) > 0
+                        if (tieneMesasOcupadas) {
+                          await Swal.fire({
+                            icon: 'warning',
+                            title: 'No permitido',
+                            text: 'No puede eliminar espacio con mesas ocupadas.',
+                            confirmButtonText: 'Entendido',
+                          })
+                          return
+                        }
 
-                      const result = await Swal.fire({
-                        icon: 'question',
-                        title: 'Eliminar espacio',
-                        html: `Confirma eliminar espacio <b>${e.descripcion || 'Sin nombre'}</b>?`,
-                        showCancelButton: true,
-                        confirmButtonText: 'Si, eliminar',
-                        cancelButtonText: 'Cancelar',
-                      })
-                      if (!result.isConfirmed) return
-                      eliminarEspacioMutation.mutate({ id: e._id as string })
-                      setMoreAnchorEl(null)
-                    }}
-                    sx={{
-                      color: 'text.disabled',
-                      '&:hover': { color: 'error.main' },
-                    }}
-                  >
-                    <Delete fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
+                        const result = await Swal.fire({
+                          icon: 'question',
+                          title: 'Eliminar espacio',
+                          html: `Confirma eliminar espacio <b>${e.descripcion || 'Sin nombre'}</b>?`,
+                          showCancelButton: true,
+                          confirmButtonText: 'Si, eliminar',
+                          cancelButtonText: 'Cancelar',
+                        })
+                        if (!result.isConfirmed) return
+                        eliminarEspacioMutation.mutate({ id: e._id as string })
+                        setMoreAnchorEl(null)
+                      }}
+                      sx={{
+                        color: 'text.disabled',
+                        '&:hover': { color: 'error.main' },
+                      }}
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </SecureComponent>
             </Box>
           </MenuItem>
         ))}
         <Divider sx={{ my: 0.5 }} />
-        <MenuItem
-          onClick={() => {
-            setModoEspacioModal('crear')
-            setEspacioEditandoId(null)
-            setNuevoEspacioNombre('')
-            setNuevoEspacioMesas(10)
-            setErrorMesas(false)
-            setHelperMesas('')
-            setOpenEspacioModal(true)
-            setMoreAnchorEl(null)
-          }}
-          sx={{ fontSize: '0.875rem', borderRadius: 1, color: 'primary.main', fontWeight: 'bold' }}
-        >
-          + Crear Nuevo
-        </MenuItem>
+        <SecureComponent action="CREAR_ESPACIO">
+          <MenuItem
+            onClick={() => {
+              setModoEspacioModal('crear')
+              setEspacioEditandoId(null)
+              setNuevoEspacioNombre('')
+              setNuevoEspacioMesas(10)
+              setErrorMesas(false)
+              setHelperMesas('')
+              setOpenEspacioModal(true)
+              setMoreAnchorEl(null)
+            }}
+            sx={{ fontSize: '0.875rem', borderRadius: 1, color: 'primary.main', fontWeight: 'bold' }}
+          >
+            + Crear Nuevo
+          </MenuItem>
+        </SecureComponent>
       </Popover>
 
       <Dialog open={openEspacioModal} onClose={() => setOpenEspacioModal(false)} maxWidth="xs" fullWidth>

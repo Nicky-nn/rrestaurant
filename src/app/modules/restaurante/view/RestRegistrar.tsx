@@ -763,16 +763,21 @@ const RestRegistrar: FunctionComponent = () => {
       // Construimos el objeto cliente compatible con RestPedido['cliente']
       // Nota: ClientProps tiene codigoCliente, razonSocial, nit, email, etc.
       // RestPedido['cliente'] espera ClienteOperacion con codigoCliente, razonSocial...
-      const nuevoCliente = {
-        _id: cliente._id,
-        codigoCliente: cliente.codigoCliente || '0',
-        razonSocial: cliente.razonSocial || 'SN',
-        numeroDocumento: cliente.numeroDocumento || cliente.nit, // A veces viene como nit
-        nit: cliente.nit || cliente.numeroDocumento,
-        email: cliente.email,
-        telefono: cliente.telefono,
-        direccion: cliente.direccion,
-      }
+      const nuevoCliente = cliente
+        ? {
+            _id: cliente._id,
+            codigoCliente: cliente.codigoCliente || '0',
+            razonSocial: cliente.razonSocial || 'SN',
+            numeroDocumento: cliente.numeroDocumento || cliente.nit, // A veces viene como nit
+            nit: cliente.nit || cliente.numeroDocumento,
+            email: cliente.email,
+            telefono: cliente.telefono,
+            direccion: cliente.direccion,
+          }
+        : {
+            codigoCliente: '0',
+            razonSocial: 'SN',
+          }
 
       return {
         ...prev,

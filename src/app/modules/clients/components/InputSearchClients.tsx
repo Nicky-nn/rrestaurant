@@ -16,7 +16,9 @@ import AsyncCreatableSelect from 'react-select/async-creatable'
 
 import { MyInputLabel } from '../../../base/components/MyInputs/MyInputLabel'
 import { getSelectStyles } from '../../../base/components/MySelect/selectStyles.tsx'
+import { useSecurity } from '../../../base/contexts/SecurityContext'
 import useAuth from '../../../base/hooks/useAuth'
+import { SecureComponent } from '../../../security/withSecurity.tsx'
 import { swalException } from '../../../utils/swal'
 import { searchClientsApi } from '../api/searchClients.api'
 import useQueryTipoDocumentoIdentidad from '../hooks/useQueryTipoDocumento'
@@ -55,6 +57,7 @@ const InputSearchClient: FunctionComponent<Props> = ({
   const theme = useTheme()
   const { tiposDocumentoIdentidad } = useQueryTipoDocumentoIdentidad()
   const { lw } = useAuth()
+  const { hasStaticPermission } = useSecurity()
 
   const fetchDefaultClient = useCallback(
     (code: string) => {
@@ -163,6 +166,12 @@ const InputSearchClient: FunctionComponent<Props> = ({
                   : `${item.codigoCliente} - ${item.razonSocial}
                             ${item.nombres || ''} ${item.apellidos || ''}`
               }
+              isValidNewOption={(inputValue) => {
+                if (!hasStaticPermission('CLIENTES:GESTION_DE_CLIENTES:NUEVO_CLIENTE')) {
+                  return false
+                }
+                return inputValue.trim().length > 0
+              }}
               onChange={(resp) => {
                 if (resp) {
                   setClient(resp)
@@ -206,31 +215,35 @@ const InputSearchClient: FunctionComponent<Props> = ({
 
         <Grid size={2}>
           <ButtonGroup variant="text" aria-label="Opciones de cliente">
-            <IconButton
-              aria-label="busqueda-cliente"
-              sx={{ p: 0.6 }}
-              aria-hidden={false}
-              onClick={() => {
-                setOpenList(true)
-                onListShowed(true)
-              }}
-            >
-              <Tooltip title={'Explorar clientes'}>
-                <ScreenSearchDesktop />
-              </Tooltip>
-            </IconButton>
-            <IconButton
-              aria-label="agregar-cliente"
-              sx={{ p: 0.6 }}
-              aria-hidden={false}
-              onClick={() => {
-                setOpenRegister(true)
-              }}
-            >
-              <Tooltip title={'Registrar Nuevo Cliente'}>
-                <PersonAddAlt1 />
-              </Tooltip>
-            </IconButton>
+            <SecureComponent staticPermission="CLIENTES:GESTION_DE_CLIENTES">
+              <IconButton
+                aria-label="busqueda-cliente"
+                sx={{ p: 0.6 }}
+                aria-hidden={false}
+                onClick={() => {
+                  setOpenList(true)
+                  onListShowed(true)
+                }}
+              >
+                <Tooltip title={'Explorar clientes'}>
+                  <ScreenSearchDesktop />
+                </Tooltip>
+              </IconButton>
+            </SecureComponent>
+            <SecureComponent staticPermission="CLIENTES:GESTION_DE_CLIENTES:NUEVO_CLIENTE">
+              <IconButton
+                aria-label="agregar-cliente"
+                sx={{ p: 0.6 }}
+                aria-hidden={false}
+                onClick={() => {
+                  setOpenRegister(true)
+                }}
+              >
+                <Tooltip title={'Registrar Nuevo Cliente'}>
+                  <PersonAddAlt1 />
+                </Tooltip>
+              </IconButton>
+            </SecureComponent>
           </ButtonGroup>
         </Grid>
       </Grid>

@@ -352,12 +352,13 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
               value={opcionesLlevar?.cliente ?? null}
               withCreditLine={false}
               onClientSelect={(c) => {
+                const finalClient = c || defaultClientRef.current
                 setOpcionesLlevar((prev) => ({
-                  cliente: c,
+                  cliente: finalClient,
                   horaRecojo: prev?.horaRecojo || '',
                   solicitarUtensilios: prev?.solicitarUtensilios || false,
                 }))
-                if (onClientChange) onClientChange(c)
+                if (onClientChange) onClientChange(finalClient)
               }}
               onListShowed={() => {}}
               editable={true}

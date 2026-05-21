@@ -12,6 +12,8 @@ import { MrtDynamicTable } from '../../../base/components/Table/MrtDynamicTable.
 import { MrtTableConfig } from '../../../base/components/Table/mrtTypes.ts'
 import { useMrtQuery } from '../../../base/components/Table/useMrtQuery.tsx'
 import Breadcrumb from '../../../base/components/Template/Breadcrumb/Breadcrumb'
+import { useSecurity } from '../../../base/contexts/SecurityContext'
+import { SecureComponent } from '../../../security/withSecurity.tsx'
 import { notSuccess } from '../../../utils/notification.ts'
 import { swalClose, swalException, swalLoading } from '../../../utils/swal.ts'
 import { apiClienteListado } from '../api/apiClienteListado.ts'
@@ -28,6 +30,7 @@ type Props = ClientsProps
 
 const Clients: FunctionComponent<Props> = () => {
   const confirm = useConfirm()
+  const { hasActionPermission } = useSecurity()
 
   const [openClienteRegistro, setOpenClienteRegistro] = useState(false)
   const [openClienteUpdate, setOpenClienteUpdate] = useState(false)
@@ -80,6 +83,7 @@ const Clients: FunctionComponent<Props> = () => {
           onClick: async ({ row, refetch }) => {
             await onDelete([row.codigoCliente], refetch)
           },
+          disabled: () => !hasActionPermission('ELIMINAR'),
         },
       ],
       rowIconsActions: [
@@ -95,10 +99,11 @@ const Clients: FunctionComponent<Props> = () => {
             setClientArg(row)
             setOpenClienteUpdate(true)
           },
+          hidden: () => !hasActionPermission('EDITAR'),
         },
       ],
     }),
-    [],
+    [hasActionPermission],
   )
 
   // Mapa de filtros para el sistema de filtros inteligentes
@@ -121,17 +126,19 @@ const Clients: FunctionComponent<Props> = () => {
     <SimpleContainerBox>
       <Breadcrumb routeSegments={[clientsRoutesMap.clients]} />
 
-      <StackMenu asideSidebarFixed>
-        <Button
-          size={'small'}
-          variant="contained"
-          onClick={() => setOpenClienteRegistro(true)}
-          startIcon={<PersonAddAltSharp />}
-          color={'primary'}
-        >
-          Nuevo Cliente
-        </Button>
-      </StackMenu>
+      <SecureComponent action="NUEVO_CLIENTE">
+        <StackMenu asideSidebarFixed>
+          <Button
+            size={'small'}
+            variant="contained"
+            onClick={() => setOpenClienteRegistro(true)}
+            startIcon={<PersonAddAltSharp />}
+            color={'primary'}
+          >
+            Nuevo Cliente
+          </Button>
+        </StackMenu>
+      </SecureComponent>
       <Box>
         <MrtDynamicTable config={config} {...clientes} />
       </Box>
