@@ -1,6 +1,6 @@
 import React, { createContext, FC, ReactNode, useContext, useMemo } from 'react'
 
-import { normalizeString } from '../../utils/menuPermissionFilter.ts'
+import { getDominioFromEnv, normalizeString } from '../../utils/menuPermissionFilter.ts'
 import useAuth from '../hooks/useAuth.ts'
 import { useMisRolesPermisoDominio } from '../hooks/useMisRolesPermisoDominio.ts'
 import { useBreadcrumb } from './BreadcrumbContext'
@@ -76,7 +76,7 @@ export const SecurityProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const parts = [...hierarchyParts, actionNormalized].filter(Boolean)
 
     // Obtener el dominio del env
-    const dominio = normalizeString(import.meta.env.ISI_MODULO || '')
+    const dominio = normalizeString(getDominioFromEnv())
 
     // Construir permiso completo: DOMINIO:PARTE1:PARTE2:...:ACCION
     const fullPermission = [dominio, ...parts].filter(Boolean).join(':')
@@ -97,7 +97,7 @@ export const SecurityProvider: FC<{ children: ReactNode }> = ({ children }) => {
     if (loading || !staticPermission) return false
 
     // Obtener el dominio del env
-    const dominio = normalizeString(import.meta.env.ISI_MODULO || '')
+    const dominio = normalizeString(getDominioFromEnv())
 
     // Normalizar el permiso estático
     const normalizedStaticPermission = normalizeString(staticPermission)

@@ -19,6 +19,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { FC, useEffect, useState } from 'react'
 
 import useCajas from '../../../base/hooks/useCajas'
+import { SecureComponent } from '../../../security'
 import { useAperturaCajaArquear } from '../mutations/useAperturaCajaArquear'
 import { ArqueoCaja, ArqueoCajaMetodoPago } from '../types'
 import CalculadoraEfectivoDialog from './CalculadoraEfectivoDialog'
@@ -231,27 +232,29 @@ const ArqueoCajaPaso1Dialog: FC<ArqueoCajaPaso1DialogProps> = ({ open, onClose, 
                 >
                   Cancelar
                 </Button>
-                <Button
-                  variant="contained"
-                  fullWidth
-                  size="large"
-                  disabled={isPending}
-                  onClick={handleSubmit}
-                  sx={{
-                    borderRadius: '10px',
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    bgcolor: 'primary.main',
-                    color: 'primary.contrastText',
-                    boxShadow: 'none',
-                    '&:hover': {
-                      bgcolor: 'primary.dark',
+                <SecureComponent action="CERRAR_CAJA">
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    disabled={isPending}
+                    onClick={handleSubmit}
+                    sx={{
+                      borderRadius: '10px',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
                       boxShadow: 'none',
-                    },
-                  }}
-                >
-                  {isPending ? 'Procesando...' : 'Siguiente'}
-                </Button>
+                      '&:hover': {
+                        bgcolor: 'primary.dark',
+                        boxShadow: 'none',
+                      },
+                    }}
+                  >
+                    {isPending ? 'Procesando...' : 'Siguiente'}
+                  </Button>
+                </SecureComponent>
               </Box>
             </Stack>
 

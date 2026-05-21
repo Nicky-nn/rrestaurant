@@ -34,6 +34,7 @@ import { topBarHeightRestriccion } from '../../../../utils/constant'
 import { notSuccess } from '../../../../utils/notification'
 import { swalClose, swalException, swalLoading } from '../../../../utils/swal'
 import CuentaRestriccionDialog from '../../cuenta/view/CuentaRestriccionDialog'
+import { SecureComponent } from '../../../../security'
 
 const RestriccionTopBarRoot = styled('div')(({ theme }) => ({
   top: 0,
@@ -193,27 +194,35 @@ const LayoutRestriccionV2: FC<any> = () => {
     const labelBase = textos[estadoKey] ?? estado ?? 'CAJA CERRADA'
     const icono = iconos[estadoKey] ?? <Lock fontSize="small" />
 
+    // Determinar permiso estático según el estado de la caja
+    const isCerrada = estadoKey === 'FINALIZADO' || estadoKey === ''
+    const permission = isCerrada
+      ? 'CAJAS:GESTION_DE_CAJAS:ABRIR_CAJA'
+      : 'CAJAS:GESTION_DE_CAJAS:CERRAR_CAJA'
+
     // Añadimos el código de la caja si existe
     const label = codigo ? `${labelBase} - ${codigo}` : labelBase
 
     return (
-      <Button
-        variant="contained"
-        size="small"
-        startIcon={icono}
-        sx={{
-          backgroundColor: color,
-          color: '#fff',
-          fontStyle: 'bold',
-        }}
-        component={Link}
-        // to={cajasRoutesMap.gestion.path}
-        to={'/cajas/gestion'}
-      >
-        <Typography variant={'body1'} noWrap>
-          {label}
-        </Typography>
-      </Button>
+      <SecureComponent staticPermission={permission}>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={icono}
+          sx={{
+            backgroundColor: color,
+            color: '#fff',
+            fontStyle: 'bold',
+          }}
+          component={Link}
+          // to={cajasRoutesMap.gestion.path}
+          to={'/cajas/gestion'}
+        >
+          <Typography variant={'body1'} noWrap>
+            {label}
+          </Typography>
+        </Button>
+      </SecureComponent>
     )
   }
 

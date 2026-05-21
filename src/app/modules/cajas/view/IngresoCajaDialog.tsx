@@ -20,6 +20,7 @@ import { FC, useState } from 'react'
 import AppSelect, { AppSelectOption } from '../../../base/components/MySelect/AppSelect'
 import useAuth from '../../../base/hooks/useAuth'
 import useCajas from '../../../base/hooks/useCajas'
+import { SecureComponent } from '../../../security'
 import { useAperturaCajaIngresar } from '../mutations/useAperturaCajaIngresar'
 import CalculadoraEfectivoDialog from './CalculadoraEfectivoDialog'
 import NumberSpinnerField from '../../../base/components/NumberSpinnerField/NumberSpinnerField'
@@ -269,27 +270,29 @@ const IngresoCajaDialog: FC<IngresoCajaDialogProps> = ({ open, onClose, cajaId, 
               >
                 Cancelar
               </Button>
-              <Button
-                variant="contained"
-                fullWidth
-                size="large"
-                disabled={isPending}
-                onClick={handleSubmit}
-                sx={{
-                  borderRadius: '10px',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  bgcolor: 'success.main',
-                  color: 'success.contrastText',
-                  boxShadow: 'none',
-                  '&:hover': {
-                    bgcolor: 'success.dark',
+              <SecureComponent action="INGRESO_CAJA">
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  disabled={isPending}
+                  onClick={handleSubmit}
+                  sx={{
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    bgcolor: 'success.main',
+                    color: 'success.contrastText',
                     boxShadow: 'none',
-                  },
-                }}
-              >
-                {isPending ? 'Registrando...' : 'Registrar Ingreso'}
-              </Button>
+                    '&:hover': {
+                      bgcolor: 'success.dark',
+                      boxShadow: 'none',
+                    },
+                  }}
+                >
+                  {isPending ? 'Registrando...' : 'Registrar Ingreso'}
+                </Button>
+              </SecureComponent>
             </Box>
           </Stack>
         </DialogContent>

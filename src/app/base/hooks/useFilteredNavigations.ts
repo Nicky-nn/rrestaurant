@@ -26,12 +26,7 @@ export const useFilteredNavigations = ({
 }: FilterNavigationsOptions): NavigationProps[] => {
   return useMemo(() => {
     // Validaciones iniciales
-    if (!userPermissions || userPermissions.length === 0) {
-      if (debug) {
-        console.warn('No hay permisos de usuario. Retornando menú vacío.')
-      }
-      return []
-    }
+    const permissions = userPermissions || []
 
     if (!navigations || navigations.length === 0) {
       return []
@@ -39,7 +34,7 @@ export const useFilteredNavigations = ({
 
     if (debug) {
       console.log('Iniciando filtrado de navegaciones...')
-      console.log('Permisos del usuario:', userPermissions)
+      console.log('Permisos del usuario:', permissions)
     }
 
     /**
@@ -53,7 +48,7 @@ export const useFilteredNavigations = ({
       if (!itemName) return false
 
       const permissionKey = buildPermissionFromEnv(parentName, itemName)
-      const hasAccess = hasPermission(userPermissions, permissionKey)
+      const hasAccess = hasPermission(permissions, permissionKey)
 
       if (debug) {
         console.log(

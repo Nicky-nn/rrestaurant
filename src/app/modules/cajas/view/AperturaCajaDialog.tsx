@@ -8,7 +8,6 @@ import {
   FormControl,
   IconButton,
   InputAdornment,
-  OutlinedInput,
   Stack,
   TextField,
   Typography,
@@ -16,13 +15,14 @@ import {
 import { FC, useEffect, useMemo, useState } from 'react'
 
 import AppSelect, { AppSelectOption } from '../../../base/components/MySelect/AppSelect'
+import NumberSpinnerField from '../../../base/components/NumberSpinnerField/NumberSpinnerField'
 import useAuth from '../../../base/hooks/useAuth'
 import useCajas from '../../../base/hooks/useCajas'
+import { SecureComponent } from '../../../security'
 import { useAperturaCajaRegistro } from '../mutations/useAperturaCajaRegistro'
 import { useCajaListado } from '../queries/useCajaListado'
 import { useTurnoCajaListado } from '../queries/useTurnoCajaListado'
 import CalculadoraEfectivoDialog from './CalculadoraEfectivoDialog'
-import NumberSpinnerField from '../../../base/components/NumberSpinnerField/NumberSpinnerField'
 
 /**
  * Selecciona el turno más apropiado según la hora actual.
@@ -35,7 +35,7 @@ const seleccionarTurnoPorHora = (
   for (const turno of turnos) {
     const inicio = turno.horaInicio ?? 0
     const cierre = turno.horaCierre ?? 24
-    
+
     if (inicio <= cierre) {
       if (horaActual >= inicio && horaActual < cierre) return turno._id ?? ''
     } else {
@@ -320,17 +320,17 @@ const AperturaCajaDialog: FC<AperturaCajaDialogProps> = ({ open, onSuccess, onCl
                     color: 'text.secondary',
                     fontSize: '1.2rem',
                     py: 0.5,
-                  }
+                  },
                 }}
               />
-              <IconButton 
-                onClick={() => setOpenCalc(true)} 
+              <IconButton
+                onClick={() => setOpenCalc(true)}
                 color="primary"
-                sx={{ 
-                  bgcolor: (theme) => `${theme.palette.primary.main}1A`, 
+                sx={{
+                  bgcolor: (theme) => `${theme.palette.primary.main}1A`,
                   borderRadius: 2,
                   width: 53,
-                  height: 53
+                  height: 53,
                 }}
               >
                 <Calculate />
@@ -371,29 +371,31 @@ const AperturaCajaDialog: FC<AperturaCajaDialogProps> = ({ open, onSuccess, onCl
             </Typography>
           )}
 
-          <Button
-            variant="contained"
-            size="large"
-            color="primary"
-            fullWidth
-            startIcon={<LockOpen sx={{ fontSize: 20 }} />}
-            onClick={handleSubmit}
-            disabled={isPending || loadingCajas || loadingTurnos}
-            sx={{
-              mt: 2,
-              py: 1.5,
-              fontSize: '1.05rem',
-              fontWeight: 700,
-              textTransform: 'none',
-              borderRadius: 2.5,
-              boxShadow: 'none',
-              '&:hover': {
+          <SecureComponent staticPermission="CAJAS:GESTION_DE_CAJAS:ABRIR_CAJA">
+            <Button
+              variant="contained"
+              size="large"
+              color="primary"
+              fullWidth
+              startIcon={<LockOpen sx={{ fontSize: 20 }} />}
+              onClick={handleSubmit}
+              disabled={isPending || loadingCajas || loadingTurnos}
+              sx={{
+                mt: 2,
+                py: 1.5,
+                fontSize: '1.05rem',
+                fontWeight: 700,
+                textTransform: 'none',
+                borderRadius: 2.5,
                 boxShadow: 'none',
-              },
-            }}
-          >
-            {isPending ? 'Abriendo...' : 'Abrir Caja y Comenzar'}
-          </Button>
+                '&:hover': {
+                  boxShadow: 'none',
+                },
+              }}
+            >
+              {isPending ? 'Abriendo...' : 'Abrir Caja y Comenzar'}
+            </Button>
+          </SecureComponent>
         </Stack>
       </DialogContent>
 

@@ -40,6 +40,7 @@ import HistorialCajas from './HistorialCajas'
 import IngresoCajaDialog from './IngresoCajaDialog'
 import RetiroCajaDialog from './RetiroCajaDialog'
 import UltimaCaja from './UltimaCaja'
+import { SecureComponent } from '../../../security'
 import PdfViewerDialog from '../../reporte/components/PdfViewerDialog'
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
@@ -223,14 +224,16 @@ const GestionCajas: FunctionComponent = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
               No tienes una caja activa en este punto de venta
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<LockOpen />}
-              onClick={() => setOpenApertura(true)}
-              sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}
-            >
-              Abrir Caja
-            </Button>
+            <SecureComponent action="ABRIR_CAJA">
+              <Button
+                variant="contained"
+                startIcon={<LockOpen />}
+                onClick={() => setOpenApertura(true)}
+                sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}
+              >
+                Abrir Caja
+              </Button>
+            </SecureComponent>
           </Box>
         )}
 
@@ -277,74 +280,80 @@ const GestionCajas: FunctionComponent = () => {
                 </Box>
               </Box>
               <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  disabled={caja?.state !== 'ELABORADO'}
-                  onClick={() => setOpenIngreso(true)}
-                  startIcon={
-                    <CallReceived sx={{ transform: 'rotate(-90deg)', fontSize: '1rem !important' }} />
-                  }
-                  sx={{
-                    color: 'success.main',
-                    borderColor: (theme) => alpha(theme.palette.success.main, 0.3),
-                    '&:hover': {
-                      borderColor: 'success.main',
-                      backgroundColor: (theme) => alpha(theme.palette.success.main, 0.08),
-                    },
-                    textTransform: 'none',
-                    borderRadius: '8px',
-                    fontWeight: 600,
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  Ingreso
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  disabled={caja?.state !== 'ELABORADO'}
-                  onClick={() => setOpenRetiro(true)}
-                  startIcon={<CallMade sx={{ fontSize: '1rem !important' }} />}
-                  sx={{
-                    color: 'error.main',
-                    borderColor: (theme) => alpha(theme.palette.error.main, 0.3),
-                    '&:hover': {
-                      borderColor: 'error.main',
-                      backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
-                    },
-                    textTransform: 'none',
-                    borderRadius: '8px',
-                    fontWeight: 600,
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  Retiro
-                </Button>
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={() => {
-                    if (caja?.state && caja.state !== 'ELABORADO') {
-                      setOpenCerrarPaso2(true)
-                    } else {
-                      setOpenArquearPaso1(true)
+                <SecureComponent action="INGRESO_CAJA">
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={caja?.state !== 'ELABORADO'}
+                    onClick={() => setOpenIngreso(true)}
+                    startIcon={
+                      <CallReceived sx={{ transform: 'rotate(-90deg)', fontSize: '1rem !important' }} />
                     }
-                  }}
-                  startIcon={<Lock sx={{ fontSize: '1rem !important' }} />}
-                  sx={{
-                    backgroundColor: 'text.primary',
-                    color: 'background.paper',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    '&:hover': { backgroundColor: (theme) => alpha(theme.palette.text.primary, 0.85) },
-                    textTransform: 'none',
-                    boxShadow: 'none',
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  Cerrar Caja
-                </Button>
+                    sx={{
+                      color: 'success.main',
+                      borderColor: (theme) => alpha(theme.palette.success.main, 0.3),
+                      '&:hover': {
+                        borderColor: 'success.main',
+                        backgroundColor: (theme) => alpha(theme.palette.success.main, 0.08),
+                      },
+                      textTransform: 'none',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      fontSize: '0.8rem',
+                    }}
+                  >
+                    Ingreso
+                  </Button>
+                </SecureComponent>
+                <SecureComponent action="RETIRO_CAJA">
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={caja?.state !== 'ELABORADO'}
+                    onClick={() => setOpenRetiro(true)}
+                    startIcon={<CallMade sx={{ fontSize: '1rem !important' }} />}
+                    sx={{
+                      color: 'error.main',
+                      borderColor: (theme) => alpha(theme.palette.error.main, 0.3),
+                      '&:hover': {
+                        borderColor: 'error.main',
+                        backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                      },
+                      textTransform: 'none',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      fontSize: '0.8rem',
+                    }}
+                  >
+                    Retiro
+                  </Button>
+                </SecureComponent>
+                <SecureComponent action="CERRAR_CAJA">
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={() => {
+                      if (caja?.state && caja.state !== 'ELABORADO') {
+                        setOpenCerrarPaso2(true)
+                      } else {
+                        setOpenArquearPaso1(true)
+                      }
+                    }}
+                    startIcon={<Lock sx={{ fontSize: '1rem !important' }} />}
+                    sx={{
+                      backgroundColor: 'text.primary',
+                      color: 'background.paper',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      '&:hover': { backgroundColor: (theme) => alpha(theme.palette.text.primary, 0.85) },
+                      textTransform: 'none',
+                      boxShadow: 'none',
+                      fontSize: '0.8rem',
+                    }}
+                  >
+                    Cerrar Caja
+                  </Button>
+                </SecureComponent>
               </Box>
             </HeaderCard>
 

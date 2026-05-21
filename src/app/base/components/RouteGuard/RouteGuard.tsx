@@ -6,6 +6,7 @@ import { navigations } from '../../../navigations.tsx'
 import {
   buildPermissionFromEnv,
   buildPermissionFromUrl,
+  getDominioFromEnv,
   hasPermission,
   matchRoute,
   normalizeString,
@@ -85,7 +86,7 @@ export const RouteGuard: FC<RouteGuardProps> = ({
 
       // Normalizar y construir permiso desde la jerarquía
       const hierarchyParts = uniqueHierarchy.map(normalizeString)
-      const dominio = normalizeString(import.meta.env.ISI_MODULO || '')
+      const dominio = normalizeString(getDominioFromEnv())
 
       // Construir permiso completo: DOMINIO:PARTE1:PARTE2:...:ULTIMA_PARTE
       const parts = [dominio, ...hierarchyParts].filter(Boolean)

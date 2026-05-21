@@ -17,6 +17,7 @@ import { FC, useState } from 'react'
 import AppSelect, { AppSelectOption } from '../../../base/components/MySelect/AppSelect'
 import useAuth from '../../../base/hooks/useAuth'
 import useCajas from '../../../base/hooks/useCajas'
+import { SecureComponent } from '../../../security'
 import { useMetodosPago } from '../../restaurante/queries/useMetodosPago'
 import { useAperturaCajaCerrar } from '../mutations/useAperturaCajaCerrar'
 import { ArqueoCaja, ArqueoCajaMetodoPago } from '../types'
@@ -231,27 +232,29 @@ const CerrarCajaPaso2Dialog: FC<CerrarCajaPaso2DialogProps> = ({
               >
                 Atrás
               </Button>
-              <Button
-                variant="contained"
-                size="large"
-                disabled={isPending}
-                onClick={handleSubmit}
-                sx={{
-                  flex: 2,
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  borderRadius: 2,
-                  bgcolor: 'text.primary',
-                  color: 'background.paper',
-                  boxShadow: 'none',
-                  '&:hover': {
-                    bgcolor: alpha(theme.palette.text.primary, 0.85),
+              <SecureComponent action="CERRAR_CAJA">
+                <Button
+                  variant="contained"
+                  size="large"
+                  disabled={isPending}
+                  onClick={handleSubmit}
+                  sx={{
+                    flex: 2,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    borderRadius: 2,
+                    bgcolor: 'text.primary',
+                    color: 'background.paper',
                     boxShadow: 'none',
-                  },
-                }}
-              >
-                {isPending ? 'Cerrando...' : 'Confirmar Cierre'}
-              </Button>
+                    '&:hover': {
+                      bgcolor: alpha(theme.palette.text.primary, 0.85),
+                      boxShadow: 'none',
+                    },
+                  }}
+                >
+                  {isPending ? 'Cerrando...' : 'Confirmar Cierre'}
+                </Button>
+              </SecureComponent>
             </Box>
           </Stack>
 

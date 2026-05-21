@@ -20,6 +20,7 @@ import { FC, useState } from 'react'
 import AppSelect, { AppSelectOption } from '../../../base/components/MySelect/AppSelect'
 import useAuth from '../../../base/hooks/useAuth'
 import useCajas from '../../../base/hooks/useCajas'
+import { SecureComponent } from '../../../security'
 import PdfViewerDialog from '../../reporte/components/PdfViewerDialog'
 import { useAperturaCajaRetirar } from '../mutations/useAperturaCajaRetirar'
 import CalculadoraEfectivoDialog from './CalculadoraEfectivoDialog'
@@ -380,27 +381,29 @@ const RetiroCajaDialog: FC<RetiroCajaDialogProps> = ({ open, onClose, cajaId, su
               >
                 Cancelar
               </Button>
-              <Button
-                variant="contained"
-                fullWidth
-                size="large"
-                disabled={isPending}
-                onClick={handleSubmit}
-                sx={{
-                  borderRadius: '10px',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  bgcolor: 'error.main',
-                  color: 'error.contrastText',
-                  boxShadow: 'none',
-                  '&:hover': {
-                    bgcolor: 'error.dark',
+              <SecureComponent action="RETIRO_CAJA">
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  disabled={isPending}
+                  onClick={handleSubmit}
+                  sx={{
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    bgcolor: 'error.main',
+                    color: 'error.contrastText',
                     boxShadow: 'none',
-                  },
-                }}
-              >
-                {isPending ? 'Registrando...' : 'Registrar Retiro'}
-              </Button>
+                    '&:hover': {
+                      bgcolor: 'error.dark',
+                      boxShadow: 'none',
+                    },
+                  }}
+                >
+                  {isPending ? 'Registrando...' : 'Registrar Retiro'}
+                </Button>
+              </SecureComponent>
             </Box>
           </Stack>
         </DialogContent>

@@ -54,7 +54,7 @@ const Sidenav: FC<any> = ({ children }: SidenavProps) => {
     : useFilteredNavigations({
         userPermissions: permisos,
         navigations,
-        debug: false,
+        debug: true,
       })
 
   const updateSidebarMode = (sidebarSettings: any) => {
