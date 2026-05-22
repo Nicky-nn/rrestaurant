@@ -9,12 +9,10 @@ export const ncdGestionRoutesMap = {
   ncdGestion: {
     path: '/notaCreditoDebito/gestion',
     name: 'Gestión de Notas',
-    action: 'GESTION_DE_CLIENTES',
   },
   ncdRegistro: {
     path: '/notaCreditoDebito/registro',
     name: 'Nueva Nota',
-    action: 'GESTION_DE_CLIENTES',
   },
 }
 

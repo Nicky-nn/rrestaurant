@@ -4,6 +4,7 @@ import { MRT_ColumnDef } from 'material-react-table'
 import { FunctionComponent, useMemo, useState } from 'react'
 
 import { MrtDynamicTable } from '../../../../base/components/Table/MrtDynamicTable'
+import { useSecurity } from '../../../../base/contexts/SecurityContext'
 import useAuth from '../../../../base/hooks/useAuth'
 import { notSuccess } from '../../../../utils/notification'
 import { swalClose, swalConfirmDialog, swalException, swalLoading } from '../../../../utils/swal'
@@ -28,6 +29,8 @@ const GestionImpresorasDialog: FunctionComponent<Props> = ({ open, onClose }) =>
   } = useImpresoraPorSucursal({
     codigoSucursal: user?.sucursal?.codigo || 0,
   })
+
+  const { hasActionPermission } = useSecurity()
 
   const impresorasReversed = useMemo(() => {
     return impresoras ? [...impresoras].reverse() : []
@@ -105,12 +108,14 @@ const GestionImpresorasDialog: FunctionComponent<Props> = ({ open, onClose }) =>
                   icon: <Edit fontSize="small" />,
                   onClick: ({ row }) => handleEdit(row),
                   color: 'primary',
+                  disabled: (row) => !hasActionPermission('EDITAR_SITIO_DE_IMPRESORA'),
                 },
                 {
                   label: 'Eliminar',
                   icon: <Delete fontSize="small" />,
                   onClick: ({ row }) => handleDelete(row),
                   color: 'error',
+                  disabled: (row) => !hasActionPermission('ELIMINAR_SITIO_DE_IMPRESORA'),
                 },
               ],
             }}

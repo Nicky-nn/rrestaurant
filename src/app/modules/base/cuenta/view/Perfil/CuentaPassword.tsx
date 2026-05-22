@@ -1,10 +1,11 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Key } from '@mui/icons-material'
 import { Button, FormControl, Grid, TextField } from '@mui/material'
-import React, { FunctionComponent } from 'react'
+import { FunctionComponent } from 'react'
 import { Controller, SubmitHandler, useForm } from 'react-hook-form'
 
 import SimpleCard from '../../../../../base/components/Template/Cards/SimpleCard'
+import { SecureComponent } from '../../../../../security'
 import { notSuccess } from '../../../../../utils/notification'
 import { swalAsyncConfirmDialog, swalException } from '../../../../../utils/swal'
 import { apiUsuarioCambiarPassword } from '../../api/usuarioCambiarPassword.api'
@@ -132,11 +133,13 @@ const CuentaPassword: FunctionComponent<Props> = (props) => {
                   />
                 </Grid>
 
-                <Grid size={12}>
-                  <Button variant={'contained'} type={'submit'}>
-                    Guardar Cambios
-                  </Button>
-                </Grid>
+                <SecureComponent staticPermission="USUARIO:OPCIONES_DE_SISTEMA:CAMBIAR_CONTRASENIA">
+                  <Grid size={12}>
+                    <Button variant={'contained'} type={'submit'}>
+                      Guardar Cambios
+                    </Button>
+                  </Grid>
+                </SecureComponent>
               </Grid>
             </form>
           </Grid>

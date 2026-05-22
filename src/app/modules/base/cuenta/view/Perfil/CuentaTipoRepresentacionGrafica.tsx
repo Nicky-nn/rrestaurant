@@ -15,6 +15,7 @@ import { ChangeEvent, FunctionComponent, useState } from 'react'
 import SimpleCard from '../../../../../base/components/Template/Cards/SimpleCard'
 import useAuth from '../../../../../base/hooks/useAuth'
 import { TipoRepresentacionGrafica } from '../../../../../base/interfaces/base'
+import { SecureComponent } from '../../../../../security'
 import { notSuccess } from '../../../../../utils/notification'
 import { swalAsyncConfirmDialog, swalException } from '../../../../../utils/swal'
 import { apiUsuarioCambiarTipoRepresentacionGrafica } from '../../api/apiUsuarioCambiarTipoRepresentacionGrafica'
@@ -89,9 +90,11 @@ const CuentaTipoRepresentacionGrafica: FunctionComponent<Props> = (props) => {
             </FormControl>
           </Grid>
           <Grid size={12}>
-            <Button variant={'contained'} onClick={handleGuardarCambios}>
-              Guardar Cambios
-            </Button>
+            <SecureComponent staticPermission="USUARIO:OPCIONES_DE_SISTEMA:CAMBIAR_TIPO_DE_REPRESENTACION_GRAFICA">
+              <Button variant={'contained'} onClick={handleGuardarCambios}>
+                Guardar Cambios
+              </Button>
+            </SecureComponent>
           </Grid>
         </Grid>
       </SimpleCard>

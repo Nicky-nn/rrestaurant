@@ -28,6 +28,7 @@ import { FunctionComponent, useMemo, useState } from 'react'
 
 import MuiRenderTopToolbarCustomActions from '../../../../base/components/MuiTable/MuiRenderTopToolbarCustomActions'
 import useAuth from '../../../../base/hooks/useAuth'
+import { SecureComponent } from '../../../../security'
 import { MuiToolbarAlertBannerProps } from '../../../../utils/muiTable/materialReactTableUtils'
 import { MuiTableNormalOptionsProps } from '../../../../utils/muiTable/muiTableNormalOptionsProps'
 import { notDanger } from '../../../../utils/notification'
@@ -572,12 +573,21 @@ const VacListado: FunctionComponent<Props> = (props) => {
     enableRowActions: false,
     renderTopToolbarCustomActions: () => (
       <MuiRenderTopToolbarCustomActions refetch={refetch}>
-        <Button variant={'outlined'} size={'small'} startIcon={<Download />} onClick={() => onExportar()}>
-          Exportar
-        </Button>
-        <Button variant={'outlined'} size={'small'} startIcon={<PictureAsPdf />} onClick={() => generarPdf()}>
-          Generar PDF
-        </Button>
+        <SecureComponent action="EXPORTAR_CVS">
+          <Button variant={'outlined'} size={'small'} startIcon={<Download />} onClick={() => onExportar()}>
+            Exportar
+          </Button>
+        </SecureComponent>
+        <SecureComponent action="GENERAR_PDF">
+          <Button
+            variant={'outlined'}
+            size={'small'}
+            startIcon={<PictureAsPdf />}
+            onClick={() => generarPdf()}
+          >
+            Generar PDF
+          </Button>
+        </SecureComponent>
       </MuiRenderTopToolbarCustomActions>
     ),
   })

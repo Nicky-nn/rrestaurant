@@ -2,28 +2,26 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { Save } from '@mui/icons-material'
 import { Box, Button, Grid } from '@mui/material'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import Swal from 'sweetalert2'
 
+import { toast } from 'react-toastify'
 import SimpleContainer from '../../../base/components/Container/SimpleContainer'
 import StackMenu from '../../../base/components/MyMenu/StackMenu'
-import RepresentacionGraficaUrls from '../../../base/components/RepresentacionGrafica/RepresentacionGraficaUrls'
+import { StackMenuItem } from '../../../base/components/MyMenu/StackMenuItem'
 import Breadcrumb from '../../../base/components/Template/Breadcrumb/Breadcrumb'
 import useAuth from '../../../base/hooks/useAuth'
+import { SecureComponent } from '../../../security'
 import { openInNewTab } from '../../../utils/helper'
 import { notError, notSuccess } from '../../../utils/notification'
 import { swalAsyncConfirmDialog, swalException } from '../../../utils/swal'
-import { ncdInputCompose } from '../services/ncdInputCompose'
-import { ncdGestionRoutesMap } from '../notaCreditoDebitoRoutes'
-import { StackMenuItem } from '../../../base/components/MyMenu/StackMenuItem'
-import NcdFacturaOriginal from './Registrar/NcdFacturaOriginal'
-import NcdFacturaDevolucion from './Registrar/NcdFacturaDevolucion'
 import { useRestNotaCreditoDebitoRegistro } from '../mutations/useRestNotaCreditoDebitoRegistro'
-import { ncdRegistroValidationSchema } from '../validator/ncdRegistroValidator'
+import { ncdGestionRoutesMap } from '../notaCreditoDebitoRoutes'
+import { ncdInputCompose } from '../services/ncdInputCompose'
 import { NcdInputProps } from '../types'
-import { toast } from 'react-toastify'
+import { ncdRegistroValidationSchema } from '../validator/ncdRegistroValidator'
+import NcdFacturaDevolucion from './Registrar/NcdFacturaDevolucion'
+import NcdFacturaOriginal from './Registrar/NcdFacturaOriginal'
 
 const NcdRegistro = () => {
-
   const {
     user: { sucursal, puntoVenta },
   } = useAuth()
@@ -96,17 +94,15 @@ const NcdRegistro = () => {
       <div className="breadcrumb">
         <Breadcrumb routeSegments={[ncdGestionRoutesMap.ncdGestion, ncdGestionRoutesMap.ncdRegistro]} />
       </div>
-      <StackMenu asideSidebarFixed>
-        <StackMenuItem>
-          <Button
-            startIcon={<Save />}
-            variant={'contained'}
-            onClick={form.handleSubmit(onSubmit)}
-          >
-            Registrar Nota
-          </Button>
-        </StackMenuItem>
-      </StackMenu>
+      <SecureComponent staticPermission="NOTAS_DE_CREDITO_DEBITO:GESTION_DE_NOTAS:REGISTRAR_NUEVA_NOTA">
+        <StackMenu asideSidebarFixed>
+          <StackMenuItem>
+            <Button startIcon={<Save />} variant={'contained'} onClick={form.handleSubmit(onSubmit)}>
+              Registrar Nota
+            </Button>
+          </StackMenuItem>
+        </StackMenu>
+      </SecureComponent>
 
       <form>
         <Grid container spacing={2}>

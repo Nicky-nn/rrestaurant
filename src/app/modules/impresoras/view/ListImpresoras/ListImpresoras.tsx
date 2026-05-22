@@ -9,7 +9,9 @@ import StackMenu from '../../../../base/components/MyMenu/StackMenu'
 import { MrtRowMenu } from '../../../../base/components/Table/MrtRowMenu'
 import { MrtMenuAction } from '../../../../base/components/Table/mrtTypes'
 import Breadcrumb from '../../../../base/components/Template/Breadcrumb/Breadcrumb'
+import { useSecurity } from '../../../../base/contexts/SecurityContext'
 import useAuth from '../../../../base/hooks/useAuth'
+import { SecureComponent } from '../../../../security'
 import { MuiTableAdvancedOptionsProps } from '../../../../utils/muiTable/muiTableAdvancedOptionsProps'
 import { useArticuloInventarioListado } from '../../../restaurante/queries/useArticuloInventarioListado'
 import { Articulo } from '../../../restaurante/types'
@@ -24,6 +26,7 @@ interface ListImpresorasProps {}
 const ListImpresoras: FunctionComponent<ListImpresorasProps> = () => {
   const { user } = useAuth()
   const columns = useMemo(() => tableColumns, [])
+  const { hasActionPermission } = useSecurity()
 
   const [openAsociarDialog, setOpenAsociarDialog] = useState(false)
   const [articuloSelected, setArticuloSelected] = useState<Articulo | null>(null)
@@ -78,6 +81,7 @@ const ListImpresoras: FunctionComponent<ListImpresorasProps> = () => {
             setArticuloSelected(row.original)
             setOpenAsociarDialog(true)
           },
+          disabled: (row) => !hasActionPermission('ASOCIAR_IMPRESORA'),
         },
       ]
 
@@ -134,24 +138,28 @@ const ListImpresoras: FunctionComponent<ListImpresorasProps> = () => {
       <SimpleContainerBox>
         <Breadcrumb routeSegments={[impresorasRoutesMap.gestion]} />
         <StackMenu asideSidebarFixed>
-          <Button
-            size={'small'}
-            variant="contained"
-            color="primary"
-            startIcon={<Print />}
-            onClick={() => setOpenGestionDialog(true)}
-          >
-            Agregar Impresora
-          </Button>
-          <Button
-            size={'small'}
-            variant="outlined"
-            color="secondary"
-            startIcon={<Settings />}
-            onClick={() => setOpenConfigDialog(true)}
-          >
-            Configuración
-          </Button>
+          <SecureComponent action="AGREGAR_SITIO_DE_IMPRESORA">
+            <Button
+              size={'small'}
+              variant="contained"
+              color="primary"
+              startIcon={<Print />}
+              onClick={() => setOpenGestionDialog(true)}
+            >
+              Agregar Impresora
+            </Button>
+          </SecureComponent>
+          <SecureComponent action="CONFIGURACION_DE_IMPRESORAS">
+            <Button
+              size={'small'}
+              variant="outlined"
+              color="secondary"
+              startIcon={<Settings />}
+              onClick={() => setOpenConfigDialog(true)}
+            >
+              Configuración
+            </Button>
+          </SecureComponent>
         </StackMenu>
 
         <Box mt={2}>

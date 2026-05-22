@@ -1,9 +1,10 @@
 import { Person } from '@mui/icons-material'
 import { Button, Grid } from '@mui/material'
-import React, { FunctionComponent } from 'react'
+import { FunctionComponent } from 'react'
 
 import SimpleCard from '../../../../../base/components/Template/Cards/SimpleCard'
 import { H4 } from '../../../../../base/components/Template/Typography'
+import { SecureComponent } from '../../../../../security'
 import { notSuccess } from '../../../../../utils/notification'
 import { swalAsyncConfirmDialog, swalException } from '../../../../../utils/swal'
 import { apiSincronizarCatalogos } from '../../api/sincronizarCatalogos.api'
@@ -73,9 +74,11 @@ const CuentaSincronizacion: FunctionComponent<Props> = (props) => {
               xs: 12,
             }}
           >
-            <Button variant={'contained'} size={'small'} onClick={fetchSincronizarCufd}>
-              EJECUTAR SERVICIO CUFD
-            </Button>
+            <SecureComponent staticPermission="USUARIO:OPCIONES_DE_SISTEMA:SINCRONIZAR_DATOS">
+              <Button variant={'contained'} size={'small'} onClick={fetchSincronizarCufd}>
+                EJECUTAR SERVICIO CUFD
+              </Button>
+            </SecureComponent>
           </Grid>
 
           <Grid
@@ -106,9 +109,11 @@ const CuentaSincronizacion: FunctionComponent<Props> = (props) => {
               xs: 12,
             }}
           >
-            <Button variant={'contained'} size={'small'} onClick={fetchSincronizarCatalogos}>
-              EJECUTAR SERVICIO CATÁLOGOS
-            </Button>
+            <SecureComponent staticPermission="USUARIO:OPCIONES_DE_SISTEMA:SINCRONIZAR_CATALOGOS">
+              <Button variant={'contained'} size={'small'} onClick={fetchSincronizarCatalogos}>
+                EJECUTAR SERVICIO CATÁLOGOS
+              </Button>
+            </SecureComponent>
           </Grid>
         </Grid>
       </SimpleCard>
