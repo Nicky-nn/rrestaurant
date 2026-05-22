@@ -1,5 +1,15 @@
 import { CancelOutlined, DescriptionOutlined, Gesture, PrintOutlined } from '@mui/icons-material'
-import { Box, Button, Chip, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material'
 import { FunctionComponent, useMemo, useState } from 'react'
 
 import { SimpleContainerBox } from '../../../base/components/Container/SimpleBox'
@@ -10,21 +20,22 @@ import { MrtTableConfig } from '../../../base/components/Table/mrtTypes.ts'
 import { useMrtQuery } from '../../../base/components/Table/useMrtQuery.tsx'
 import Breadcrumb from '../../../base/components/Template/Breadcrumb/Breadcrumb'
 import { useError } from '../../../base/contexts/ErrorProvider'
+import { useSecurity } from '../../../base/contexts/SecurityContext'
 import useAuth from '../../../base/hooks/useAuth'
 import { MyGraphQlError } from '../../../base/services/GraphqlError'
+import PdfViewerDialog from '../../reporte/components/PdfViewerDialog'
 import { client } from '../client'
 import { useRestPedidoFacturaRegistro } from '../mutations/useRestPedidoFacturaRegistro'
 import { useRestPedidoFinalizar } from '../mutations/useRestPedidoFinalizar'
 import { RESTPEDIDOLISTADO } from '../queries/useRestPedidoListado'
 import { restauranteRoutesMap } from '../restauranteRoutes'
 import { ArticuloOperacion, RestPedido, RestPedidoConnection, RestPedidoFinalizarInput } from '../types'
+import { HistorialPedido } from './listado/historialPedido'
 import { tableColumns } from './listado/TableRestPedidoHeaders.tsx'
 import RrCobroDialog, { PagoRealizado } from './registrar/RrCobroDialog'
 import RrGestionPedidoDialog from './registrar/RrGestionPedidoDialog'
 import { useComandaPdf } from './registrar/useComandaPdf'
 import RestAnularPedidoDialog from './RestAnularPedidoDialog'
-import { HistorialPedido } from './listado/historialPedido'
-import PdfViewerDialog from '../../reporte/components/PdfViewerDialog'
 
 const ProductosDetalle = ({ productos }: { productos: ArticuloOperacion[] }) => {
   if (!productos.length) return <Typography variant="body2">Sin productos</Typography>
@@ -99,17 +110,13 @@ const DetalleConHistorial = ({ row, isAdmin }: { row: RestPedido; isAdmin: boole
   return (
     <Box sx={{ p: 2 }}>
       {isAdmin && (
-        <Box sx={{ display: 'flex',}}>
-          <Button 
-            variant="outlined" 
-            size="small" 
-            onClick={() => setShowHistorial(!showHistorial)}
-          >
+        <Box sx={{ display: 'flex' }}>
+          <Button variant="outlined" size="small" onClick={() => setShowHistorial(!showHistorial)}>
             {showHistorial ? 'Ver Productos' : 'Ver Historial '}
           </Button>
         </Box>
       )}
-      
+
       {showHistorial ? (
         <HistorialPedido pedidoId={row._id!} />
       ) : (
@@ -126,6 +133,7 @@ type Props = RestGestionComponentProps
 const RestGestion: FunctionComponent<Props> = () => {
   const { user } = useAuth()
   const { showError } = useError()
+  const { hasStaticPermission } = useSecurity()
 
   const { mutateAsync: finalizarPedido, isPending: isFinalizarPending } = useRestPedidoFinalizar()
   const { mutateAsync: facturarPedido, isPending: isFacturarPending } = useRestPedidoFacturaRegistro()
@@ -339,7 +347,10 @@ const RestGestion: FunctionComponent<Props> = () => {
             }
           },
           disabled: (row) =>
-            row.tipoDocumento !== 'NOTA_VENTA' || row.state === 'ANULADO' || row.state === 'CANCELADO',
+            row.tipoDocumento !== 'NOTA_VENTA' ||
+            row.state === 'ANULADO' ||
+            row.state === 'CANCELADO' ||
+            !hasStaticPermission('VENTAS_Y_PEDIDOS:GESTION_DE_PEDIDOS:GESTIONAR_PEDIDO'),
         },
         {
           label: 'Generar Comanda',
@@ -347,7 +358,10 @@ const RestGestion: FunctionComponent<Props> = () => {
           onClick: ({ row }) => {
             handleGenerarComanda(row)
           },
-          disabled: (row) => row.tipoDocumento !== 'NOTA_VENTA' || row.state !== 'COMPLETADO',
+          disabled: (row) =>
+            row.tipoDocumento !== 'NOTA_VENTA' ||
+            row.state !== 'COMPLETADO' ||
+            !hasStaticPermission('VENTAS_Y_PEDIDOS:GESTION_DE_PEDIDOS:GENERAR_COMANDA_DESDE_GESTION'),
         },
         {
           label: 'Generar E. de Cuenta',
@@ -355,7 +369,10 @@ const RestGestion: FunctionComponent<Props> = () => {
           onClick: ({ row }) => {
             imprimirEstadoCuenta(row, 0)
           },
-          disabled: (row) => row.tipoDocumento !== 'NOTA_VENTA' || row.state !== 'COMPLETADO',
+          disabled: (row) =>
+            row.tipoDocumento !== 'NOTA_VENTA' ||
+            row.state !== 'COMPLETADO' ||
+            !hasStaticPermission('VENTAS_Y_PEDIDOS:GESTION_DE_PEDIDOS:GENERAR_ESTADO_CUENTA_DESDE_GESTION'),
         },
         {
           label: 'Anular',
@@ -365,7 +382,9 @@ const RestGestion: FunctionComponent<Props> = () => {
             setPedidoAnular(row)
             setOpenAnular(true)
           },
-          disabled: (row) => row.state !== 'FINALIZADO',
+          disabled: (row) =>
+            row.state !== 'FINALIZADO' ||
+            !hasStaticPermission('VENTAS_Y_PEDIDOS:GESTION_DE_PEDIDOS:ANULAR_PEDIDO'),
         },
       ],
       renderDetailPanel: (row) => {
@@ -373,7 +392,7 @@ const RestGestion: FunctionComponent<Props> = () => {
         return <DetalleConHistorial row={row} isAdmin={isAdmin} />
       },
     }),
-    [columns, user],
+    [columns, user, hasStaticPermission],
   )
 
   const REST_GESTION_FILTER_TYPES: FilterTypeMap<RestPedido> = {

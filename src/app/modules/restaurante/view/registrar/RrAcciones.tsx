@@ -22,8 +22,10 @@ import { FunctionComponent, useEffect, useMemo, useState } from 'react'
 import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto'
 import { useAppConfirm } from '../../../../base/contexts/AppConfirmProvider'
 import { useError } from '../../../../base/contexts/ErrorProvider'
+import { useSecurity } from '../../../../base/contexts/SecurityContext'
 import useAuth from '../../../../base/hooks/useAuth'
 import { MyGraphQlError } from '../../../../base/services/GraphqlError'
+import { SecureComponent } from '../../../../security'
 import PdfViewerDialog from '../../../reporte/components/PdfViewerDialog'
 import { MesaUI } from '../../interfaces/mesa.interface'
 import { useRestPedidoActualizar } from '../../mutations/useRestPedidoActualizar'
@@ -134,6 +136,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 }) => {
   const theme = useTheme()
   const { user } = useAuth()
+  const { hasActionPermission, hasStaticPermission } = useSecurity()
   const { requestConfirm } = useAppConfirm()
   const { showError } = useError()
   const [descuento, setDescuento] = useState<number>(0)
@@ -998,7 +1001,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           </Typography>
           <MontoMonedaTexto
             monto={descuento}
-            editar={true}
+            editar={hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:INGRESAR_DESCUENTO')}
             onChange={(val) => {
               setDescuento(val || 0)
               if ((val || 0) > 0 && onDescuentoChange) onDescuentoChange()
@@ -1015,7 +1018,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           </Typography>
           <MontoMonedaTexto
             monto={giftcard}
-            editar={true}
+            editar={hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:INGRESAR_GIFTsCARD')}
             onChange={(val) => {
               setGiftcard(val || 0)
               if ((val || 0) > 0 && onDescuentoChange) onDescuentoChange()
@@ -1043,7 +1046,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <Button
             variant="outlined"
             size="large"
-            disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+            disabled={
+              !mesaSeleccionada?.pedido?._id ||
+              mesaSeleccionada.pedido._id.startsWith('nuevo-') ||
+              !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:IMPRIMIR_CUENTA')
+            }
             onClick={handleImprimirCuenta}
             onContextMenu={handleCuentaContextMenu}
             sx={{
@@ -1069,7 +1076,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <Button
             variant="outlined"
             size="large"
-            disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+            disabled={
+              !mesaSeleccionada?.pedido?._id ||
+              mesaSeleccionada.pedido._id.startsWith('nuevo-') ||
+              !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:DIVIDIR_CUENTA')
+            }
             onClick={handleOpenDividir}
             sx={{
               flex: 1,
@@ -1094,7 +1105,11 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <Button
             variant="outlined"
             size="large"
-            disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+            disabled={
+              !mesaSeleccionada?.pedido?._id ||
+              mesaSeleccionada.pedido._id.startsWith('nuevo-') ||
+              !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:TRANFERIR_MESA')
+            }
             onClick={handleOpenTransferir}
             sx={{
               flex: 1,
@@ -1122,7 +1137,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <Button
             variant="contained"
             size="large"
-            disabled={!mesaSeleccionada}
+            disabled={!mesaSeleccionada || !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:CANCELAR_PEDIDO')}
             onClick={handleCancelar}
             sx={{
               flex: 1,
@@ -1152,7 +1167,12 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <Button
             variant="contained"
             size="large"
-            disabled={!mesaSeleccionada}
+            disabled={
+              !mesaSeleccionada ||
+              (!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')
+                ? !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:REGISTRAR_PEDIDO')
+                : !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:ACTUALIZAR_PEDIDO'))
+            }
             sx={{
               flex: 1,
               flexDirection: 'column',
@@ -1190,7 +1210,8 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
               !mesaSeleccionada ||
               !mesaSeleccionada.pedido ||
               !mesaSeleccionada.pedido.productos ||
-              mesaSeleccionada.pedido.productos.length === 0
+              mesaSeleccionada.pedido.productos.length === 0 ||
+              !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:COBRAR')
             }
             onClick={handleOpenCobro}
             sx={{
@@ -1284,16 +1305,18 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         }
       />
       {/* Context menu click derecho "Cuenta" */}
-      <Menu
-        anchorEl={contextMenuAnchor}
-        open={Boolean(contextMenuAnchor)}
-        onClose={() => setContextMenuAnchor(null)}
-      >
-        <MenuItem onClick={handleReimprimirComandaOpen}>
-          <ReceiptLongOutlinedIcon fontSize="small" sx={{ mr: 1 }} />
-          Reimprimir Comanda
-        </MenuItem>
-      </Menu>
+      <SecureComponent staticPermission="VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:REIMPRIMIR_COMANDA">
+        <Menu
+          anchorEl={contextMenuAnchor}
+          open={Boolean(contextMenuAnchor)}
+          onClose={() => setContextMenuAnchor(null)}
+        >
+          <MenuItem onClick={handleReimprimirComandaOpen}>
+            <ReceiptLongOutlinedIcon fontSize="small" sx={{ mr: 1 }} />
+            Reimprimir Comanda
+          </MenuItem>
+        </Menu>
+      </SecureComponent>
 
       {/* Dialog previsualización comanda */}
       <PdfViewerDialog

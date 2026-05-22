@@ -25,6 +25,7 @@ import { keyframes } from '@mui/system'
 import { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import NumberSpinnerField from '../../../../base/components/NumberSpinnerField/NumberSpinnerField'
+import { useSecurity } from '../../../../base/contexts/SecurityContext'
 import { searchClientsApi } from '../../../clients/api/searchClients.api'
 import InputSearchClients from '../../../clients/components/InputSearchClients'
 import { ClientProps } from '../../../clients/interfaces/client'
@@ -512,6 +513,7 @@ const CartItem = ({
   onRemove: () => void
 }) => {
   const theme = useTheme()
+  const { hasStaticPermission } = useSecurity()
   const [isEditing, setIsEditing] = useState(false)
 
   const originalCortesia = !!item.cortesia
@@ -725,6 +727,7 @@ const CartItem = ({
                     setIsCortesia(next)
                     onUpdate({ ...item, cortesia: next })
                   }}
+                  disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:CORTESIA')}
                   sx={{
                     bgcolor: isCortesia ? alpha(theme.palette.success.main, 0.1) : 'transparent',
                     color: isCortesia ? 'success.main' : 'text.secondary',
@@ -738,6 +741,7 @@ const CartItem = ({
                 <IconButton
                   size="small"
                   onClick={onRemove}
+                  disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:ELIMINAR_PRODUCTO')}
                   sx={{ color: 'text.secondary', '&:hover': { bgcolor: 'action.hover' } }}
                 >
                   <DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />
@@ -790,6 +794,7 @@ const CartItem = ({
                 step={0.5}
                 decimalScale={2}
                 min={0}
+                disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:EDITAR_PRECIO_ITEM')}
                 sx={{ bgcolor: '#fff', '& .MuiOutlinedInput-input': { p: 1, fontSize: '0.85rem' } }}
               />
             </Box>
@@ -827,6 +832,7 @@ const CartItem = ({
                   step={0.5}
                   decimalScale={2}
                   min={0}
+                  disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:EDITAR_DESCUENTO_ITEM')}
                   sx={{ bgcolor: '#fff', '& .MuiOutlinedInput-input': { p: 1, fontSize: '0.85rem' } }}
                 />
               )}

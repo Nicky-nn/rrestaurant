@@ -31,6 +31,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { FunctionComponent, useEffect, useMemo, useRef, useState } from 'react'
 
 import MontoMonedaTexto from '../../../../base/components/PopoverMonto/MontoMonedaTexto'
+import { useSecurity } from '../../../../base/contexts/SecurityContext'
 import { useMetodosPago } from '../../queries/useMetodosPago'
 import { MetodoPago } from '../../types'
 
@@ -83,6 +84,7 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
 }) => {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+  const { hasActionPermission, hasStaticPermission } = useSecurity()
 
   const { data: metodosData, isLoading: metodosLoading } = useMetodosPago({})
   const metodosPago = useMemo(() => metodosData || [], [metodosData])
@@ -468,7 +470,7 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
                 </Typography>
                 <MontoMonedaTexto
                   monto={descuento}
-                  editar={!isProcessing}
+                  editar={hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:INGRESAR_DESCUENTO')}
                   onChange={(val) => onDescuentoChange?.(val || 0)}
                   sigla="BOB"
                   montoProps={{ sx: { color: 'error.main', fontWeight: 600, fontSize: '0.875rem' } }}
@@ -482,7 +484,7 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
                 </Typography>
                 <MontoMonedaTexto
                   monto={giftcard}
-                  editar={!isProcessing}
+                  editar={hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:INGRESAR_GIFT')}
                   onChange={(val) => onGiftcardChange?.(val || 0)}
                   sigla="BOB"
                   montoProps={{ sx: { color: 'error.main', fontWeight: 600, fontSize: '0.875rem' } }}
@@ -690,7 +692,7 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
                   if (onFinalizar)
                     onFinalizar(metodoSeleccionado || 1, metodoSeleccionadoObj?.descripcion || 'Efectivo')
                 }}
-                disabled={isProcessing}
+                disabled={isProcessing || !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:FINALIZAR_PEDIDO')}
                 fullWidth
                 sx={{
                   p: 2,
@@ -711,7 +713,7 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
               variant="contained"
               size="large"
               onClick={handleFacturarClick}
-              disabled={isProcessing}
+              disabled={isProcessing || !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:FACTURAR_PEDIDO')}
               fullWidth
               sx={{
                 p: 2,

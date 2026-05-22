@@ -9,6 +9,7 @@ import { MrtDynamicTable } from '../../../base/components/Table/MrtDynamicTable.
 import { MrtTableConfig } from '../../../base/components/Table/mrtTypes.ts'
 import { useMrtQuery } from '../../../base/components/Table/useMrtQuery.tsx'
 import Breadcrumb from '../../../base/components/Template/Breadcrumb/Breadcrumb'
+import { useSecurity } from '../../../base/contexts/SecurityContext.tsx'
 import useAuth from '../../../base/hooks/useAuth'
 import { apiEstado } from '../../../interfaces/index.ts'
 import { client } from '../client'
@@ -67,6 +68,8 @@ type Props = RestFacturasComponentProps
 
 const RestFacturas: FunctionComponent<Props> = () => {
   const { user } = useAuth()
+  const { hasActionPermission } = useSecurity()
+
   const [factura, setFactura] = useState<SalidaFactura | null>(null)
   const [openReenviarFactura, setOpenReenviarFactura] = useState(false)
   const [openEnviarWhats, setOpenEnviarWhats] = useState(false)
@@ -90,6 +93,7 @@ const RestFacturas: FunctionComponent<Props> = () => {
             setFactura(row)
             setOpenReenviarFactura(true)
           },
+          disabled: (row) => !hasActionPermission('REENVIAR_FACTURA_POR_EMAIL'),
         },
         {
           label: 'Enviar por W. A.',
@@ -99,6 +103,7 @@ const RestFacturas: FunctionComponent<Props> = () => {
             setFactura(row)
             setOpenEnviarWhats(true)
           },
+          disabled: (row) => !hasActionPermission('REENVIAR_FACTURA_POR_WHATSAPP'),
         },
         {
           label: 'Anular Venta / Factura',
@@ -109,6 +114,7 @@ const RestFacturas: FunctionComponent<Props> = () => {
             setOpenAnularVenta(true)
           },
           hidden: (row) => [apiEstado.anulado, apiEstado.eliminado].includes(row.state as string),
+          disabled: (row) => !hasActionPermission('ANULAR_VENTA_O_FACTURA'),
         },
       ],
       rowIconsActions: [
@@ -120,11 +126,12 @@ const RestFacturas: FunctionComponent<Props> = () => {
             setOpenConsultaFactura(true)
           },
           icon: <Preview />,
+          hidden: (row) => !hasActionPermission('CONSULTAR_FACTURA'),
         },
       ],
       renderDetailPanel: (row) => <ProductosDetalle productos={row.detalle ?? []} />,
     }),
-    [columns],
+    [columns, hasActionPermission],
   )
 
   const REST_FACTURAS_FILTER_TYPES: FilterTypeMap<SalidaFactura> = {
