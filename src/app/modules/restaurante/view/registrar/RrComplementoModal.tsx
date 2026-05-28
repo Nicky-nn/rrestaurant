@@ -1133,6 +1133,14 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                               : null
                             // Sin stock: no hay almacén con disponible > 0
                             const sinStock = necesitaVerificarStock && stockCheck?.almacen === null
+                            // Stock disponible para mostrar en UI
+                            const { stockDisp: stockDispMod, umNombre: umNombreMod } = getStockConvertido(op)
+                            const labelStockMod =
+                              stockDispMod !== null && !sinStock
+                                ? umNombreMod
+                                  ? `${Math.floor(stockDispMod)} ${umNombreMod}`
+                                  : `${Math.floor(stockDispMod)}`
+                                : null
                             // Max del grupo alcanzado Y esta opción ya tiene 0 → deshabilitado
                             const maxAlcanzado = grupoLleno && !selected
                             const disabled = maxAlcanzado || sinStock
@@ -1161,7 +1169,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                   display: 'flex',
                                   flexDirection: 'column',
                                   justifyContent: 'space-between',
-                                  height: 72,
+                                  minHeight: 72,
                                   p: 1.5,
                                   border: '2px solid',
                                   borderColor: sinStock
@@ -1188,6 +1196,21 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                   if (!disabled) setOpcionQty(gIdx, oIdx, 1, grupoOpciones, maxSel)
                                 }}
                               >
+                                {/* Stock disponible: encima del nombre, muy sutil */}
+                                {labelStockMod !== null && (
+                                  <Typography
+                                    sx={{
+                                      fontSize: '0.58rem',
+                                      color: 'text.disabled',
+                                      lineHeight: 1,
+                                      mb: 0.4,
+                                      userSelect: 'none',
+                                    }}
+                                  >
+                                    {labelStockMod}
+                                  </Typography>
+                                )}
+
                                 {/* Fila superior: nombre (izq) + precio (der) */}
                                 <Box
                                   sx={{
