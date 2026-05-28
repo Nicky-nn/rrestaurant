@@ -23,6 +23,7 @@ import {
   Articulo,
   ArticuloModificadorOpcionOperacion,
   ArticuloModificadorOperacionInput,
+  ArticuloOperacionReceta,
   ArticuloRecetaIngredienteOperacion,
   ArticuloRecetaOperacionInput,
 } from '../../types'
@@ -45,6 +46,13 @@ export interface RrComplementoModalProps {
     /** Precio unitario con modificadores y receta extra incluidos */
     precioUnitario: number
   }) => void
+  /** Si se pasa, el modal se abre en modo edición con los valores previos pre-poblados */
+  initialData?: {
+    cantidad?: number
+    notasIds?: string[]
+    variacionReceta?: ArticuloOperacionReceta[]
+    modificadoresInput?: ArticuloModificadorOperacionInput[]
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -230,12 +238,15 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   onClose,
   articulo,
   onAdd,
+  initialData,
 }) => {
   const { user } = useAuth()
   const codigoSucursal = user.sucursal.codigo
   const containerRef = useRef<HTMLDivElement>(null)
   // Evita re-aplicar auto-removidos si el usuario ya interactuó
   const autoRemovidosSeedadoRef = useRef(false)
+  // Evita re-aplicar initialData de modificadores si composicion ya fue procesada
+  const initialDataModsAppliedRef = useRef(false)
 
   const esReceta = Boolean(articulo.esReceta)
   const tieneModificadores = Boolean(articulo.tieneModificadores)
@@ -258,14 +269,41 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
   // ── Reset completo al abrir (cada artículo es independiente) ─────────────
   useEffect(() => {
     if (open) {
-      setIngredientesRemovidos(new Set())
-      setIngredientesExtra({})
-      setModificadorSeleccion({})
-      setModificadorOrden([])
-      setSelectedNotas(new Set()) // notas siempre vacías al abrir, LS solo ordena
-      setCantidad(1)
-      autoRemovidosSeedadoRef.current = false // resetear para nueva sesión
+      initialDataModsAppliedRef.current = false
+      if (initialData) {
+        // Modo edición: pre-poblar desde datos previos
+        const remSet = new Set<string>()
+        ;(initialData.variacionReceta ?? []).forEach((v) => {
+          if (v.removido && v.articuloId) remSet.add(v.articuloId)
+        })
+        setIngredientesRemovidos(remSet)
+
+        const extMap: Record<string, number> = {}
+        ;(initialData.variacionReceta ?? []).forEach((v) => {
+          if (v.esExtra && v.articuloId && (v.articuloPrecio?.cantidad ?? 0) > 0) {
+            extMap[v.articuloId] = v.articuloPrecio!.cantidad!
+          }
+        })
+        setIngredientesExtra(extMap)
+
+        setSelectedNotas(new Set(initialData.notasIds ?? []))
+        setCantidad(initialData.cantidad ?? 1)
+        // Modificadores: se poblan en efecto separado cuando composicion carga
+        setModificadorSeleccion({})
+        setModificadorOrden([])
+        // Saltar auto-remove de stock: el usuario ya tomó sus decisiones previas
+        autoRemovidosSeedadoRef.current = true
+      } else {
+        setIngredientesRemovidos(new Set())
+        setIngredientesExtra({})
+        setModificadorSeleccion({})
+        setModificadorOrden([])
+        setSelectedNotas(new Set())
+        setCantidad(1)
+        autoRemovidosSeedadoRef.current = false
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, articulo._id])
 
   // ── Lordicon script ───────────────────────────────────────────────────────
@@ -300,6 +338,41 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     { enabled: open && Boolean(articulo._id), staleTime: 0 },
   )
   console.log('composicion', composicion)
+
+  // ── Poblar modificadores desde initialData al cargar composicion ──────────
+  useEffect(() => {
+    if (
+      !open ||
+      !initialData?.modificadoresInput?.length ||
+      !composicion ||
+      initialDataModsAppliedRef.current
+    )
+      return
+    initialDataModsAppliedRef.current = true
+    const newSeleccion: ModificadorSeleccion = {}
+    const newOrden: string[] = []
+    initialData.modificadoresInput.forEach((input) => {
+      const gIdx = (composicion.modificadores ?? []).findIndex((g) => g._id === input.articuloModificadorId)
+      if (gIdx < 0) return
+      const grupo = composicion.modificadores![gIdx]
+      const oIdx = (grupo.opciones ?? []).findIndex((op) => {
+        if (op.articulo?.codigoArticulo !== input.codigoArticulo) return false
+        const codigoUm =
+          op.articuloUnidadMedida?.codigoUnidadMedida ??
+          op.articulo?.articuloPrecioBase?.articuloUnidadMedida?.codigoUnidadMedida ??
+          ''
+        return codigoUm === (input.articuloPrecio.codigoArticuloUnidadMedida ?? '')
+      })
+      if (oIdx < 0) return
+      const key = mkKey(gIdx, oIdx)
+      newSeleccion[key] = (newSeleccion[key] ?? 0) + (input.articuloPrecio.cantidad ?? 1)
+      if (!newOrden.includes(key)) newOrden.push(key)
+    })
+    if (Object.keys(newSeleccion).length > 0) {
+      setModificadorSeleccion(newSeleccion)
+      setModificadorOrden(newOrden)
+    }
+  }, [open, composicion, initialData])
 
   // ── Auto-remover ingredientes sin stock al cargar composicion ─────────────
   useEffect(() => {
@@ -1742,7 +1815,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
               px: 2.5,
             }}
           >
-            <span>{puedeAgregar ? 'Agregar' : 'Selección requerida'}</span>
+            <span>{puedeAgregar ? (initialData ? 'Actualizar' : 'Agregar') : 'Selección requerida'}</span>
             <Box
               component="span"
               sx={{

@@ -23,7 +23,6 @@ import { ESTADO_MESA, MesaUI } from '../interfaces/mesa.interface'
 import { useRestEspacioPorSucursal } from '../queries/useRestEspacioPorSucursal'
 import { useRestPedidoListado } from '../queries/useRestPedidoListado'
 import { useRestPedidoMesasOcupadas } from '../queries/useRestPedidoMesasOcupadas'
-import { COCINA_PEDIDO_LISTO_EVENT, COCINA_PEDIDO_LISTO_KEY } from './cocinaEvents'
 import {
   Articulo,
   ArticuloModificadorOperacionInput,
@@ -33,6 +32,7 @@ import {
   ArticuloRecetaOperacionInput,
   RestPedido,
 } from '../types'
+import { COCINA_PEDIDO_LISTO_EVENT, COCINA_PEDIDO_LISTO_KEY } from './cocinaEvents'
 import RrAcciones from './registrar/RrAcciones'
 import RrCarrito from './registrar/RrCarrito'
 import RrCategoriasProductos from './registrar/RrCategoriasProductos'
@@ -538,6 +538,8 @@ const RestRegistrar: FunctionComponent = () => {
             cortesia: false,
             variacionReceta: variacionReceta.length > 0 ? variacionReceta : undefined,
             _modificadoresInput: modificadoresInput,
+            // Referencia al Articulo original para reabrir el modal de complementos desde el carrito
+            _articulo: articulo,
             modificadores: modificadoresInput.map((m) => {
               const qty = m.articuloPrecio?.cantidad ?? 1
               return {
@@ -697,6 +699,8 @@ const RestRegistrar: FunctionComponent = () => {
                     modificadores: serverMods,
                     // Preservar _modificadoresInput con nroItem actualizado para futuras actualizaciones
                     _modificadoresInput: enrichedLocalMods.length > 0 ? enrichedLocalMods : undefined,
+                    // Preservar referencia al Articulo original para editar complementos desde el carrito
+                    _articulo: localProd?._articulo,
                   }
                 }),
               }

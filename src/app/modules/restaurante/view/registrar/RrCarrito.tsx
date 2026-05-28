@@ -36,7 +36,8 @@ import {
   TIPO_PEDIDO,
   TipoPedido,
 } from '../../interfaces/mesa.interface'
-import { ArticuloOperacion } from '../../types'
+import { Articulo, ArticuloOperacion } from '../../types'
+import RrComplementoModal from './RrComplementoModal'
 import RrOpciones from './RrOpciones'
 
 // Declaración del web component lord-icon para TypeScript
@@ -59,6 +60,29 @@ declare module 'react' {
     }
   }
 }
+
+/**
+ * Construye un Articulo mínimo desde un ArticuloOperacion del servidor.
+ * Se usa cuando el item no trae _articulo (pedidos cargados de sesiones anteriores).
+ * Se pasan esReceta y tieneModificadores como true: el servidor devuelve null/vacío
+ * si el artículo no tiene receta o modificadores, y el modal los omite.
+ */
+const buildArticuloFromOp = (item: ArticuloOperacion): Articulo =>
+  ({
+    _id: item.articuloId,
+    codigoArticulo: item.codigoArticulo,
+    nombreArticulo: item.nombreArticulo,
+    esReceta: true,
+    tieneModificadores: true,
+    articuloPrecioBase: {
+      monedaPrimaria: {
+        precio: item.articuloPrecioBase?.valor ?? item.articuloPrecio?.valor ?? 0,
+        moneda: {
+          sigla: item.articuloPrecio?.moneda?.sigla ?? item.articuloPrecioBase?.moneda?.sigla ?? 'Bs',
+        },
+      },
+    },
+  }) as any
 
 interface RrCarritoProps {
   mesaSeleccionada?: MesaUI | null
@@ -83,6 +107,8 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
   const [opcionesLlevar, setOpcionesLlevar] = useState<OpcionesParaLlevar | null>(null)
   const [notaGeneral, setNotaGeneral] = useState('')
   const [initialCartState, setInitialCartState] = useState('')
+  // Índice del item del carrito cuyo modal de complementos está abierto
+  const [editComplementoIdx, setEditComplementoIdx] = useState<number | null>(null)
 
   // Cache del cliente 00: se carga UNA sola vez al montar el componente.
   // Así al cambiar de mesa nunca se hace una llamada de red extra.
@@ -386,6 +412,14 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
                   item={producto}
                   onUpdate={(updated) => onUpdateProduct?.(index, updated)}
                   onRemove={() => onRemoveProduct?.(index)}
+                  onEditComplemento={(() => {
+                    const art = (producto as any)._articulo
+                    const tiene = art
+                      ? Boolean(art.esReceta || art.tieneModificadores)
+                      : (producto.variacionReceta?.length ?? 0) > 0 ||
+                        (producto.modificadores?.length ?? 0) > 0
+                    return tiene && producto.articuloId ? () => setEditComplementoIdx(index) : undefined
+                  })()}
                 />
               ))
             ) : (
@@ -456,6 +490,115 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
             opcionesLlevar={opcionesLlevar}
             setOpcionesLlevar={setOpcionesLlevar}
           />
+
+          {/* Modal de edición de complementos desde el carrito */}
+          {editComplementoIdx !== null && mesaSeleccionada.pedido?.productos?.[editComplementoIdx] && (
+            <RrComplementoModal
+              open={true}
+              onClose={() => setEditComplementoIdx(null)}
+              articulo={
+                (mesaSeleccionada.pedido.productos[editComplementoIdx] as any)._articulo ??
+                buildArticuloFromOp(mesaSeleccionada.pedido.productos[editComplementoIdx])
+              }
+              initialData={{
+                cantidad:
+                  mesaSeleccionada.pedido.productos[editComplementoIdx].articuloPrecio?.cantidad ??
+                  mesaSeleccionada.pedido.productos[editComplementoIdx].articuloPrecioBase?.cantidad ??
+                  1,
+                notasIds:
+                  mesaSeleccionada.pedido.productos[editComplementoIdx].notaRapida
+                    ?.map((n) => n.valor)
+                    .filter((v): v is string => Boolean(v)) ?? [],
+                variacionReceta:
+                  (mesaSeleccionada.pedido.productos[editComplementoIdx].variacionReceta as any[]) ?? [],
+                modificadoresInput:
+                  (mesaSeleccionada.pedido.productos[editComplementoIdx] as any)._modificadoresInput ?? [],
+              }}
+              onAdd={(payload) => {
+                const productos = mesaSeleccionada.pedido?.productos ?? []
+                const existingItem = productos[editComplementoIdx!]
+                if (!existingItem) {
+                  setEditComplementoIdx(null)
+                  return
+                }
+
+                const updatedItem: ArticuloOperacion = {
+                  ...existingItem,
+                  articuloPrecio: {
+                    ...existingItem.articuloPrecio,
+                    cantidad: payload.cantidad,
+                    valor: payload.precioUnitario,
+                    precio: payload.precioUnitario,
+                  },
+                  articuloPrecioBase: {
+                    ...existingItem.articuloPrecioBase,
+                    cantidad: payload.cantidad,
+                    valor: payload.precioUnitario,
+                    precio: payload.precioUnitario,
+                  },
+                  notaRapida: payload.notasIds.map((n) => ({ valor: n })),
+                  variacionReceta: payload.variacionReceta as any,
+                  modificadores: payload.modificadoresInput.map((m) => ({
+                    articuloModificadorId: m.articuloModificadorId,
+                    articuloId: m.codigoArticulo,
+                    codigoArticulo: m.codigoArticulo,
+                    nombreArticulo: (m as any).nombreArticulo || m.codigoArticulo || 'Modificador',
+                    esOpcionGratuita: m.esOpcionGratuita,
+                    elegibleParaGratis: (m as any).elegibleParaGratis,
+                    cantidadIncluida: m.articuloPrecio?.cantidad ?? 1,
+                    articuloPrecio: m.articuloPrecio as any,
+                    state: 'NUEVO',
+                  })),
+                  _modificadoresInput: payload.modificadoresInput as any,
+                  state: existingItem.state === 'ELABORADO' ? 'ACTUALIZADO' : (existingItem.state ?? 'NUEVO'),
+                } as any
+
+                // ── Verificar si el item actualizado es idéntico a otro existente → fusionar ──
+                const buildFirma = (item: any) => {
+                  const artId = item.articuloId || item.codigoArticulo || ''
+                  const vr = [...(item.variacionReceta ?? [])]
+                    .map((v: any) => `${v.codigoArticulo}:${v.removido ? 'R' : ''}${v.esExtra ? 'E' : ''}`)
+                    .sort()
+                    .join('|')
+                  const mods = [...(item.modificadores ?? [])]
+                    .map(
+                      (m: any) => `${m.codigoArticulo}:${m.articuloPrecio?.codigoArticuloUnidadMedida ?? ''}`,
+                    )
+                    .sort()
+                    .join('|')
+                  const notas = [...(item.notaRapida ?? [])]
+                    .map((n: any) => n.valor || '')
+                    .sort()
+                    .join('|')
+                  const nota = (item.nota || '').trim()
+                  return `${artId}|${vr}|${mods}|${notas}|${nota}`
+                }
+
+                const updatedFirma = buildFirma(updatedItem)
+                const matchIdx = productos.findIndex(
+                  (p, i) => i !== editComplementoIdx && buildFirma(p) === updatedFirma,
+                )
+
+                if (matchIdx >= 0) {
+                  // Fusionar: sumar cantidad al item idéntico y eliminar el editado
+                  const matchItem = productos[matchIdx]
+                  const matchQty =
+                    matchItem.articuloPrecio?.cantidad ?? matchItem.articuloPrecioBase?.cantidad ?? 1
+                  const mergedQty = matchQty + payload.cantidad
+                  onUpdateProduct?.(matchIdx, {
+                    ...matchItem,
+                    articuloPrecio: { ...matchItem.articuloPrecio, cantidad: mergedQty },
+                    articuloPrecioBase: { ...matchItem.articuloPrecioBase, cantidad: mergedQty },
+                  } as ArticuloOperacion)
+                  onRemoveProduct?.(editComplementoIdx!)
+                } else {
+                  onUpdateProduct?.(editComplementoIdx!, updatedItem)
+                }
+
+                setEditComplementoIdx(null)
+              }}
+            />
+          )}
         </>
       ) : (
         <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -507,10 +650,12 @@ const CartItem = ({
   item,
   onUpdate,
   onRemove,
+  onEditComplemento,
 }: {
   item: ArticuloOperacion
   onUpdate: (updated: ArticuloOperacion) => void
   onRemove: () => void
+  onEditComplemento?: () => void
 }) => {
   const theme = useTheme()
   const { hasStaticPermission } = useSecurity()
@@ -641,7 +786,21 @@ const CartItem = ({
       {/* Fila principal: Título y Botones */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
         <Box sx={{ flexGrow: 1, pr: 1 }}>
-          <Typography sx={{ fontSize: '0.95rem', fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
+          <Typography
+            onClick={onEditComplemento}
+            sx={{
+              fontSize: '0.95rem',
+              fontWeight: 800,
+              color: 'text.primary',
+              lineHeight: 1.2,
+              ...(onEditComplemento && {
+                textDecoration: 'underline',
+                textDecorationColor: 'text.disabled',
+                cursor: 'pointer',
+                '&:hover': { color: 'secondary.main', textDecorationColor: 'secondary.main' },
+              }),
+            }}
+          >
             {item.nombreArticulo}
             {isEdited && (
               <Typography component="span" sx={{ color: 'primary.main', fontWeight: 900, ml: 0.5 }}>
