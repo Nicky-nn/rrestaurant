@@ -590,81 +590,19 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="lg"
       fullWidth
       PaperProps={{
         sx: {
           borderRadius: 3,
           overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'row',
+          flexDirection: 'column',
           height: 'auto',
           maxHeight: '90vh',
         },
       }}
     >
-      {/* ── Panel izquierdo: imagen ── */}
-      <Box
-        sx={{
-          width: { xs: 0, sm: '40%' },
-          display: { xs: 'none', sm: 'block' },
-          flexShrink: 0,
-          position: 'relative',
-          bgcolor: 'grey.200',
-          overflow: 'hidden',
-        }}
-      >
-        {imagenUrl ? (
-          <Box
-            component="img"
-            src={imagenUrl}
-            alt={articulo.nombreArticulo}
-            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        ) : (
-          <Box
-            sx={{
-              width: '100%',
-              height: '100%',
-              minHeight: 220,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1.5,
-            }}
-          >
-            {iconLoaded ? (
-              <Box
-                ref={containerRef}
-                sx={{ width: '60%', maxWidth: 180, aspectRatio: '1/1', mixBlendMode: 'multiply' }}
-              >
-                {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-                {/* @ts-ignore - lord-icon is a custom web component not defined in JSX */}
-                <lord-icon
-                  src="https://cdn.lordicon.com/elcmkycs.json"
-                  trigger="loop"
-                  state="hover-pinch"
-                  style={{ width: '100%', height: '100%' }}
-                />
-              </Box>
-            ) : (
-              <IconButton disabled>
-                <ShoppingCartOutlined sx={{ fontSize: 100 }} />
-              </IconButton>
-            )}
-            <Typography
-              variant="caption"
-              color="text.disabled"
-              sx={{ fontStyle: 'italic', fontSize: '0.68rem', mt: -1 }}
-            >
-              Sin imagen
-            </Typography>
-          </Box>
-        )}
-      </Box>
-
-      {/* ── Panel derecho: info + selección ── */}
       <DialogContent
         sx={{
           flex: 1,
@@ -679,18 +617,51 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
           sx={{
             px: 3,
             pt: 3,
-            pb: 1.5,
+            pb: 2,
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
             flexShrink: 0,
           }}
         >
-          <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.3, pr: 1 }}>
-            {articulo.nombreArticulo}
-          </Typography>
-          <IconButton size="small" onClick={onClose} sx={{ mt: -0.5 }}>
-            <CloseIcon fontSize="small" />
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: 2,
+                overflow: 'hidden',
+                bgcolor: 'grey.100',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              {imagenUrl ? (
+                <Box
+                  component="img"
+                  src={imagenUrl}
+                  alt={articulo.nombreArticulo}
+                  sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <ShoppingCartOutlined sx={{ fontSize: 24, color: 'text.disabled' }} />
+              )}
+            </Box>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.2 }}>
+                {articulo.nombreArticulo}
+              </Typography>
+              <Typography variant="subtitle1" fontWeight={800} color="primary.main" sx={{ lineHeight: 1 }}>
+                {sigla}{precioBase.toFixed(2)}
+              </Typography>
+            </Box>
+          </Box>
+
+          <IconButton size="small" onClick={onClose} sx={{ border: '1px solid', borderColor: 'grey.200' }}>
+            <CloseIcon fontSize="small" sx={{ color: 'text.secondary' }} />
           </IconButton>
         </Box>
 
@@ -1056,76 +1027,93 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                 </Box>
               )}
 
-              {/* ── Sección: Modificadores ─────────────────────────────────── */}
-              {tieneModificadores && (composicion?.modificadores ?? []).length > 0 && (
-                <Box sx={{ mb: 2.5 }}>
-                  {(composicion?.modificadores ?? []).map((grupo, gIdx) => {
-                    const esObligatorio = (grupo.minSeleccion ?? 0) > 0
-                    const maxSel = (grupo.maxSeleccion ?? 0) * cantidad
-                    const grupoOpciones = grupo.opciones ?? []
-                    const totalSelGrupo = grupoOpciones.reduce(
-                      (s, _op, oIdx) => s + (modificadorSeleccion[mkKey(gIdx, oIdx)] ?? 0),
-                      0,
-                    )
-                    const grupoLleno = maxSel > 0 && totalSelGrupo >= maxSel
-                    const minAlcanzado = totalSelGrupo >= (grupo.minSeleccion ?? 0) * cantidad
+              {/* ── Sección: Modificadores y Notas Rápidas ─────────────────────────────────── */}
+              <Box
+                sx={{
+                  mb: 2.5,
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 2.5,
+                  alignItems: 'flex-start',
+                }}
+              >
+                {tieneModificadores && (composicion?.modificadores ?? []).length > 0 && (
+                  <>
+                    {(composicion?.modificadores ?? []).map((grupo, gIdx) => {
+                      const esObligatorio = (grupo.minSeleccion ?? 0) > 0
+                      const maxSel = (grupo.maxSeleccion ?? 0) * cantidad
+                      const grupoOpciones = grupo.opciones ?? []
+                      const totalSelGrupo = grupoOpciones.reduce(
+                        (s, _op, oIdx) => s + (modificadorSeleccion[mkKey(gIdx, oIdx)] ?? 0),
+                        0,
+                      )
+                      const grupoLleno = maxSel > 0 && totalSelGrupo >= maxSel
+                      const minAlcanzado = totalSelGrupo >= (grupo.minSeleccion ?? 0) * cantidad
 
-                    // Ancla del grupo para agrandados
-                    const anclaOpDisplay = grupoOpciones.find((o) => o.esOpcionAncla === true)
-                    const precioAnclaDisplay = anclaOpDisplay?.articulo
-                      ? getPrecioParaUM(
-                          anclaOpDisplay.articulo,
-                          anclaOpDisplay.articuloUnidadMedida?.codigoUnidadMedida,
-                        )
-                      : null
-                    const tieneAnclaDisplay = precioAnclaDisplay !== null
+                      // Ancla del grupo para agrandados
+                      const anclaOpDisplay = grupoOpciones.find((o) => o.esOpcionAncla === true)
+                      const precioAnclaDisplay = anclaOpDisplay?.articulo
+                        ? getPrecioParaUM(
+                            anclaOpDisplay.articulo,
+                            anclaOpDisplay.articuloUnidadMedida?.codigoUnidadMedida,
+                          )
+                        : null
+                      const tieneAnclaDisplay = precioAnclaDisplay !== null
 
-                    // Cupos cubiertos por gratuidad (eligible) y por ancla (no-eligible con agrandado)
-                    const cuposGratisDisplay = (grupo.opcionesGratuitas ?? 0) * cantidad
-                    const freeQtyPerArt: Record<string, number> = {}
-                    const anclaQtyPerArt: Record<string, number> = {}
-                    if (cuposGratisDisplay > 0) {
-                      const candidatas = grupoOpciones
-                        .map((op, oIdx) => ({
-                          artId: mkKey(gIdx, oIdx),
-                          qty: modificadorSeleccion[mkKey(gIdx, oIdx)] ?? 0,
-                          elegible: op.elegibleParaGratis === true,
-                        }))
-                        .filter((o) => o.qty > 0)
-                        .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId))
-                      let restantes = cuposGratisDisplay
-                      for (const o of candidatas) {
-                        if (restantes <= 0) break
-                        if (o.elegible) {
-                          const gratisQty = Math.min(restantes, o.qty)
-                          freeQtyPerArt[o.artId] = gratisQty
-                          restantes -= gratisQty
-                        } else if (tieneAnclaDisplay) {
-                          const anclaQty = Math.min(restantes, o.qty)
-                          anclaQtyPerArt[o.artId] = anclaQty
-                          restantes -= anclaQty
+                      // Cupos cubiertos por gratuidad (eligible) y por ancla (no-eligible con agrandado)
+                      const cuposGratisDisplay = (grupo.opcionesGratuitas ?? 0) * cantidad
+                      const freeQtyPerArt: Record<string, number> = {}
+                      const anclaQtyPerArt: Record<string, number> = {}
+                      if (cuposGratisDisplay > 0) {
+                        const candidatas = grupoOpciones
+                          .map((op, oIdx) => ({
+                            artId: mkKey(gIdx, oIdx),
+                            qty: modificadorSeleccion[mkKey(gIdx, oIdx)] ?? 0,
+                            elegible: op.elegibleParaGratis === true,
+                          }))
+                          .filter((o) => o.qty > 0)
+                          .sort((a, b) => modificadorOrden.indexOf(a.artId) - modificadorOrden.indexOf(b.artId))
+                        let restantes = cuposGratisDisplay
+                        for (const o of candidatas) {
+                          if (restantes <= 0) break
+                          if (o.elegible) {
+                            const gratisQty = Math.min(restantes, o.qty)
+                            freeQtyPerArt[o.artId] = gratisQty
+                            restantes -= gratisQty
+                          } else if (tieneAnclaDisplay) {
+                            const anclaQty = Math.min(restantes, o.qty)
+                            anclaQtyPerArt[o.artId] = anclaQty
+                            restantes -= anclaQty
+                          }
                         }
                       }
-                    }
 
-                    // Cupos libres (sin asignar) para mostrar en UI
-                    const cuposUsadosGrupo =
-                      Object.values(freeQtyPerArt).reduce((s, v) => s + v, 0) +
-                      Object.values(anclaQtyPerArt).reduce((s, v) => s + v, 0)
-                    const cuposLibresGrupo = cuposGratisDisplay - cuposUsadosGrupo
+                      // Cupos libres (sin asignar) para mostrar en UI
+                      const cuposUsadosGrupo =
+                        Object.values(freeQtyPerArt).reduce((s, v) => s + v, 0) +
+                        Object.values(anclaQtyPerArt).reduce((s, v) => s + v, 0)
+                      const cuposLibresGrupo = cuposGratisDisplay - cuposUsadosGrupo
 
-                    return (
-                      <Box
-                        key={grupo._id ?? gIdx}
-                        sx={{ mb: gIdx < (composicion?.modificadores ?? []).length - 1 ? 2.5 : 0 }}
-                      >
+                      return (
+                        <Box
+                          key={grupo._id ?? gIdx}
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 4,
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.03) : alpha(theme.palette.common.black, 0.02),
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            flex: '1 1 320px',
+                            minWidth: 0,
+                          }}
+                        >
                         {/* Cabecera del grupo */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
                           <Typography
                             variant="overline"
-                            fontWeight={700}
+                            fontWeight={800}
                             color={esObligatorio && !minAlcanzado ? 'warning.main' : 'text.secondary'}
-                            sx={{ letterSpacing: '0.1em', fontSize: '0.7rem', lineHeight: 1.4 }}
+                            sx={{ letterSpacing: '0.05em', fontSize: '0.75rem', lineHeight: 1.4 }}
                           >
                             {grupo.nombre}
                           </Typography>
@@ -1141,7 +1129,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                               size="small"
                               color={minAlcanzado ? 'success' : 'warning'}
                               variant={minAlcanzado ? 'filled' : 'outlined'}
-                              sx={{ height: 18, fontSize: '0.6rem' }}
+                              sx={{ height: 18, fontSize: '0.65rem', fontWeight: 600 }}
                             />
                           )}
                           {maxSel > 0 && (
@@ -1150,25 +1138,22 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                               size="small"
                               variant="outlined"
                               color={grupoLleno ? 'primary' : 'default'}
-                              sx={{ height: 18, fontSize: '0.6rem' }}
+                              sx={{ height: 18, fontSize: '0.65rem', fontWeight: 600 }}
                             />
                           )}
                           {(grupo.opcionesGratuitas ?? 0) > 0 && (
-                            <Chip
-                              label={`${(grupo.opcionesGratuitas ?? 0) * cantidad} gratis`}
-                              size="small"
-                              color="success"
-                              sx={{ height: 18, fontSize: '0.6rem' }}
-                            />
+                            <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: 'primary.main' }}>
+                              ({(grupo.opcionesGratuitas ?? 0) * cantidad} gratis)
+                            </Typography>
                           )}
                         </Box>
 
-                        {/* Opciones: diseño grid de tarjetas sin imagen */}
+                        {/* Opciones: lista vertical */}
                         <Box
                           sx={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
-                            gap: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 1.5,
                           }}
                         >
                           {grupoOpciones.map((op: ArticuloModificadorOpcionOperacion, oIdx: number) => {
@@ -1184,10 +1169,7 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                               ? getPrecioParaUM(op.articulo, op.articuloUnidadMedida?.codigoUnidadMedida)
                               : 0
                             const opSigla = op.articulo ? getSigla(op.articulo) : sigla
-                            // Verificar disponibilidad de stock para artículos que verifican stock.
-                            // NOTA: lotes está deprecated y siempre llega null desde el servidor,
-                            // por eso la verificación se hace exclusivamente por disponible del almacén
-                            // (mostrarAlmacenConStock:true → filtra almacenes con disponible > 0).
+                            
                             const necesitaVerificarStock = op.articulo?.verificarStock === true
                             const stockCheck = necesitaVerificarStock
                               ? articuloToArticuloOperacionInputService(
@@ -1235,183 +1217,109 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                                 ? Math.max(0, precio - precioAnclaDisplay)
                                 : precio
 
+                            const imgUrl = op.articulo?.imagen?.variants?.thumbnail ?? op.articulo?.imagen?.variants?.medium ?? null;
+
                             return (
                               <Box
                                 key={selKey}
                                 sx={{
                                   display: 'flex',
-                                  flexDirection: 'column',
-                                  justifyContent: 'space-between',
-                                  minHeight: 72,
-                                  p: 1.5,
-                                  border: '2px solid',
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  width: '100%',
+                                  minHeight: 56,
+                                  p: 1.25,
+                                  gap: 1.5,
+                                  border: '1px solid',
                                   borderColor: sinStock
                                     ? 'error.light'
                                     : selected
                                       ? esCompletamenteGratis
-                                        ? 'success.main'
-                                        : 'primary.main'
-                                      : 'divider',
+                                        ? 'success.light'
+                                        : 'primary.light'
+                                      : 'grey.200',
                                   borderRadius: 3,
                                   bgcolor: sinStock
                                     ? (theme) => alpha(theme.palette.error.main, 0.04)
                                     : selected
                                       ? esCompletamenteGratis
-                                        ? (theme) => alpha(theme.palette.success.main, 0.08)
-                                        : (theme) => alpha(theme.palette.primary.main, 0.06)
+                                        ? (theme) => alpha(theme.palette.success.main, 0.02)
+                                        : (theme) => alpha(theme.palette.primary.main, 0.02)
                                       : 'background.paper',
                                   transition: 'all 0.15s ease',
                                   opacity: disabled ? 0.5 : 1,
                                   cursor: disabled ? 'not-allowed' : 'pointer',
                                   userSelect: 'none',
+                                  boxShadow: selected ? '0 2px 8px rgba(0,0,0,0.04)' : 'none',
                                 }}
                                 onClick={() => {
                                   if (!disabled) setOpcionQty(gIdx, oIdx, 1, grupoOpciones, maxSel)
                                 }}
                               >
-                                {/* Stock disponible: encima del nombre, muy sutil */}
-                                {labelStockMod !== null && (
-                                  <Typography
-                                    sx={{
-                                      fontSize: '0.58rem',
-                                      color: 'text.disabled',
-                                      lineHeight: 1,
-                                      mb: 0.4,
-                                      userSelect: 'none',
-                                    }}
-                                  >
-                                    {labelStockMod}
-                                  </Typography>
-                                )}
-
-                                {/* Fila superior: nombre (izq) + precio (der) */}
-                                <Box
-                                  sx={{
-                                    display: 'flex',
-                                    alignItems: 'flex-start',
-                                    justifyContent: 'space-between',
-                                    gap: 0.5,
-                                  }}
-                                >
-                                  <Typography
-                                    variant="body2"
-                                    fontWeight={selected ? 700 : 500}
-                                    color={
-                                      selected
-                                        ? esCompletamenteGratis
-                                          ? 'success.main'
-                                          : 'primary.main'
-                                        : 'text.primary'
-                                    }
-                                    sx={{
-                                      flex: 1,
-                                      lineHeight: 1.25,
-                                      overflow: 'hidden',
-                                      display: '-webkit-box',
-                                      WebkitBoxOrient: 'vertical',
-                                      WebkitLineClamp: 2,
-                                    }}
-                                  >
-                                    {nombre}
-                                  </Typography>
-                                  {/* Precio al lado derecho del nombre */}
-                                  {!sinStock && precio > 0 && !esCompletamenteGratis && (
-                                    <Typography
-                                      variant="body2"
-                                      fontWeight={700}
-                                      color={
-                                        selected
-                                          ? esDescuentoAncla
-                                            ? 'warning.main'
-                                            : 'primary.main'
-                                          : 'text.secondary'
-                                      }
-                                      sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
-                                    >
-                                      {`+${opSigla}${precioDisplay.toFixed(2)}`}
-                                    </Typography>
+                                {/* Izquierda: Imagen o Iniciales */}
+                                <Box sx={{
+                                  width: 44, height: 44, borderRadius: 2, flexShrink: 0,
+                                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  color: 'primary.main', fontWeight: 800, fontSize: '0.85rem',
+                                  overflow: 'hidden'
+                                }}>
+                                  {imgUrl ? (
+                                    <Box component="img" src={imgUrl} alt={nombre} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  ) : (
+                                    nombre.substring(0, 2).toUpperCase()
                                   )}
                                 </Box>
 
-                                {/* Fila inferior: chips de estado (izq) + stepper (der) */}
-                                <Box
-                                  sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    gap: 0.5,
-                                  }}
-                                >
-                                  {/* Chips de estado */}
-                                  <Box
-                                    sx={{ display: 'flex', gap: 0.5, flexWrap: 'nowrap', overflow: 'hidden' }}
+                                {/* Centro: Nombre, Precio y Chips */}
+                                <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 0.25, minWidth: 0 }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    {labelStockMod !== null && (
+                                      <Typography sx={{ fontSize: '0.55rem', color: 'text.disabled', lineHeight: 1 }}>
+                                        {labelStockMod}
+                                      </Typography>
+                                    )}
+                                    {sinStock && (
+                                      <Chip label="Sin stock" size="small" color="error" sx={{ height: 16, fontSize: '0.55rem' }} />
+                                    )}
+                                  </Box>
+                                  
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight={selected ? 700 : 600}
+                                    color={selected ? 'text.primary' : 'text.secondary'}
+                                    sx={{ lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                                   >
-                                    {sinStock ? (
-                                      <Chip
-                                        label="Sin stock"
-                                        size="small"
-                                        color="error"
-                                        sx={{ height: 18, fontSize: '0.6rem' }}
-                                      />
-                                    ) : esCompletamenteGratis ? (
-                                      <Chip
-                                        label="GRATIS"
-                                        size="small"
-                                        color="success"
-                                        sx={{ height: 18, fontSize: '0.6rem' }}
-                                      />
+                                    {nombre}
+                                  </Typography>
+                                  
+                                  <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.75, mt: 0.25 }}>
+                                    {!sinStock && precio > 0 && !esCompletamenteGratis && (
+                                      <Typography
+                                        variant="caption"
+                                        fontWeight={800}
+                                        color="primary.main"
+                                        sx={{ lineHeight: 1 }}
+                                      >
+                                        {`+${opSigla}${precioDisplay.toFixed(2)}`}
+                                      </Typography>
+                                    )}
+                                    
+                                    {esCompletamenteGratis ? (
+                                      <Chip label="GRATIS" size="small" color="success" sx={{ height: 16, fontSize: '0.55rem', fontWeight: 700, px: 0.5 }} />
                                     ) : (
                                       <>
-                                        {esParcialmenteGratis && (
-                                          <Chip
-                                            label={`${cubiertoPorGratis} gratis`}
-                                            size="small"
-                                            color="success"
-                                            sx={{ height: 18, fontSize: '0.6rem' }}
-                                          />
-                                        )}
-                                        {esDescuentoAncla && precioAnclaDisplay !== null && (
-                                          <Chip
-                                            label={`-${opSigla}${precioAnclaDisplay.toFixed(2)}`}
-                                            size="small"
-                                            color="warning"
-                                            sx={{
-                                              height: 18,
-                                              fontSize: '0.6rem',
-                                              '& .MuiChip-label': { px: 0.75 },
-                                            }}
-                                          />
-                                        )}
-                                        {aplicaAgrandadoPreview && precioAnclaDisplay !== null && (
-                                          <Chip
-                                            label={`Agrandar +${opSigla}${Math.max(0, precio - precioAnclaDisplay).toFixed(2)}`}
-                                            size="small"
-                                            color="warning"
-                                            variant="outlined"
-                                            sx={{
-                                              height: 18,
-                                              fontSize: '0.6rem',
-                                              '& .MuiChip-label': { px: 0.75 },
-                                            }}
-                                          />
-                                        )}
-                                        {op.elegibleParaGratis === true && cuposLibresGrupo > 0 && (
-                                          <Chip
-                                            label="APTO PARA REGALO"
-                                            size="medium"
-                                            color="warning"
-                                            sx={{
-                                              height: 18,
-                                              fontSize: '0.6rem',
-                                              '& .MuiChip-label': { px: 0.75 },
-                                            }}
-                                          />
-                                        )}
+                                        {esParcialmenteGratis && <Chip label={`${cubiertoPorGratis} gratis`} size="small" color="success" sx={{ height: 16, fontSize: '0.55rem', fontWeight: 700, px: 0.5 }} />}
+                                        {esDescuentoAncla && precioAnclaDisplay !== null && <Chip label={`-${opSigla}${precioAnclaDisplay.toFixed(2)}`} size="small" color="warning" sx={{ height: 16, fontSize: '0.55rem', fontWeight: 700, px: 0.5 }} />}
+                                        {aplicaAgrandadoPreview && precioAnclaDisplay !== null && <Chip label={`Agrandar +${opSigla}${Math.max(0, precio - precioAnclaDisplay).toFixed(2)}`} size="small" color="warning" variant="outlined" sx={{ height: 16, fontSize: '0.55rem', fontWeight: 700, px: 0.5 }} />}
+                                        {op.elegibleParaGratis === true && cuposLibresGrupo > 0 && <Chip label="APTO PARA REGALO" size="small" color="success" sx={{ height: 16, fontSize: '0.55rem', fontWeight: 700, border: '1px solid', borderColor: 'success.light', bgcolor: (theme) => alpha(theme.palette.success.main, 0.1), color: 'success.dark' }} />}
                                       </>
                                     )}
                                   </Box>
+                                </Box>
 
-                                  {/* Stepper compacto */}
+                                {/* Derecha: Stepper */}
+                                <Box sx={{ flexShrink: 0 }}>
                                   <QtyStepperInline
                                     qty={qty}
                                     maxReached={grupoLleno || sinStock}
@@ -1423,28 +1331,39 @@ const RrComplementoModal: FunctionComponent<RrComplementoModalProps> = ({
                             )
                           })}
                         </Box>
-
-                        {gIdx < (composicion?.modificadores ?? []).length - 1 && <Divider sx={{ mt: 2 }} />}
                       </Box>
                     )
+
                   })}
+                  </>
+                )}
+
+                {/* ── Notas rápidas (como tarjeta adicional en el grid) ── */}
+                <Box
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 4,
+                    bgcolor: (theme) => theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.03) : alpha(theme.palette.common.black, 0.02),
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flex: '999 1 320px',
+                    minWidth: 0,
+                  }}
+                >
+                  <RrNotasRapidas
+                    notasPredefinidas={notas}
+                    selectedNotas={selectedNotas}
+                    onChange={setSelectedNotas}
+                    permitePersonalizada={true}
+                    storageId={articulo.tipoArticulo?._id ?? articulo._id}
+                    open={open}
+                  />
                 </Box>
-              )}
+              </Box>
             </>
           )}
-
-          {/* ── Notas rápidas ────────────────────────────────────────────────
-              selectedNotas siempre empieza vacío al abrir.
-              El LS solo ordena las notas (más utilizadas primero),
-              no las pre-selecciona. ── */}
-          <RrNotasRapidas
-            notasPredefinidas={notas}
-            selectedNotas={selectedNotas}
-            onChange={setSelectedNotas}
-            permitePersonalizada={true}
-            storageId={articulo.tipoArticulo?._id ?? articulo._id}
-            open={open}
-          />
         </Box>
 
         {/* ── Resumen de variaciones de receta ── */}
