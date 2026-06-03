@@ -87,6 +87,11 @@ export const ARTICULOCOMPOSICIONVENTAFRAGMENT = gql`
       opciones {
         articulo {
           _id
+          imagen {
+            variants {
+              medium
+            }
+          }
           codigoArticulo
           articuloPrecioId
           nombreArticulo
