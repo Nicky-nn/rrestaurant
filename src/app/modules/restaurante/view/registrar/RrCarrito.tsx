@@ -925,7 +925,7 @@ const CartItem = ({
             border: '1px solid',
             borderColor: 'divider',
             borderRadius: 2,
-            bgcolor: '#fcfcfc',
+            bgcolor: 'background.paper',
             p: 1,
             mb: 0.5,
             mt: 0.5,
@@ -954,7 +954,7 @@ const CartItem = ({
                 decimalScale={2}
                 min={0}
                 disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:EDITAR_PRECIO_ITEM')}
-                sx={{ bgcolor: '#fff', '& .MuiOutlinedInput-input': { p: 1, fontSize: '0.85rem' } }}
+                sx={{ bgcolor: 'background.default', '& .MuiOutlinedInput-input': { p: 1, fontSize: '0.85rem' } }}
               />
             </Box>
             <Box sx={{ flex: 1 }}>
@@ -977,7 +977,7 @@ const CartItem = ({
                   disabled
                   value="-"
                   sx={{
-                    bgcolor: '#f5f5f5',
+                    bgcolor: 'action.disabledBackground',
                     fontSize: '0.85rem',
                     '& .MuiOutlinedInput-input': { p: 1, textAlign: 'center', fontWeight: 'bold' },
                   }}
@@ -992,7 +992,7 @@ const CartItem = ({
                   decimalScale={2}
                   min={0}
                   disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:EDITAR_DESCUENTO_ITEM')}
-                  sx={{ bgcolor: '#fff', '& .MuiOutlinedInput-input': { p: 1, fontSize: '0.85rem' } }}
+                  sx={{ bgcolor: 'background.default', '& .MuiOutlinedInput-input': { p: 1, fontSize: '0.85rem' } }}
                 />
               )}
             </Box>
@@ -1016,7 +1016,7 @@ const CartItem = ({
               placeholder="Ej. Sin sal, extra mayonesa..."
               value={nota}
               onChange={(e) => setNota(e.target.value)}
-              sx={{ bgcolor: '#fff', fontSize: '0.85rem', '& .MuiOutlinedInput-input': { p: 1 } }}
+              sx={{ bgcolor: 'background.default', fontSize: '0.85rem', '& .MuiOutlinedInput-input': { p: 1 } }}
             />
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
