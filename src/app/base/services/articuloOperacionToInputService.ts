@@ -1,13 +1,15 @@
-import { ArticuloOperacionProps } from '../../interfaces/articulo.ts'
-import { ArticuloOperacionInputProps } from '../../interfaces/articuloOperacion.ts'
-import { genRandomString } from '../../utils/helper.ts'
+import { ArticuloOperacionProps } from "../../interfaces/articulo.ts";
+import { ArticuloOperacionInputProps } from "../../interfaces/articuloOperacion.ts";
+import { genRandomString } from "../../utils/helper.ts";
 
 /**
  * Decodificamos un objecto articuloOperacion a su equivalente articuloOperacionInputProp
  * @param ao
  * @author isi-template
  */
-export const articuloOperacionToInputService = (ao: ArticuloOperacionProps): ArticuloOperacionInputProps => {
+export const articuloOperacionToInputService = (
+  ao: ArticuloOperacionProps,
+): ArticuloOperacionInputProps => {
   return {
     id: genRandomString(10).toUpperCase(),
     nroItem: ao.nroItem,
@@ -24,13 +26,18 @@ export const articuloOperacionToInputService = (ao: ArticuloOperacionProps): Art
     articuloUnidadMedida: ao.articuloPrecio.articuloUnidadMedida,
     cantidadOriginal: ao.articuloPrecio.cantidad,
     cantidad: ao.articuloPrecio.cantidad,
+    cantidadFactor: ao.articuloPrecio.cantidadFactor,
     descuento: ao.articuloPrecio.descuento,
     descuentoP: 0,
     impuesto: ao.articuloPrecio.impuesto,
+    costo: ao.articuloPrecio.costo,
     precio: ao.articuloPrecio.valor,
+    costoAnterior: ao.articuloPrecio.costo,
+    precioAnterior: ao.articuloPrecio.valor,
     moneda: ao.articuloPrecio.moneda,
     detalleExtra: ao.detalleExtra,
     nota: ao.nota,
     verificarStock: ao.verificarStock,
-  }
-}
+    porcentajeCosto: 0,
+  };
+};

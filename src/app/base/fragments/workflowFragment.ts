@@ -1,6 +1,6 @@
 // noinspection GraphQLUnresolvedReference
 
-import { gql } from 'graphql-request'
+import { gql } from "graphql-request";
 
 /**
  * Trazabilidad o auditoria del usuario
@@ -8,8 +8,10 @@ import { gql } from 'graphql-request'
  */
 export const workflowFragment = gql`
   fragment workflowFields on Workflow {
+    estadoAnterior
+    estadoNuevo
     usuario
     fecha
     comentario
   }
-`
+`;

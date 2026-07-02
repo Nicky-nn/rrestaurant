@@ -1,25 +1,26 @@
-import { ArticleOutlined } from '@mui/icons-material'
 import { Box, Divider, FormControl, Grid, Paper, Stack, TextField, Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import React, { FunctionComponent, useCallback, useEffect, useMemo } from 'react'
-import { Control, Controller, UseFormSetValue, useWatch } from 'react-hook-form'
+import { Control, Controller, UseFormGetValues, UseFormSetValue, useWatch } from 'react-hook-form'
 
 import { apiAlmacenPorSucursalListado } from '../../../../../../base/api/apiAlmacenPorSucursalListado.ts'
+import { SimpleBox } from '../../../../../../base/components/Container/SimpleBox.tsx'
 import { FormDescuentoField } from '../../../../../../base/components/Form/FormDescuentoField.tsx'
 import FormSelect from '../../../../../../base/components/Form/FormSelect.tsx'
 import { numberWithCommasPlaces } from '../../../../../../base/components/MyInputs/NumberInput.tsx'
 import NumberSpinnerField from '../../../../../../base/components/NumberSpinnerField/NumberSpinnerField.tsx'
 import MontoMonedaTexto from '../../../../../../base/components/PopoverMonto/MontoMonedaTexto.tsx'
 import { PreloadFieldSkeleton } from '../../../../../../base/components/skeleton/PreloadFieldSkeleton.tsx'
-import SimpleCard from '../../../../../../base/components/Template/Cards/SimpleCard.tsx'
 import { transformarArticuloPrecioService } from '../../../../../../base/services/transformarArticuloPrecioService.ts'
 import { EntidadInputProps } from '../../../../../../interfaces'
 import { ArticuloProps } from '../../../../../../interfaces/articulo.ts'
 import { ArticuloOperacionInputProps } from '../../../../../../interfaces/articuloOperacion.ts'
+import { ArticuloPrecioProps } from '../../../../../../interfaces/articuloPrecio.ts'
 import { ArticuloUnidadMedidaProps } from '../../../../../../interfaces/articuloUnidadMedida.ts'
 import { apiGestionArticulo } from '../../../../../../interfaces/gestionArticulo.ts'
-import { InventarioOperacionProps } from '../../../../../../interfaces/InventarioOperacion.ts'
+import { ArticuloInventarioOperacionProps } from '../../../../../../interfaces/InventarioOperacion.ts'
 import { MonedaProps } from '../../../../../../interfaces/monedaPrecio.ts'
+import { getColor } from '../../../../../../utils/getColor.ts'
 import { handleFocus } from '../../../../../../utils/helper.ts'
 import ArticuloUnidadMedidaSeleccion, {
   UnidadMedidaSeleccionProps,
@@ -40,8 +41,19 @@ import {
   PrecioSeleccionProps,
 } from './ArticuloSeleccionInventarioTypes.ts'
 
+/**
+ * Redondea un número a una cantidad específica de decimales de forma segura,
+ * evitando los errores de coma flotante nativos de JavaScript.
+ */
+const aifRound = (num: number | null | undefined, decimals: number = 2): number => {
+  if (num == null || isNaN(num)) return 0
+  if (decimals === 0) return Math.round(num)
+  const roundedStr = Math.round(Number(num + 'e' + decimals)) + 'e-' + decimals
+  return Number(roundedStr)
+}
+
 // =========================================================================
-// ENVOLTORIO PARA AISLAR EL RENDER DEL DESCUENTO
+// ENVOLTORIOS PARA AISLAR EL RENDER DEL DESCUENTO
 // =========================================================================
 interface WrapperDescuentoProps {
   control: Control<ArticuloOperacionInputProps>
@@ -49,6 +61,8 @@ interface WrapperDescuentoProps {
   monedaSigla: string
   disabled?: boolean
   nroDecimales: number
+  step: number
+  min: number
 }
 
 const WrapperDescuento: FunctionComponent<WrapperDescuentoProps> = ({
@@ -57,14 +71,15 @@ const WrapperDescuento: FunctionComponent<WrapperDescuentoProps> = ({
   monedaSigla,
   disabled,
   nroDecimales,
+  step,
+  min,
 }) => {
-  // Solo este pequeño wrapper se re-renderiza cuando cambian la cantidad o el precio
   const [cantidad, precio] = useWatch({
     control,
     name: ['cantidad', 'precio'],
   })
 
-  const subtotal = (Number(cantidad) || 0) * (Number(precio) || 0)
+  const subtotal = aifRound((Number(cantidad) || 0) * (Number(precio) || 0))
 
   return (
     <FormDescuentoField
@@ -76,38 +91,49 @@ const WrapperDescuento: FunctionComponent<WrapperDescuentoProps> = ({
       monedaSigla={monedaSigla}
       disabled={disabled}
       nroDecimales={nroDecimales}
+      step={step}
+      min={min}
+    />
+  )
+}
+
+// Nuevo envoltorio para solucionar el bug visual del ReadOnly
+const DescuentoReadOnly: FunctionComponent<{
+  control: Control<ArticuloOperacionInputProps>
+  monedaSigla: string
+  props?: DescuentoSeleccionProps
+}> = ({ control, monedaSigla, props }) => {
+  const descuentoWatch = useWatch({ control, name: 'descuento' })
+  return (
+    <TextField
+      id="descuento-readonly"
+      label={props?.label ?? 'Descuento'}
+      value={props?.ocultar ? '--' : numberWithCommasPlaces(descuentoWatch || 0, props?.nroDecimales ?? 2)}
+      size="small"
+      fullWidth
+      disabled={true}
+      slotProps={{ input: { readOnly: true, endAdornment: monedaSigla } }}
     />
   )
 }
 
 // =========================================================================
 // COMPONENTE AISLADO: RESUMEN DE CÁLCULOS
-// Extraemos la observación de campos de alta frecuencia aquí
-// para evitar re-renderizar al momento de teclear
 // =========================================================================
 interface ResumenCalculosProps {
   control: Control<ArticuloOperacionInputProps>
   moneda: MonedaProps
 }
 
-/**
- * Componente para generar los totales
- * @param control
- * @param setValue
- * @param moneda
- * @constructor
- */
 const ResumenCalculos: FunctionComponent<ResumenCalculosProps> = ({ control, moneda }) => {
-  // 1. Escuchamos directamente el MONTO (descuento), no el porcentaje
   const [cantidad, precio, descuentoMonto, descuentoPWatch] = useWatch({
     control,
     name: ['cantidad', 'precio', 'descuento', 'descuentoP'],
   })
 
-  // 2. Cálculos simples
   const calculos = useMemo(() => {
     const subtotal = (Number(cantidad) || 0) * (Number(precio) || 0)
-    const montoDescuento = Number(descuentoMonto) || 0 // Ya viene calculado desde el wrapper
+    const montoDescuento = Number(descuentoMonto) || 0
     const totalNeto = subtotal - montoDescuento
 
     return { subtotal, montoDescuento, totalNeto }
@@ -150,19 +176,17 @@ const ResumenCalculos: FunctionComponent<ResumenCalculosProps> = ({ control, mon
           />
         </Stack>
 
-        {/* DESCUENTO */}
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="body2" color="text.secondary" noWrap>
             Descuento{' '}
             <Box component="span" sx={{ color: 'error.main', fontWeight: 700 }}>
-              {/* Seguimos mostrando el % visualmente para el cliente */}(
-              {Number(descuentoPWatch || 0).toFixed(2)}%)
+              ({Number(descuentoPWatch || 0).toFixed(2)}%)
             </Box>
           </Typography>
           <MontoMonedaTexto
             boxProps={{ color: 'error.main', fontSize: 'medium' }}
             label={'- '}
-            monto={calculos.montoDescuento} // Mostramos el monto exacto
+            monto={calculos.montoDescuento}
             sigla={moneda.sigla}
           />
         </Stack>
@@ -178,18 +202,15 @@ const ResumenCalculos: FunctionComponent<ResumenCalculosProps> = ({ control, mon
         >
           <Typography
             variant="button"
-            sx={{
-              fontSize: { xs: '0.90rem', sm: '1rem' },
-              fontWeight: 800,
-              whiteSpace: 'nowrap',
-            }}
+            sx={{ fontSize: { xs: '0.90rem', sm: '1rem' }, fontWeight: 800, whiteSpace: 'nowrap' }}
           >
             TOTAL
           </Typography>
           <MontoMonedaTexto
             boxProps={{
-              color: (theme) => theme.palette.blue.light,
+              color: (theme) => getColor(theme, 'blue').textColor,
               fontSize: 'large',
+              fontWeight: 600,
             }}
             monto={calculos.totalNeto}
             sigla={moneda.sigla}
@@ -203,10 +224,11 @@ const ResumenCalculos: FunctionComponent<ResumenCalculosProps> = ({ control, mon
 interface OwnProps {
   control: Control<ArticuloOperacionInputProps>
   setValue: UseFormSetValue<ArticuloOperacionInputProps>
+  getValues: UseFormGetValues<ArticuloOperacionInputProps>
   articulo: ArticuloProps
   moneda: MonedaProps
-  inventario: InventarioOperacionProps | null
-  open: boolean // si es true, se cargan los datos, open de dialog
+  inventario: ArticuloInventarioOperacionProps | null
+  open: boolean
   entidad: EntidadInputProps
   almacenProps: AlmacenSeleccionProps
   loteProps: LoteSeleccionProps
@@ -214,17 +236,11 @@ interface OwnProps {
   cantidadProps?: CantidadSeleccionProps
   precioProps?: PrecioSeleccionProps
   descuentoProps?: DescuentoSeleccionProps
-  ocultarCalculos?: boolean // Si queremos ocultar el cuadro de calculos
+  ocultarCalculos?: boolean
 }
 
 type Props = OwnProps
 
-/**
- * Tarjeta de formulario de artículo con inventario
- * Soporta múltiples fuentes de datos para almacenes y lotes
- * @param props
- * @constructor
- */
 const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
   const {
     articulo,
@@ -234,6 +250,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     open,
     entidad,
     setValue,
+    getValues,
     loteProps,
     almacenProps,
     unidadMedidaProps,
@@ -243,14 +260,13 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     ocultarCalculos = false,
   } = props
 
-  // ===== OBSERVACON DE CAMPOS DEL FORMULARIO =====
-  // Solo observamos dependencias estructurales que cambian selects o listas
+  // ===== OBSERVACIÓN OPTIMIZADA =====
   const [almacenWatch, articuloUnidadMedidaWatch] = useWatch({
     control,
     name: ['almacen', 'articuloUnidadMedida'],
   })
 
-  // ===== CARGA DE ALMACENES DESDE TABLA (solo si fuente === 'tbl') =====
+  // ===== CARGA DE ALMACENES DESDE TABLA =====
   const {
     data: almacenesTabla,
     isLoading: loadingAlmacenesTabla,
@@ -267,37 +283,26 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
   // ===== PROCESAMIENTO DE ALMACENES SEGÚN LA FUENTE =====
   const almacenes = useMemo(() => {
     const fuente = almacenProps.fuente || 'tbl'
-
     if (fuente === 'tbl') {
-      // Usar almacenes de la tabla general
       return almacenesTabla ? procesarAlmacenesDesdeTabla(almacenesTabla, almacenProps) : []
     } else {
-      // Usar almacenes del inventario del artículo
       const inventarioDetalle = articulo?.inventario?.[0]?.detalle || []
       return procesarAlmacenesDesdeInventario(inventarioDetalle, almacenProps)
     }
   }, [almacenProps, almacenesTabla, articulo])
 
-  // loading siempre y cuando sea de tbl
   const loadingAlmacenes = (almacenProps.fuente || 'tbl') === 'tbl' ? loadingAlmacenesTabla : false
 
   // ===== PROCESAMIENTO DE LOTES SEGÚN LA FUENTE =====
   const lotesDisponibles = useMemo(() => {
     if (!almacenWatch?.codigoAlmacen) return []
-
     const fuente = loteProps.fuente || 'inv'
     if (fuente === 'inv') {
-      // Usar lotes del inventario del artículo por almacén
       const inventarioDetalle = articulo?.inventario?.[0]?.detalle || []
       const detalleAlmacen = obtenerDetalleInventarioPorAlmacen(inventarioDetalle, almacenWatch.codigoAlmacen)
-
       if (!detalleAlmacen) return []
-
       return procesarLotesDesdeInventario(detalleAlmacen.lotes, loteProps)
     } else {
-      // fuente === 'tbl': Usar lotes de la API (todos los lotes del artículo)
-      // Por ahora retornamos vacío, pero aquí iría la llamada a la API de lotes
-      // cuando no dependan del almacén específico
       return []
     }
   }, [almacenWatch, loteProps, articulo])
@@ -307,10 +312,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     if (almacenProps.autoSeleccion && isSuccess && almacenes.length > 0 && !almacenWatch) {
       const primerAlmacen = seleccionarAlmacenAutomatico(almacenes)
       if (primerAlmacen) {
-        setValue('almacen', primerAlmacen, {
-          shouldValidate: true,
-          shouldDirty: true,
-        })
+        setValue('almacen', primerAlmacen, { shouldValidate: true, shouldDirty: true })
       }
     }
   }, [almacenProps.autoSeleccion, isSuccess, almacenes, almacenWatch, setValue])
@@ -324,33 +326,36 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     ]
   }, [articulo])
 
-  // ===== LABEL DE PRECIO SEGÚN TIPO =====
   const precioLabel = useMemo(() => {
     if (precioProps?.tipoMonto === 'costo') return 'Costo unitario'
     if (precioProps?.tipoMonto === 'delivery') return 'Precio delivery'
     return 'Precio unitario'
   }, [precioProps?.tipoMonto])
 
-  // Mapeamos articulo en map para facil acceso de valores
-  const articuloPrecioMap = useMemo(() => {
+  const articuloPrecioMap = useMemo<Map<string, ArticuloPrecioProps>>(() => {
     if (!articulo) return new Map()
-    return new Map(
+    return new Map<string, ArticuloPrecioProps>(
       [articulo.articuloPrecioBase, ...articulo.articuloPrecio].map((ap) => [
         ap.articuloUnidadMedida.codigoUnidadMedida,
         ap,
       ]),
     )
   }, [articulo])
-  // Cambio de unidad de medida y seteamos el precio en función configuracion de tipo moneda
+
+  // ===== CAMBIO DE UNIDAD DE MEDIDA =====
   const onChangeUnidadMedida = useCallback(
     (item: ArticuloUnidadMedidaProps | null) => {
       if (!item) return
-      // Si los codigos son iguales no hacemos nada
       if (item.codigoUnidadMedida === articuloUnidadMedidaWatch?.codigoUnidadMedida) return
 
+      // const cantidadActual = getValues('cantidad') || 0
+      // const cantidadOriginalActual = getValues('cantidadOriginal') || 0
+
       const articuloPrecio = articuloPrecioMap.get(item.codigoUnidadMedida)
+      // const articuloOld = articuloPrecioMap.get(articuloUnidadMedidaWatch?.codigoUnidadMedida || '')
       if (!articuloPrecio) return
 
+      // --- 1. PRECIOS ---
       const monedaPrecio = transformarArticuloPrecioService(articuloPrecio, moneda)
       let precioFinal = monedaPrecio.precio
 
@@ -358,10 +363,30 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
       if (precioProps?.tipoMonto === 'costo') precioFinal = monedaPrecio.precioBase
       if (precioProps?.tipoMonto === 'delivery') precioFinal = monedaPrecio.delivery
 
-      setValue('precio', precioFinal, {
-        shouldValidate: true,
-        shouldDirty: true,
-      })
+      setValue('precio', precioFinal, { shouldValidate: true, shouldDirty: true })
+
+      // // --- 2. CANTIDADES (Matemática de Alta Precisión) ---
+      // const factorAntiguo = articuloOld?.cantidadBase || 1
+      // const factorNuevo = articuloPrecio.cantidadBase
+      //
+      // // Calculamos el valor exacto en la unidad base (sin redondear)
+      // const cantidadBaseExacta = cantidadActual * factorAntiguo
+      // const cantidadOriginalBaseExacta = cantidadOriginalActual * factorAntiguo
+      //
+      // // Dividimos por el nuevo factor
+      // let cantidadTransformado = cantidadBaseExacta / factorNuevo
+      // let cantidadOriginal = cantidadOriginalBaseExacta / factorNuevo
+      //
+      // // Usamos toFixed(6) para limpiar basura de punto flotante de JS (ej: 0.9999999)
+      // // pero mantenemos suficientes decimales para que las conversiones inversas sean exactas.
+      // cantidadTransformado = Number(cantidadTransformado.toFixed(6))
+      // cantidadOriginal = Number(cantidadOriginal.toFixed(6))
+      //
+      // // console.log("Valor exacto calculado:", cantidadTransformado)
+      //
+      // setValue('cantidad', cantidadTransformado, { shouldValidate: true, shouldDirty: true })
+      // setValue('cantidadFactor', factorNuevo)
+      // setValue('cantidadOriginal', cantidadOriginal)
     },
     [
       articuloPrecioMap,
@@ -372,6 +397,13 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     ],
   )
 
+  // articuloPrecioMap,
+  // articuloUnidadMedidaWatch?.codigoUnidadMedida,
+  // moneda,
+  // precioProps?.tipoMonto,
+  // setValue,
+  // getValues,
+
   const handleAlmacenChange = useCallback(
     (newValue: any, fieldOnChange: (val: any) => void) => {
       fieldOnChange(newValue)
@@ -380,6 +412,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     [setValue],
   )
 
+  /** Prorreamos la cantidad en funcíon a cantidadFactor de la unidad de medida */
   const handleUnidadMedidaChange = useCallback(
     (item: any, fieldOnChange: (val: any) => void) => {
       fieldOnChange(item)
@@ -388,18 +421,28 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
     [onChangeUnidadMedida],
   )
 
-  /***********************************************************************************/
-  /***********************************************************************************/
-  /***********************************************************************************/
   // ===== RENDERIZADO =====
   return (
-    <SimpleCard
-      title={`${articulo.codigoArticulo}: ${articulo.nombreArticulo}`}
-      childIcon={<ArticleOutlined />}
-    >
-      <Grid container rowSpacing={2.7} columnSpacing={1.5}>
+    <SimpleBox sx={{ py: 2, px: 2, width: '100%' }}>
+      <Grid container rowSpacing={3} columnSpacing={1.5}>
         <Grid size={12}>
-          {/* ALMACENES */}
+          <Typography
+            sx={{
+              color: (theme) => getColor(theme, 'primary').textColor,
+              fontWeight: 500,
+              letterSpacing: 0.5,
+              textTransform: 'capitalize',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: '1',
+              WebkitBoxOrient: 'vertical',
+            }}
+          >
+            Ficha del producto: {articulo?.nombreArticulo || ''}
+          </Typography>
+        </Grid>
+        <Grid size={12}>
           <Controller
             control={control}
             name={'almacen'}
@@ -424,8 +467,8 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             )}
           />
         </Grid>
+
         <Grid size={12}>
-          {/* LOTE */}
           <Controller
             control={control}
             render={({ field, fieldState: { error } }) => (
@@ -438,7 +481,6 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
                 value={field.value}
                 error={error?.message}
                 onChange={field.onChange}
-                // Pasar lotes procesados si viene del inventario por almacén
                 lotesInventario={
                   (loteProps.fuente || 'almacen') === 'almacen'
                     ? lotesDisponibles.map((l) => l.lote)
@@ -449,8 +491,8 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             name={'lote'}
           />
         </Grid>
+
         <Grid size={12}>
-          {/* UNIDAD MEDIDA */}
           <Controller
             control={control}
             render={({ field, fieldState: { error } }) => (
@@ -465,7 +507,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             name={'articuloUnidadMedida'}
           />
         </Grid>
-        {/* CANTIDAD */}
+
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           <Controller
             control={control}
@@ -490,9 +532,9 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
               }
               return (
                 <NumberSpinnerField
-                  min={0}
+                  min={cantidadProps?.min ?? 0}
                   decimalScale={cantidadProps?.nroDecimales ?? 2}
-                  step={1}
+                  step={cantidadProps?.step ?? 1}
                   label={cantidadProps?.label ?? 'Cantidad'}
                   size="small"
                   fullWidth
@@ -509,7 +551,7 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
             }}
           />
         </Grid>
-        {/* PRECIO */}
+
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           <Controller
             control={control}
@@ -536,7 +578,8 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
                 <NumberSpinnerField
                   label={precioProps?.label ?? precioLabel}
                   size="small"
-                  min={0}
+                  min={precioProps?.min ?? 0}
+                  step={precioProps?.step ?? 0.1}
                   fullWidth
                   onClick={handleFocus}
                   onChange={field.onChange}
@@ -547,33 +590,16 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
                   unit={moneda.sigla}
                   spinnerTabIndex={false}
                   disabled={precioProps?.disabled ?? false}
-                  hideActionButtons={true}
                   decimalScale={precioProps?.nroDecimales ?? 2}
                 />
               )
             }}
           />
         </Grid>
-        {/* DESCUENTO */}
+
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           {descuentoProps?.readOnly || descuentoProps?.ocultar ? (
-            <TextField
-              id="descuento-readonly"
-              label={descuentoProps?.label ?? 'Descuento'}
-              // Mostramos el monto directamente, ya que el cálculo interno lo mantiene actualizado
-              value={
-                descuentoProps?.ocultar
-                  ? '--'
-                  : numberWithCommasPlaces(
-                      control._formValues.descuento || 0,
-                      descuentoProps?.nroDecimales ?? 2,
-                    )
-              }
-              size="small"
-              fullWidth
-              disabled={true}
-              slotProps={{ input: { readOnly: true, endAdornment: moneda.sigla } }}
-            />
+            <DescuentoReadOnly control={control} monedaSigla={moneda.sigla} props={descuentoProps} />
           ) : (
             <WrapperDescuento
               control={control}
@@ -581,19 +607,21 @@ const ArticuloInventarioFormularioCard: FunctionComponent<Props> = (props) => {
               monedaSigla={moneda.sigla}
               disabled={descuentoProps?.disabled}
               nroDecimales={descuentoProps?.nroDecimales ?? 2}
+              step={descuentoProps?.step ?? 0.1}
+              min={descuentoProps?.min ?? 0}
             />
           )}
         </Grid>
-        {/* CÁLCULOS AISLADOS */}
+
         {!ocultarCalculos && (
           <Grid size={12}>
-            <Box mt={-1.5}>
+            <Box mt={0}>
               <ResumenCalculos control={control} moneda={moneda} />
             </Box>
           </Grid>
         )}
       </Grid>
-    </SimpleCard>
+    </SimpleBox>
   )
 }
 

@@ -1,13 +1,17 @@
 // noinspection GraphQLUnresolvedReference
 
-import { gql, GraphQLClient } from 'graphql-request'
+import { gql, GraphQLClient } from "graphql-request";
 
-import { EntidadInputProps, PageInfoProps, PageInputProps } from '../../interfaces'
-import { ArticuloProps } from '../../interfaces/articulo.ts'
-import { genReplaceEmpty } from '../../utils/helper.ts'
-import { articuloFragment } from '../fragments/articuloFragment.ts'
-import { AccessToken } from '../models/paramsModel.ts'
-import { MyGraphQlError } from '../services/GraphqlError.ts'
+import {
+  EntidadInputProps,
+  PageInfoProps,
+  PageInputProps,
+} from "../../interfaces";
+import { ArticuloProps } from "../../interfaces/articulo.ts";
+import { genReplaceEmpty } from "../../utils/helper.ts";
+import { articuloFragment } from "../fragments/articuloFragment.ts";
+import { AccessToken } from "../models/paramsModel.ts";
+import { MyGraphQlError } from "../services/GraphqlError.ts";
 
 const gqlQuery = (fragment: string | null) => {
   return gql`
@@ -47,12 +51,12 @@ const gqlQuery = (fragment: string | null) => {
         }
       }
     }
-  `
-}
+  `;
+};
 
 interface ArticuloInventarioResponse {
-  pageInfo: PageInfoProps
-  docs: ArticuloProps[]
+  pageInfo: PageInfoProps;
+  docs: ArticuloProps[];
 }
 
 /**
@@ -66,34 +70,37 @@ export const apiArticuloInventarioListado = async (
   entidad: EntidadInputProps,
   pageInfo: PageInputProps,
   input: {
-    verificarPrecio?: boolean
-    verificarInventario?: boolean
-    queryExtra?: string
-    fragment?: string | null // En caso de reemplazar el fragmento de ejecución, el nombre debe llamarse articuloFields
+    verificarPrecio?: boolean;
+    verificarInventario?: boolean;
+    queryExtra?: string;
+    fragment?: string | null; // En caso de reemplazar el fragmento de ejecución, el nombre debe llamarse articuloFields
   },
 ): Promise<ArticuloInventarioResponse> => {
   try {
-    const client = new GraphQLClient(import.meta.env.ISI_API_URL)
-    const token = localStorage.getItem(AccessToken)
-    const { limit, page, reverse, query } = pageInfo
-    const { verificarPrecio, verificarInventario, queryExtra } = input
+    const client = new GraphQLClient(import.meta.env.ISI_API_URL);
+    const token = localStorage.getItem(AccessToken);
+    const { limit, page, reverse, query } = pageInfo;
+    const { verificarPrecio, verificarInventario, queryExtra } = input;
     // Set a single header
-    client.setHeader('authorization', `Bearer ${token}`)
-    const cds = parseInt(import.meta.env.ISI_DOCUMENTO_SECTOR.toString()!, 10)
+    client.setHeader("authorization", `Bearer ${token}`);
+    const cds = parseInt(import.meta.env.ISI_DOCUMENTO_SECTOR.toString()!, 10);
 
-    const data: any = await client.request(gqlQuery(genReplaceEmpty(input.fragment, null)), {
-      cds,
-      entidad,
-      verificarPrecio,
-      verificarInventario,
-      limit,
-      page,
-      reverse,
-      query,
-      queryExtra,
-    })
-    return data.articuloInventarioV2Listado
+    const data: any = await client.request(
+      gqlQuery(genReplaceEmpty(input.fragment, null)),
+      {
+        cds,
+        entidad,
+        verificarPrecio,
+        verificarInventario,
+        limit,
+        page,
+        reverse,
+        query,
+        queryExtra,
+      },
+    );
+    return data.articuloInventarioV2Listado;
   } catch (e: any) {
-    throw new MyGraphQlError(e)
+    throw new MyGraphQlError(e);
   }
-}
+};

@@ -8,174 +8,212 @@ import {
   Shadows,
   SimplePaletteColorOptions,
   ThemeOptions,
-} from '@mui/material'
+} from "@mui/material";
 
-import { themeDarkShadow, themeLightShadow } from './themeShadows.ts'
+import { COLOR_TINTS } from "../../../../utils/getColor.ts";
+import { themeDarkShadow, themeLightShadow } from "./themeShadows.ts";
 
-export const themeShadows: Shadows = themeLightShadow
+// =========================================================================
+// 1. EXPANSIÓN DE TIPOS DE MATERIAL-UI (Añade esto al inicio del archivo)
+// =========================================================================
+declare module "@mui/material/styles" {
+  interface PaletteColor {
+    /** Color de fondo suave (12%) usado generalmente para tablas y alertas */
+    softBgColor: string;
+    softTextColor: string;
 
-const WHITE_STRONG = 'rgba(255, 255, 255, 0.99)'
-const WHITE_SOFT = 'rgba(255, 255, 255, 0.87)'
-const BLACK = 'rgba(0, 0, 0, 0.87)'
-const DARK_ALPHA = 0.6
+    /** Color de fondo con más presencia (24%) para destacar datos importantes */
+    strongBgColor: string;
+    strongTextColor: string;
 
-// Devuelve blanco o negro según la luminosidad del color de fondo
-const getBestContrastColor = (background: string): string => {
-  const contrastWithBlack = getContrastRatio(background, '#000000')
-  const contrastWithWhite = getContrastRatio(background, '#FFFFFF')
-
-  // ✅ Si negro tiene MEJOR contraste → usar negro
-  if (contrastWithBlack > contrastWithWhite) {
-    return WHITE_SOFT
+    /** Color suave de hover */
+    hoverBgColor: string;
+    /** Color de tono mas suave que softBgColor */
+    faintBgColor: string;
+    /** Color de borde */
+    borderColor: string;
   }
-
-  // Fondo muy oscuro → blanco fuerte
-  if (contrastWithWhite >= 7) {
-    return WHITE_STRONG
+  interface SimplePaletteColorOptions {
+    softBgColor?: string;
+    softTextColor?: string;
+    strongBgColor?: string;
+    strongTextColor?: string;
+    hoverBgColor?: string;
+    faintBgColor?: string;
+    borderColor?: string;
   }
-
-  // Fondo medio-oscuro → blanco suave
-  if (contrastWithWhite >= 4.5) {
-    return WHITE_SOFT
-  }
-
-  // Fallback: elegir el que tenga mejor contraste
-  return contrastWithWhite > contrastWithBlack ? WHITE_SOFT : BLACK
 }
+export const themeShadows: Shadows = themeLightShadow;
+
+const WHITE_STRONG = "rgba(255, 255, 255, 0.99)";
+const WHITE_SOFT = "rgba(255, 255, 255, 0.87)";
+const BLACK = "rgba(0, 0, 0, 0.87)";
+
+// =========================================================================
+// 2. HELPERS BASE Y DE CONTRASTE
+// =========================================================================
+const getBestContrastColor = (background: string): string => {
+  const contrastWithWhite = getContrastRatio(background, "#FFFFFF");
+  if (contrastWithWhite >= 3) {
+    return contrastWithWhite >= 7 ? WHITE_STRONG : WHITE_SOFT;
+  }
+  return BLACK;
+};
+
+// Extraemos los fondos para poder usarlos en los cálculos de color-mix antes de armar el tema
+const getPaperBg = (isDark: boolean) => (isDark ? "#1e1e1e" : "#FAFAFA");
+const getDefaultBg = (isDark: boolean) => (isDark ? "#0a0a0a" : "#F5F5F5");
+const getElevatedBg = (isDark: boolean) => (isDark ? "#242424" : "#FFFFFF");
+
+// =========================================================================
+// 3. EL NUEVO GENERADOR DE ESTADOS AVANZADOS (MRT Logic inyectada)
+// =========================================================================
+const generateAdvancedColorStates = (mainColor: string, isDark: boolean) => {
+  const paperBg = getPaperBg(isDark);
+
+  // Consumimos las constantes globales
+  const softTint = isDark ? COLOR_TINTS.soft.dark : COLOR_TINTS.soft.light;
+  const strongTint = isDark
+    ? COLOR_TINTS.strong.dark
+    : COLOR_TINTS.strong.light;
+
+  return {
+    // Nivel 1: Suave
+    softBgColor: `color-mix(in srgb, ${mainColor} ${softTint}%, ${paperBg})`,
+    softTextColor: isDark ? lighten(mainColor, 0.55) : darken(mainColor, 0.3),
+
+    // Nivel 2: Fuerte
+    strongBgColor: `color-mix(in srgb, ${mainColor} ${strongTint}%, ${paperBg})`,
+    strongTextColor: isDark ? lighten(mainColor, 0.7) : darken(mainColor, 0.4),
+
+    // Elementos UI
+    borderColor: alpha(mainColor, isDark ? 0.3 : 0.2),
+    hoverBgColor: alpha(mainColor, isDark ? 0.12 : 0.04),
+    faintBgColor: alpha(mainColor, isDark ? 0.06 : 0.02),
+  };
+};
 
 const textLight = {
-  primary: 'rgba(52, 49, 76, 1)',
-  secondary: 'rgba(52, 49, 76, 0.70)',
-  disabled: 'rgba(52, 49, 76, 0.38)',
-  hint: 'rgba(52, 49, 76, 0.60)',
-}
+  primary: "rgba(52, 49, 76, 1)",
+  secondary: "rgba(52, 49, 76, 0.70)",
+  disabled: "rgba(52, 49, 76, 0.38)",
+  hint: "rgba(52, 49, 76, 0.60)",
+};
 
 const textDark = {
-  primary: 'rgba(250, 250, 250, 0.87)', // Warm white
-  secondary: 'rgba(250, 250, 250, 0.60)',
-  disabled: 'rgba(250, 250, 250, 0.38)',
-  hint: 'rgba(250, 250, 250, 0.50)',
-}
+  primary: "rgba(250, 250, 250, 0.83)",
+  secondary: "rgba(250, 250, 250, 0.60)",
+  disabled: "rgba(250, 250, 250, 0.38)",
+  hint: "rgba(250, 250, 250, 0.50)",
+};
 
-const errorColor = { main: '#F44336' }
-
-// --- 2. NUEVOS COLORES (Disponibles en todos los temas) ---
+// =========================================================================
+// 4. COLORES EXTENDIDOS (Ahora con estados avanzados)
+// =========================================================================
 const getExtendedColors = (mode: PaletteMode) => {
-  const isDark = mode === 'dark'
-  const c = (hexColor: string) => (isDark ? alpha(hexColor, DARK_ALPHA) : hexColor)
-  // const c = (light: string, dark: string) => (isDark ? dark : light)
+  const isDark = mode === "dark";
+  const c = (light: string, dark: string) => (isDark ? dark : light);
 
   const definitions = {
     yellow: {
-      // Ámbar controlado (warning sin fluorescencia)
-      main: isDark ? c('#F57C00') : '#FFC107',
-      light: isDark ? c('#ffee58') : '#ffee58',
-      dark: isDark ? c('#E65100') : '#FFA000',
-      contrastText: BLACK,
+      main: c("#FFB300", "#F57C00"),
+      light: c("#FFD54F", "#FFB74D"),
+      dark: c("#FF8F00", "#E65100"),
     },
-
     green: {
-      // Verde profundo usable en dark
-      main: isDark ? c('#2E7D32') : '#4CAF50',
-      light: isDark ? c('#81c784') : '#81c784',
-      dark: isDark ? c('#1B5E20') : '#388E3C',
+      main: c("#4CAF50", "#2E7D32"),
+      light: c("#81C784", "#66BB6A"),
+      dark: c("#388E3C", "#1B5E20"),
     },
-
     blue: {
-      // Azul marino real (no pastel)
-      main: isDark ? c('#1565C0') : '#2196F3',
-      light: isDark ? c('#64b5f6') : '#64b5f6',
-      dark: isDark ? c('#0D47A1') : '#1976D2',
+      main: c("#2196F3", "#1565C0"),
+      light: c("#64B5F6", "#42A5F5"),
+      dark: c("#1976D2", "#0D47A1"),
     },
     cyan: {
-      // Cian petróleo
-      main: isDark ? c('#00838F') : '#00bcd4',
-      light: isDark ? c('#4dd0e1') : '#4dd0e1',
-      dark: isDark ? c('#006064') : '#0097A7',
+      main: c("#00BCD4", "#00838F"),
+      light: c("#4DD0E1", "#26C6DA"),
+      dark: c("#0097A7", "#006064"),
     },
-
     purple: {
-      // Uva profunda
-      main: isDark ? c('#6A1B9A') : '#9C27B0',
-      light: isDark ? c('#ba68c8') : '#ba68c8',
-      dark: isDark ? c('#4A148C') : '#7B1FA2',
+      main: c("#9C27B0", "#6A1B9A"),
+      light: c("#BA68C8", "#AB47BC"),
+      dark: c("#7B1FA2", "#4A148C"),
     },
-
     teal: {
-      // Teal oscuro de dashboard
-      main: isDark ? c('#00695C') : '#009688',
-      light: isDark ? c('#4db6ac') : '#4db6ac',
-      dark: isDark ? c('#004D40') : '#00796B',
+      main: c("#009688", "#00695C"),
+      light: c("#4DB6AC", "#26A69A"),
+      dark: c("#00796B", "#004D40"),
     },
-
     orange: {
-      // Teal oscuro de dashboard
-      main: isDark ? c('#fb8c00') : '#ff9800',
-      light: isDark ? c('#ffb74d') : '#ffb74d',
-      dark: isDark ? c('#f57c00') : '#fb8c00',
+      main: c("#FF9800", "#EF6C00"),
+      light: c("#FFB74D", "#FFA726"),
+      dark: c("#F57C00", "#E65100"),
     },
-  }
+  };
 
   return Object.keys(definitions).reduce((acc, key) => {
-    const colorKey = key as keyof typeof definitions
-    const colorDef = definitions[colorKey]
+    const colorKey = key as keyof typeof definitions;
+    const colorDef = definitions[colorKey];
 
-    const contrastText = (colorDef as any).contrastText || getBestContrastColor(colorDef.main)
+    const contrastText =
+      (colorDef as any).contrastText || getBestContrastColor(colorDef.main);
+    const advancedStates = generateAdvancedColorStates(colorDef.main, isDark);
 
     acc[colorKey] = {
       ...colorDef,
       contrastText,
-    }
+      ...advancedStates, // <-- Inyectamos hoverBg, headBg, etc.
+    };
 
-    return acc
-  }, {} as any)
-}
+    return acc;
+  }, {} as any);
+};
 
-// --- 3. CONFIGURACIÓN DE VARIANTES (Primary & Secondary) ---
-// Aquí defines SOLO lo que es único de cada tema
+// =========================================================================
+// 5. CONFIGURACIÓN DE VARIANTES PRINCIPALES
+// =========================================================================
 interface ColorDefinition {
-  primary: SimplePaletteColorOptions
-  secondary: SimplePaletteColorOptions
+  primary: SimplePaletteColorOptions;
+  secondary: SimplePaletteColorOptions;
 }
 
 interface ThemeDefinition {
-  light: ColorDefinition
-  dark: ColorDefinition
+  light: ColorDefinition;
+  dark: ColorDefinition;
 }
 
-// Definiciion principal de colores
 const colors = {
-  default: { pri: '#363e5d', sec: '#df9c16', darkLighten: 0.02 },
-  green: { pri: '#00625D', sec: '#F47A20', darkLighten: 0.0 },
-  indigo: { pri: '#1c4c96', sec: '#ff7360', darkLighten: 0.02 },
-  purple: { pri: '#4745b6', sec: '#ff8000', darkLighten: 0.02 },
-  blue: { pri: '#1976d2', sec: '#d27619', darkLighten: 0 },
-  blue1: { pri: '#00539A', sec: '#E15200', darkLighten: 0.2 },
-  blue2: { pri: '#25368B', sec: '#FCC346', darkLighten: 0 },
-  purple2: { pri: '#584569', sec: '#ED6C20', darkLighten: 0.02 },
-}
+  default: { pri: "#363e5d", sec: "#df9c16", darkLighten: 0.02 },
+  green: { pri: "#00625D", sec: "#F47A20", darkLighten: 0.0 },
+  indigo: { pri: "#1c4c96", sec: "#ff7360", darkLighten: 0.02 },
+  purple: { pri: "#4745b6", sec: "#ff8000", darkLighten: 0.02 },
+  blue: { pri: "#1976d2", sec: "#d27619", darkLighten: 0 },
+  blue1: { pri: "#00539A", sec: "#E15200", darkLighten: 0.2 },
+  blue2: { pri: "#25368B", sec: "#FCC346", darkLighten: 0 },
+  purple2: { pri: "#584569", sec: "#ED6C20", darkLighten: 0.02 },
+};
 
-// ----------------------------------------------------------------------
-// 2. HELPER PARA GENERAR VARIANTES (Main, Light, Dark)
-// ----------------------------------------------------------------------
-/**
- * Crea el objeto completo de paleta { main, light, dark }
- * @param hexColor El color principal
- * @param isDarkMode
- * @param darkLighten
- */
-const createPalette = (hexColor: string, isDarkMode: boolean, darkLighten: number = 0) => {
-  const mainColor = isDarkMode && darkLighten > 0 ? lighten(hexColor, darkLighten) : hexColor
+const createPalette = (
+  hexColor: string,
+  isDarkMode: boolean,
+  darkLighten: number = 0,
+) => {
+  const mainColor =
+    isDarkMode && darkLighten > 0 ? lighten(hexColor, darkLighten) : hexColor;
+  const advancedStates = generateAdvancedColorStates(mainColor, isDarkMode);
+
   return {
-    base: hexColor,
+    base: hexColor, // Opcional, pero util si lo usas en otros lados
     main: mainColor,
-    light: lighten(mainColor, 0.2), // Genera primary.light
-    dark: darken(mainColor, 0.15), // Genera primary.dark
-  }
-}
+    light: lighten(mainColor, 0.2),
+    dark: darken(mainColor, 0.15),
+    contrastText: getBestContrastColor(mainColor),
+    ...advancedStates, // <-- Inyectamos hoverBg, headBg, etc.
+  };
+};
 
-// Generamos la paleta de colores para primary y secondary
-const themeConfig: Record<string, ThemeDefinition> = {}
+const themeConfig: Record<string, ThemeDefinition> = {};
 Object.entries(colors).forEach(([key, value]) => {
   themeConfig[key] = {
     light: {
@@ -186,103 +224,113 @@ Object.entries(colors).forEach(([key, value]) => {
       primary: createPalette(value.pri, true, value.darkLighten),
       secondary: createPalette(value.sec, true, value.darkLighten),
     },
-  }
-})
+  };
+});
 
-// Generamos la configuracion de la paleta de colores
+// =========================================================================
+// 4.5. COLORES SEMÁNTICOS (Estados del Sistema independientes de la marca)
+// =========================================================================
+const getSemanticColors = (mode: PaletteMode) => {
+  const isDark = mode === "dark";
+
+  // Función local rápida para elegir el color según el modo
+  const c = (light: string, dark: string) => (isDark ? dark : light);
+
+  const semantics = {
+    error: { main: c("#d32f2f", "#c62828") },
+    warning: { main: c("#ed6c02", "#e65100") },
+    success: { main: c("#2e7d32", "#1b5e20") },
+    info: { main: c("#0288d1", "#01579b") },
+  };
+
+  // Los pasamos por el motor avanzado para que generen softBgColor, faintBgColor, etc.
+  return {
+    error: {
+      ...semantics.error,
+      ...generateAdvancedColorStates(semantics.error.main, isDark),
+    },
+    warning: {
+      ...semantics.warning,
+      ...generateAdvancedColorStates(semantics.warning.main, isDark),
+    },
+    success: {
+      ...semantics.success,
+      ...generateAdvancedColorStates(semantics.success.main, isDark),
+    },
+    info: {
+      ...semantics.info,
+      ...generateAdvancedColorStates(semantics.info.main, isDark),
+    },
+  };
+};
+
+// =========================================================================
+// 6. ENSAMBLAJE FINAL DEL TEMA
+// =========================================================================
 const createCompleteTheme = (
-  variantName: string, // Nombre original, ej "green"
+  variantName: string,
   mode: PaletteMode,
-  colors: ColorDefinition, // Los colores específicos de esa configuración (light o dark)
+  themeColorsDefinition: ColorDefinition,
 ): ThemeOptions => {
-  const isDark = mode === 'dark'
-  const extendedPalette = getExtendedColors(mode)
+  const isDark = mode === "dark";
+  const extendedPalette = getExtendedColors(mode);
+  const semanticColors = getSemanticColors(mode);
 
-  // Lógica de background
   const background = {
-    paper: isDark ? '#1e1e1e' : '#FAFAFA', // Blanco puro para tarjetas
-    default: isDark ? '#0a0a0a' : '#F5F5F5', // Gris suave para el fondo de la app
-    elevated: isDark ? '#242424' : '#FFFFFF',
-  }
+    paper: getPaperBg(isDark),
+    default: getDefaultBg(isDark),
+    elevated: getElevatedBg(isDark),
+  };
 
-  // Override de background específico para ciertos temas en Dark Mode
-  // if (isDark) {
-  //   background.default = '#1D1D1D' // Tu fondo dark general
-  //   background.paper = '#353535'
-  //   // // Fondos de tarjetas personalizados según el tema
-  //   // if (variantName === 'green') background.paper = '#00625D'
-  // }
-
-  // creamos un contenedor para mui-modal
-  // Crear contenedor una sola vez
   const getModalContainer = (() => {
-    let container: HTMLDivElement | null = null
+    let container: HTMLDivElement | null = null;
     return () => {
-      // Verificamos document para evitar errores en SSR
-      if (typeof document === 'undefined') return null
-
+      if (typeof document === "undefined") return null;
       if (!container) {
-        container = document.createElement('div')
-        container.id = 'modal-root'
-        document.body.appendChild(container)
+        container = document.createElement("div");
+        container.id = "modal-root";
+        document.body.appendChild(container);
       }
-      return container
-    }
-  })()
+      return container;
+    };
+  })();
 
   return {
     palette: {
       mode,
-      ...extendedPalette, // Agrega orange, green, etc.
-      primary: {
-        ...colors.primary,
-        contrastText: (colors.primary as any).contrastText || getBestContrastColor(colors.primary.main),
-      },
-      secondary: {
-        ...colors.secondary,
-        contrastText: (colors.secondary as any).contrastText || getBestContrastColor(colors.secondary.main),
-      },
+      ...extendedPalette,
+      primary: themeColorsDefinition.primary,
+      secondary: themeColorsDefinition.secondary,
       text: isDark ? textDark : textLight,
-      divider: isDark ? alpha('#ffffff', 0.12) : alpha('#000000', 0.12),
-      error: errorColor,
+      divider: isDark ? alpha("#ffffff", 0.12) : alpha("#000000", 0.12),
+      ...semanticColors,
       background,
       action: {
-        active: isDark ? 'rgba(255, 255, 255, 0.78)' : 'rgba(0, 0, 0, 0.54)',
-        hover: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-        selected: isDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.08)',
-        disabled: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.26)',
-        disabledBackground: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
+        active: isDark ? "rgba(255, 255, 255, 0.78)" : "rgba(0, 0, 0, 0.54)",
+        hover: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.04)",
+        selected: isDark ? "rgba(255, 255, 255, 0.16)" : "rgba(0, 0, 0, 0.08)",
+        disabled: isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.26)",
+        disabledBackground: isDark
+          ? "rgba(255, 255, 255, 0.12)"
+          : "rgba(0, 0, 0, 0.12)",
       },
     } as PaletteOptions,
     shadows: isDark ? themeDarkShadow : themeShadows,
     components: {
-      MuiModal: {
-        defaultProps: {
-          container: getModalContainer,
-        },
-      },
-      MuiPopover: {
-        defaultProps: {
-          container: getModalContainer,
-        },
-      },
+      MuiModal: { defaultProps: { container: getModalContainer } },
+      MuiPopover: { defaultProps: { container: getModalContainer } },
     },
-  }
-}
+  };
+};
 
-// Generación final
-export const themeColors: Record<string, ThemeOptions> = Object.keys(themeConfig).reduce(
+export const themeColors: Record<string, ThemeOptions> = Object.keys(
+  themeConfig,
+).reduce(
   (acc, key) => {
-    const config = themeConfig[key]
-
-    // Generar la versión LIGHT usando config.light
-    acc[key] = createCompleteTheme(key, 'light', config.light)
-
-    // Generar la versión DARK usando config.dark
-    // Nota: Aquí pasamos 'config.dark' explícitamente, así que se usará los colores definidos para oscuro.
-    acc[`${key}Dark`] = createCompleteTheme(key, 'dark', config.dark)
-
-    return acc
+    const config = themeConfig[key];
+    acc[key] = createCompleteTheme(key, "light", config.light);
+    acc[`${key}Dark`] = createCompleteTheme(key, "dark", config.dark);
+    return acc;
   },
   {} as Record<string, ThemeOptions>,
-)
+);
