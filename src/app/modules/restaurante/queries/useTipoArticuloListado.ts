@@ -9,7 +9,7 @@ export interface TipoArticuloListadoVariables {
   limit: number
   page?: number
   reverse?: boolean
-  query?: string
+  query?: string // query string to filter the results based on the name of the TipoArticulo
 }
 
 export const TIPOARTICULOLISTADO = gql`
