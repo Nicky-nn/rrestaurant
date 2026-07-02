@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom'
 
 import AuthGuard from '../../auth/AuthGuard'
 import MatxLayout from '../base/components/Template/MatxLayout/MatxLayout'
+import adsRoutes from '../modules/ads/adsRoutes'
 import cuentaRoutes from '../modules/base/cuenta/CuentaRoutes'
 import NotFound from '../modules/base/sessions/NotFound'
 import sessionRoutes from '../modules/base/sessions/SessionRoutes'
@@ -9,9 +10,9 @@ import cajasRoutes from '../modules/cajas/cajasRoutes'
 import clientsRoutes from '../modules/clients/clientsRoutes'
 import homeRoutes, { homeRoutesMap } from '../modules/home/HomeRoutes'
 import impresorasRoutes from '../modules/impresoras/impresorasRoutes'
+import ncdGestionRoutes from '../modules/notaCreditoDebito/notaCreditoDebitoRoutes'
 import reporteRoutes from '../modules/reporte/reporteRoutes'
 import restaurantRoutes from '../modules/restaurante/restauranteRoutes'
-import ncdGestionRoutes from '../modules/notaCreditoDebito/notaCreditoDebitoRoutes'
 
 export const appRoutes = [
   {
@@ -23,6 +24,7 @@ export const appRoutes = [
     children: [
       ...homeRoutes,
       ...cuentaRoutes,
+      ...adsRoutes,
       ...cajasRoutes,
       ...clientsRoutes,
       ...restaurantRoutes,

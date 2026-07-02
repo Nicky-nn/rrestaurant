@@ -34,6 +34,10 @@ export default ({ mode }) => {
           target: 'http://localhost:7777',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/local-printers/, '')
+        },
+        '/api': {
+          target: 'http://localhost:4000',
+          changeOrigin: true
         }
       }
     }

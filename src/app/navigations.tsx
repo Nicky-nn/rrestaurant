@@ -1,3 +1,4 @@
+import { adsRoutesMap } from './modules/ads/adsRoutes'
 import { cajasRoutesMap } from './modules/cajas/cajasRoutes'
 import { clientsRoutesMap } from './modules/clients/clientsRoutes'
 import { homeRoutesMap } from './modules/home/HomeRoutes'
@@ -112,6 +113,17 @@ export const navigations: NavigationProps[] = [
         name: impresorasRoutesMap.gestion.name,
         iconText: 'IM',
         path: impresorasRoutesMap.gestion.path,
+      },
+    ],
+  },
+  {
+    name: 'Ads',
+    icon: 'campaign',
+    children: [
+      {
+        name: adsRoutesMap.gestion.name,
+        iconText: 'GA',
+        path: adsRoutesMap.gestion.path,
       },
     ],
   },
