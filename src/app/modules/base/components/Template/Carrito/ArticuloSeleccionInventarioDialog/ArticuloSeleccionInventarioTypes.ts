@@ -92,6 +92,10 @@ export interface PrecioSeleccionProps extends MontoSeleccionProps {
   tipoMonto?: 'precio' | 'costo' | 'delivery'
   /** Cantidad de decimales para el input valor, default 2 */
   nroDecimales?: number
+  /** Saltos de numeración al presionar el btn + / - o con flecha arriba⬆️. Default 0.1 */
+  step?: number
+  /** Valor minimo admitible para el control. agnostico del formulario de validación Default 0 */
+  min?: number
 }
 
 /**
@@ -101,6 +105,10 @@ export interface PrecioSeleccionProps extends MontoSeleccionProps {
 export interface CantidadSeleccionProps extends MontoSeleccionProps {
   /** Cantidad de decimales para el input cantidad, default 2 */
   nroDecimales?: number
+  /** Saltos de numeración al presionar el btn + / - o con flecha arriba⬆️. Default 1 */
+  step?: number
+  /** Valor minimo admitible para el control. agnostico del formulario de validación Default 1 */
+  min?: number
 }
 
 /**
@@ -110,6 +118,10 @@ export interface CantidadSeleccionProps extends MontoSeleccionProps {
 export interface DescuentoSeleccionProps extends MontoSeleccionProps {
   /** Cantidad de decimales para el input descuento, default 2 */
   nroDecimales?: number
+  /** Saltos de numeración al presionar el btn + / - o con flecha arriba⬆️. Default 0.1 */
+  step?: number
+  /** Valor minimo admitible para el control. agnostico del formulario de validación Default 0 */
+  min?: number
 }
 
 /**
@@ -138,6 +150,8 @@ export interface SeleccionArticuloReglasProps {
   validaLoteFechaVencimiento?: boolean
   /** Oculta el cuadro de calculos de totales */
   ocultarCalculos?: boolean
+  /** Valor minimo (Precio / Costo) aceptado. Default 0 */
+  valorMin?: number
 }
 
 /**

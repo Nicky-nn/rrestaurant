@@ -1,33 +1,61 @@
-import { DeleteForever, ShoppingCart } from '@mui/icons-material'
+import { DeleteForeverOutlined } from '@mui/icons-material'
 import {
   Box,
-  ButtonGroup,
   Grid,
   IconButton,
   ListItemButton,
-  Paper,
+  Palette,
   Stack,
-  styled,
   Table,
-  TableBody,
   TableCell,
-  tableCellClasses,
-  TableContainer,
-  TableHead,
+  TableCellProps,
   TableRow,
   Theme,
   Typography,
 } from '@mui/material'
-import { FC, FunctionComponent, memo } from 'react'
+import React, { FunctionComponent, memo } from 'react'
 
-import { IconButtonTextAreaPopover } from '../../../../../base/components/MyInputs/IconButtonTextAreaPopover.tsx'
+import { CarritoVacio } from '../../../../../base/components/Container/CarritoVacio.tsx'
+import {
+  StyledTableBody,
+  StyledTableContainer,
+  StyledTableHead,
+  StyledTableRow,
+} from '../../../../../base/components/MuiTable/StyledTable.tsx'
+import { ArticuloDetallePopover } from '../../../../../base/components/PopoverMonto/ArticuloDetallePopover.tsx'
 import MontoMonedaTexto from '../../../../../base/components/PopoverMonto/MontoMonedaTexto.tsx'
+import { PopoverTexto } from '../../../../../base/components/PopoverMonto/PopoverTexto.tsx'
 import { ArticuloOperacionInputProps } from '../../../../../interfaces/articuloOperacion.ts'
 import { apiGestionArticulo } from '../../../../../interfaces/gestionArticulo.ts'
 import { MonedaProps } from '../../../../../interfaces/monedaPrecio.ts'
 import { alphaByTheme } from '../../../../../utils/colorUtils.ts'
 
 // --- Interfaces Documentadas ---
+
+// Define todos los lugares donde podrías querer inyectar una columna
+type UbicacionColumnaExtra =
+  | 'inicio' // Justo después del NroItem
+  | 'despues-cantidad' // Entre Cantidad y Unidad de Medida/Artículo
+  | 'despues-articulo' // Entre Artículo y Almacén/Lote
+  | 'fin' // Justo antes de Opciones
+
+/**
+ * Configuración para crear columnas extra a demanda.
+ */
+interface CarritoArticulosColumn extends Omit<TableCellProps, 'id' | 'children'> {
+  /** Identificador único de la columna (requerido) */
+  id: string
+  /** Texto o componente a mostrar en la cabecera (TableHead) */
+  label: React.ReactNode
+  /** Si es true, oculta completamente la columna */
+  ocultar?: boolean
+  /** Propiedades específicas y opcionales para la celda de la cabecera (si es diferente del body) */
+  headCellProps?: TableCellProps
+  /** Posición donde se inyectará la columna. Default: 'fin' */
+  ubicacion?: UbicacionColumnaExtra
+  /** Función que renderiza el contenido de la celda, con acceso al contexto del item */
+  renderCell: (item: ArticuloOperacionInputProps, index: number) => React.ReactNode
+}
 
 /**
  * Propiedades de configuración para las columnas individuales del carrito.
@@ -37,7 +65,16 @@ interface BaseColProps {
   label?: string
   /** Si es true, oculta completamente la columna */
   ocultar?: boolean
+  /** Ancho específico de la columna (ej. 120, '10%', 'auto') */
+  width?: number | string
+  /** Ancho mínimo de la columna, útil para evitar que se comprima demasiado */
+  minWidth?: number | string
 }
+
+// Extraemos las claves de la paleta (primary, secondary, error, etc.)
+type CarritoPaletteColors = {
+  [K in keyof Palette]: Palette[K] extends { main: string } ? K : never
+}[keyof Palette]
 
 /**
  * Props principales del componente CarritoArticulos.
@@ -83,7 +120,11 @@ interface CarritoProps {
 
   // --- Configuraciones de Columnas ---
   /** Opciones de la columna de Acciones (Eliminar, Detalles) */
-  opcionesProps?: BaseColProps & { mostrarNroItem?: boolean }
+  opcionesProps?: BaseColProps & {
+    mostrarNroItem?: boolean
+    /** Inyecta componentes (ej. IconButtons) adicionales en la celda de acciones */
+    renderExtraActions?: (item: ArticuloOperacionInputProps, index: number) => React.ReactNode
+  }
   /** Opciones de la columna de Información del Artículo */
   articuloProps?: BaseColProps & { ocultarUnidadMedidaText?: boolean }
   /** Opciones de la columna de Precio */
@@ -96,31 +137,15 @@ interface CarritoProps {
   almacenLoteProps?: BaseColProps & { ocultarTextoAlmacen?: boolean; ocultarTextoLote?: boolean }
   /** Opciones de la columna de Unidad de Medida (aislada) */
   unidadMedidaProps?: BaseColProps
+  /** Color del head, Ej. primary, red[500] #fffff.  default primary,  */
+  bgColor?: CarritoPaletteColors | string
+  /** Aplica hover en las filas. Default true */
+  hover?: boolean
+  /** Intercalar color en cada fila. Default true */
+  striped?: boolean
+  /** Columnas extra inyectadas a demanda */
+  columnasExtra?: CarritoArticulosColumn[]
 }
-
-// --- Estilos Estáticos ---
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  [`&.${tableCellClasses.head}`]: {
-    backgroundColor: alphaByTheme(theme.palette.primary.main, theme, 0.6, 0.85),
-    color: theme.palette.primary.contrastText,
-    fontWeight: 600,
-    padding: '8px 6px',
-  },
-  [`&.${tableCellClasses.body}`]: {
-    padding: '4px 2px',
-    fontSize: '0.875rem',
-  },
-}))
-
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  transition: theme.transitions.create('background-color'),
-  '&:nth-of-type(odd)': {
-    backgroundColor: theme.palette.action.hover,
-  },
-  '&:hover': {
-    backgroundColor: alphaByTheme(theme.palette.primary.main, theme, 0.09),
-  },
-}))
 
 // --- Sub-componente de Fila (Memorizado) ---
 const ArticuloRow = memo(
@@ -141,17 +166,41 @@ const ArticuloRow = memo(
       precioProps,
       descProps,
       unidadMedidaProps = { ocultar: true },
+      columnasExtra = [],
     } = props
+
+    // --- HELPER DE INYECCIÓN (BODY) ---
+    const renderColumnasDinamicas = (ubicacionTarget: UbicacionColumnaExtra) => {
+      return columnasExtra
+        .filter((col) => !col.ocultar && (col.ubicacion || 'fin') === ubicacionTarget)
+        .map((col) => {
+          const {
+            id,
+            renderCell,
+            ubicacion: _ubicacion,
+            label: _label,
+            ocultar: _ocultar,
+            headCellProps: _headCellProps,
+            ...cellProps
+          } = col
+
+          return (
+            <TableCell key={id} {...cellProps}>
+              {renderCell(item, index)}
+            </TableCell>
+          )
+        })
+    }
 
     const isActive = indexActivo === index
     // Cuando se encuentra activo
     const rowBg = (theme: Theme) =>
-      isActive ? alphaByTheme(theme.palette.primary.main, theme, 0.2) : 'inherit'
+      isActive ? alphaByTheme(theme.palette.primary.main, theme, 0.2, 0.4) : 'inherit'
 
     return (
       <StyledTableRow sx={{ backgroundColor: rowBg }}>
         {opcionesProps?.mostrarNroItem && (
-          <StyledTableCell align="center" width={40}>
+          <TableCell align="center">
             {item.nroItem ? (
               <Typography variant="body2" sx={{ fontWeight: 500 }}>
                 {item.nroItem}
@@ -165,11 +214,14 @@ const ArticuloRow = memo(
                 {index + 1}
               </Typography>
             )}
-          </StyledTableCell>
+          </TableCell>
         )}
 
+        {/* INYECCIÓN: INICIO */}
+        {renderColumnasDinamicas('inicio')}
+
         {!cantidadProps?.ocultar && (
-          <StyledTableCell align="right" width={110}>
+          <TableCell align="right">
             <MontoMonedaTexto
               monto={item.cantidad}
               editar={!!onChangeCantidad}
@@ -180,53 +232,66 @@ const ArticuloRow = memo(
               min={cantidadProps?.min ?? 0}
               max={cantidadProps?.max ?? 1000000}
             />
-          </StyledTableCell>
+          </TableCell>
         )}
 
+        {/* INYECCIÓN: DESPUÉS DE CANTIDAD */}
+        {renderColumnasDinamicas('despues-cantidad')}
+
         {!unidadMedidaProps.ocultar && (
-          <StyledTableCell align="left" width={100}>
+          <TableCell align="left">
             <Typography variant="caption" noWrap>
               {item.articuloUnidadMedida?.nombreUnidadMedida}
             </Typography>
-          </StyledTableCell>
+          </TableCell>
         )}
 
         {/* FIX: Alineación estricta a la izquierda para la columna del Artículo */}
-        <StyledTableCell align="left" sx={{ minWidth: 220 }}>
+        <TableCell align="left">
           <Stack
             direction="column"
             component={onClickArticulo ? ListItemButton : Box}
             onClick={onClickArticulo ? () => onClickArticulo({ index, item }) : undefined}
-            // Aseguramos que el contenido del Stack empiece desde la izquierda
             sx={{ p: 0.5, borderRadius: 1, alignItems: 'flex-start', textAlign: 'left' }}
           >
-            <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: 1.3 }}>
-              <Box component="span" sx={{ color: 'primary.main', fontWeight: 600, mr: 0.75 }}>
-                {item.codigoArticulo}
-              </Box>
-              {item.nombreArticulo}
-            </Typography>
+            {onClickArticulo && (
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: 500, lineHeight: 1.3 }}
+                title={`${item.codigoArticulo}`}
+              >
+                {item.nombreArticulo}
+              </Typography>
+            )}
+
+            {!onClickArticulo && <ArticuloDetallePopover articulo={item} />}
 
             {item.detalleExtra && (
-              <Typography variant="caption" sx={{ fontStyle: 'italic', color: 'text.secondary', mt: 0.25 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }} display={'inline'}>
                 {item.detalleExtra}
               </Typography>
             )}
 
             {!articuloProps?.ocultarUnidadMedidaText && item.articuloUnidadMedida && (
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+              <Typography
+                variant="caption"
+                sx={{ color: 'text.secondary', fontWeight: 400, mt: 0.3, fontStyle: 'italic' }}
+              >
                 {item.articuloUnidadMedida.nombreUnidadMedida}
               </Typography>
             )}
           </Stack>
-        </StyledTableCell>
+        </TableCell>
+
+        {/* INYECCIÓN: DESPUÉS DE ARTÍCULO */}
+        {renderColumnasDinamicas('despues-articulo')}
 
         {!almacenLoteProps?.ocultar && (
-          <StyledTableCell align="left" width={160}>
+          <TableCell align="left">
             <Stack spacing={0.25} alignItems="flex-start">
               {!almacenLoteProps?.ocultarTextoAlmacen && (
                 <Typography variant="caption" display="flex" gap={0.5} noWrap>
-                  <Box component="span" sx={{ fontWeight: 700, color: 'success.main' }}>
+                  <Box component="span" sx={{ fontWeight: 700, color: 'green.main' }} title={'Almacén'}>
                     ALM:
                   </Box>
                   {item.almacen?.nombre ? (
@@ -255,11 +320,11 @@ const ArticuloRow = memo(
                 </Typography>
               )}
             </Stack>
-          </StyledTableCell>
+          </TableCell>
         )}
 
         {!precioProps?.ocultar && (
-          <StyledTableCell align="right" width={110}>
+          <TableCell align="right">
             <MontoMonedaTexto
               monto={item.precio}
               sigla={moneda?.sigla}
@@ -269,11 +334,11 @@ const ArticuloRow = memo(
               montoProps={{ textAlign: 'right', sx: { fontWeight: 700, color: 'text.primary' } }}
               decimales={precioProps?.nroDecimales ?? 2}
             />
-          </StyledTableCell>
+          </TableCell>
         )}
 
         {!descProps?.ocultar && (
-          <StyledTableCell align="right" width={90}>
+          <TableCell align="right">
             <MontoMonedaTexto
               monto={item.descuento}
               sigla={moneda?.sigla}
@@ -283,26 +348,48 @@ const ArticuloRow = memo(
               montoProps={{ textAlign: 'right' }}
               decimales={descProps?.nroDecimales ?? 2}
             />
-          </StyledTableCell>
+          </TableCell>
         )}
 
+        {/* INYECCIÓN: FIN (Por defecto) */}
+        {renderColumnasDinamicas('fin')}
+
         {!opcionesProps?.ocultar && (
-          <StyledTableCell align="center" width={80}>
-            <ButtonGroup size="small" variant="text">
-              {onDeleteArticulo && (
-                <IconButton color="error" onClick={() => onDeleteArticulo({ index, item })} size="small">
-                  <DeleteForever fontSize="small" />
-                </IconButton>
-              )}
+          <TableCell align="center">
+            <Stack
+              direction="row"
+              spacing={0.5}
+              alignItems="center"
+              justifyContent="center"
+              sx={{ whiteSpace: 'nowrap' }} // Mantiene la protección responsiva
+            >
+              {/* --- INYECCIÓN DE ACCIONES EXTRA --- */}
+              {opcionesProps.renderExtraActions && opcionesProps.renderExtraActions(item, index)}
+
               {onChangeDetalleExtra && (
-                <IconButtonTextAreaPopover
-                  id={`det-extra-${item.id}`}
-                  initialValue={item.detalleExtra || ''}
-                  onApply={(v) => onChangeDetalleExtra({ index, item, detalleExtra: v })}
+                <PopoverTexto
+                  name={`det-extra-${item.id}`}
+                  iconButtonProps={{
+                    size: 'small',
+                  }}
+                  title={'Agregar detalle extra'}
+                  value={item.detalleExtra ?? ''}
+                  onChange={(v) => onChangeDetalleExtra({ index, item, detalleExtra: v.target.value })}
                 />
               )}
-            </ButtonGroup>
-          </StyledTableCell>
+
+              {onDeleteArticulo && (
+                <IconButton
+                  color="error"
+                  title={'Quitar línea'}
+                  onClick={() => onDeleteArticulo({ index, item })}
+                  size="small"
+                >
+                  <DeleteForeverOutlined />
+                </IconButton>
+              )}
+            </Stack>
+          </TableCell>
         )}
       </StyledTableRow>
     )
@@ -330,20 +417,37 @@ const CarritoArticulos: FunctionComponent<CarritoProps> = (props) => {
     cantidadProps,
     almacenLoteProps,
     unidadMedidaProps = { ocultar: true },
+    bgColor = 'primary',
+    striped = true,
+    hover = false,
+    columnasExtra = [],
   } = props
 
+  // --- HELPER DE INYECCIÓN (HEAD) ---
+  const renderHeadersDinamicos = (ubicacionTarget: UbicacionColumnaExtra) => {
+    return columnasExtra
+      .filter((col) => !col.ocultar && (col.ubicacion || 'fin') === ubicacionTarget)
+      .map((col) => {
+        const {
+          id,
+          label,
+          headCellProps,
+          ubicacion: _ubicacion,
+          renderCell: _renderCell,
+          ocultar: _ocultar,
+          ...cellProps
+        } = col
+
+        return (
+          <TableCell key={`head-${id}`} {...cellProps} {...headCellProps}>
+            {label}
+          </TableCell>
+        )
+      })
+  }
+
   if (articulos.length === 0) {
-    return (
-      <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', backgroundColor: 'action.hover' }}>
-        <ShoppingCart sx={{ fontSize: 48, mb: 1, opacity: 0.3 }} />
-        <Typography variant="h6" color="text.secondary">
-          {titulo || 'Carrito Vacío'}
-        </Typography>
-        <Typography variant="body2" color="warning.main">
-          Se requiere al menos un artículo para procesar.
-        </Typography>
-      </Paper>
-    )
+    return <CarritoVacio />
   }
 
   const esMonedaDiferente = moneda?.sigla !== monedaPrimaria?.sigla
@@ -375,41 +479,103 @@ const CarritoArticulos: FunctionComponent<CarritoProps> = (props) => {
         )}
       </Grid>
 
-      <TableContainer component={Paper} variant="outlined" sx={{ maxHeight, overflowY: 'auto' }}>
-        <Table size="small" stickyHeader>
-          <TableHead>
+      <StyledTableContainer sx={{ maxHeight, overflowY: 'auto' }} bgColor={bgColor}>
+        <Table size="small" stickyHeader sx={{ minWidth: 750 }}>
+          <StyledTableHead bgColor={bgColor}>
             <TableRow>
-              {opcionesProps?.mostrarNroItem && <StyledTableCell align="center">#</StyledTableCell>}
-              {!cantidadProps?.ocultar && (
-                <StyledTableCell align="right">{cantidadProps?.label || 'Cant.'}</StyledTableCell>
+              {opcionesProps?.mostrarNroItem && (
+                <TableCell align="center" width={40}>
+                  #
+                </TableCell>
               )}
+
+              {/* HEAD INYECCIÓN: INICIO */}
+              {renderHeadersDinamicos('inicio')}
+
+              {!cantidadProps?.ocultar && (
+                <TableCell
+                  align="right"
+                  width={cantidadProps?.width ?? 105}
+                  sx={{ minWidth: cantidadProps?.minWidth }}
+                >
+                  {cantidadProps?.label || 'Cant.'}
+                </TableCell>
+              )}
+
+              {/* HEAD INYECCIÓN: DESPUÉS DE CANTIDAD */}
+              {renderHeadersDinamicos('despues-cantidad')}
+
               {!unidadMedidaProps.ocultar && (
-                <StyledTableCell align="left">{unidadMedidaProps?.label || 'U.M.'}</StyledTableCell>
+                <TableCell
+                  align="left"
+                  width={unidadMedidaProps?.width ?? 100}
+                  sx={{ minWidth: unidadMedidaProps?.minWidth }}
+                >
+                  {unidadMedidaProps?.label || 'U.M.'}
+                </TableCell>
               )}
 
               {!articuloProps?.ocultar && (
-                <StyledTableCell align="left">{articuloProps?.label || 'Artículo'}</StyledTableCell>
+                <TableCell
+                  align="left"
+                  width={articuloProps?.width}
+                  sx={{ minWidth: articuloProps?.minWidth ?? 220 }}
+                >
+                  {articuloProps?.label || 'Artículo'}
+                </TableCell>
               )}
 
+              {/* HEAD INYECCIÓN: DESPUÉS DE ARTÍCULO */}
+              {renderHeadersDinamicos('despues-articulo')}
+
               {!almacenLoteProps?.ocultar && (
-                <StyledTableCell align="left">{almacenLoteProps?.label || 'Almacén / Lote'}</StyledTableCell>
+                <TableCell
+                  align="left"
+                  width={almacenLoteProps?.width ?? 160}
+                  sx={{ minWidth: almacenLoteProps?.minWidth }}
+                >
+                  {almacenLoteProps?.label || 'Almacén / Lote'}
+                </TableCell>
               )}
               {!precioProps?.ocultar && (
-                <StyledTableCell align="right">{precioProps?.label || 'Precio'}</StyledTableCell>
+                <TableCell
+                  align="right"
+                  width={precioProps?.width ?? 110}
+                  sx={{ minWidth: precioProps?.minWidth }}
+                >
+                  {precioProps?.label || 'Precio'}
+                </TableCell>
               )}
               {!descProps?.ocultar && (
-                <StyledTableCell align="right">{descProps?.label || 'Desc.'}</StyledTableCell>
+                <TableCell
+                  align="right"
+                  width={descProps?.width ?? 90}
+                  sx={{ minWidth: descProps?.minWidth }}
+                >
+                  {descProps?.label || 'Desc.'}
+                </TableCell>
               )}
-              {!opcionesProps?.ocultar && <StyledTableCell align="center">Acciones</StyledTableCell>}
+
+              {/* HEAD INYECCIÓN: FIN */}
+              {renderHeadersDinamicos('fin')}
+              {!opcionesProps?.ocultar && (
+                <TableCell
+                  align="center"
+                  width={opcionesProps?.width ?? 80}
+                  sx={{ minWidth: opcionesProps?.minWidth }}
+                >
+                  Acciones
+                </TableCell>
+              )}
             </TableRow>
-          </TableHead>
-          <TableBody>
+          </StyledTableHead>
+          <StyledTableBody bgColor={bgColor} striped={striped} hover={hover}>
             {articulos.map((item, index) => (
               <ArticuloRow key={item.id || index} item={item} index={index} props={props} />
             ))}
-          </TableBody>
+          </StyledTableBody>
         </Table>
-      </TableContainer>
+      </StyledTableContainer>
     </Box>
   )
 }

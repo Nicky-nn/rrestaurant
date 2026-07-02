@@ -1,31 +1,78 @@
-import { AddCircleOutlined, RemoveCircle } from '@mui/icons-material'
-import { IconButton, InputAdornment, styled, TextField, type TextFieldProps, Typography } from '@mui/material'
-import * as React from 'react'
-import { ForwardedRef, useEffect, useRef, useState } from 'react'
-import { IMaskInput } from 'react-imask'
+import {
+  alpha,
+  IconButton,
+  InputAdornment,
+  styled,
+  SvgIcon,
+  TextField,
+  type TextFieldProps,
+  Typography,
+} from "@mui/material";
+import * as React from "react";
+import { ForwardedRef, useEffect, useRef, useState } from "react";
+import { IMaskInput } from "react-imask";
 
 const StyledIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.text.secondary,
-  '&:disabled': {
-    color: theme.palette.action.disabled,
+  "&:disabled": {
+    color: alpha(theme.palette.action.disabled, 0.12),
   },
-  '&:hover': {
+  "&:hover": {
     color: theme.palette.primary.main,
   },
-  '&:focus': {
+  "&:focus": {
     color: theme.palette.primary.main,
   },
-  transition: theme.transitions.create('color'),
-  padding: 4.5,
-}))
+  transition: theme.transitions.create("color"),
+  padding: 2,
+}));
+
+/** Icono + */
+const CustomHairlineAddIcon = (props: any) => (
+  <SvgIcon {...props} viewBox="0 0 24 24">
+    {/* G es un grupo para aplicar estilos comunes */}
+    <g
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="0.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* Círculo exterior */}
+      <circle cx="12" cy="12" r="10" />
+      {/* Línea vertical del '+' */}
+      <line x1="12" y1="8" x2="12" y2="16" />
+      {/* Línea horizontal del '+' */}
+      <line x1="8" y1="12" x2="16" y2="12" />
+    </g>
+  </SvgIcon>
+);
+
+/** Icono - */
+const CustomHairlineRemoveIcon = (props: any) => (
+  <SvgIcon {...props} viewBox="0 0 24 24">
+    <g
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="0.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* Círculo exterior */}
+      <circle cx="12" cy="12" r="10" />
+      {/* Línea horizontal del '-' */}
+      <line x1="8" y1="12" x2="16" y2="12" />
+    </g>
+  </SvgIcon>
+);
 
 // =========================================================================
 // ADAPTADOR PARA react-imask
 // =========================================================================
 interface CustomProps {
-  onChange: (event: { target: { name: string; value: string } }) => void
-  name: string
-  scale?: number
+  onChange: (event: { target: { name: string; value: string } }) => void;
+  name: string;
+  scale?: number;
 }
 
 /**
@@ -34,7 +81,7 @@ interface CustomProps {
  */
 const NumericFormatCustom = React.forwardRef<HTMLInputElement, CustomProps>(
   function NumericFormatCustom(props, ref) {
-    const { scale, onChange, ...rest } = props
+    const { scale, onChange, ...rest } = props;
     return (
       <IMaskInput
         {...rest}
@@ -42,290 +89,296 @@ const NumericFormatCustom = React.forwardRef<HTMLInputElement, CustomProps>(
         scale={scale ?? 2}
         normalizeZeros={true}
         padFractionalZeros={true}
-        thousandsSeparator={' '}
-        radix={'.'}
-        mapToRadix={[',']}
+        thousandsSeparator={" "}
+        radix={"."}
+        mapToRadix={[","]}
         mask={Number}
         unmask={true}
         onAccept={(value) => {
-          onChange({ target: { name: props.name, value: value.toString() } })
+          onChange({ target: { name: props.name, value: value.toString() } });
         }}
       />
-    )
+    );
   },
-)
+);
 
 // =========================================================================
 // INTERFACES
 // =========================================================================
-export type NumberInputProps = Omit<TextFieldProps, 'onChange' | 'onBlur'> & {
-  value?: number | null
-  min?: number
-  max?: number
-  step?: number
-  decimalScale?: number
-  unit?: string
-  textAlign?: 'left' | 'center' | 'right'
-  hideActionButtons?: boolean
-  onChange?: (value: number | null) => void
-  spinnerTabIndex?: boolean
-  mostrarMensajeError?: boolean
-  customEndAdornment?: React.ReactNode
-  customStartAdornment?: React.ReactNode
-}
+export type NumberInputProps = Omit<TextFieldProps, "onChange" | "onBlur"> & {
+  value?: number | null;
+  min?: number;
+  max?: number;
+  step?: number;
+  decimalScale?: number;
+  unit?: string;
+  textAlign?: "left" | "center" | "right";
+  hideActionButtons?: boolean;
+  onChange?: (value: number | null) => void;
+  spinnerTabIndex?: boolean;
+  mostrarMensajeError?: boolean;
+  customEndAdornment?: React.ReactNode;
+  customStartAdornment?: React.ReactNode;
+};
 
 /**
  * Componente principal que nos permite generar un input de tipo number con funciones de validacion, decimales, y todas las propiedades adjuntas
  * @author isi-template
  */
-const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(function NumberSpinnerField(
-  props,
-  ref: ForwardedRef<HTMLDivElement>,
-) {
-  // const t = useTranslations('NumberInput')
-  const {
-    disabled = false,
-    hideActionButtons = false,
-    max = Infinity,
-    min = -Infinity,
-    onChange,
-    size = 'small',
-    slotProps,
-    step = 1,
-    value: valueProp,
-    textAlign = 'center',
-    unit,
-    helperText,
-    decimalScale = 2,
-    spinnerTabIndex = true,
-    mostrarMensajeError = true,
-    ...rest
-  } = props
+const NumberSpinnerField = React.forwardRef<HTMLDivElement, NumberInputProps>(
+  function NumberSpinnerField(props, ref: ForwardedRef<HTMLDivElement>) {
+    const {
+      disabled = false,
+      hideActionButtons = false,
+      max = Infinity,
+      min = -Infinity,
+      onChange,
+      size = "small",
+      slotProps,
+      step = 1,
+      value: valueProp = null, // Renombramos internamente para no confundir con el state
+      textAlign = "center",
+      unit,
+      helperText,
+      decimalScale = 2,
+      spinnerTabIndex = true,
+      mostrarMensajeError = true,
+      customEndAdornment,
+      customStartAdornment,
+      ...rest
+    } = props;
 
-  const intervalRef = useRef(null) // Referencia para almacenar el intervalo
-  const [stateValue, setStateValue] = useState<number | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+    // =======================================================================
+    // BUFFER TRANSITORIO Y CANDADOS DE RENDIMIENTO
+    // =======================================================================
+    const [localValue, setLocalValue] = useState<number | null>(valueProp);
+    const spinBufferRef = useRef<number | null>(valueProp);
+    // Candado para saber si estamos presionando la tecla
+    const isSpinningRef = useRef(false);
 
-  /**
-   * Cuando se presiona una tecla
-   * @param e
-   */
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const char = getKeyDownChar(e)
-    if (!char)
-      // Ningun caracter
-      return
-    const target = e.target as HTMLInputElement
-    if (target.selectionStart == null || target.selectionEnd == null)
-      // Ninguna seleccion
-      return
-    return char
-  }
+    // Controladores de tiempo para el clic mantenido
+    const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const spinIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  /**
-   * Incrementa el valor
-   */
-  const increment = (forceChange = false) => {
-    const newValue = Number(
-      ((stateValue != null && !Number.isNaN(stateValue) ? Number(stateValue) : 0) + step).toFixed(
-        decimalScale,
-      ),
-    )
-    if (newValue > max) {
-      return
-    }
-    setStateValue(newValue)
-    if (forceChange) {
-      if (onChange) onChange(newValue)
-    }
-  }
-
-  /**
-   * Decrementa el valor
-   */
-  const decrement = (forceChange = false) => {
-    const newValue = Number(
-      ((stateValue != null && !Number.isNaN(stateValue) ? Number(stateValue) : 0) - step).toFixed(
-        decimalScale,
-      ),
-    )
-
-    if (newValue < min) {
-      return
-    }
-    setStateValue(newValue)
-    if (forceChange) {
-      if (onChange) onChange(newValue)
-    }
-  }
-
-  /**
-   * Cuando se presiona una tecla
-   * @param e
-   */
-  const getKeyDownChar = (e: React.KeyboardEvent): string | undefined => {
-    if (e.key === 'ArrowUp') {
-      if (intervalRef.current !== null) return
-      increment()
-      return
-    } else if (e.key === 'ArrowDown') {
-      if (intervalRef.current !== null) return
-      decrement()
-      return
-    }
-  }
-
-  const startSpin = (direction: 'UP' | 'DOWN') => {
-    if (intervalRef.current !== null) return
-    if (direction === 'UP') increment(true)
-    else decrement(true)
-
-    intervalRef.current = setInterval(() => {
-      if (direction === 'UP') increment(true)
-      else decrement(true)
-    }, 150) as any
-  }
-
-  const stopSpin = () => {
-    if (intervalRef.current !== null) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-  }
-
-  const clampNumber = (val: string): number | null => {
-    if (val === '' || val === null || val === undefined) return null
-    const n = Number(val)
-    return Number.isNaN(n) ? null : n
-  }
-
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      // Limpiar el intervalo cuando se suelta la tecla
-      if (intervalRef.current !== null) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
+    // Sincronizamos con el padre SOLO si el valor entrante es realmente distinto
+    useEffect(() => {
+      if (valueProp !== spinBufferRef.current) {
+        setLocalValue(valueProp);
+        spinBufferRef.current = valueProp;
       }
-    }
-    // Estado final de cambio afuera
-    if (onChange) {
-      if (!stateValue) {
-        onChange(null)
-      } else {
-        onChange(Number(stateValue))
+    }, [valueProp]);
+
+    // Limpieza de memoria al desmontar el componente
+    useEffect(() => {
+      return () => {
+        if (spinTimeoutRef.current) clearTimeout(spinTimeoutRef.current);
+        if (spinIntervalRef.current) clearInterval(spinIntervalRef.current);
+      };
+    }, []);
+
+    const updateBuffer = (newVal: number | null, isFinalChange: boolean) => {
+      // FRENO DE BUCLE: Si el valor es exactamente el mismo, no hacemos nada
+      if (newVal === spinBufferRef.current) return;
+
+      spinBufferRef.current = newVal;
+      setLocalValue(newVal); // Actualiza la UI instantáneamente
+
+      // Si es un cambio final avisamos al formulario
+      if (isFinalChange && onChange) {
+        onChange(newVal);
       }
-    }
-  }
+    };
 
-  /**
-   * Actualizacion de datos y envio fuera del componente
-   * @param value
-   */
-  const updateChange = (value: string) => {
-    const formattedValue = clampNumber(value)
-    // console.log(formattedValue, value.toString())
-    setStateValue(formattedValue)
-    // console.log(formattedValue, min, max)
-    if (Number(formattedValue) < min) {
-      if (mostrarMensajeError) setErrorMessage(`Valor mínimo es ${min}`)
-    } else {
-      if (Number(formattedValue) > max) {
-        if (mostrarMensajeError) setErrorMessage('Valor maximo es ' + max)
-      } else {
-        setErrorMessage(undefined)
+    // Evaluamos el error visual basado en el valor actual del buffer
+    const isOutOfRange =
+      localValue !== null && (localValue < min || localValue > max);
+    const dynamicHelperText =
+      mostrarMensajeError && isOutOfRange
+        ? localValue! < min
+          ? `El valor mínimo es ${min}`
+          : `El valor máximo es ${max}`
+        : helperText;
+    // Si no hay texto de error, le pasamos un espacio en blanco (' ')
+    // Esto obliga a Material-UI a mantener la altura del contenedor siempre fija.
+    const finalHelperText = dynamicHelperText || "";
+
+    // ===== HANDLERS DE INCREMENTO / DECREMENTO =====
+    const executeIncrement = (isFinalChange: boolean) => {
+      const current = spinBufferRef.current ?? 0;
+      let next = Number((current + step).toFixed(decimalScale));
+      if (next > max) next = max;
+      updateBuffer(next, isFinalChange);
+    };
+
+    const executeDecrement = (isFinalChange: boolean) => {
+      const current = spinBufferRef.current ?? 0;
+      let next = Number((current - step).toFixed(decimalScale));
+      if (next < min) next = min;
+      updateBuffer(next, isFinalChange);
+    };
+
+    // ===== HANDLERS DE BOTONES (Clic mantenido / Touch) =====
+    const startSpin = (direction: "UP" | "DOWN") => {
+      isSpinningRef.current = true; // Activamos el candado para que IMask no interfiera
+
+      // 1. Salto inmediato (como si fuera un clic normal)
+      if (direction === "UP") executeIncrement(false);
+      else executeDecrement(false);
+
+      // 2. Esperamos 400ms (Delay natural antes de empezar la repetición rápida)
+      spinTimeoutRef.current = setTimeout(() => {
+        // 3. Empezamos a sumar/restar a toda velocidad (cada 50 milisegundos)
+        spinIntervalRef.current = setInterval(() => {
+          if (direction === "UP") executeIncrement(false);
+          else executeDecrement(false);
+        }, 50);
+      }, 400);
+    };
+
+    const stopSpin = () => {
+      isSpinningRef.current = false; // Quitamos el candado
+
+      // Detenemos los motores
+      if (spinTimeoutRef.current) clearTimeout(spinTimeoutRef.current);
+      if (spinIntervalRef.current) clearInterval(spinIntervalRef.current);
+
+      // Enviamos el valor final acumulado al formulario principal al soltar el dedo/clic
+      if (onChange) {
+        onChange(spinBufferRef.current);
       }
-    }
-  }
+    };
 
-  /**
-   * Evento on change del componente
-   * @param e
-   */
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateChange(e.target.value)
-  }
+    // ===== HANDLERS DE TECLADO (Mantener presionado) =====
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        isSpinningRef.current = true; // Activamos el candado
+        executeIncrement(false);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        isSpinningRef.current = true; // Activamos el candado
+        executeDecrement(false);
+      }
+    };
 
-  /******************************************************************************/
-  /******************************************************************************/
-  useEffect(() => {
-    setStateValue(valueProp ?? null)
-  }, [valueProp])
+    const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        isSpinningRef.current = false; // Quitamos el candado al soltar
 
-  return (
-    <TextField
-      {...rest}
-      ref={ref}
-      value={stateValue?.toString() || null} // We can't ever pass null to value because it breaks the shrink state of the label, so we pass empty string instead
-      disabled={disabled}
-      size={size}
-      autoComplete={'off'}
-      onKeyDown={handleKeyDown}
-      onChange={handleChange}
-      onKeyUp={handleKeyUp}
-      helperText={errorMessage || helperText}
-      error={props.error || Number(stateValue) < min || Number(stateValue) > max}
-      placeholder={props.placeholder || min.toString()}
-      slotProps={{
-        ...slotProps,
-        input: {
-          sx: {
-            fontSize: '1.16em',
-          },
-          inputComponent: NumericFormatCustom as any,
-          inputProps: {
-            scale: decimalScale,
-            style: {
-              textAlign: textAlign,
-              height: 20,
+        // Enviamos el valor final acumulado al formulario principal
+        if (onChange) {
+          onChange(spinBufferRef.current);
+        }
+      }
+    };
+
+    // ===== HANDLER DE ESCRITURA NORMAL (Tipeo con IMask) =====
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const valStr = e.target.value;
+      const nextVal = valStr === "" ? null : Number(valStr);
+
+      // Si IMask dispara esto mientras mantenemos presionada la flecha,
+      // isSpinningRef será true, por lo que bloqueamos el envío final al padre.
+      updateBuffer(nextVal, !isSpinningRef.current);
+    };
+
+    return (
+      <TextField
+        {...rest}
+        ref={ref}
+        value={localValue?.toString() ?? ""} // Usamos nuestro valor local rápido
+        disabled={disabled}
+        size={size}
+        autoComplete={"off"}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onChange={handleChange}
+        helperText={finalHelperText}
+        error={props.error || isOutOfRange}
+        placeholder={props.placeholder || min.toString()}
+        slotProps={{
+          ...slotProps,
+          input: {
+            inputComponent: NumericFormatCustom as any,
+            inputProps: {
+              scale: decimalScale,
+              style: { textAlign },
+              inputMode: decimalScale > 0 ? "decimal" : "numeric",
+              type: "tel",
             },
+            startAdornment: (!hideActionButtons || customStartAdornment) && (
+              <InputAdornment position="start" sx={{ mr: 0.7 }}>
+                {customStartAdornment}
+                {!hideActionButtons && (
+                  <StyledIconButton
+                    aria-label="decrementar valor"
+                    edge="start"
+                    disabled={
+                      disabled ||
+                      (localValue !== null && localValue - step < min)
+                    }
+                    tabIndex={spinnerTabIndex ? undefined : -1}
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      startSpin("DOWN");
+                    }}
+                    onPointerUp={stopSpin}
+                    onPointerLeave={stopSpin}
+                    onPointerCancel={stopSpin}
+                  >
+                    <CustomHairlineRemoveIcon sx={{ fontSize: "1.9rem" }} />
+                  </StyledIconButton>
+                )}
+              </InputAdornment>
+            ),
+            endAdornment: (unit ||
+              !hideActionButtons ||
+              customEndAdornment) && (
+              <InputAdornment position="end">
+                {customEndAdornment}
+                {unit && (
+                  <Typography
+                    component={"span"}
+                    fontSize={"smaller"}
+                    sx={{ lineHeight: 0, mt: 0.3, px: 0.5 }}
+                  >
+                    {unit}
+                  </Typography>
+                )}
+                {!hideActionButtons && (
+                  <StyledIconButton
+                    aria-label="incrementar valor"
+                    edge="end"
+                    disabled={
+                      disabled ||
+                      (localValue !== null && localValue + step > max)
+                    }
+                    tabIndex={spinnerTabIndex ? undefined : -1}
+                    // ¡Usamos Pointer Events para unificar Mouse y Touch!
+                    onPointerDown={(e) => {
+                      e.preventDefault(); // Evita perder foco
+                      startSpin("UP");
+                    }}
+                    onPointerUp={stopSpin}
+                    onPointerLeave={stopSpin}
+                    onPointerCancel={stopSpin} // Corta el giro si el sistema interrumpe el gesto (ej. scroll)
+                  >
+                    <CustomHairlineAddIcon sx={{ fontSize: "1.9rem" }} />
+                  </StyledIconButton>
+                )}
+              </InputAdornment>
+            ),
+            ...slotProps?.input,
           },
-          startAdornment: !hideActionButtons && (
-            <InputAdornment position="start" sx={{ mr: 0.7 }}>
-              <StyledIconButton
-                aria-label="decrementar valor"
-                onClick={() => decrement(true)}
-                edge="start"
-                disabled={disabled || (Number(stateValue) || 0) - step < min}
-                tabIndex={spinnerTabIndex ? undefined : -1}
-              >
-                <RemoveCircle />
-              </StyledIconButton>
-            </InputAdornment>
-          ),
-          endAdornment: (unit || !hideActionButtons) && (
-            <InputAdornment position="end">
-              {unit && (
-                <Typography component={'span'} fontSize={'smaller'} sx={{ lineHeight: 0, mt: 0.3 }}>
-                  {unit}
-                </Typography>
-              )}
-              {!hideActionButtons && (
-                <StyledIconButton
-                  aria-label="incrementar valor"
-                  edge="end"
-                  disabled={disabled || (Number(stateValue) || 0) + step > max}
-                  tabIndex={spinnerTabIndex ? undefined : -1}
-                  onPointerDown={(e) => {
-                    e.preventDefault()
-                    startSpin('UP')
-                  }}
-                  onPointerUp={stopSpin}
-                  onPointerLeave={stopSpin}
-                  onPointerCancel={stopSpin}
-                >
-                  <AddCircleOutlined />
-                </StyledIconButton>
-              )}
-            </InputAdornment>
-          ),
-          ...slotProps?.input,
-        },
-        htmlInput: {
-          ...slotProps?.htmlInput,
-        },
-      }}
-    />
-  )
-})
+          htmlInput: {
+            inputMode: decimalScale > 0 ? "decimal" : "numeric",
+            pattern: decimalScale > 0 ? undefined : "[0-9]*",
+            ...slotProps?.htmlInput,
+          },
+        }}
+      />
+    );
+  },
+);
 
-export default React.memo(NumberSpinnerField)
+export default React.memo(NumberSpinnerField);

@@ -1,17 +1,18 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate } from "react-router-dom";
 
-import AuthGuard from '../../auth/AuthGuard'
-import MatxLayout from '../base/components/Template/MatxLayout/MatxLayout'
-import cuentaRoutes from '../modules/base/cuenta/CuentaRoutes'
-import NotFound from '../modules/base/sessions/NotFound'
-import sessionRoutes from '../modules/base/sessions/SessionRoutes'
-import cajasRoutes from '../modules/cajas/cajasRoutes'
-import clientsRoutes from '../modules/clients/clientsRoutes'
-import homeRoutes, { homeRoutesMap } from '../modules/home/HomeRoutes'
-import impresorasRoutes from '../modules/impresoras/impresorasRoutes'
-import reporteRoutes from '../modules/reporte/reporteRoutes'
-import restaurantRoutes from '../modules/restaurante/restauranteRoutes'
-import ncdGestionRoutes from '../modules/notaCreditoDebito/notaCreditoDebitoRoutes'
+import AuthGuard from "../../auth/AuthGuard";
+import MatxLayout from "../base/components/Template/MatxLayout/MatxLayout";
+import cuentaRoutes from "../modules/base/cuenta/CuentaRoutes";
+import NotFound from "../modules/base/sessions/NotFound";
+import sessionRoutes from "../modules/base/sessions/SessionRoutes";
+import cajasRoutes from "../modules/cajas/cajasRoutes";
+import clientsRoutes from "../modules/clients/clientsRoutes";
+import homeRoutes, { homeRoutesMap } from "../modules/home/HomeRoutes";
+import impresorasRoutes from "../modules/impresoras/impresorasRoutes";
+import reporteRoutes from "../modules/reporte/reporteRoutes";
+import restaurantRoutes from "../modules/restaurante/restauranteRoutes";
+import ncdGestionRoutes from "../modules/notaCreditoDebito/notaCreditoDebitoRoutes";
+import entradaRoutes from "../modules/entrada/entradaRoutes.tsx";
 
 export const appRoutes = [
   {
@@ -29,9 +30,10 @@ export const appRoutes = [
       ...impresorasRoutes,
       ...reporteRoutes,
       ...ncdGestionRoutes,
+      ...entradaRoutes,
     ],
   },
   ...sessionRoutes,
-  { path: '/', element: <Navigate to={homeRoutesMap.home.path} /> },
-  { path: '*', element: <NotFound /> },
-]
+  { path: "/", element: <Navigate to={homeRoutesMap.home.path} /> },
+  { path: "*", element: <NotFound /> },
+];

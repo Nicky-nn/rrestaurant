@@ -1,4 +1,11 @@
-import { alpha, IconButton, IconButtonProps, Palette, PaletteColor, styled } from '@mui/material'
+import {
+  alpha,
+  IconButton,
+  IconButtonProps,
+  Palette,
+  PaletteColor,
+  styled,
+} from '@mui/material'
 
 interface StyledButtonProps extends IconButtonProps {
   // Ahora customColor acepta exactamente lo mismo que un IconButton de MUI
@@ -21,7 +28,10 @@ export const MrtIconButtonStyled = styled(IconButton, {
       return theme.palette.text.secondary
     }
     // Acceso dinámico a la paleta (ej: theme.palette.primary.main)
-    return (theme.palette[customColor as keyof Palette] as PaletteColor)?.main || theme.palette.text.secondary
+    return (
+      (theme.palette[customColor as keyof Palette] as PaletteColor)?.main ||
+      theme.palette.text.secondary
+    )
   }
 
   const activeColor = getPaletteColor()

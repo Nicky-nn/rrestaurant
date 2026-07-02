@@ -25,6 +25,8 @@ interface FormDescuentoFieldProps<T extends FieldValues> {
   label?: string
   disabled?: boolean
   nroDecimales?: number
+  step?: number
+  min?: number
 }
 
 const round2 = (num: number) => Math.round((num + Number.EPSILON) * 100) / 100
@@ -45,6 +47,8 @@ const getErrorByPath = (obj: any, path: string) => {
  * @param label
  * @param disabled
  * @param nroDecimales
+ * @param step
+ * @param min
  * @author isi-template
  * @constructor
  */
@@ -58,6 +62,8 @@ export const FormDescuentoField = <T extends FieldValues>({
   label,
   disabled = false,
   nroDecimales = 2,
+  step = 0.1,
+  min = 0,
 }: FormDescuentoFieldProps<T>): ReactElement => {
   const [modo, setModo] = useState<'PORCENTAJE' | 'MONTO'>('PORCENTAJE')
 
@@ -142,10 +148,10 @@ export const FormDescuentoField = <T extends FieldValues>({
       onClick={handleSelect}
       onChange={isPorcentaje ? handleChangePorcentaje : handleChangeMonto}
       disabled={disabled}
-      min={0}
+      min={min}
+      step={step}
       max={isPorcentaje ? 100 : subtotal}
       decimalScale={nroDecimales}
-      hideActionButtons={false}
       error={!!errorObj}
       helperText={errorMessage}
       customEndAdornment={

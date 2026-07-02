@@ -1,4 +1,4 @@
-import { IconButtonProps, TableRowProps } from '@mui/material'
+import { IconButtonProps, Palette, TableRowProps } from '@mui/material'
 import { QueryFunctionContext, QueryKey } from '@tanstack/react-query'
 import {
   MRT_ColumnDef,
@@ -14,6 +14,10 @@ import { LinkProps } from 'react-router-dom'
 
 import { MrtActionParams } from './ActionIconButton.tsx'
 
+// Extraemos las claves de la paleta (primary, secondary, error, etc.)
+export type MrtPaletteColors = {
+  [K in keyof Palette]: Palette[K] extends { main: string } ? K : never
+}[keyof Palette]
 /**
  * @author isi-template
  */
@@ -116,12 +120,19 @@ export interface MrtMenuAction<T> {
 export interface MrtFlatOptions {
   enablePagination?: boolean // Por si quieres tabla plana pero con páginas
   enableSorting?: boolean
-  headerBackgroundColor?: string
-  headerTextColor?: string
+  /** Generamos el borde outlined de Paper. Default true */
   showBorder?: boolean
   dense?: MRT_DensityState // Para filas más delgadas
   showHeaders?: boolean
   fullWidth?: boolean // Si es true, la tabla se estira al 100%
+  /** Titulo caption. Soporta texto o un componente de React personalizado */
+  title?: ReactNode | string
+  /** Color base de la tabla (ej. green[300] o 'primary'). Pinta el Head y el Hover. default inherit */
+  tableColor?: MrtPaletteColors | string
+  /** Activa el hover tintado en las filas. Default: false */
+  enableRowHover?: boolean
+  /** Activa las filas intercaladas tintadas. Default: true */
+  enableStripedRows?: boolean
 }
 
 /**
@@ -134,8 +145,8 @@ export interface MrtTableConfig<T extends Record<string, any>> {
   id: string
   // @required columnas para renderizar
   columns: MRT_ColumnDef<T, any>[]
-  // título de la tabla
-  title?: string
+  /** Título de la tabla principal. Soporta texto o componente */
+  title?: ReactNode | string
   // -- SELECCION --
   enableSelection?: boolean // Habilita seleccion checkbox/radio
   multiSelection?: boolean //true: Checkbox, false: Radio
@@ -173,4 +184,8 @@ export interface MrtTableConfig<T extends Record<string, any>> {
   showIconRefetch?: boolean
   // Props nativa de MRT que no esté mapeada arriba
   additionalOptions?: Partial<MRT_TableOptions<T>>
+
+  // -- ESTILOS VISUALES (NUEVO) --
+  /** Color base de la tabla (ej. green[300] o 'primary'). Pinta el Head y el Hover. default inherit */
+  tableColor?: MrtPaletteColors | string
 }

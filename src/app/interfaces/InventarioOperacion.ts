@@ -1,30 +1,30 @@
-import { AlmacenInventarioProps } from './almacen.ts'
-import { ArticuloPrecioProps } from './articuloPrecio.ts'
-import { LoteInventarioProps } from './lote.ts'
-import { SucursalProps } from './sucursal.ts'
+import { AlmacenInventarioProps } from "./almacen.ts";
+import { ArticuloPrecioProps } from "./articuloPrecio.ts";
+import { LoteInventarioProps } from "./lote.ts";
+import { SucursalProps } from "./sucursal.ts";
 
 /**
  * Inventario de articulo para operaciones
  * @author isi-template
- * @deprecated
+ * @deprecated - Reemplazada por ArticuloInventarioOperacionProps
  */
 export interface InventarioOperacionProps {
-  _id: string
-  codigoArticulo: string
-  nombreArticulo: string
-  sucursal: SucursalProps
-  articuloPrecio: ArticuloPrecioProps
-  articuloPrecioBase: ArticuloPrecioProps
-  almacen: AlmacenInventarioProps
-  lote: LoteInventarioProps | null
-  totalStock: number // Sumatoria stock de todos los almacenes
-  totalComprometido: number // Sumatoria comprometido de todos los almacenes
-  totalSolicitado: number // Stock reservado para pedidos para ordenes de compra aprobadas
-  totalDisponible: number // Disponible para transacción
-  stock: number // Existencia segun el tipo de busqueda, almacen u lote
-  comprometido: number // Existencia segun el tipo de busqueda, almacen u lote
-  solicitado: number // Existencia segun el tipo de busqueda, almacen u lote
-  disponible: number // Existencia segun el tipo de busqueda, almacen u lote
+  _id: string;
+  codigoArticulo: string;
+  nombreArticulo: string;
+  sucursal: SucursalProps;
+  articuloPrecio: ArticuloPrecioProps;
+  articuloPrecioBase: ArticuloPrecioProps;
+  almacen: AlmacenInventarioProps;
+  lote: LoteInventarioProps | null;
+  totalStock: number; // Sumatoria stock de todos los almacenes
+  totalComprometido: number; // Sumatoria comprometido de todos los almacenes
+  totalSolicitado: number; // Stock reservado para pedidos para ordenes de compra aprobadas
+  totalDisponible: number; // Disponible para transacción
+  stock: number; // Existencia segun el tipo de busqueda, almacen u lote
+  comprometido: number; // Existencia segun el tipo de busqueda, almacen u lote
+  solicitado: number; // Existencia segun el tipo de busqueda, almacen u lote
+  disponible: number; // Existencia segun el tipo de busqueda, almacen u lote
 }
 
 /**
@@ -34,29 +34,37 @@ export interface InventarioOperacionProps {
  */
 export interface ArticuloInventarioOperacionProps {
   /** Id del inventario */
-  _id: string
+  _id: string;
   /** Id del articulo */
-  articuloId: string
+  articuloId: string;
   /** Código del articulo */
-  codigoArticulo: string
+  codigoArticulo: string;
   /** Nombre del articulo */
-  nombreArticulo: string
+  nombreArticulo: string;
   /** Sucursal segun sesión */
-  sucursal: SucursalProps
+  sucursal: SucursalProps;
   /** Articulo precio para realizar la transacción */
-  articuloPrecio: ArticuloPrecioProps
+  articuloPrecio: ArticuloPrecioProps;
   /** Articulo precio segun la unida de medida báse */
-  articuloPrecioBase: ArticuloPrecioProps
+  articuloPrecioBase: ArticuloPrecioProps;
   /** Almacen con inventario según articulo precio */
-  almacen: AlmacenInventarioProps | null
+  almacen: AlmacenInventarioProps | null;
   /** Lote con inventario según articulo precio */
-  lote: LoteInventarioProps | null
+  lote: LoteInventarioProps | null;
   /** Total stock segun articulo precio */
-  totalStock: number
+  totalStock: number;
   /** Total comprometido segun articulo precio */
-  totalComprometido: number
+  totalComprometido: number;
   /** Total solicitado segun articulo precio */
-  totalSolicitado: number
+  totalSolicitado: number;
   /** Total disponible segun articulo precio */
-  totalDisponible: number
+  totalDisponible: number;
+  /** Existencia según el tipo de busqueda, almacen u lote */
+  stock: number;
+  /** Existencia según el tipo de busqueda, almacen u lote */
+  comprometido: number;
+  /** Existencia segun el tipo de busqueda, almacen u lote */
+  solicitado: number;
+  /** Existencia segun el tipo de busqueda, almacen u lote */
+  disponible: number;
 }

@@ -1,4 +1,8 @@
-import { MRT_ColumnFiltersState, MRT_PaginationState, MRT_SortingState } from 'material-react-table'
+import {
+  MRT_ColumnFiltersState,
+  MRT_PaginationState,
+  MRT_SortingState,
+} from 'material-react-table'
 import { useEffect, useState } from 'react'
 
 interface MrtStateQueryProps {
@@ -24,7 +28,8 @@ export const useMrtQueryState = ({
 }: MrtStateQueryProps = {}) => {
   // 1. Estados de la UI (Necesarios siempre, sea Server o Client side)
   const [pagination, setPagination] = useState<MRT_PaginationState>(initialPagination)
-  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>(initialColumnFilters)
+  const [columnFilters, setColumnFilters] =
+    useState<MRT_ColumnFiltersState>(initialColumnFilters)
   const [globalFilter, setGlobalFilter] = useState(initialGlobalFilter)
   const [sorting, setSorting] = useState<MRT_SortingState>(initialSorting)
 

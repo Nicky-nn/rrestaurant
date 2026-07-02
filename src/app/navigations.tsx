@@ -1,121 +1,133 @@
-import { cajasRoutesMap } from './modules/cajas/cajasRoutes'
-import { clientsRoutesMap } from './modules/clients/clientsRoutes'
-import { homeRoutesMap } from './modules/home/HomeRoutes'
-import { impresorasRoutesMap } from './modules/impresoras/impresorasRoutes'
-import { ncdGestionRoutesMap } from './modules/notaCreditoDebito/notaCreditoDebitoRoutes'
-import { reporteRoutesMap } from './modules/reporte/reporteRoutes'
-import { restauranteRoutesMap } from './modules/restaurante/restauranteRoutes'
+import { cajasRoutesMap } from "./modules/cajas/cajasRoutes";
+import { clientsRoutesMap } from "./modules/clients/clientsRoutes";
+import { homeRoutesMap } from "./modules/home/HomeRoutes";
+import { impresorasRoutesMap } from "./modules/impresoras/impresorasRoutes";
+import { ncdGestionRoutesMap } from "./modules/notaCreditoDebito/notaCreditoDebitoRoutes";
+import { reporteRoutesMap } from "./modules/reporte/reporteRoutes";
+import { restauranteRoutesMap } from "./modules/restaurante/restauranteRoutes";
+import { entradaRoutesMap } from "./modules/entrada/entradaRoutes.tsx";
 
 export interface NavigationProps {
-  name: string
-  path?: string
-  icon?: any
-  iconText?: string
-  label?: string
-  type?: string
-  badge?: { value: string; color: string }
+  name: string;
+  path?: string;
+  icon?: any;
+  iconText?: string;
+  label?: string;
+  type?: string;
+  badge?: { value: string; color: string };
   children?: Array<{
-    name: string
-    icon?: string
-    iconText: string
-    path: string
-  }>
+    name: string;
+    icon?: string;
+    iconText: string;
+    path: string;
+  }>;
 }
 
 export const navigations: NavigationProps[] = [
   {
     name: homeRoutesMap.home.name,
-    icon: 'dashboard',
+    icon: "dashboard",
     path: homeRoutesMap.home.path,
   },
   {
-    name: 'Ventas y Pedidos',
-    icon: 'shopping_cart',
+    name: "Ventas y Pedidos",
+    icon: "shopping_cart",
     children: [
       {
         name: restauranteRoutesMap.registro.name,
-        iconText: 'PR',
+        iconText: "PR",
         path: restauranteRoutesMap.registro.path,
       },
       {
         name: restauranteRoutesMap.gestion.name,
-        iconText: 'PG',
+        iconText: "PG",
         path: restauranteRoutesMap.gestion.path,
       },
       {
         name: restauranteRoutesMap.facturas.name,
-        iconText: 'FA',
+        iconText: "FA",
         path: restauranteRoutesMap.facturas.path,
       },
     ],
   },
   {
-    name: 'Notas de Credito Debito',
-    icon: 'description',
+    name: "Notas de Credito Debito",
+    icon: "description",
     children: [
       {
         name: ncdGestionRoutesMap.ncdGestion.name,
-        iconText: 'NGD',
+        iconText: "NGD",
         path: ncdGestionRoutesMap.ncdGestion.path,
       },
     ],
   },
   {
-    name: 'Cajas',
-    icon: 'point_of_sale',
+    name: "Cajas",
+    icon: "point_of_sale",
     children: [
       {
         name: cajasRoutesMap.gestion.name,
-        iconText: 'GC',
+        iconText: "GC",
         path: cajasRoutesMap.gestion.path,
       },
     ],
   },
   {
-    name: 'Clientes',
-    icon: 'person',
+    name: "Entradas",
+    icon: "add_business",
+    children: [
+      {
+        name: entradaRoutesMap.gestion.name,
+        iconText: "ENT",
+        path: entradaRoutesMap.gestion.path,
+      },
+    ],
+  },
+  {
+    name: "Clientes",
+    icon: "person",
     children: [
       {
         name: clientsRoutesMap.clients.name,
-        icon: '',
-        iconText: 'CL',
+        icon: "",
+        iconText: "CL",
         path: clientsRoutesMap.clients.path,
       },
     ],
   },
   {
-    name: 'Reportes',
-    icon: 'bar_chart',
+    name: "Reportes",
+    icon: "bar_chart",
     children: [
       {
-        name: 'Artículos por PV',
-        iconText: 'APV',
+        name: "Artículos por PV",
+        iconText: "APV",
         path: reporteRoutesMap.articuloPorPuntoVenta.path,
       },
       {
-        name: 'Artículos por Sucursal',
-        iconText: 'APS',
+        name: "Artículos por Sucursal",
+        iconText: "APS",
         path: reporteRoutesMap.articuloPorComercio.path,
       },
       {
-        name: 'Pedidos Observados',
-        iconText: 'PO',
+        name: "Pedidos Observados",
+        iconText: "PO",
         path: reporteRoutesMap.pedidosSospechosos.path,
       },
     ],
   },
   {
-    name: 'Impresoras',
-    icon: 'print',
+    name: "Impresoras",
+    icon: "print",
     children: [
       {
         name: impresorasRoutesMap.gestion.name,
-        iconText: 'IM',
+        iconText: "IM",
         path: impresorasRoutesMap.gestion.path,
       },
     ],
   },
-]
+];
 
 /*
 // Ejemplo de estructura con Hijos

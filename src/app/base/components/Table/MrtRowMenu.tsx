@@ -21,7 +21,11 @@ interface MrtRowMenuProps<T> {
   actions: MrtMenuAction<T>[]
   refetch: () => Promise<any>
 }
-export const MrtRowMenu = <T extends Record<string, any>>({ row, actions, refetch }: MrtRowMenuProps<T>) => {
+export const MrtRowMenu = <T extends Record<string, any>>({
+  row,
+  actions,
+  refetch,
+}: MrtRowMenuProps<T>) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const theme = useTheme()
   const open = Boolean(anchorEl)
@@ -92,7 +96,10 @@ export const MrtRowMenu = <T extends Record<string, any>>({ row, actions, refetc
           const getActionColor = () => {
             if (isDisabled) return theme.palette.text.disabled
             const paletteKey = action.color as keyof Palette
-            return (theme.palette[paletteKey] as PaletteColor)?.main || theme.palette.text.primary
+            return (
+              (theme.palette[paletteKey] as PaletteColor)?.main ||
+              theme.palette.text.primary
+            )
           }
 
           const finalColor = getActionColor()

@@ -1,6 +1,6 @@
 import { MRT_ColumnFiltersState } from 'material-react-table'
 
-export type CastType = 'boolean' | 'number' | 'date' | 'string'
+export type CastType = 'boolean' | 'number' | 'date' | 'string' | 'oid'
 
 // Helper para excluir tipos que no queremos recorrer (como Date o Arrays simples)
 type Primitive = string | number | boolean | Date | null | undefined | any[]
@@ -62,6 +62,8 @@ export const castMrtFilters = <T>(
           return Number(val)
         case 'date':
           return new Date(val)
+        case 'oid':
+          return `oid(${val})`
         default:
           return val
       }
