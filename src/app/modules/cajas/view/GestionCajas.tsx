@@ -556,20 +556,31 @@ const GestionCajas: FunctionComponent = () => {
                             </Typography>
                           )}
                         </Box>
-                        {isRetiro && (() => {
-                          const matchingRetiro = caja?.retiros?.find((r: any) => r.fecha === obs.fecha)
-                          const url = matchingRetiro?.representacionGrafica?.rollo || matchingRetiro?.representacionGrafica?.pdf
-                          if (url) {
-                            return (
-                              <Tooltip title="Ver Comprobante">
-                                <IconButton size="small" onClick={() => setPdfViewerUrl(url)} sx={{ ml: 1, color: 'primary.main', bgcolor: (t) => alpha(t.palette.primary.main, 0.1) }}>
-                                  <Print fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            )
-                          }
-                          return null
-                        })()}
+                        {isRetiro &&
+                          (() => {
+                            const matchingRetiro = caja?.retiros?.find((r: any) => r.fecha === obs.fecha)
+                            const url =
+                              matchingRetiro?.representacionGrafica?.rollo ||
+                              matchingRetiro?.representacionGrafica?.pdf
+                            if (url) {
+                              return (
+                                <Tooltip title="Ver Comprobante">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => setPdfViewerUrl(url)}
+                                    sx={{
+                                      ml: 1,
+                                      color: 'primary.main',
+                                      bgcolor: (t) => alpha(t.palette.primary.main, 0.1),
+                                    }}
+                                  >
+                                    <Print fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              )
+                            }
+                            return null
+                          })()}
                       </Box>
                     )
                   })}

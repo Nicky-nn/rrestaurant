@@ -44,8 +44,7 @@ const AnularNcdDialog: FunctionComponent<Props> = (props: Props) => {
   const { data: motivosAnulacionData } = useSinMotivoAnulacion({})
   const motivosAnulacion =
     motivosAnulacionData?.filter(
-      (motivo) =>
-        motivo.codigoClasificador !== '1' && motivo.codigoClasificador !== '3',
+      (motivo) => motivo.codigoClasificador !== '1' && motivo.codigoClasificador !== '3',
     ) || []
   const [loading, setLoading] = useState(false)
   const { mutateAsync: anularNotaAsync } = useRestNotaCreditoDebitoAnular()
@@ -97,9 +96,7 @@ const AnularNcdDialog: FunctionComponent<Props> = (props: Props) => {
       })
         .then((result) => {
           if (result.isConfirmed) {
-            notSuccess(
-              `Documento ${factura?.numeroNotaCreditoDebito} anulado correctamente`,
-            )
+            notSuccess(`Documento ${factura?.numeroNotaCreditoDebito} anulado correctamente`)
             onClose(true)
             setLoading(false)
           }
@@ -122,7 +119,7 @@ const AnularNcdDialog: FunctionComponent<Props> = (props: Props) => {
         <DialogTitle>Anular Documento</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid size={{  xs: 12, sm: 12, md: 12, lg: 12 }}>
+            <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12 }}>
               Número de Nota: {factura?.numeroNotaCreditoDebito || ''} <br />
               Cliente: {factura?.cliente?.razonSocial || ''} <br />
               Fecha Emisión: {factura?.fechaEmision || ''} <br />

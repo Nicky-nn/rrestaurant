@@ -18,19 +18,10 @@
     "mutations/useAperturaCajaArquear.ts",
     "mutations/useAperturaCajaCerrar.ts"
   ],
-  "types": [
-    "types/index.ts"
-  ],
-  "client": [
-    "client/index.ts"
-  ],
-  "index": [
-    "index.ts"
-  ],
-  "saved_operations": [
-    "aperturaCajaArquear",
-    "aperturaCajaCerrar"
-  ],
+  "types": ["types/index.ts"],
+  "client": ["client/index.ts"],
+  "index": ["index.ts"],
+  "saved_operations": ["aperturaCajaArquear", "aperturaCajaCerrar"],
   "used_types": [
     "AperturaCajaCerrarInput",
     "ArqueoCajaRetiro",

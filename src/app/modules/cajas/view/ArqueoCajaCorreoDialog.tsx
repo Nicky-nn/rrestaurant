@@ -16,7 +16,7 @@ import {
   OutlinedInput,
   Checkbox,
   ListItemText,
-  TextField
+  TextField,
 } from '@mui/material'
 import React, { FunctionComponent, useEffect, useState } from 'react'
 
@@ -82,7 +82,7 @@ const ArqueoCajaCorreoDialog: FunctionComponent<ArqueoCajaCorreoDialogProps> = (
     }
 
     const urlPdf = caja?.representacionGrafica?.[formato]
-    
+
     if (!urlPdf) {
       notError(`El reporte de caja no tiene un enlace de descarga en formato ${formato.toUpperCase()}`)
       return
@@ -90,13 +90,14 @@ const ArqueoCajaCorreoDialog: FunctionComponent<ArqueoCajaCorreoDialogProps> = (
 
     try {
       setIsPending(true)
-      
+
       const emailsToSend: string[] = []
-      
+
       for (const usuario of selectedUsuarios) {
-        const correo = correosModificados[usuario] !== undefined 
-          ? correosModificados[usuario] 
-          : usuariosDisponibles.find(u => u.usuario === usuario)?.correo
+        const correo =
+          correosModificados[usuario] !== undefined
+            ? correosModificados[usuario]
+            : usuariosDisponibles.find((u) => u.usuario === usuario)?.correo
 
         if (correo && correo.trim() !== '') {
           emailsToSend.push(correo.trim())
@@ -110,17 +111,17 @@ const ArqueoCajaCorreoDialog: FunctionComponent<ArqueoCajaCorreoDialogProps> = (
       }
 
       const nombreArchivo = `Cierre_de_Caja_${caja.cajaCodigo || caja.cajaId || ''}.pdf`
-      
+
       await apiArqueoCajaCorreo({
         titulo: `Cierre de Caja ${caja.cajaCodigo || caja.cajaId || ''}`,
         mensaje: `Se adjunta el reporte de cierre de caja en formato ${formato.toUpperCase()}.`,
         urlArchivo: [
           {
             filename: nombreArchivo,
-            href: urlPdf
-          }
+            href: urlPdf,
+          },
         ],
-        email: emailsToSend
+        email: emailsToSend,
       })
 
       notSuccess(`Reporte enviado correctamente a ${emailsToSend.length} correo(s).`)
@@ -152,7 +153,7 @@ const ArqueoCajaCorreoDialog: FunctionComponent<ArqueoCajaCorreoDialogProps> = (
         <Alert color="info" icon={false} sx={{ mt: 2 }}>
           Seleccione los usuarios responsables a los que desea enviar el documento por correo electrónico.
         </Alert>
-        
+
         <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <FormControl fullWidth size="small">
             <InputLabel id="select-usuarios-correo-label">Usuarios a enviar</InputLabel>
@@ -168,10 +169,10 @@ const ArqueoCajaCorreoDialog: FunctionComponent<ArqueoCajaCorreoDialogProps> = (
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {selected.map((value) => (
-                    <Chip 
-                      key={value} 
-                      label={value} 
-                      size="small" 
+                    <Chip
+                      key={value}
+                      label={value}
+                      size="small"
                       onDelete={() => {
                         setSelectedUsuarios((prev) => prev.filter((item) => item !== value))
                       }}
@@ -186,7 +187,9 @@ const ArqueoCajaCorreoDialog: FunctionComponent<ArqueoCajaCorreoDialogProps> = (
               {usuariosDisponibles.map((user) => (
                 <MenuItem key={user.usuario} value={user.usuario}>
                   <Checkbox checked={selectedUsuarios.indexOf(user.usuario) > -1} />
-                  <ListItemText primary={`${user.usuario} ${user.correo ? `(${user.correo})` : '(Sin correo)'}`} />
+                  <ListItemText
+                    primary={`${user.usuario} ${user.correo ? `(${user.correo})` : '(Sin correo)'}`}
+                  />
                 </MenuItem>
               ))}
             </Select>
@@ -204,7 +207,7 @@ const ArqueoCajaCorreoDialog: FunctionComponent<ArqueoCajaCorreoDialogProps> = (
               <MenuItem value="rollo">Rollo (Ticket)</MenuItem>
             </Select>
           </FormControl>
-          
+
           {selectedUsuarios.length > 0 && (
             <Box sx={{ mt: 1, p: 2, bgcolor: 'background.default', borderRadius: 2 }}>
               <Typography variant="caption" sx={{ fontWeight: 700, mb: 1.5, display: 'block' }}>
@@ -213,9 +216,10 @@ const ArqueoCajaCorreoDialog: FunctionComponent<ArqueoCajaCorreoDialogProps> = (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {selectedUsuarios.map((usuario) => {
                   const originalUser = usuariosDisponibles.find((u) => u.usuario === usuario)
-                  const correoActual = correosModificados[usuario] !== undefined 
-                    ? correosModificados[usuario] 
-                    : (originalUser?.correo || '')
+                  const correoActual =
+                    correosModificados[usuario] !== undefined
+                      ? correosModificados[usuario]
+                      : originalUser?.correo || ''
 
                   return (
                     <TextField
@@ -228,7 +232,7 @@ const ArqueoCajaCorreoDialog: FunctionComponent<ArqueoCajaCorreoDialogProps> = (
                       onChange={(e) => {
                         setCorreosModificados((prev) => ({
                           ...prev,
-                          [usuario]: e.target.value
+                          [usuario]: e.target.value,
                         }))
                       }}
                     />

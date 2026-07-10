@@ -42,7 +42,7 @@ const RestEnviarFacturaWhatsappDialog: FunctionComponent<RestEnviarFacturaWhatsa
     }
 
     const pdfUrl = factura?.representacionGrafica?.pdf || ''
-    
+
     if (!pdfUrl) {
       notError('La factura no tiene un enlace de descarga disponible')
       return
@@ -52,7 +52,7 @@ const RestEnviarFacturaWhatsappDialog: FunctionComponent<RestEnviarFacturaWhatsa
       await sendFactura({
         telefono,
         urlPdf: pdfUrl,
-        nombreFactura: `Factura ${factura?.cliente?.razonSocial || ''}`.trim()
+        nombreFactura: `Factura ${factura?.cliente?.razonSocial || ''}`.trim(),
       })
       notSuccess('Mensaje de WhatsApp enviado correctamente')
       onClose(true)
@@ -80,8 +80,8 @@ const RestEnviarFacturaWhatsappDialog: FunctionComponent<RestEnviarFacturaWhatsa
           <Typography variant="body1">Cliente: {factura.cliente?.razonSocial}</Typography>
         </Box>
         <Alert color="info" icon={false} sx={{ mt: 2 }}>
-          Ingrese el número de teléfono al que desea enviar la factura por WhatsApp.
-          Por defecto el código de país será 591, puede usar el formato "+56 91234567" si desea otro.
+          Ingrese el número de teléfono al que desea enviar la factura por WhatsApp. Por defecto el código de
+          país será 591, puede usar el formato "+56 91234567" si desea otro.
         </Alert>
         <Box sx={{ mt: 3 }}>
           <Typography variant="caption" sx={{ fontWeight: 700, mb: 1, display: 'block' }}>

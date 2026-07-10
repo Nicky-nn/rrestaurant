@@ -1,52 +1,52 @@
-import { FormHelperText, Grid } from "@mui/material";
-import React, { FunctionComponent } from "react";
-import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
+import { FormHelperText, Grid } from '@mui/material'
+import React, { FunctionComponent } from 'react'
+import { useFieldArray, useFormContext, useWatch } from 'react-hook-form'
 
-import { articuloToArticuloOperacionInputService } from "../../../../base/services/articuloToArticuloOperacionInputService.ts";
-import ArticuloSeleccion from "../../../base/components/Template/ArticuloSeleccion/ArticuloSeleccion.tsx";
-import SeleccionArticuloInventarioDialog from "../../../base/components/Template/Carrito/ArticuloSeleccionInventarioDialog/SeleccionArticuloInventarioDialog.tsx";
-import CarritoArticulos from "../../../base/components/Template/Carrito/CarritoArticulos.tsx";
-import { useEntradaOperaciones } from "../../hooks/useEntradaOperaciones.tsx";
-import { EntradaPorCajaInputProp } from "../../interfaces";
-import { useSeleccionArticuloInventario } from "../../../base/components/Template/Carrito/ArticuloSeleccionInventarioDialog/useSeleccionArticuloInventario.tsx";
+import { articuloToArticuloOperacionInputService } from '../../../../base/services/articuloToArticuloOperacionInputService.ts'
+import ArticuloSeleccion from '../../../base/components/Template/ArticuloSeleccion/ArticuloSeleccion.tsx'
+import SeleccionArticuloInventarioDialog from '../../../base/components/Template/Carrito/ArticuloSeleccionInventarioDialog/SeleccionArticuloInventarioDialog.tsx'
+import CarritoArticulos from '../../../base/components/Template/Carrito/CarritoArticulos.tsx'
+import { useEntradaOperaciones } from '../../hooks/useEntradaOperaciones.tsx'
+import { EntradaPorCajaInputProp } from '../../interfaces'
+import { useSeleccionArticuloInventario } from '../../../base/components/Template/Carrito/ArticuloSeleccionInventarioDialog/useSeleccionArticuloInventario.tsx'
 
 interface OwnProps {}
 
-type Props = OwnProps;
+type Props = OwnProps
 
 /**
  * @description Selección de articulos para entradas rápidas
  * @constructor
  */
 const EntradaSeleccionArticulos: FunctionComponent<Props> = () => {
-  const { entidad, monedaPrimaria } = useEntradaOperaciones();
-  const form = useFormContext<EntradaPorCajaInputProp>();
+  const { entidad, monedaPrimaria } = useEntradaOperaciones()
+  const form = useFormContext<EntradaPorCajaInputProp>()
   const {
     control,
     setValue,
     formState: { errors },
-  } = form;
+  } = form
 
-  const seleccion = useSeleccionArticuloInventario("seleccion-articulo-dialog");
+  const seleccion = useSeleccionArticuloInventario('seleccion-articulo-dialog')
 
   const [monedaWatch, tipoCambioWatch] = useWatch({
     control,
-    name: ["moneda", "tipoCambio"],
-  });
+    name: ['moneda', 'tipoCambio'],
+  })
 
   const detalleWatch = useWatch({
     control,
-    name: "detalle",
-  });
+    name: 'detalle',
+  })
 
   const { remove, update, prepend } = useFieldArray({
     control,
-    name: "detalle",
-  });
+    name: 'detalle',
+  })
 
   /** Si no existe moneda, no renderizamos */
   if (!monedaWatch) {
-    return null;
+    return null
   }
 
   return (
@@ -54,24 +54,24 @@ const EntradaSeleccionArticulos: FunctionComponent<Props> = () => {
       <Grid container rowSpacing={1} columnSpacing={3} sx={{ mb: -3 }}>
         <Grid size={{ xs: 12, md: 7 }}>
           <ArticuloSeleccion
-            id={"entrada-rapida-articulo-busqueda"}
+            id={'entrada-rapida-articulo-busqueda'}
             entidad={entidad}
             bloquearCodigosArticulo={detalleWatch.map((d) => d.codigoArticulo)}
             verificarPrecio={true}
             verificarInventario={true}
-            tipoMonto={"costo"}
+            tipoMonto={'costo'}
             onArticuloChange={(art) => {
               const artOperacion = art.map((a) =>
                 articuloToArticuloOperacionInputService(a, monedaWatch, {
-                  tipoMonto: "costo",
+                  tipoMonto: 'costo',
                   autoLote: true,
                 }),
-              );
-              prepend([...artOperacion]);
+              )
+              prepend([...artOperacion])
             }}
-            extraQuery={["verificarStock=true"]}
+            extraQuery={['verificarStock=true']}
             dialogProps={{
-              titulo: "Seleccion articulos de entrada",
+              titulo: 'Seleccion articulos de entrada',
             }}
           />
         </Grid>
@@ -86,14 +86,14 @@ const EntradaSeleccionArticulos: FunctionComponent<Props> = () => {
               ocultar: true,
             }}
             precioProps={{
-              label: "Costo Unit.",
+              label: 'Costo Unit.',
             }}
             onChangeCantidad={(item) => {
               if (item) {
                 update(item.index, {
                   ...item.item,
                   cantidad: item.cantidad,
-                });
+                })
               }
             }}
             onChangePrecio={(item) => {
@@ -101,7 +101,7 @@ const EntradaSeleccionArticulos: FunctionComponent<Props> = () => {
                 update(item.index, {
                   ...item.item,
                   precio: item.precio,
-                });
+                })
               }
             }}
             onChangeDetalleExtra={(item) => {
@@ -109,29 +109,27 @@ const EntradaSeleccionArticulos: FunctionComponent<Props> = () => {
                 update(item.index, {
                   ...item.item,
                   detalleExtra: item.detalleExtra,
-                });
+                })
               }
             }}
             onClickArticulo={(item) => {
               if (item) {
-                seleccion.openSeleccion(item.item.articuloId, item.index);
+                seleccion.openSeleccion(item.item.articuloId, item.index)
               }
             }}
             onChangeTipoCambio={(resp) => {
               if (resp) {
-                setValue("tipoCambio", resp);
+                setValue('tipoCambio', resp)
               }
             }}
             onDeleteArticulo={(resp) => {
               if (resp) {
-                remove(resp.index);
+                remove(resp.index)
               }
             }}
           />
 
-          {Boolean(errors.detalle) && (
-            <FormHelperText error>{errors.detalle?.message}</FormHelperText>
-          )}
+          {Boolean(errors.detalle) && <FormHelperText error>{errors.detalle?.message}</FormHelperText>}
         </Grid>
       </Grid>
 
@@ -139,23 +137,23 @@ const EntradaSeleccionArticulos: FunctionComponent<Props> = () => {
         id={seleccion.id}
         articuloId={seleccion.articuloId}
         almacenProps={{
-          fuente: "tbl",
+          fuente: 'tbl',
         }}
         moneda={monedaWatch}
         articuloIndex={seleccion.index}
         item={detalleWatch[seleccion.index]}
         precioProps={{
-          tipoMonto: "costo",
+          tipoMonto: 'costo',
         }}
         entidad={entidad}
         onClose={(data) => {
           if (data) {
-            update(data.index, data.item);
+            update(data.index, data.item)
           }
-          seleccion.closeSeleccion();
+          seleccion.closeSeleccion()
         }}
         onClear={() => {
-          seleccion.closeSeleccion();
+          seleccion.closeSeleccion()
         }}
         open={seleccion.open}
         reglas={{
@@ -169,7 +167,7 @@ const EntradaSeleccionArticulos: FunctionComponent<Props> = () => {
         }}
       />
     </>
-  );
-};
+  )
+}
 
-export default EntradaSeleccionArticulos;
+export default EntradaSeleccionArticulos

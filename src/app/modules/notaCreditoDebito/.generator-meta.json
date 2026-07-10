@@ -4,22 +4,14 @@
     "fragments/RestNotaCreditoDebitoConnectionFragments.ts",
     "fragments/NotaCreditoDebitoFragments.ts"
   ],
-  "queries": [
-    "queries/useRestNotaCreditoDebitoListado.ts"
-  ],
+  "queries": ["queries/useRestNotaCreditoDebitoListado.ts"],
   "mutations": [
     "mutations/useRestNotaCreditoDebitoRegistro.ts",
     "mutations/useRestNotaCreditoDebitoAnular.ts"
   ],
-  "types": [
-    "types/index.ts"
-  ],
-  "client": [
-    "client/index.ts"
-  ],
-  "index": [
-    "index.ts"
-  ],
+  "types": ["types/index.ts"],
+  "client": ["client/index.ts"],
+  "index": ["index.ts"],
   "saved_operations": [
     "restNotaCreditoDebitoListado",
     "restNotaCreditoDebitoRegistro",

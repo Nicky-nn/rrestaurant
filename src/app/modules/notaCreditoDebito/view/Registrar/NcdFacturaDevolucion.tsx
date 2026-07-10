@@ -1,5 +1,16 @@
 import { AssignmentReturn } from '@mui/icons-material'
-import { Box, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material'
+import {
+  Box,
+  Grid,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+} from '@mui/material'
 import React, { FunctionComponent } from 'react'
 import { useFieldArray, UseFormReturn } from 'react-hook-form'
 
@@ -46,8 +57,12 @@ const NcdFacturaDevolucion: FunctionComponent<Props> = (props) => {
                     <TableCell sx={{ width: 100, fontWeight: 'bold' }}>NRO. ITEM</TableCell>
                     <TableCell sx={{ width: 160, fontWeight: 'bold' }}>CANTIDAD</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>DESCRIPCIÓN</TableCell>
-                    <TableCell align="right" sx={{ width: 160, fontWeight: 'bold' }}>PRECIO UNIT.</TableCell>
-                    <TableCell align="right" sx={{ width: 160, fontWeight: 'bold' }}>DESCUENTO</TableCell>
+                    <TableCell align="right" sx={{ width: 160, fontWeight: 'bold' }}>
+                      PRECIO UNIT.
+                    </TableCell>
+                    <TableCell align="right" sx={{ width: 160, fontWeight: 'bold' }}>
+                      DESCUENTO
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -74,12 +89,8 @@ const NcdFacturaDevolucion: FunctionComponent<Props> = (props) => {
                             />
                           </TableCell>
                           <TableCell>{item.descripcion}</TableCell>
-                          <TableCell align="right">
-                            {numberWithCommas(item.precioUnitario, {})}
-                          </TableCell>
-                          <TableCell align="right">
-                            {numberWithCommas(item.montoDescuento, {})}
-                          </TableCell>
+                          <TableCell align="right">{numberWithCommas(item.precioUnitario, {})}</TableCell>
+                          <TableCell align="right">{numberWithCommas(item.montoDescuento, {})}</TableCell>
                         </TableRow>
                       )
                     })}

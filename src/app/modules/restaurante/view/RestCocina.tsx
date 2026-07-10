@@ -554,7 +554,11 @@ const RestCocina: FunctionComponent = () => {
       const estadoLocal = estados[pedidoId]?.estado
       if (estadoLocal === 'LISTO') return
       const numero = pedidosNumeroRef.current[pedidoId]
-      avisar(`Pedido #${numero || ''} cancelado`, 'warning', numero ? `Pedido ${numero}, cancelado` : 'Pedido cancelado')
+      avisar(
+        `Pedido #${numero || ''} cancelado`,
+        'warning',
+        numero ? `Pedido ${numero}, cancelado` : 'Pedido cancelado',
+      )
     })
     Object.keys(pedidosNumeroRef.current).forEach((pedidoId) => {
       if (!idsActuales.has(pedidoId)) delete pedidosNumeroRef.current[pedidoId]

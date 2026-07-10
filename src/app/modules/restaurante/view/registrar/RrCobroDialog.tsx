@@ -692,7 +692,9 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
                   if (onFinalizar)
                     onFinalizar(metodoSeleccionado || 1, metodoSeleccionadoObj?.descripcion || 'Efectivo')
                 }}
-                disabled={isProcessing || !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:FINALIZAR_PEDIDO')}
+                disabled={
+                  isProcessing || !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:FINALIZAR_PEDIDO')
+                }
                 fullWidth
                 sx={{
                   p: 2,
@@ -713,7 +715,9 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
               variant="contained"
               size="large"
               onClick={handleFacturarClick}
-              disabled={isProcessing || !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:FACTURAR_PEDIDO')}
+              disabled={
+                isProcessing || !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:FACTURAR_PEDIDO')
+              }
               fullWidth
               sx={{
                 p: 2,

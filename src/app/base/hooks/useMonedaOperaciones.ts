@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo } from 'react'
 
-import { ArticuloMonedaProps } from "../../interfaces/articuloMoneda.ts";
-import { PerfilProps } from "../models/loginModel.ts";
-import { getMonedaPorArticuloMonedaService } from "../services/getMonedaService.ts";
+import { ArticuloMonedaProps } from '../../interfaces/articuloMoneda.ts'
+import { PerfilProps } from '../models/loginModel.ts'
+import { getMonedaPorArticuloMonedaService } from '../services/getMonedaService.ts'
 
 /**
  * Hook para cargar el listado de monedas y retornar la moneda de user, usada para todas las operaciones
@@ -13,30 +13,19 @@ import { getMonedaPorArticuloMonedaService } from "../services/getMonedaService.
  * @param user - El objeto de perfil que contiene la moneda establecida por el usuario.
  * @param articuloMoneda
  */
-export const useMonedaOperaciones = (
-  user: PerfilProps,
-  articuloMoneda: ArticuloMonedaProps,
-) => {
-  const {
-    monedaPrimaria,
-    monedaAdicional1,
-    monedaAdicional2,
-    monedaAdicional3,
-  } = articuloMoneda;
+export const useMonedaOperaciones = (user: PerfilProps, articuloMoneda: ArticuloMonedaProps) => {
+  const { monedaPrimaria, monedaAdicional1, monedaAdicional2, monedaAdicional3 } = articuloMoneda
 
   // Usamos useMemo para calcular la moneda de operacion
   // Esto solo se recalculará si la lista de monedas o el perfil cambia cambian.
   const moneda = useMemo(() => {
-    const monedaDeUso = user.moneda;
+    const monedaDeUso = user.moneda
 
-    const monedaEncontrada = getMonedaPorArticuloMonedaService(
-      monedaDeUso,
-      articuloMoneda,
-    );
+    const monedaEncontrada = getMonedaPorArticuloMonedaService(monedaDeUso, articuloMoneda)
 
     // Si se encontró, esa es la moneda principal. Si no, retorna null.
-    return monedaEncontrada || null;
-  }, [user, articuloMoneda]);
+    return monedaEncontrada || null
+  }, [user, articuloMoneda])
 
   // Retorna los datos calculados
   return {
@@ -46,5 +35,5 @@ export const useMonedaOperaciones = (
     monedaAdicional1,
     monedaAdicional2,
     monedaAdicional3,
-  };
-};
+  }
+}

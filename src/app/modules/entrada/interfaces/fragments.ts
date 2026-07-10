@@ -163,4 +163,3 @@ export const ENTRADA_FRAGMENT = gql`
   ${workflowFragment}
   ${ENTRADA_FIELDS_FRAGMENT}
 `
-

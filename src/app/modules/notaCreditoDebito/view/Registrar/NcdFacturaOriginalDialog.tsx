@@ -103,7 +103,7 @@ const NcdFacturaOriginalDialog: FunctionComponent<Props> = (props) => {
       showAudit: false,
       showIconRefetch: true,
     }),
-    [columns]
+    [columns],
   )
 
   const facturaQuery = useMrtQuery({
@@ -113,9 +113,9 @@ const NcdFacturaOriginalDialog: FunctionComponent<Props> = (props) => {
         filterTypes: FACTURA_FILTER_TYPES,
         filterFields: ['state=VALIDADA'],
       })
-      
+
       const { reverse, query } = pgs
-      
+
       const data = await client.request<{ restFacturaListado: RestFacturaConnection }>(RESTFACTURALISTADO, {
         entidad,
         limit: 5,

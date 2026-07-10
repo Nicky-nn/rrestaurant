@@ -1,14 +1,5 @@
 import { CheckCircleOutline } from '@mui/icons-material'
-import {
-  Alert,
-  AlertTitle,
-  Box,
-  CircularProgress,
-  Divider,
-  Grid,
-  Paper,
-  Typography,
-} from '@mui/material'
+import { Alert, AlertTitle, Box, CircularProgress, Divider, Grid, Paper, Typography } from '@mui/material'
 import dayjs from 'dayjs'
 import { useMemo, useEffect } from 'react'
 
@@ -52,7 +43,7 @@ const PedidosSospechososListado = ({
           codigoSucursal,
           fechaInicial: inicioDMY,
           fechaFinal: finDMY,
-        }
+        },
       )
 
       return data.restPedidoAuditoriaReporteAnomalia || []
@@ -78,76 +69,93 @@ const PedidosSospechososListado = ({
       if (nivel === 'BAJO' || puntaje < 15) {
         return
       }
-        
+
       // Iteramos los artículos para reportar las causas si son por artículo
-        const modis = auditoria.articulos ?? []
-        let hasDetalle = false
+      const modis = auditoria.articulos ?? []
+      let hasDetalle = false
 
-        modis.forEach(art => {
-           const cant = art.articuloPrecio?.cantidad ?? 0
-           const cantAnt = art.articuloPrecio?.cantidadAnterior ?? cant
-           const precio = art.articuloPrecio?.valor ?? 0
+      modis.forEach((art) => {
+        const cant = art.articuloPrecio?.cantidad ?? 0
+        const cantAnt = art.articuloPrecio?.cantidadAnterior ?? cant
+        const precio = art.articuloPrecio?.valor ?? 0
 
-           const resumenLower = auditoria.resumenCambios?.toLowerCase() || ''
-           const nombreLower = art.nombreArticulo?.toLowerCase() || ''
-           const nameInSummary = nombreLower && resumenLower.includes(nombreLower)
+        const resumenLower = auditoria.resumenCambios?.toLowerCase() || ''
+        const nombreLower = art.nombreArticulo?.toLowerCase() || ''
+        const nameInSummary = nombreLower && resumenLower.includes(nombreLower)
 
-           if (art.state === 'ELIMINADO' || cant < cantAnt || nameInSummary) {
-               hasDetalle = true
-               const resumenPartes = auditoria.resumenCambios?.split('.') || []
-               const coincidenciaResumen = art.nombreArticulo 
-                 ? resumenPartes.map(s => s.trim()).filter(s => s.toLowerCase().includes(art.nombreArticulo!.toLowerCase())).join('. ')
-                 : ''
-               const resumenFinal = coincidenciaResumen || auditoria.resumenCambios
+        if (art.state === 'ELIMINADO' || cant < cantAnt || nameInSummary) {
+          hasDetalle = true
+          const resumenPartes = auditoria.resumenCambios?.split('.') || []
+          const coincidenciaResumen = art.nombreArticulo
+            ? resumenPartes
+                .map((s) => s.trim())
+                .filter((s) => s.toLowerCase().includes(art.nombreArticulo!.toLowerCase()))
+                .join('. ')
+            : ''
+          const resumenFinal = coincidenciaResumen || auditoria.resumenCambios
 
-               list.push({
-                 pedidoId: auditoria.pedidoId,
-                 numeroPedido: auditoria.numeroPedido,
-                 orden: auditoria.numeroOrden,
-                 sucursal: auditoria.codigoSucursal,
-                 puntoVenta: auditoria.codigoPuntoVenta,
-                 fecha: auditoria.fechaRegistro,
-                 nombre: art.nombreArticulo || 'General',
-                 articuloId: art.articuloId || auditoria.pedidoId,
-                 cantidad: cant,
-                 precio: precio,
-                 autor: auditoria.usuario,
-                 descripcion: auditoria.accion !== 'ANULACION' ? (resumenFinal || 'Modificación de artículo') : (auditoria.motivosSospecha?.join(', ') || 'Anomalía en artículo'),
-                 resumenCambios: resumenFinal,
-                 motivosSospecha: auditoria.motivosSospecha,
-                 accion: auditoria.accion,
-                 estadoArticulo: auditoria.accion || 'ACTUALIZACION',
-                 riesgoNivel: auditoria.riesgoNivel,
-                 riesgoPuntaje: auditoria.riesgoPuntaje,
-                 duracionMinutos: auditoria.duracionMinutos,
-               })
-           }
-        })
-
-        // Si no fue un artículo específico el anómalo (ej: tiempo muy corto, monto muy bajo), lo metemos global
-        if (!hasDetalle) {
-             list.push({
-                 pedidoId: auditoria.pedidoId,
-                 numeroPedido: auditoria.numeroPedido,
-                 orden: auditoria.numeroOrden,
-                 sucursal: auditoria.codigoSucursal,
-                 puntoVenta: auditoria.codigoPuntoVenta,
-                 fecha: auditoria.fechaRegistro,
-                 nombre: (auditoria.accion === 'ANULACION' || auditoria.accion === 'CANCELACION') ? 'PEDIDO COMPLETO' : (auditoria.articulos?.map(art => art.nombreArticulo).filter(Boolean).join(', ') || 'PEDIDO COMPLETO'),
-                 articuloId: auditoria.pedidoId,
-                 cantidad: 1,
-                 precio: auditoria.totales?.operacion?.totalFinal || 0,
-                 autor: auditoria.usuario,
-                 descripcion: (auditoria.accion !== 'ANULACION' && auditoria.accion !== 'CANCELACION') ? (auditoria.resumenCambios || `Evento: ${auditoria.accion}`) : (auditoria.motivosSospecha?.join(', ') || auditoria.resumenCambios || `Evento: ${auditoria.accion}`),
-                 resumenCambios: auditoria.resumenCambios,
-                 motivosSospecha: auditoria.motivosSospecha,
-                 accion: auditoria.accion,
-                 estadoArticulo: auditoria.accion || 'REVISION',
-                 riesgoNivel: auditoria.riesgoNivel,
-                 riesgoPuntaje: auditoria.riesgoPuntaje,
-                 duracionMinutos: auditoria.duracionMinutos,
-             })
+          list.push({
+            pedidoId: auditoria.pedidoId,
+            numeroPedido: auditoria.numeroPedido,
+            orden: auditoria.numeroOrden,
+            sucursal: auditoria.codigoSucursal,
+            puntoVenta: auditoria.codigoPuntoVenta,
+            fecha: auditoria.fechaRegistro,
+            nombre: art.nombreArticulo || 'General',
+            articuloId: art.articuloId || auditoria.pedidoId,
+            cantidad: cant,
+            precio: precio,
+            autor: auditoria.usuario,
+            descripcion:
+              auditoria.accion !== 'ANULACION'
+                ? resumenFinal || 'Modificación de artículo'
+                : auditoria.motivosSospecha?.join(', ') || 'Anomalía en artículo',
+            resumenCambios: resumenFinal,
+            motivosSospecha: auditoria.motivosSospecha,
+            accion: auditoria.accion,
+            estadoArticulo: auditoria.accion || 'ACTUALIZACION',
+            riesgoNivel: auditoria.riesgoNivel,
+            riesgoPuntaje: auditoria.riesgoPuntaje,
+            duracionMinutos: auditoria.duracionMinutos,
+          })
         }
+      })
+
+      // Si no fue un artículo específico el anómalo (ej: tiempo muy corto, monto muy bajo), lo metemos global
+      if (!hasDetalle) {
+        list.push({
+          pedidoId: auditoria.pedidoId,
+          numeroPedido: auditoria.numeroPedido,
+          orden: auditoria.numeroOrden,
+          sucursal: auditoria.codigoSucursal,
+          puntoVenta: auditoria.codigoPuntoVenta,
+          fecha: auditoria.fechaRegistro,
+          nombre:
+            auditoria.accion === 'ANULACION' || auditoria.accion === 'CANCELACION'
+              ? 'PEDIDO COMPLETO'
+              : auditoria.articulos
+                  ?.map((art) => art.nombreArticulo)
+                  .filter(Boolean)
+                  .join(', ') || 'PEDIDO COMPLETO',
+          articuloId: auditoria.pedidoId,
+          cantidad: 1,
+          precio: auditoria.totales?.operacion?.totalFinal || 0,
+          autor: auditoria.usuario,
+          descripcion:
+            auditoria.accion !== 'ANULACION' && auditoria.accion !== 'CANCELACION'
+              ? auditoria.resumenCambios || `Evento: ${auditoria.accion}`
+              : auditoria.motivosSospecha?.join(', ') ||
+                auditoria.resumenCambios ||
+                `Evento: ${auditoria.accion}`,
+          resumenCambios: auditoria.resumenCambios,
+          motivosSospecha: auditoria.motivosSospecha,
+          accion: auditoria.accion,
+          estadoArticulo: auditoria.accion || 'REVISION',
+          riesgoNivel: auditoria.riesgoNivel,
+          riesgoPuntaje: auditoria.riesgoPuntaje,
+          duracionMinutos: auditoria.duracionMinutos,
+        })
+      }
     })
     return list
   }, [pedidosDocs, stats])
@@ -168,12 +176,10 @@ const PedidosSospechososListado = ({
       )}
 
       {triggerSearch === 0 || (!pedidosAuditoria && !isFetching) ? (
-        <Paper
-          elevation={0}
-          sx={{ p: 4, textAlign: 'center', border: '1px dashed #ccc', borderRadius: 2 }}
-        >
+        <Paper elevation={0} sx={{ p: 4, textAlign: 'center', border: '1px dashed #ccc', borderRadius: 2 }}>
           <Typography variant="body1" color="text.secondary">
-            Selecciona un rango de fechas y haz clic en <strong>"Consultar Anomalías"</strong> para analizar los pedidos.
+            Selecciona un rango de fechas y haz clic en <strong>"Consultar Anomalías"</strong> para analizar
+            los pedidos.
           </Typography>
         </Paper>
       ) : null}
@@ -189,9 +195,10 @@ const PedidosSospechososListado = ({
           }}
         >
           <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Asegúrate de haber presionado <strong>"Generar Stats"</strong> previamente para que el análisis sea preciso.
+            Asegúrate de haber presionado <strong>"Generar Stats"</strong> previamente para que el análisis
+            sea preciso.
           </Typography>
-          
+
           <CheckCircleOutline
             sx={{
               fontSize: 64,

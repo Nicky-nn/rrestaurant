@@ -43,9 +43,7 @@ const formatearTextoAccion = (accion: string) => {
   return accion?.replace(/_/g, ' ') || 'DESCONOCIDO'
 }
 
-export const HistorialPedido = ({
-  pedidoId,
-}: HistorialPedidoProps) => {
+export const HistorialPedido = ({ pedidoId }: HistorialPedidoProps) => {
   const { data: historial = [], isLoading } = useRestPedidoAuditoriaPorPedidoId({ pedidoId })
 
   const numeroPedido = historial.length > 0 ? historial[0].numeroPedido : undefined
@@ -104,9 +102,10 @@ export const HistorialPedido = ({
             const articulos = h.articulos || []
 
             // Find items that were present in previous step but missing now (ELIMINADOS)
-            const eliminados = pasoAnterior?.articulos?.filter(
-              (prevArt) => !articulos.some((currArt) => currArt.nroItem === prevArt.nroItem)
-            ) || []
+            const eliminados =
+              pasoAnterior?.articulos?.filter(
+                (prevArt) => !articulos.some((currArt) => currArt.nroItem === prevArt.nroItem),
+              ) || []
 
             // Combine both currently present and eliminated items for the step UI
             const allItemsForStep = [...articulos, ...eliminados]
@@ -175,11 +174,11 @@ export const HistorialPedido = ({
                   <Stack spacing={2} mb={2}>
                     {allItemsForStep.map((articulo, i) => {
                       const isEliminado = eliminados.some((eli) => eli.nroItem === articulo.nroItem)
-                      
+
                       let colorEstado = 'grey.500'
                       let iconoEstado = <FiberManualRecordIcon />
                       let textoEstado = 'MANTENIDO'
-                      
+
                       let cantidadActual = articulo.articuloPrecio?.cantidad ?? 0
                       let cantidadAnterior = 0
                       let mostrarCambio = false
@@ -192,7 +191,7 @@ export const HistorialPedido = ({
                       } else {
                         // Find this item in the previous step
                         const prevArticulo = pasoAnterior?.articulos?.find(
-                          (a) => a.nroItem === articulo.nroItem
+                          (a) => a.nroItem === articulo.nroItem,
                         )
                         if (prevArticulo) {
                           cantidadAnterior = prevArticulo.articuloPrecio?.cantidad ?? 0
@@ -276,7 +275,10 @@ export const HistorialPedido = ({
                                 variant="caption"
                                 sx={{ color: colorEstado, textTransform: 'uppercase', fontWeight: 'bold' }}
                               >
-                                {textoEstado} {mostrarCambio && !isEliminado ? `(${cantidadAnterior} → ${cantidadActual})` : ''}
+                                {textoEstado}{' '}
+                                {mostrarCambio && !isEliminado
+                                  ? `(${cantidadAnterior} → ${cantidadActual})`
+                                  : ''}
                                 {isEliminado ? `(Era: ${cantidadAnterior})` : ''}
                               </Typography>
                             </Stack>
@@ -284,7 +286,7 @@ export const HistorialPedido = ({
                         </Paper>
                       )
                     })}
-                    
+
                     {allItemsForStep.length === 0 && (
                       <Typography variant="body2" color="text.secondary">
                         No hay artículos registrados.
@@ -295,9 +297,7 @@ export const HistorialPedido = ({
                   {/* Fecha y autor */}
                   <Typography variant="caption" color="text.secondary" sx={{ mt: 'auto', pt: 2 }}>
                     <span style={{ display: 'block', fontWeight: 'bold' }}>{h.usuario ?? 'Sistema'}</span>
-                    <span style={{ display: 'block' }}>
-                      {h.fechaRegistro ?? 'Fecha desconocida'}
-                    </span>
+                    <span style={{ display: 'block' }}>{h.fechaRegistro ?? 'Fecha desconocida'}</span>
                   </Typography>
                 </Paper>
               </Box>
@@ -308,4 +308,3 @@ export const HistorialPedido = ({
     </Box>
   )
 }
-

@@ -72,7 +72,10 @@ const CerrarCajaPaso2Dialog: FC<CerrarCajaPaso2DialogProps> = ({
     return init
   })
 
-  const metodosDisponibles = metodosPagoData?.filter(mp => mp.codigoClasificador && !metodosMostrados.includes(mp.codigoClasificador)) || []
+  const metodosDisponibles =
+    metodosPagoData?.filter(
+      (mp) => mp.codigoClasificador && !metodosMostrados.includes(mp.codigoClasificador),
+    ) || []
 
   const reset = () => {
     setSupervisor((supervisorOptions[0]?.value as string) ?? user.usuario)
@@ -94,12 +97,13 @@ const CerrarCajaPaso2Dialog: FC<CerrarCajaPaso2DialogProps> = ({
     setError(null)
 
     // When no methods registered send empty array; montoReal goes at root level
-    const metodoPagoPayload = metodosMostrados.length > 0
-      ? metodosMostrados.map((cod) => ({
-          codigoMetodoPago: cod,
-          monto: montosPago[cod] || 0,
-        }))
-      : [{ codigoMetodoPago: 1, monto: 0 }]
+    const metodoPagoPayload =
+      metodosMostrados.length > 0
+        ? metodosMostrados.map((cod) => ({
+            codigoMetodoPago: cod,
+            monto: montosPago[cod] || 0,
+          }))
+        : [{ codigoMetodoPago: 1, monto: 0 }]
 
     cerrarCaja(
       {
@@ -155,7 +159,8 @@ const CerrarCajaPaso2Dialog: FC<CerrarCajaPaso2DialogProps> = ({
           Paso 2: Confirmar Cierre
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 3 }}>
-          Ingresa el total por método de pago, asigna el supervisor y añade un comentario para finalizar el cierre.
+          Ingresa el total por método de pago, asigna el supervisor y añade un comentario para finalizar el
+          cierre.
         </Typography>
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
@@ -286,10 +291,15 @@ const CerrarCajaPaso2Dialog: FC<CerrarCajaPaso2DialogProps> = ({
 
               <Stack spacing={1.5} sx={{ maxHeight: 280, overflowY: 'auto', pr: 1 }}>
                 {metodosMostrados.map((cod) => {
-                  const fromCaja = caja?.metodoPagoVenta?.find((mp) => mp.metodoPago?.codigoClasificador === cod)
+                  const fromCaja = caja?.metodoPagoVenta?.find(
+                    (mp) => mp.metodoPago?.codigoClasificador === cod,
+                  )
                   const isFromCaja = !!fromCaja
                   const fromData = metodosPagoData?.find((mp) => mp.codigoClasificador === cod)
-                  const descripcion = fromCaja?.metodoPago?.descripcion || fromData?.descripcion || (cod === 1 ? 'Efectivo' : 'Desconocido')
+                  const descripcion =
+                    fromCaja?.metodoPago?.descripcion ||
+                    fromData?.descripcion ||
+                    (cod === 1 ? 'Efectivo' : 'Desconocido')
                   return (
                     <Box key={cod} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Typography variant="body1" sx={{ flex: 1, fontWeight: 600 }}>
@@ -331,7 +341,10 @@ const CerrarCajaPaso2Dialog: FC<CerrarCajaPaso2DialogProps> = ({
                     <AppSelect
                       options={[
                         { value: 0, label: '+ Agregar otro método de pago...' },
-                        ...metodosDisponibles.map((mp) => ({ value: mp.codigoClasificador!, label: mp.descripcion! })),
+                        ...metodosDisponibles.map((mp) => ({
+                          value: mp.codigoClasificador!,
+                          label: mp.descripcion!,
+                        })),
                       ]}
                       value={0}
                       onChange={(e) => {

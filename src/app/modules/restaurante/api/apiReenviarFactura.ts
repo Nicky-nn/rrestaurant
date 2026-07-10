@@ -14,10 +14,7 @@ const mutation = gql`
  * @description Envio de multiples notificaciones por correo
  * @param input
  */
-export const apiFcvReenvioEmails = async (input: {
-  cuf: string
-  emails: string[]
-}): Promise<boolean> => {
+export const apiFcvReenvioEmails = async (input: { cuf: string; emails: string[] }): Promise<boolean> => {
   const client = new GraphQLClient(import.meta.env.ISI_API_URL)
   const token = localStorage.getItem(AccessToken)
   // Set a single header

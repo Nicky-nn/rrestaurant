@@ -136,8 +136,8 @@ const RestReenviarFacturaDialog: FunctionComponent<RestReenviarFacturaDialogProp
             <Typography variant={'body1'}>Estado: {factura.state}</Typography>
           </Box>
           <Alert color={'info'} icon={false} sx={{ mt: 2 }}>
-            Ingrese el / los correos a los que desea que se reenvíe la factura, presione enter pare
-            registrar nuevo correo
+            Ingrese el / los correos a los que desea que se reenvíe la factura, presione enter pare registrar
+            nuevo correo
           </Alert>
           <Box sx={{ mt: 2 }}>
             <CreatableSelect

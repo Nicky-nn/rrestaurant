@@ -1,8 +1,8 @@
 import {
   ArticuloOperacionApiInputProps,
   ArticuloOperacionInputProps,
-} from "../../interfaces/articuloOperacion.ts";
-import { genReplaceEmpty } from "../../utils/helper.ts";
+} from '../../interfaces/articuloOperacion.ts'
+import { genReplaceEmpty } from '../../utils/helper.ts'
 
 /**
  * Decodificamos el articuloOperacionInputProp a ArticuloOperacionApiInputProp
@@ -16,8 +16,7 @@ export const articuloOperacionInputToApiService = (
     nroItem: input.nroItem || null,
     articuloPrecio: {
       cantidad: input.cantidad,
-      codigoArticuloUnidadMedida:
-        input.articuloUnidadMedida!.codigoUnidadMedida,
+      codigoArticuloUnidadMedida: input.articuloUnidadMedida!.codigoUnidadMedida,
       descuento: input.descuento,
       impuesto: input.impuesto,
       precio: input.precio,
@@ -31,5 +30,5 @@ export const articuloOperacionInputToApiService = (
     detalleExtra: genReplaceEmpty(input.detalleExtra, null),
     nota: genReplaceEmpty(input.nota, null),
     cortesia: false,
-  };
-};
+  }
+}

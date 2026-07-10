@@ -1,25 +1,11 @@
 {
   "last_sync": "2026-05-04T17:50:08.063768",
-  "fragments": [
-    "fragments/RestAnomaliaFragments.ts",
-    "fragments/RestPedidoAuditoriaFragments.ts"
-  ],
-  "queries": [
-    "queries/useRestAnomaliaPorSucursal.ts",
-    "queries/useRestPedidoAuditoriaReporteAnomalia.ts"
-  ],
-  "mutations": [
-    "mutations/useRestAnomaliaGenerarStats.ts"
-  ],
-  "types": [
-    "types/index.ts"
-  ],
-  "client": [
-    "client/index.ts"
-  ],
-  "index": [
-    "index.ts"
-  ],
+  "fragments": ["fragments/RestAnomaliaFragments.ts", "fragments/RestPedidoAuditoriaFragments.ts"],
+  "queries": ["queries/useRestAnomaliaPorSucursal.ts", "queries/useRestPedidoAuditoriaReporteAnomalia.ts"],
+  "mutations": ["mutations/useRestAnomaliaGenerarStats.ts"],
+  "types": ["types/index.ts"],
+  "client": ["client/index.ts"],
+  "index": ["index.ts"],
   "saved_operations": [
     "restAnomaliaPorSucursal",
     "restPedidoAuditoriaReporteAnomalia",

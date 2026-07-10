@@ -4,9 +4,7 @@ import { authRoles } from '../../../auth/authRoles'
 
 const VentasArticuloPuntoVentaApp = lazy(() => import('./view/VentasArticuloPuntoVenta'))
 const VentasArticuloComercioApp = lazy(() => import('./view/VentasArticuloComercio'))
-const ReportePedidosSospechososApp = lazy(
-  () => import('./view/ReportePedidosSospechosos'),
-)
+const ReportePedidosSospechososApp = lazy(() => import('./view/ReportePedidosSospechosos'))
 
 export const reporteRoutesMap = {
   articuloPorPuntoVenta: {

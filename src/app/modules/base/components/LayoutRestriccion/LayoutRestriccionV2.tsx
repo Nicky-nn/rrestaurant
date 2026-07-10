@@ -196,9 +196,7 @@ const LayoutRestriccionV2: FC<any> = () => {
 
     // Determinar permiso estático según el estado de la caja
     const isCerrada = estadoKey === 'FINALIZADO' || estadoKey === ''
-    const permission = isCerrada
-      ? 'CAJAS:GESTION_DE_CAJAS:ABRIR_CAJA'
-      : 'CAJAS:GESTION_DE_CAJAS:CERRAR_CAJA'
+    const permission = isCerrada ? 'CAJAS:GESTION_DE_CAJAS:ABRIR_CAJA' : 'CAJAS:GESTION_DE_CAJAS:CERRAR_CAJA'
 
     // Añadimos el código de la caja si existe
     const label = codigo ? `${labelBase} - ${codigo}` : labelBase

@@ -28,8 +28,7 @@ export const notaCreditoColumns: MRT_ColumnDef<NotaCreditoDebito>[] = [
     header: 'Nro. Documento',
     accessorFn: (row) => (
       <span>
-        {row.cliente?.numeroDocumento}{' '}
-        {row.cliente?.complemento ? `-${row.cliente?.complemento}` : ''}
+        {row.cliente?.numeroDocumento} {row.cliente?.complemento ? `-${row.cliente?.complemento}` : ''}
       </span>
     ),
     filterFn: (row, id, filterValue) =>

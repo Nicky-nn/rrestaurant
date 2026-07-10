@@ -3,9 +3,9 @@ import {
   ArticuloPrecioProps,
   PrecioCostoOperacionProps,
   TipoArtPrecioOperacion,
-} from "../../interfaces/articuloPrecio.ts";
-import { MonedaProps } from "../../interfaces/monedaPrecio.ts";
-import { getMonedaPrecioPorArticuloPrecioService } from "./getMonedaService.ts";
+} from '../../interfaces/articuloPrecio.ts'
+import { MonedaProps } from '../../interfaces/monedaPrecio.ts'
+import { getMonedaPrecioPorArticuloPrecioService } from './getMonedaService.ts'
 
 /**
  * Generamos la estructura base para el valor de un artículo
@@ -19,18 +19,13 @@ export const estructuraValorDefault = (
   tipoOperacion: TipoArtPrecioOperacion,
   articuloPrecio: ArticuloPrecioProps,
 ): PrecioCostoOperacionProps => {
-  const monedaPrecio = getMonedaPrecioPorArticuloPrecioService(
-    moneda,
-    articuloPrecio,
-  );
+  const monedaPrecio = getMonedaPrecioPorArticuloPrecioService(moneda, articuloPrecio)
   if (!monedaPrecio) {
-    console.warn("Moneda could not be found.");
-    throw new Error("Moneda could not be found.");
+    console.warn('Moneda could not be found.')
+    throw new Error('Moneda could not be found.')
   }
   const valor =
-    tipoOperacion === apiTipoArtPrecioOperacion.precio
-      ? monedaPrecio.precio
-      : monedaPrecio.precioBase;
+    tipoOperacion === apiTipoArtPrecioOperacion.precio ? monedaPrecio.precio : monedaPrecio.precioBase
 
   return {
     tipoOperacion,
@@ -62,5 +57,5 @@ export const estructuraValorDefault = (
       totalGasto: 0,
       totalFinal: 0,
     },
-  };
-};
+  }
+}

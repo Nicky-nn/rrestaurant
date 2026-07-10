@@ -105,7 +105,7 @@ const NcdFacturaOriginal: FunctionComponent<Props> = (props) => {
             return {
               nroItem: d.nroItem || 0,
               cantidadOriginal: d.cantidad || 0,
-              cantidad: existingItem ? existingItem.cantidad : (d.cantidad || 0),
+              cantidad: existingItem ? existingItem.cantidad : d.cantidad || 0,
               descripcion: d.descripcion || '',
               montoDescuento: d.montoDescuento || 0,
               precioUnitario: d.precioUnitario || 0,

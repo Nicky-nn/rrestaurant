@@ -311,7 +311,12 @@ const ArqueoCajaPaso1Dialog: FC<ArqueoCajaPaso1DialogProps> = ({ open, onClose, 
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.2 }}>
                   <InfoOutlined sx={{ fontSize: 16, color: 'info.main' }} />
-                  <Typography variant="overline" color="info.main" fontWeight={700} sx={{ letterSpacing: 0.5 }}>
+                  <Typography
+                    variant="overline"
+                    color="info.main"
+                    fontWeight={700}
+                    sx={{ letterSpacing: 0.5 }}
+                  >
                     Información del Arqueo
                   </Typography>
                 </Box>

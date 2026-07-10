@@ -1,8 +1,5 @@
-import { yupResolver } from "@hookform/resolvers/yup";
-import {
-  AddShoppingCartOutlined,
-  Inventory2Outlined,
-} from "@mui/icons-material";
+import { yupResolver } from '@hookform/resolvers/yup'
+import { AddShoppingCartOutlined, Inventory2Outlined } from '@mui/icons-material'
 import {
   Alert,
   AlertTitle,
@@ -14,41 +11,34 @@ import {
   DialogContent,
   Grid,
   Typography,
-} from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import React, {
-  FunctionComponent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useForm, useWatch } from "react-hook-form";
+} from '@mui/material'
+import { useQuery } from '@tanstack/react-query'
+import React, { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 
-import { apiArticuloInventarioPorId } from "../../../../../../base/api/apiArticuloInventarioPorId.ts";
-import { MyDialogTitle } from "../../../../../../base/components/Dialog/MyDialogTitle.tsx";
-import { MetodoSeleccionLote } from "../../../../../../base/services/articuloToArticuloOperacionInputService.ts";
-import { articuloToInventarioOperacion } from "../../../../../../base/services/articuloToInventarioOperacion.ts";
-import { articuloOperacionInputValidator } from "../../../../../../base/validator/articuloOperacionInputValidator.ts";
-import { ArticuloOperacionInputProps } from "../../../../../../interfaces/articuloOperacion.ts";
-import { UnidadMedidaSeleccionProps } from "../../ArticuloUnidadMedidaSeleccion/ArticuloUnidadMedidaSeleccion.tsx";
-import { LoteSeleccionProps } from "../../LoteSeleccion/LoteSeleccionTypes.ts";
-import ArticuloInventarioFormularioCard from "./ArticuloInventarioFormularioCard.tsx";
-import ArticuloInventarioInformacionCard from "./ArticuloInventarioInformacionCard.tsx";
+import { apiArticuloInventarioPorId } from '../../../../../../base/api/apiArticuloInventarioPorId.ts'
+import { MyDialogTitle } from '../../../../../../base/components/Dialog/MyDialogTitle.tsx'
+import { MetodoSeleccionLote } from '../../../../../../base/services/articuloToArticuloOperacionInputService.ts'
+import { articuloToInventarioOperacion } from '../../../../../../base/services/articuloToInventarioOperacion.ts'
+import { articuloOperacionInputValidator } from '../../../../../../base/validator/articuloOperacionInputValidator.ts'
+import { ArticuloOperacionInputProps } from '../../../../../../interfaces/articuloOperacion.ts'
+import { UnidadMedidaSeleccionProps } from '../../ArticuloUnidadMedidaSeleccion/ArticuloUnidadMedidaSeleccion.tsx'
+import { LoteSeleccionProps } from '../../LoteSeleccion/LoteSeleccionTypes.ts'
+import ArticuloInventarioFormularioCard from './ArticuloInventarioFormularioCard.tsx'
+import ArticuloInventarioInformacionCard from './ArticuloInventarioInformacionCard.tsx'
 import {
   ActionButtonsProps,
   CantidadSeleccionProps,
   DescuentoSeleccionProps,
   PrecioSeleccionProps,
   SeleccionArticuloInventarioDialogProps,
-} from "./ArticuloSeleccionInventarioTypes.ts";
-import { seleccionArticuloInventarioReglas } from "./seleccionArticuloInventarioReglas.ts";
+} from './ArticuloSeleccionInventarioTypes.ts'
+import { seleccionArticuloInventarioReglas } from './seleccionArticuloInventarioReglas.ts'
 
 const DEFAULT_LOTE_PROPS: LoteSeleccionProps = {
   metodoSeleccion: MetodoSeleccionLote.MANUAL,
-};
-const DEFAULT_EMPTY_PROPS = {};
+}
+const DEFAULT_EMPTY_PROPS = {}
 
 /**
  * Diálogo de selección de artículo con inventario
@@ -63,9 +53,9 @@ const DEFAULT_EMPTY_PROPS = {};
  * @constructor
  * @autor isi-template
  */
-const SeleccionArticuloInventarioDialog: FunctionComponent<
-  SeleccionArticuloInventarioDialogProps
-> = (props) => {
+const SeleccionArticuloInventarioDialog: FunctionComponent<SeleccionArticuloInventarioDialogProps> = (
+  props,
+) => {
   const {
     onClose,
     open,
@@ -86,16 +76,15 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
     reglas,
     actionButtons = DEFAULT_EMPTY_PROPS as ActionButtonsProps,
     ...other
-  } = props;
+  } = props
 
-  const [mensajes, setMensajes] = useState<string[]>([]);
+  const [mensajes, setMensajes] = useState<string[]>([])
 
   // Creamos el formulario
-  const { control, handleSubmit, reset, setValue, getValues } =
-    useForm<ArticuloOperacionInputProps>({
-      defaultValues: item || {},
-      resolver: yupResolver(articuloOperacionInputValidator),
-    });
+  const { control, handleSubmit, reset, setValue, getValues } = useForm<ArticuloOperacionInputProps>({
+    defaultValues: item || {},
+    resolver: yupResolver(articuloOperacionInputValidator),
+  })
 
   const {
     data: articulo,
@@ -104,7 +93,7 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
     isError,
   } = useQuery({
     queryKey: [
-      "seleccion-articulo-inventario-por-id",
+      'seleccion-articulo-inventario-por-id',
       open,
       articuloId,
       entidad,
@@ -113,102 +102,83 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
     ],
     enabled: open && Boolean(articuloId),
     queryFn: async () => {
-      if (!articuloId) return null;
+      if (!articuloId) return null
       const resp = await apiArticuloInventarioPorId({
         entidad,
         verificarPrecio,
         verificarInventario,
         id: articuloId,
-      });
-      return resp ?? null;
+      })
+      return resp ?? null
     },
     refetchInterval: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-  });
+  })
 
   // ===== OBSERVACION DE DATOS DEL FORMULARIO =====
   const [almacenWatch, loteWatch, articuloUnidadMedidaWatch] = useWatch({
     control,
-    name: ["almacen", "lote", "articuloUnidadMedida"],
-  });
+    name: ['almacen', 'lote', 'articuloUnidadMedida'],
+  })
 
   // ===== CÁLCULO DEL INVENTARIO ACTUAL =====
   const inventario = useMemo(() => {
-    if (!articulo) return null;
+    if (!articulo) return null
 
     return articuloToInventarioOperacion(articulo, {
       codigoAlmacen: almacenWatch?.codigoAlmacen ?? null,
       codigoLote: loteWatch?.codigoLote ?? null,
       codigoUnidadMedida: articuloUnidadMedidaWatch?.codigoUnidadMedida ?? null,
-    });
-  }, [articulo, almacenWatch, loteWatch, articuloUnidadMedidaWatch]);
+    })
+  }, [articulo, almacenWatch, loteWatch, articuloUnidadMedidaWatch])
 
   // ===== MANEJO DE ENVÍO DEL FORMULARIO =====
   const onSubmit = useCallback(
     (data: ArticuloOperacionInputProps) => {
-      const errors = seleccionArticuloInventarioReglas(
-        articulo,
-        data,
-        inventario,
-        {
-          loteProps,
-          unidadMedidaProps,
-          reglas,
-        },
-      );
+      const errors = seleccionArticuloInventarioReglas(articulo, data, inventario, {
+        loteProps,
+        unidadMedidaProps,
+        reglas,
+      })
 
-      setMensajes(errors.length > 0 ? errors : []);
-      if (errors.length > 0) return;
+      setMensajes(errors.length > 0 ? errors : [])
+      if (errors.length > 0) return
       onClose({
         index: articuloIndex,
         item: data,
-      });
+      })
     },
-    [
-      articulo,
-      inventario,
-      loteProps,
-      unidadMedidaProps,
-      reglas,
-      articuloIndex,
-      onClose,
-    ],
-  );
+    [articulo, inventario, loteProps, unidadMedidaProps, reglas, articuloIndex, onClose],
+  )
 
   const onError = useCallback((errors: any) => {
-    console.log("Errores de validación del formulario:", errors);
-    setMensajes(["No se ha podido validar el formulario"]);
-  }, []);
+    console.log('Errores de validación del formulario:', errors)
+    setMensajes(['No se ha podido validar el formulario'])
+  }, [])
 
   const lotePropsCalculados = useMemo(
     () => ({
-      fuente: loteProps?.fuente ?? almacenProps?.fuente ?? "inv",
+      fuente: loteProps?.fuente ?? almacenProps?.fuente ?? 'inv',
       ...loteProps,
     }),
     [loteProps, almacenProps?.fuente],
-  );
+  )
 
   // ===== EFECTOS =====
-  const formularioInicializado = useRef(false);
+  const formularioInicializado = useRef(false)
   useEffect(() => {
-    if (!open) formularioInicializado.current = false;
-  }, [open]);
+    if (!open) formularioInicializado.current = false
+  }, [open])
 
   // Reset del formulario cuando cambian los datos
   useEffect(() => {
-    if (
-      open &&
-      isSuccess &&
-      item &&
-      articulo &&
-      !formularioInicializado.current
-    ) {
-      reset({ ...item });
-      formularioInicializado.current = true;
-      setMensajes([]);
+    if (open && isSuccess && item && articulo && !formularioInicializado.current) {
+      reset({ ...item })
+      formularioInicializado.current = true
+      setMensajes([])
     }
-  }, [open, isSuccess, item, reset, articulo]);
+  }, [open, isSuccess, item, reset, articulo])
 
   /*###############################################################*/
   /*###############################################################*/
@@ -221,7 +191,7 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
         <Box display="flex" justifyContent="center" p={3}>
           <CircularProgress />
         </Box>
-      );
+      )
     }
 
     // Error de carga
@@ -229,10 +199,9 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
       return (
         <Alert severity="error">
           <AlertTitle>Error</AlertTitle>
-          No se ha podido cargar los datos del artículo desde el servidor. Por
-          favor, intente nuevamente.
+          No se ha podido cargar los datos del artículo desde el servidor. Por favor, intente nuevamente.
         </Alert>
-      );
+      )
     }
 
     // Validación de existencia de datos
@@ -240,11 +209,10 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
       return (
         <Alert severity="warning">
           <AlertTitle>Alerta</AlertTitle>
-          No se ha podido encontrar los datos del artículo en el servidor o el
-          item seleccionado es inexistente. Cierre el diálogo e intente de
-          nuevo.
+          No se ha podido encontrar los datos del artículo en el servidor o el item seleccionado es
+          inexistente. Cierre el diálogo e intente de nuevo.
         </Alert>
-      );
+      )
     }
 
     // Validación de coincidencia de artículo
@@ -252,10 +220,10 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
       return (
         <Alert severity="warning">
           <AlertTitle>Alerta</AlertTitle>
-          El artículo del servidor no coincide con el artículo seleccionado.
-          Cierre el diálogo y vuelva a intentar.
+          El artículo del servidor no coincide con el artículo seleccionado. Cierre el diálogo y vuelva a
+          intentar.
         </Alert>
-      );
+      )
     }
     // Contenido principal
     return (
@@ -288,7 +256,7 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
           />
         </Grid>
       </Grid>
-    );
+    )
   }, [
     articuloLoading,
     isError,
@@ -308,25 +276,25 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
     open,
     lotePropsCalculados,
     getValues,
-  ]);
+  ])
 
   // ===== MANEJO DE CIERRE =====
   const handleClose = useCallback(() => {
-    onClose();
-  }, [onClose]);
+    onClose()
+  }, [onClose])
 
   // ===== MANEJO DE ENVÍO =====
   const handleFormSubmit = useCallback(() => {
-    handleSubmit(onSubmit, onError)();
-  }, [handleSubmit, onSubmit, onError]);
+    handleSubmit(onSubmit, onError)()
+  }, [handleSubmit, onSubmit, onError])
 
   return (
     <Dialog
       sx={{
-        "& .MuiDialog-paper": {
-          maxHeight: "90vh",
-          width: "1100px",
-          maxWidth: "90vw",
+        '& .MuiDialog-paper': {
+          maxHeight: '90vh',
+          width: '1100px',
+          maxWidth: '90vw',
         },
       }}
       fullWidth
@@ -336,33 +304,29 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
       keepMounted={false}
       {...other}
     >
-      <MyDialogTitle
-        onClose={() => onClose()}
-        icon={Inventory2Outlined}
-        sx={{ mb: -1 }}
-      >
+      <MyDialogTitle onClose={() => onClose()} icon={Inventory2Outlined} sx={{ mb: -1 }}>
         <Typography
-          variant={"h6"}
+          variant={'h6'}
           sx={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "-webkit-box",
-            WebkitLineClamp: "1",
-            WebkitBoxOrient: "vertical",
-            letterSpacing: "0.02em",
-            textTransform: "uppercase",
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: '1',
+            WebkitBoxOrient: 'vertical',
+            letterSpacing: '0.02em',
+            textTransform: 'uppercase',
             mt: -0.4,
           }}
         >
-          {articulo ? `${articulo.nombreArticulo}` : "Cargando..."}
+          {articulo ? `${articulo.nombreArticulo}` : 'Cargando...'}
         </Typography>
       </MyDialogTitle>
       <DialogContent sx={{ pb: 0 }}>
         <Box>{renderContent()}</Box>
         {mensajes.length > 0 && (
           <Box mt={1}>
-            <Alert severity={"error"}>
-              <AlertTitle>Se han detectado los siguientes errores:</AlertTitle>{" "}
+            <Alert severity={'error'}>
+              <AlertTitle>Se han detectado los siguientes errores:</AlertTitle>{' '}
               {mensajes.map((m, index) => (
                 <Typography key={index}>- {m}</Typography>
               ))}
@@ -370,31 +334,27 @@ const SeleccionArticuloInventarioDialog: FunctionComponent<
           </Box>
         )}
       </DialogContent>
-      <DialogActions sx={{ justifyContent: "center", pb: 1 }}>
+      <DialogActions sx={{ justifyContent: 'center', pb: 1 }}>
         {actionButtons.mostrarBtnCerrar && (
-          <Button color="error" variant={"text"} onClick={() => onClose()}>
-            {actionButtons.btnCerrarText || "Cerrar"}
+          <Button color="error" variant={'text'} onClick={() => onClose()}>
+            {actionButtons.btnCerrarText || 'Cerrar'}
           </Button>
         )}
 
-        {!actionButtons.ocultarBtnActualizar &&
-          articulo &&
-          item &&
-          articulo._id === item.articuloId && (
-            <Button
-              color={item ? "success" : "primary"}
-              variant="contained"
-              size={"large"}
-              startIcon={<AddShoppingCartOutlined />}
-              onClick={handleFormSubmit}
-            >
-              {actionButtons.btnActualizarText ||
-                (item ? "Actualizar item" : "Agregar item")}
-            </Button>
-          )}
+        {!actionButtons.ocultarBtnActualizar && articulo && item && articulo._id === item.articuloId && (
+          <Button
+            color={item ? 'success' : 'primary'}
+            variant="contained"
+            size={'large'}
+            startIcon={<AddShoppingCartOutlined />}
+            onClick={handleFormSubmit}
+          >
+            {actionButtons.btnActualizarText || (item ? 'Actualizar item' : 'Agregar item')}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
-  );
-};
+  )
+}
 
-export default React.memo(SeleccionArticuloInventarioDialog);
+export default React.memo(SeleccionArticuloInventarioDialog)

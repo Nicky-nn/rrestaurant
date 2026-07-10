@@ -16,7 +16,7 @@ import {
   OutlinedInput,
   Checkbox,
   ListItemText,
-  TextField
+  TextField,
 } from '@mui/material'
 import React, { FunctionComponent, useEffect, useState } from 'react'
 
@@ -82,7 +82,7 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
     }
 
     const urlPdf = caja?.representacionGrafica?.[formato]
-    
+
     if (!urlPdf) {
       notError(`El reporte de caja no tiene un enlace de descarga en formato ${formato.toUpperCase()}`)
       return
@@ -91,17 +91,18 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
     try {
       let enviados = 0
       for (const usuario of selectedUsuarios) {
-        const telefono = telefonosModificados[usuario] !== undefined 
-          ? telefonosModificados[usuario] 
-          : usuariosDisponibles.find(u => u.usuario === usuario)?.telefono
+        const telefono =
+          telefonosModificados[usuario] !== undefined
+            ? telefonosModificados[usuario]
+            : usuariosDisponibles.find((u) => u.usuario === usuario)?.telefono
 
         if (!telefono) continue
-        
+
         await sendFactura({
           telefono: telefono,
           urlPdf: urlPdf,
           nombreFactura: `Cierre de Caja ${caja.cajaCodigo || caja.cajaId || ''}`.trim(),
-          mensajePersonalizado: `Hola ${usuario || ''}, le adjuntamos el reporte de cierre de caja en formato ${formato.toUpperCase()}.`
+          mensajePersonalizado: `Hola ${usuario || ''}, le adjuntamos el reporte de cierre de caja en formato ${formato.toUpperCase()}.`,
         })
         enviados++
       }
@@ -137,7 +138,7 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
         <Alert color="info" icon={false} sx={{ mt: 2 }}>
           Seleccione los usuarios responsables a los que desea enviar el documento y el formato del archivo.
         </Alert>
-        
+
         <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <FormControl fullWidth size="small">
             <InputLabel id="select-usuarios-label">Usuarios a enviar</InputLabel>
@@ -153,10 +154,10 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {selected.map((value) => (
-                    <Chip 
-                      key={value} 
-                      label={value} 
-                      size="small" 
+                    <Chip
+                      key={value}
+                      label={value}
+                      size="small"
                       onDelete={() => {
                         setSelectedUsuarios((prev) => prev.filter((item) => item !== value))
                       }}
@@ -171,7 +172,9 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
               {usuariosDisponibles.map((user) => (
                 <MenuItem key={user.usuario} value={user.usuario}>
                   <Checkbox checked={selectedUsuarios.indexOf(user.usuario) > -1} />
-                  <ListItemText primary={`${user.usuario} ${user.telefono ? `(${user.telefono})` : '(Sin teléfono)'}`} />
+                  <ListItemText
+                    primary={`${user.usuario} ${user.telefono ? `(${user.telefono})` : '(Sin teléfono)'}`}
+                  />
                 </MenuItem>
               ))}
             </Select>
@@ -189,7 +192,7 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
               <MenuItem value="rollo">Rollo (Ticket)</MenuItem>
             </Select>
           </FormControl>
-          
+
           {selectedUsuarios.length > 0 && (
             <Box sx={{ mt: 1, p: 2, bgcolor: 'background.default', borderRadius: 2 }}>
               <Typography variant="caption" sx={{ fontWeight: 700, mb: 1.5, display: 'block' }}>
@@ -198,9 +201,10 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {selectedUsuarios.map((usuario) => {
                   const originalUser = usuariosDisponibles.find((u) => u.usuario === usuario)
-                  const telefonoActual = telefonosModificados[usuario] !== undefined 
-                    ? telefonosModificados[usuario] 
-                    : (originalUser?.telefono || '')
+                  const telefonoActual =
+                    telefonosModificados[usuario] !== undefined
+                      ? telefonosModificados[usuario]
+                      : originalUser?.telefono || ''
 
                   return (
                     <TextField
@@ -213,7 +217,7 @@ const ArqueoCajaWhatsappDialog: FunctionComponent<ArqueoCajaWhatsappDialogProps>
                       onChange={(e) => {
                         setTelefonosModificados((prev) => ({
                           ...prev,
-                          [usuario]: e.target.value
+                          [usuario]: e.target.value,
                         }))
                       }}
                     />

@@ -1,10 +1,10 @@
-import { AlmacenInventarioProps } from "../../interfaces/almacen.ts";
-import { ArticuloProps } from "../../interfaces/articulo.ts";
-import { apiGestionArticulo } from "../../interfaces/gestionArticulo.ts";
-import { ArticuloInventarioOperacionProps } from "../../interfaces/InventarioOperacion.ts";
-import { LoteInventarioProps } from "../../interfaces/lote.ts";
-import { genRound } from "../../utils/utils.ts";
-import { invRound } from "./articuloInventarioToOperacion.ts";
+import { AlmacenInventarioProps } from '../../interfaces/almacen.ts'
+import { ArticuloProps } from '../../interfaces/articulo.ts'
+import { apiGestionArticulo } from '../../interfaces/gestionArticulo.ts'
+import { ArticuloInventarioOperacionProps } from '../../interfaces/InventarioOperacion.ts'
+import { LoteInventarioProps } from '../../interfaces/lote.ts'
+import { genRound } from '../../utils/utils.ts'
+import { invRound } from './articuloInventarioToOperacion.ts'
 
 /**
  * Decodificamos el inventario, segun los datos de operacion para entrada, salida.
@@ -16,34 +16,27 @@ import { invRound } from "./articuloInventarioToOperacion.ts";
 export const articuloToInventarioOperacion = (
   articulo: ArticuloProps,
   options: {
-    codigoAlmacen: string | null;
-    codigoLote: string | null;
-    codigoUnidadMedida: string | null;
+    codigoAlmacen: string | null
+    codigoLote: string | null
+    codigoUnidadMedida: string | null
   },
 ): ArticuloInventarioOperacionProps | null => {
-  if (!articulo) return null;
-  if (articulo.inventario.length === 0) return null;
-  const { codigoAlmacen, codigoLote, codigoUnidadMedida } = options;
+  if (!articulo) return null
+  if (articulo.inventario.length === 0) return null
+  const { codigoAlmacen, codigoLote, codigoUnidadMedida } = options
 
   /** En caso no existencia del codigo unidad de medida, se asume unidad medida base */
-  const cum =
-    codigoUnidadMedida ||
-    articulo.articuloPrecioBase.articuloUnidadMedida.codigoUnidadMedida;
+  const cum = codigoUnidadMedida || articulo.articuloPrecioBase.articuloUnidadMedida.codigoUnidadMedida
 
-  if (!codigoUnidadMedida || !codigoAlmacen) return null;
+  if (!codigoUnidadMedida || !codigoAlmacen) return null
 
-  const articuloPrecio = [
-    articulo.articuloPrecioBase,
-    ...articulo.articuloPrecio,
-  ].find(
+  const articuloPrecio = [articulo.articuloPrecioBase, ...articulo.articuloPrecio].find(
     (ap) => ap.articuloUnidadMedida.codigoUnidadMedida === codigoUnidadMedida,
-  );
-  if (!articuloPrecio) return null;
+  )
+  if (!articuloPrecio) return null
 
-  const alm = articulo.inventario[0].detalle.find(
-    (i) => i.almacen.codigoAlmacen === codigoAlmacen,
-  );
-  if (!alm) return null;
+  const alm = articulo.inventario[0].detalle.find((i) => i.almacen.codigoAlmacen === codigoAlmacen)
+  if (!alm) return null
 
   const almacen: AlmacenInventarioProps = {
     _id: alm.almacen._id,
@@ -54,13 +47,13 @@ export const articuloToInventarioOperacion = (
     comprometido: genRound(alm.comprometido / articuloPrecio.cantidadBase),
     solicitado: genRound(alm.solicitado / articuloPrecio.cantidadBase),
     disponible: genRound(alm.disponible / articuloPrecio.cantidadBase),
-  };
+  }
 
-  let lote: LoteInventarioProps | null = null;
+  let lote: LoteInventarioProps | null = null
   if (articulo.gestionArticulo === apiGestionArticulo.LOTE) {
     if (codigoLote) {
       // Priorizamos la busca de lote dentro del almacen
-      const lot = alm.lotes.find((i) => i.lote.codigoLote === codigoLote);
+      const lot = alm.lotes.find((i) => i.lote.codigoLote === codigoLote)
       if (lot) {
         lote = {
           _id: lot.lote._id,
@@ -72,30 +65,28 @@ export const articuloToInventarioOperacion = (
           atributo1: lot.lote.atributo1,
           atributo2: lot.lote.atributo2,
           stock: genRound(lot.stock / articuloPrecio.cantidadBase),
-          comprometido: genRound(
-            lot.comprometido / articuloPrecio.cantidadBase,
-          ),
+          comprometido: genRound(lot.comprometido / articuloPrecio.cantidadBase),
           solicitado: genRound(lot.solicitado / articuloPrecio.cantidadBase),
           disponible: genRound(lot.disponible / articuloPrecio.cantidadBase),
-        };
+        }
       }
     }
   }
 
-  let stock = almacen.stock;
-  let comprometido = almacen.comprometido;
-  let solicitado = almacen.solicitado;
-  let disponible = almacen.disponible;
+  let stock = almacen.stock
+  let comprometido = almacen.comprometido
+  let solicitado = almacen.solicitado
+  let disponible = almacen.disponible
   if (codigoLote) {
-    stock = 0;
-    comprometido = 0;
-    solicitado = 0;
-    disponible = 0;
+    stock = 0
+    comprometido = 0
+    solicitado = 0
+    disponible = 0
     if (lote) {
-      stock = lote.stock;
-      comprometido = lote.comprometido;
-      solicitado = lote.solicitado;
-      disponible = lote.disponible;
+      stock = lote.stock
+      comprometido = lote.comprometido
+      solicitado = lote.solicitado
+      disponible = lote.disponible
     }
   }
 
@@ -109,21 +100,13 @@ export const articuloToInventarioOperacion = (
     articuloPrecioBase: articulo.articuloPrecioBase,
     almacen,
     lote,
-    totalStock: genRound(
-      articulo.inventario[0].totalStock / articuloPrecio.cantidadBase,
-    ),
-    totalComprometido: genRound(
-      articulo.inventario[0].totalComprometido / articuloPrecio.cantidadBase,
-    ),
-    totalSolicitado: genRound(
-      articulo.inventario[0].totalSolicitado / articuloPrecio.cantidadBase,
-    ),
-    totalDisponible: genRound(
-      articulo.inventario[0].totalDisponible / articuloPrecio.cantidadBase,
-    ),
+    totalStock: genRound(articulo.inventario[0].totalStock / articuloPrecio.cantidadBase),
+    totalComprometido: genRound(articulo.inventario[0].totalComprometido / articuloPrecio.cantidadBase),
+    totalSolicitado: genRound(articulo.inventario[0].totalSolicitado / articuloPrecio.cantidadBase),
+    totalDisponible: genRound(articulo.inventario[0].totalDisponible / articuloPrecio.cantidadBase),
     stock,
     comprometido,
     solicitado,
     disponible,
-  };
-};
+  }
+}

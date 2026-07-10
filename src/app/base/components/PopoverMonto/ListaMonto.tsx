@@ -1,13 +1,5 @@
 import { CheckCircle } from '@mui/icons-material'
-import {
-  Button,
-  Grid,
-  ListItemButton,
-  Popover,
-  styled,
-  SxProps,
-  Theme,
-} from '@mui/material'
+import { Button, Grid, ListItemButton, Popover, styled, SxProps, Theme } from '@mui/material'
 import React, { FunctionComponent, useEffect, useState } from 'react'
 
 import ParseMontoMoneda from '../Mask/ParseMontoMoneda'
@@ -43,18 +35,7 @@ type Props = OwnProps
  * @deprecated, usar el componente MontoMonedaTexto
  */
 const ListaMonto: FunctionComponent<Props> = (props) => {
-  const {
-    id,
-    onChange,
-    monto,
-    montoText = monto,
-    sigla,
-    min,
-    max,
-    step,
-    editar = true,
-    sxMontoProps,
-  } = props
+  const { id, onChange, monto, montoText = monto, sigla, min, max, step, editar = true, sxMontoProps } = props
   const [anchorMonto, setAnchorMonto] = useState<any | null>(null)
 
   const [inputMonto, setInputMonto] = useState<number | undefined | null>(null)

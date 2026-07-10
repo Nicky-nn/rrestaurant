@@ -86,7 +86,7 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
         Cell: ({ row }) => {
           let nivel = row.original.riesgoNivel
           const puntaje = row.original.riesgoPuntaje || 0
-          
+
           if (!nivel) {
             if (puntaje >= 50) nivel = 'CRÍTICO'
             else if (puntaje >= 25) nivel = 'ALTO'
@@ -121,7 +121,7 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
               />
             </Tooltip>
           )
-        }
+        },
       },
       {
         accessorKey: 'duracionMinutos',
@@ -130,7 +130,7 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
         Cell: ({ cell }) => {
           const val = cell.getValue<number>()
           return val != null ? `${val} min` : '-'
-        }
+        },
       },
       { accessorKey: 'autor', header: 'Autor', size: 100 },
       {
@@ -159,21 +159,20 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  maxWidth: '220px'
+                  maxWidth: '220px',
                 }}
               >
                 {value}
               </div>
             </Tooltip>
           )
-        }
+        },
       },
       {
         accessorKey: 'precio',
         header: 'Precio',
         size: 110,
-        Cell: ({ cell }) =>
-          cell.getValue<number>() != null ? cell.getValue<number>().toFixed(2) : '-',
+        Cell: ({ cell }) => (cell.getValue<number>() != null ? cell.getValue<number>().toFixed(2) : '-'),
       },
     ],
     [],
@@ -189,7 +188,7 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
       title: 'Exportar Reporte',
       description: '¿Está seguro que desea exportar el listado de anomalías en formato CSV?',
       confirmationText: 'Exportar',
-      confirmButtonColor: 'primary'
+      confirmButtonColor: 'primary',
     })
 
     if (!confirm.confirmed) return
@@ -236,11 +235,7 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
           Exportar CSV
         </Button>
       ),
-      renderDetailPanel: (row) => (
-          <DetalleAnomalia
-            anomalia={row}
-          />
-      ),
+      renderDetailPanel: (row) => <DetalleAnomalia anomalia={row} />,
       additionalOptions: {
         enableColumnResizing: true,
         columnResizeMode: 'onChange',
@@ -255,35 +250,21 @@ const AnomaliasListado: React.FC<Props> = ({ anomalias }) => {
         },
       },
     }),
-    [columns, anomalias, onExportarCSV]
+    [columns, anomalias, onExportarCSV],
   )
 
   return (
     <>
-      <Paper
-        elevation={1}
-      >
-        <MrtDynamicTable
-          config={config}
-          data={anomalias}
-        />
+      <Paper elevation={1}>
+        <MrtDynamicTable config={config} data={anomalias} />
       </Paper>
 
       {/* Diálogo para mostrar especificaciones del pedido */}
-      <Dialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle>
-          Evolución del Pedido Nº {pedidoSeleccionado?.numeroPedido ?? ''}
-        </DialogTitle>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="lg" fullWidth>
+        <DialogTitle>Evolución del Pedido Nº {pedidoSeleccionado?.numeroPedido ?? ''}</DialogTitle>
         <DialogContent dividers>
           {pedidoSeleccionado ? (
-            <ReporteHistorialPedido
-              pedidoId={pedidoSeleccionado.pedidoId || ''}
-            />
+            <ReporteHistorialPedido pedidoId={pedidoSeleccionado.pedidoId || ''} />
           ) : (
             <div>No hay datos para mostrar</div>
           )}

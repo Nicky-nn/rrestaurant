@@ -1,4 +1,15 @@
-import { Assessment, CheckCircle, History, TrendingUp, Wallet, Warning, Download, PictureAsPdf, Email, WhatsApp } from '@mui/icons-material'
+import {
+  Assessment,
+  CheckCircle,
+  History,
+  TrendingUp,
+  Wallet,
+  Warning,
+  Download,
+  PictureAsPdf,
+  Email,
+  WhatsApp,
+} from '@mui/icons-material'
 import { alpha, Box, Button, Card, Chip, Divider, Grid, Skeleton, Typography, useTheme } from '@mui/material'
 import React, { FC, useMemo, useState } from 'react'
 import { Cell, Pie, PieChart, Tooltip as RechartsTooltip } from 'recharts'
@@ -470,7 +481,8 @@ const UltimaCaja: FC = () => {
                     Total Cortesias
                   </Typography>
                   <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: -0.2 }}>
-                    {caja.cortesia?.conteoPedidos || 0} pedidos, {caja.cortesia?.conteoArticulos || 0} artículos
+                    {caja.cortesia?.conteoPedidos || 0} pedidos, {caja.cortesia?.conteoArticulos || 0}{' '}
+                    artículos
                   </Typography>
                 </Box>
                 <Typography variant="body1" fontWeight={600} color="text.secondary">
@@ -746,17 +758,17 @@ const UltimaCaja: FC = () => {
       <PdfViewerDialog open={!!pdfViewerUrl} pdfUrl={pdfViewerUrl} onClose={() => setPdfViewerUrl(null)} />
 
       {/* WhatsApp Dialog */}
-      <ArqueoCajaWhatsappDialog 
-        open={openWhatsappDialog} 
-        onClose={() => setOpenWhatsappDialog(false)} 
-        caja={caja} 
+      <ArqueoCajaWhatsappDialog
+        open={openWhatsappDialog}
+        onClose={() => setOpenWhatsappDialog(false)}
+        caja={caja}
       />
 
       {/* Correo Dialog */}
-      <ArqueoCajaCorreoDialog 
-        open={openCorreoDialog} 
-        onClose={() => setOpenCorreoDialog(false)} 
-        caja={caja} 
+      <ArqueoCajaCorreoDialog
+        open={openCorreoDialog}
+        onClose={() => setOpenCorreoDialog(false)}
+        caja={caja}
       />
     </Box>
   )

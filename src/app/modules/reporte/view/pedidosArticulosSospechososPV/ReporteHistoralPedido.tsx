@@ -19,7 +19,7 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Chip
+  Chip,
 } from '@mui/material'
 import { parse } from 'date-fns'
 
@@ -40,7 +40,7 @@ const estadoIcono: Record<string, JSX.Element> = {
   DEFAULT: <FiberManualRecordIcon fontSize="small" />,
 }
 
-const estadoColor: Record<string, "info" | "warning" | "success" | "error" | "default"> = {
+const estadoColor: Record<string, 'info' | 'warning' | 'success' | 'error' | 'default'> = {
   CREACION: 'info',
   MODIFICACION_ARTICULOS: 'warning',
   MODIFICACION_FINANCIERA: 'warning',
@@ -55,9 +55,7 @@ const formatearTextoAccion = (accion: string) => {
   return accion?.replace(/_/g, ' ') || 'DESCONOCIDO'
 }
 
-export const ReporteHistorialPedido = ({
-  pedidoId,
-}: HistorialPedidoProps) => {
+export const ReporteHistorialPedido = ({ pedidoId }: HistorialPedidoProps) => {
   const { data: historial = [], isLoading } = useRestPedidoAuditoriaPorPedidoId({ pedidoId })
 
   const numeroPedido = historial.length > 0 ? historial[0].numeroPedido : undefined
@@ -84,7 +82,6 @@ export const ReporteHistorialPedido = ({
 
   return (
     <Box sx={{ padding: 1 }}>
-
       <TableContainer component={Paper} elevation={0} variant="outlined">
         <Table size="small">
           <TableHead sx={{ backgroundColor: 'primary.main' }}>
@@ -101,14 +98,15 @@ export const ReporteHistorialPedido = ({
               const accionType = h.accion || 'DEFAULT'
               const chipColor = estadoColor[accionType] || 'default'
               const icono = estadoIcono[accionType] || estadoIcono['DEFAULT']
-              
+
               const pasoAnterior = idx > 0 ? sortedHistorial[idx - 1] : null
               const articulos = h.articulos || []
 
               // Encontrar artículos que estaban antes pero ya no están ahora
-              const eliminados = pasoAnterior?.articulos?.filter(
-                (prevArt) => !articulos.some((currArt) => currArt.nroItem === prevArt.nroItem)
-              ) || []
+              const eliminados =
+                pasoAnterior?.articulos?.filter(
+                  (prevArt) => !articulos.some((currArt) => currArt.nroItem === prevArt.nroItem),
+                ) || []
 
               // Consolidar artículos actuales más los eliminados en este paso para recorrerlos todos juntos
               const allItemsForStep = [...articulos, ...eliminados]
@@ -119,22 +117,23 @@ export const ReporteHistorialPedido = ({
 
               allItemsForStep.forEach((articulo) => {
                 const isAnulacionOCancelacion = accionType === 'ANULACION' || accionType === 'CANCELACION'
-                const isEliminado = isAnulacionOCancelacion || eliminados.some((eli) => eli.nroItem === articulo.nroItem)
-                
+                const isEliminado =
+                  isAnulacionOCancelacion || eliminados.some((eli) => eli.nroItem === articulo.nroItem)
+
                 let cantidadActual = articulo.articuloPrecio?.cantidad ?? 0
                 let cantidadAnterior = 0
                 let cambioDetectado = false
 
                 if (isEliminado) {
                   cantidadActual = 0
-                  const prevArticulo = pasoAnterior?.articulos?.find(a => a.nroItem === articulo.nroItem)
-                  cantidadAnterior = prevArticulo ? (prevArticulo.articuloPrecio?.cantidad ?? 0) : (articulo.articuloPrecio?.cantidad ?? 0)
+                  const prevArticulo = pasoAnterior?.articulos?.find((a) => a.nroItem === articulo.nroItem)
+                  cantidadAnterior = prevArticulo
+                    ? (prevArticulo.articuloPrecio?.cantidad ?? 0)
+                    : (articulo.articuloPrecio?.cantidad ?? 0)
                   cambioDetectado = true
                 } else {
                   // Buscar el artículo en el paso anterior para comparar
-                  const prevArticulo = pasoAnterior?.articulos?.find(
-                    (a) => a.nroItem === articulo.nroItem
-                  )
+                  const prevArticulo = pasoAnterior?.articulos?.find((a) => a.nroItem === articulo.nroItem)
                   if (prevArticulo) {
                     cantidadAnterior = prevArticulo.articuloPrecio?.cantidad ?? 0
                     if (cantidadAnterior !== cantidadActual) {
@@ -154,72 +153,102 @@ export const ReporteHistorialPedido = ({
                   if (accionType === 'CANCELACION') textoEliminado = 'Fue cancelado'
 
                   itemsCriticos.push(
-                    <Typography key={articulo.nroItem} variant="body2" sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <DeleteIcon fontSize="inherit" /> <strong>{articulo.nombreArticulo}</strong>: {textoEliminado} (Antes: {cantidadAnterior})
-                    </Typography>
+                    <Typography
+                      key={articulo.nroItem}
+                      variant="body2"
+                      sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 0.5 }}
+                    >
+                      <DeleteIcon fontSize="inherit" /> <strong>{articulo.nombreArticulo}</strong>:{' '}
+                      {textoEliminado} (Antes: {cantidadAnterior})
+                    </Typography>,
                   )
                 } else if (cambioDetectado) {
                   huboCambiosCriticos = true
                   if (cantidadActual > cantidadAnterior) {
-                    const isNew = cantidadAnterior === 0;
+                    const isNew = cantidadAnterior === 0
                     itemsCriticos.push(
-                      <Typography key={articulo.nroItem} variant="body2" sx={{ color: isNew ? 'info.main' : 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                         <AddCircleIcon fontSize="inherit" /> 
-                         <strong>{articulo.nombreArticulo}</strong>: {isNew ? `Se agregó (${cantidadActual})` : `Aumentó la cantidad (${cantidadAnterior} → ${cantidadActual})`}
-                      </Typography>
+                      <Typography
+                        key={articulo.nroItem}
+                        variant="body2"
+                        sx={{
+                          color: isNew ? 'info.main' : 'warning.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                        }}
+                      >
+                        <AddCircleIcon fontSize="inherit" />
+                        <strong>{articulo.nombreArticulo}</strong>:{' '}
+                        {isNew
+                          ? `Se agregó (${cantidadActual})`
+                          : `Aumentó la cantidad (${cantidadAnterior} → ${cantidadActual})`}
+                      </Typography>,
                     )
                   } else if (cantidadActual < cantidadAnterior) {
                     itemsCriticos.push(
-                      <Typography key={articulo.nroItem} variant="body2" sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <RemoveCircleIcon fontSize="inherit" /> <strong>{articulo.nombreArticulo}</strong>: Disminuyó la cantidad ({cantidadAnterior} → {cantidadActual})
-                      </Typography>
+                      <Typography
+                        key={articulo.nroItem}
+                        variant="body2"
+                        sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 0.5 }}
+                      >
+                        <RemoveCircleIcon fontSize="inherit" /> <strong>{articulo.nombreArticulo}</strong>:
+                        Disminuyó la cantidad ({cantidadAnterior} → {cantidadActual})
+                      </Typography>,
                     )
                   }
                 } else {
                   itemsCriticos.push(
-                    <Typography key={articulo.nroItem} variant="body2" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <FiberManualRecordIcon fontSize="inherit" sx={{ fontSize: 10 }} /> <strong>{articulo.nombreArticulo}</strong>: Mantenido ({cantidadActual})
-                    </Typography>
+                    <Typography
+                      key={articulo.nroItem}
+                      variant="body2"
+                      sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}
+                    >
+                      <FiberManualRecordIcon fontSize="inherit" sx={{ fontSize: 10 }} />{' '}
+                      <strong>{articulo.nombreArticulo}</strong>: Mantenido ({cantidadActual})
+                    </Typography>,
                   )
                 }
               })
 
               return (
                 <TableRow key={idx} hover>
-                  <TableCell sx={{ verticalAlign: 'top' }}>
-                    {h.fechaRegistro ?? '-'}
-                  </TableCell>
+                  <TableCell sx={{ verticalAlign: 'top' }}>{h.fechaRegistro ?? '-'}</TableCell>
                   <TableCell sx={{ verticalAlign: 'top' }}>
                     <Typography variant="body2" fontWeight="bold">
                       {h.usuario ?? 'Sistema'}
                     </Typography>
                   </TableCell>
                   <TableCell sx={{ verticalAlign: 'top' }}>
-                    <Chip 
-                      icon={icono} 
-                      label={formatearTextoAccion(accionType)} 
-                      color={chipColor} 
-                      size="small" 
+                    <Chip
+                      icon={icono}
+                      label={formatearTextoAccion(accionType)}
+                      color={chipColor}
+                      size="small"
                     />
                   </TableCell>
                   <TableCell sx={{ verticalAlign: 'top' }}>
-                     {h.resumenCambios || <Typography variant="caption" color="text.secondary">Sin detalles</Typography>}
+                    {h.resumenCambios || (
+                      <Typography variant="caption" color="text.secondary">
+                        Sin detalles
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell sx={{ verticalAlign: 'top' }}>
-                     {!huboCambiosCriticos && allItemsForStep.length > 0 && (
-                       <Typography variant="body2" sx={{ color: 'success.main', display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                         <DoneAllIcon fontSize="inherit" /> Sin cambios críticos de artículos.
-                       </Typography>
-                     )}
-                     {itemsCriticos.length > 0 ? (
-                       <Stack spacing={0.5}>
-                         {itemsCriticos}
-                       </Stack>
-                     ) : (
-                       <Typography variant="caption" color="text.secondary">
-                         No hay artículos registrados.
-                       </Typography>
-                     )}
+                    {!huboCambiosCriticos && allItemsForStep.length > 0 && (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: 'success.main', display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}
+                      >
+                        <DoneAllIcon fontSize="inherit" /> Sin cambios críticos de artículos.
+                      </Typography>
+                    )}
+                    {itemsCriticos.length > 0 ? (
+                      <Stack spacing={0.5}>{itemsCriticos}</Stack>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        No hay artículos registrados.
+                      </Typography>
+                    )}
                   </TableCell>
                 </TableRow>
               )

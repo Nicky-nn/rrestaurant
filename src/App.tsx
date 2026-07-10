@@ -15,7 +15,7 @@ import { AuthProvider } from './app/base/contexts/JWTAuthContext'
 import { SecurityProvider } from './app/base/contexts/SecurityContext'
 import { SettingsProvider } from './app/base/contexts/SettingsContext.tsx'
 import { appRoutes } from './app/routes/routes'
-import { ToastProvider } from "./app/base/contexts/ToastContext.tsx";
+import { ToastProvider } from './app/base/contexts/ToastContext.tsx'
 
 /**
  * @author isi-template
@@ -59,31 +59,31 @@ function App() {
         <BreadcrumbProvider>
           <SecurityProvider>
             <MatxTheme>
-              <ToastProvider defaultOptions={{ position: "center_top" }}>
+              <ToastProvider defaultOptions={{ position: 'center_top' }}>
                 <ErrorProvider>
                   <AppConfirmProvider
                     defaultOptions={{
-                      title: "Autorización",
-                      content: "¿Proceder con la solicitud?",
-                      confirmationText: "Aceptar",
-                      cancellationText: "Cancelar",
+                      title: 'Autorización',
+                      content: '¿Proceder con la solicitud?',
+                      confirmationText: 'Aceptar',
+                      cancellationText: 'Cancelar',
                       showInput: false,
                       disableCloseOnOverlay: false,
                     }}
                   >
                     <ConfirmProvider
                       defaultOptions={{
-                        title: "Confirmación",
-                        content: "¿Confirma que desea realizar la acción?",
+                        title: 'Confirmación',
+                        content: '¿Confirma que desea realizar la acción?',
                         allowClose: false,
-                        confirmationText: "Confirmar",
-                        cancellationText: "Cancelar",
+                        confirmationText: 'Confirmar',
+                        cancellationText: 'Cancelar',
                         dialogProps: {
                           fullWidth: true,
-                          maxWidth: "xs",
+                          maxWidth: 'xs',
                           disableRestoreFocus: true,
                           disableEnforceFocus: true,
-                          "aria-hidden": false,
+                          'aria-hidden': false,
                         },
                         titleProps: {
                           sx: {
@@ -94,56 +94,56 @@ function App() {
                           dividers: true,
                         },
                         dialogActionsProps: {
-                          sx: { justifyContent: "center" },
+                          sx: { justifyContent: 'center' },
                         },
                         confirmationButtonProps: {
-                          color: "primary",
-                          variant: "contained",
-                          size: "medium",
+                          color: 'primary',
+                          variant: 'contained',
+                          size: 'medium',
                           startIcon: <CheckCircleTwoTone />,
-                          "aria-label": "confirm",
+                          'aria-label': 'confirm',
                           autoFocus: false,
                         },
                         cancellationButtonProps: {
-                          color: "error",
-                          variant: "text",
-                          size: "medium",
-                          "aria-label": "close",
+                          color: 'error',
+                          variant: 'text',
+                          size: 'medium',
+                          'aria-label': 'close',
                           autoFocus: false,
                         },
-                        buttonOrder: ["cancel", "confirm"],
+                        buttonOrder: ['cancel', 'confirm'],
                       }}
                     >
                       <CssBaseline />
                       {isDebugMode && (
                         <Box
                           sx={{
-                            position: "fixed",
+                            position: 'fixed',
                             top: 0,
                             left: 0,
                             right: 0,
                             bottom: 0,
                             zIndex: 9999,
-                            pointerEvents: "none",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            overflow: "hidden",
+                            pointerEvents: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
                           }}
                         >
                           <Typography
                             sx={{
                               fontSize: {
-                                xs: "140px",
-                                sm: "180px",
-                                md: "220px",
+                                xs: '140px',
+                                sm: '180px',
+                                md: '220px',
                               },
                               fontWeight: 100,
-                              color: "rgba(0, 0, 0, 0.04)",
-                              textTransform: "uppercase",
-                              letterSpacing: "30px",
-                              userSelect: "none",
-                              transform: "rotate(-45deg)",
+                              color: 'rgba(0, 0, 0, 0.04)',
+                              textTransform: 'uppercase',
+                              letterSpacing: '30px',
+                              userSelect: 'none',
+                              transform: 'rotate(-45deg)',
                             }}
                           >
                             SANDBOX
@@ -164,7 +164,7 @@ function App() {
         </BreadcrumbProvider>
       </AuthProvider>
     </SettingsProvider>
-  );
+  )
 }
 
 export default App

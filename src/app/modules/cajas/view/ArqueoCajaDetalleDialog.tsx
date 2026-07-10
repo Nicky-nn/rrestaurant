@@ -648,17 +648,17 @@ const ArqueoCajaDetalleDialog: FC<ArqueoCajaDetalleDialogProps> = ({
       <PdfViewerDialog open={!!pdfViewerUrl} pdfUrl={pdfViewerUrl} onClose={() => setPdfViewerUrl(null)} />
 
       {/* WhatsApp Dialog */}
-      <ArqueoCajaWhatsappDialog 
-        open={openWhatsappDialog} 
-        onClose={() => setOpenWhatsappDialog(false)} 
-        caja={caja} 
+      <ArqueoCajaWhatsappDialog
+        open={openWhatsappDialog}
+        onClose={() => setOpenWhatsappDialog(false)}
+        caja={caja}
       />
 
       {/* Correo Dialog */}
-      <ArqueoCajaCorreoDialog 
-        open={openCorreoDialog} 
-        onClose={() => setOpenCorreoDialog(false)} 
-        caja={caja} 
+      <ArqueoCajaCorreoDialog
+        open={openCorreoDialog}
+        onClose={() => setOpenCorreoDialog(false)}
+        caja={caja}
       />
     </>
   )

@@ -45,18 +45,10 @@
     "mutations/useRestEspacioEliminar.ts",
     "mutations/useWaapiEnviarUrl.ts"
   ],
-  "types": [
-    "types/index.ts"
-  ],
-  "client": [
-    "client/index.ts"
-  ],
-  "index": [
-    "index.ts"
-  ],
-  "saved_operations": [
-    "restPedidoAuditoriaPorPedidoId"
-  ],
+  "types": ["types/index.ts"],
+  "client": ["client/index.ts"],
+  "index": ["index.ts"],
+  "saved_operations": ["restPedidoAuditoriaPorPedidoId"],
   "used_types": [
     "InventarioDetalle",
     "TotalesPrecioCostoOperacion",

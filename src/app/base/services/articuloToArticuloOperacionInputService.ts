@@ -1,65 +1,65 @@
 // noinspection PointlessBooleanExpressionJS
 
-import { ArticuloProps } from "../../interfaces/articulo.ts";
-import { ArticuloOperacionInputProps } from "../../interfaces/articuloOperacion.ts";
-import { ArticuloUnidadMedidaProps } from "../../interfaces/articuloUnidadMedida.ts";
-import { genRandomString, genReplaceEmpty } from "../../utils/helper.ts";
-import { MonedaParamsProps, TipoMontoProps } from "../interfaces/base.ts";
-import { procesarLoteYAlmacen } from "./loteAlmacenHelper.ts";
-import { transformarArticuloPrecioService } from "./transformarArticuloPrecioService.ts";
+import { ArticuloProps } from '../../interfaces/articulo.ts'
+import { ArticuloOperacionInputProps } from '../../interfaces/articuloOperacion.ts'
+import { ArticuloUnidadMedidaProps } from '../../interfaces/articuloUnidadMedida.ts'
+import { genRandomString, genReplaceEmpty } from '../../utils/helper.ts'
+import { MonedaParamsProps, TipoMontoProps } from '../interfaces/base.ts'
+import { procesarLoteYAlmacen } from './loteAlmacenHelper.ts'
+import { transformarArticuloPrecioService } from './transformarArticuloPrecioService.ts'
 
 /**
  * Estrategias de selección de lote
  */
 export enum MetodoSeleccionLote {
-  FEFO = "fefo", // First Expired First Out - Por fecha de vencimiento (más próximo a vencer)
-  FIFO = "fifo", // First In First Out - Por fecha de fabricación (más antiguo)
-  MANUAL = "manual", // Manual - Se requiere codigoLote
+  FEFO = 'fefo', // First Expired First Out - Por fecha de vencimiento (más próximo a vencer)
+  FIFO = 'fifo', // First In First Out - Por fecha de fabricación (más antiguo)
+  MANUAL = 'manual', // Manual - Se requiere codigoLote
 }
 
 interface OpcionesArticuloOperacion {
   // Asocia automaticamente el almacen mas proximo, default true
-  autoAlmacen?: boolean;
+  autoAlmacen?: boolean
   // En caso se requiera asociar un almacen especifico, default null
-  codigoAlmacen?: string;
+  codigoAlmacen?: string
   // Asocia Automaticamente un lote, default false
-  autoLote?: boolean;
+  autoLote?: boolean
   // En caso se requiera asociar un lote especifico, default null
-  codigoLote?: string;
+  codigoLote?: string
   // Metodo de selección de lote, default FEFO, (más próximo a vencer)
-  metodoSeleccionLote?: MetodoSeleccionLote;
+  metodoSeleccionLote?: MetodoSeleccionLote
   // Solo considera almacenes con stock > 0, default false
-  mostrarAlmacenConStock?: boolean;
+  mostrarAlmacenConStock?: boolean
   // Solo considera lotes con stock > 0, default false
-  mostrarLoteConStock?: boolean;
+  mostrarLoteConStock?: boolean
   // Cantidad de items por defecto, default 1
-  cantidad?: number;
+  cantidad?: number
   // Cantidad auxiliar que no cambia, default 1
-  cantidadOriginal?: number;
+  cantidadOriginal?: number
   // En caso se requiera sustituir el articuloUnidadMedida, default null
-  articuloUnidadMedida?: ArticuloUnidadMedidaProps;
+  articuloUnidadMedida?: ArticuloUnidadMedidaProps
   // En caso se requiera sustituir el detalleExtra, default ''
-  detalleExtra?: string;
+  detalleExtra?: string
   // En caso se requiera sustituir la nota, default ''
-  nota?: string;
+  nota?: string
   // En caso se requiera sustituir el nroItem, default null
-  nroItem?: number;
+  nroItem?: number
   // En caso se requiera agregar un descuento inicial
-  descuento?: number;
+  descuento?: number
   // En caso se requiera agregar el descuento porcentual
-  descuentoP?: number;
+  descuentoP?: number
   // En caso se requiera agregar un impuesto inicial
-  impuesto?: number;
+  impuesto?: number
   // Marca que se concatena con el id random generado
-  marca?: string;
+  marca?: string
   // Asocia el tipo de monto solicitado en el campo precio, costo, precio, delivery, etc... default precio
-  tipoMonto?: TipoMontoProps;
+  tipoMonto?: TipoMontoProps
   /**
    * Porcentaje de asignación financiera (0-100).
    * Uso exclusivo en Producción (DESPIECE / CONJUNTA) para prorratear el costo base.
    * En otras operaciones (Ventas/Compras) su valor es 0.
    */
-  porcentajeCosto?: number;
+  porcentajeCosto?: number
 }
 
 /**
@@ -87,44 +87,37 @@ export const articuloToArticuloOperacionInputService = (
     metodoSeleccionLote = MetodoSeleccionLote.FEFO,
     mostrarAlmacenConStock = false,
     mostrarLoteConStock = false,
-    detalleExtra = "",
-    nota = "",
+    detalleExtra = '',
+    nota = '',
     nroItem = null,
     descuento = 0,
     descuentoP = 0,
     impuesto = 0,
-    marca = "AOI",
-    tipoMonto = "precio",
+    marca = 'AOI',
+    tipoMonto = 'precio',
     porcentajeCosto = 0,
-  } = options || {};
+  } = options || {}
 
   // Determinar unidad de medida
   const articuloUnidadMedida =
-    options?.articuloUnidadMedida ??
-    articulo.articuloPrecioBase.articuloUnidadMedida;
+    options?.articuloUnidadMedida ?? articulo.articuloPrecioBase.articuloUnidadMedida
 
   // Buscamos el precio por unidad de medida
-  const articuloPrecio = [
-    articulo.articuloPrecioBase,
-    ...articulo.articuloPrecio,
-  ].find(
-    (p) =>
-      p.articuloUnidadMedida.codigoUnidadMedida ===
-      articuloUnidadMedida.codigoUnidadMedida,
-  );
+  const articuloPrecio = [articulo.articuloPrecioBase, ...articulo.articuloPrecio].find(
+    (p) => p.articuloUnidadMedida.codigoUnidadMedida === articuloUnidadMedida.codigoUnidadMedida,
+  )
 
   // Determinar precio según tipo de monto
-  const { precio, moneda, precioBase, delivery } =
-    transformarArticuloPrecioService(
-      articuloPrecio || articulo.articuloPrecioBase,
-      monedaVenta,
-    );
+  const { precio, moneda, precioBase, delivery } = transformarArticuloPrecioService(
+    articuloPrecio || articulo.articuloPrecioBase,
+    monedaVenta,
+  )
 
-  const cantidadFactor = articuloPrecio?.cantidadBase || 1;
+  const cantidadFactor = articuloPrecio?.cantidadBase || 1
 
-  let precioFinal = precio;
-  if (tipoMonto === "delivery") precioFinal = delivery;
-  if (tipoMonto === "costo") precioFinal = precioBase;
+  let precioFinal = precio
+  if (tipoMonto === 'delivery') precioFinal = delivery
+  if (tipoMonto === 'costo') precioFinal = precioBase
 
   // Procesar lote y almacén
   const { lote, almacen } =
@@ -138,7 +131,7 @@ export const articuloToArticuloOperacionInputService = (
           mostrarAlmacenConStock,
           mostrarLoteConStock,
         })
-      : { lote: null, almacen: null };
+      : { lote: null, almacen: null }
 
   // Construir el resultado
   return {
@@ -171,5 +164,5 @@ export const articuloToArticuloOperacionInputService = (
     nota,
     verificarStock: articulo.verificarStock,
     porcentajeCosto,
-  };
-};
+  }
+}

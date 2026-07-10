@@ -718,7 +718,7 @@ const RrDividirCuentaDialog: FunctionComponent<RrDividirCuentaDialogProps> = ({
                       ))}
                     </Box>
                   </Box>
-                  
+
                   {maxQty > 1 && isChecked ? (
                     <Box
                       sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}

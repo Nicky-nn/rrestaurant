@@ -1,76 +1,76 @@
-import { genRandomString } from "../utils/helper.ts";
-import { AlmacenProps } from "./almacen.ts";
-import { ArticuloPrecioOperacionApiInputProps } from "./articuloPrecio.ts";
-import { ArticuloUnidadMedidaProps } from "./articuloUnidadMedida.ts";
-import { ClaseArticuloProps } from "./claseArticulo.ts";
-import { GestionArticuloProps } from "./gestionArticulo.ts";
-import { GrupoArticuloOperacionProps } from "./grupoArticulo.ts";
-import { LoteInventarioApiInputProps, LoteProps } from "./lote.ts";
-import { MonedaProps } from "./monedaPrecio.ts";
-import { SinProductoServicioProps } from "./sin.interface.ts";
-import { TipoArticuloOperacionProps } from "./tipoArticulo.ts";
+import { genRandomString } from '../utils/helper.ts'
+import { AlmacenProps } from './almacen.ts'
+import { ArticuloPrecioOperacionApiInputProps } from './articuloPrecio.ts'
+import { ArticuloUnidadMedidaProps } from './articuloUnidadMedida.ts'
+import { ClaseArticuloProps } from './claseArticulo.ts'
+import { GestionArticuloProps } from './gestionArticulo.ts'
+import { GrupoArticuloOperacionProps } from './grupoArticulo.ts'
+import { LoteInventarioApiInputProps, LoteProps } from './lote.ts'
+import { MonedaProps } from './monedaPrecio.ts'
+import { SinProductoServicioProps } from './sin.interface.ts'
+import { TipoArticuloOperacionProps } from './tipoArticulo.ts'
 
 /**
  * @author isi-template
  */
 export interface ArticuloOperacionInputProps {
-  id: string;
-  nroItem: number | null;
-  articuloId: string;
-  codigoArticulo: string;
-  nombreArticulo: string;
-  tipoArticulo: TipoArticuloOperacionProps | null;
-  claseArticulo: ClaseArticuloProps | null;
-  grupoArticulo?: GrupoArticuloOperacionProps | null;
-  gestionArticulo: GestionArticuloProps | null;
-  almacen: AlmacenProps | null;
-  lote: LoteProps | null;
-  sinProductoServicio: SinProductoServicioProps | null;
-  articuloUnidadMedida: ArticuloUnidadMedidaProps | null;
+  id: string
+  nroItem: number | null
+  articuloId: string
+  codigoArticulo: string
+  nombreArticulo: string
+  tipoArticulo: TipoArticuloOperacionProps | null
+  claseArticulo: ClaseArticuloProps | null
+  grupoArticulo?: GrupoArticuloOperacionProps | null
+  gestionArticulo: GestionArticuloProps | null
+  almacen: AlmacenProps | null
+  lote: LoteProps | null
+  sinProductoServicio: SinProductoServicioProps | null
+  articuloUnidadMedida: ArticuloUnidadMedidaProps | null
   // Cantidad solo para front-end
-  cantidadOriginal: number;
+  cantidadOriginal: number
   /** Cantidad equivalente segun articuloUnidadMedida */
-  cantidadFactor: number;
-  cantidad: number;
-  descuento: number;
-  descuentoP: number; // descuento porcentaje
+  cantidadFactor: number
+  cantidad: number
+  descuento: number
+  descuentoP: number // descuento porcentaje
   /** Impuesto porcentual 0 - 100%, default 0 */
-  impuesto: number;
+  impuesto: number
   /** Costo o precioBase del articulo */
-  costo: number;
+  costo: number
   /** Dependiendo el tipoMonto, puede ser precioBase, precio, delivery, etc */
-  precio: number;
+  precio: number
   /** Costo anterior que no cambia en el tiempo, se registra en funciones de conversión */
-  costoAnterior?: number;
+  costoAnterior?: number
   /** Precio anterior que no cambia en el tiempo, se registra en funciones de conversión */
-  precioAnterior?: number;
-  moneda: MonedaProps | null;
-  detalleExtra: string | null;
-  nota: string | null;
-  verificarStock: boolean;
+  precioAnterior?: number
+  moneda: MonedaProps | null
+  detalleExtra: string | null
+  nota: string | null
+  verificarStock: boolean
   /**
    * Porcentaje de asignación financiera (0-100).
    * Uso exclusivo en Producción (DESPIECE / CONJUNTA) para prorratear el costo base.
    * En otras operaciones (Ventas/Compras) su valor es 0.
    */
-  porcentajeCosto?: number;
+  porcentajeCosto?: number
 }
 /**
  * @author isi-template
  */
 export interface ArticuloOperacionApiInputProps {
   /** Nro de item que se reenvia en caso de modificación */
-  nroItem?: number | null;
-  codigoArticulo: string;
-  codigoAlmacen: string;
-  codigoLote: string | null;
+  nroItem?: number | null
+  codigoArticulo: string
+  codigoAlmacen: string
+  codigoLote: string | null
   /** En caso de asociar multiples lotes */
-  lotes?: LoteInventarioApiInputProps[];
-  articuloPrecio: ArticuloPrecioOperacionApiInputProps;
-  detalleExtra: string | null;
-  nota: string | null;
-  notaRapida?: string[];
-  cortesia?: boolean;
+  lotes?: LoteInventarioApiInputProps[]
+  articuloPrecio: ArticuloPrecioOperacionApiInputProps
+  detalleExtra: string | null
+  nota: string | null
+  notaRapida?: string[]
+  cortesia?: boolean
 }
 
 /**
@@ -79,9 +79,9 @@ export interface ArticuloOperacionApiInputProps {
 export const ARTICULO_OPERACION_DEFAULTS: ArticuloOperacionInputProps = {
   id: genRandomString(10).toUpperCase(),
   nroItem: null,
-  articuloId: "",
-  codigoArticulo: "",
-  nombreArticulo: "",
+  articuloId: '',
+  codigoArticulo: '',
+  nombreArticulo: '',
   tipoArticulo: null,
   claseArticulo: null,
   grupoArticulo: null,
@@ -105,4 +105,4 @@ export const ARTICULO_OPERACION_DEFAULTS: ArticuloOperacionInputProps = {
   nota: null,
   verificarStock: false,
   porcentajeCosto: 0,
-};
+}

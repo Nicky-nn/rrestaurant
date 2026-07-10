@@ -173,18 +173,18 @@ const IngresoCajaDialog: FC<IngresoCajaDialogProps> = ({ open, onClose, cajaId, 
                       fontWeight: 700,
                       fontSize: '1.2rem',
                       py: 0.5,
-                    }
+                    },
                   }}
                 />
-                <IconButton 
-                  onClick={() => setOpenCalc(true)} 
+                <IconButton
+                  onClick={() => setOpenCalc(true)}
                   title="Calculadora de efectivo"
                   color="primary"
-                  sx={{ 
-                    bgcolor: (theme) => `${theme.palette.primary.main}1A`, 
+                  sx={{
+                    bgcolor: (theme) => `${theme.palette.primary.main}1A`,
                     borderRadius: 2,
                     width: 53,
-                    height: 53
+                    height: 53,
                   }}
                 >
                   <Calculate />

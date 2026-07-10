@@ -444,19 +444,50 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
         const isCortesia = p.cortesia || false
         if (isCortesia) return
 
+        // Usar total/subtotal del backend si calculó un TotalesGenerales o precio en el artículo directamente
+        if (typeof (p as any).subTotal === 'number') {
+          sub += (p as any).subTotal
+          return
+        }
+        if (typeof (p as any).totales?.subtotalNeto === 'number') {
+          sub += (p as any).totales.subtotalNeto
+          return
+        }
+
         const precio = p.articuloPrecio?.valor ?? 0
         const cantidad = p.articuloPrecio?.cantidad ?? p.articuloPrecioBase?.cantidad ?? 1
-        sub += Number(precio) * Number(cantidad)
+        let itemTotal = Number(precio) * Number(cantidad)
 
-        if (p.modificadores && Array.isArray(p.modificadores)) {
-          p.modificadores.forEach((m) => {
-            const mPrecio = m.articuloPrecio?.valor ?? 0
-            const mQty = m.articuloPrecio?.cantidad ?? 1
-            sub += Number(mPrecio) * Number(mQty)
-          })
+        // Cuando el producto viene del servidor (articuloId presente), articuloPrecio.valor
+        // ya incluye el precio de modificadores y variaciones de receta.
+        // Solo sumarlos si son datos locales (pedido nuevo, sin articuloId del servidor).
+        const esDelServidor = Boolean((p as any).articuloId)
+        if (!esDelServidor) {
+          if (p.modificadores && Array.isArray(p.modificadores)) {
+            p.modificadores.forEach((m) => {
+              const mPrecio = m.articuloPrecio?.valor ?? 0
+              const mQty = m.articuloPrecio?.cantidad ?? 1
+              itemTotal += Number(mPrecio) * Number(mQty)
+            })
+          }
+          if (p.variacionReceta && Array.isArray(p.variacionReceta)) {
+            p.variacionReceta.forEach((vr) => {
+              const vrPrecio = (vr.articuloPrecio as any)?.precio ?? 0
+              const vrQty = vr.articuloPrecio?.cantidad ?? (vr as any).articuloPrecioBase?.cantidad ?? 0
+              itemTotal += Number(vrPrecio) * Number(vrQty)
+            })
+          }
         }
+
+        sub += itemTotal
       })
     }
+
+    // Fallback absoluto al back-end. A veces la mesa devuelve el subtotalNeto calculado completo.
+    if (sub === 0 && (mesaSeleccionada?.pedido?.totales as any)?.subtotalNeto) {
+      return (mesaSeleccionada!.pedido!.totales as any).subtotalNeto
+    }
+
     return sub
   }, [mesaSeleccionada])
 
@@ -1137,7 +1168,9 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           <Button
             variant="contained"
             size="large"
-            disabled={!mesaSeleccionada || !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:CANCELAR_PEDIDO')}
+            disabled={
+              !mesaSeleccionada || !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:CANCELAR_PEDIDO')
+            }
             onClick={handleCancelar}
             sx={{
               flex: 1,

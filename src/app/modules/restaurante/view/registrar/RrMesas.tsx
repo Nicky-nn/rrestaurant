@@ -174,7 +174,7 @@ const MesaCard = memo(
             opacity: isDark ? 0.2 : 0.1,
             fontWeight: 'bold',
             fontSize: showAsGrid ? 70 : 60,
-            color: isDark ? '#ffffff' : (estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000'),
+            color: isDark ? '#ffffff' : estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000',
           }}
         >
           {mesa.value}
@@ -188,7 +188,7 @@ const MesaCard = memo(
             right: 5,
             opacity: isDark ? 0.2 : 0.1,
             fontSize: showAsGrid ? 55 : 45,
-            color: isDark ? '#ffffff' : (estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000'),
+            color: isDark ? '#ffffff' : estado === ESTADO_MESA.LIBRE ? '#006400' : '#7A0000',
           }}
         />
 

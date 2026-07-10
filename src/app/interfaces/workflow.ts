@@ -4,13 +4,13 @@
  * */
 export interface WorkflowProps {
   /** Estado anterior, si es inicial devuelve null o NINGUNO */
-  estadoAnterior: string | null;
+  estadoAnterior: string | null
   /** Nuevo estado segun las transiciones delimitadas por el backend */
-  estadoNuevo: string;
+  estadoNuevo: string
   /** Fecha de cambio de estado */
-  fecha: string;
+  fecha: string
   /** Usuario que realizó el cambio de estado */
-  usuario: string;
+  usuario: string
   /** Comentario o motivo del cambio de estado */
-  comentario: string;
+  comentario: string
 }
