@@ -6,7 +6,7 @@ import { impresorasRoutesMap } from './modules/impresoras/impresorasRoutes'
 import { ncdGestionRoutesMap } from './modules/notaCreditoDebito/notaCreditoDebitoRoutes'
 import { reporteRoutesMap } from './modules/reporte/reporteRoutes'
 import { restauranteRoutesMap } from './modules/restaurante/restauranteRoutes'
-
+import { ecommerceRoutesMap } from './modules/ecommerce/ecommerceRoutes'
 export interface NavigationProps {
   name: string
   path?: string
@@ -126,6 +126,11 @@ export const navigations: NavigationProps[] = [
         path: adsRoutesMap.gestion.path,
       },
     ],
+  },
+  {
+    name: 'Ecomerce',
+    icon: 'storefront',
+    path: ecommerceRoutesMap.ecommerce.path,
   },
 ]
 

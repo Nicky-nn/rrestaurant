@@ -13,6 +13,7 @@ import impresorasRoutes from '../modules/impresoras/impresorasRoutes'
 import ncdGestionRoutes from '../modules/notaCreditoDebito/notaCreditoDebitoRoutes'
 import reporteRoutes from '../modules/reporte/reporteRoutes'
 import restaurantRoutes from '../modules/restaurante/restauranteRoutes'
+import ecommerceRoutes from '../modules/ecommerce/ecommerceRoutes'
 
 export const appRoutes = [
   {
@@ -31,6 +32,7 @@ export const appRoutes = [
       ...impresorasRoutes,
       ...reporteRoutes,
       ...ncdGestionRoutes,
+      ...ecommerceRoutes,
     ],
   },
   ...sessionRoutes,

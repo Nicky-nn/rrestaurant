@@ -1,6 +1,6 @@
 import CallSplitOutlinedIcon from '@mui/icons-material/CallSplitOutlined'
+import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
-import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import RoomServiceOutlinedIcon from '@mui/icons-material/RoomServiceOutlined'
 import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
@@ -26,6 +26,7 @@ import { useSecurity } from '../../../../base/contexts/SecurityContext'
 import useAuth from '../../../../base/hooks/useAuth'
 import { MyGraphQlError } from '../../../../base/services/GraphqlError'
 import { SecureComponent } from '../../../../security'
+import { useChangeOrderStatus } from '../../../ecommerce/mutations/useChangeOrderStatus'
 import PdfViewerDialog from '../../../reporte/components/PdfViewerDialog'
 import { MesaUI } from '../../interfaces/mesa.interface'
 import { useRestPedidoActualizar } from '../../mutations/useRestPedidoActualizar'
@@ -59,6 +60,7 @@ interface RrAccionesProps {
   onCancel?: () => void
   onClear?: () => void
   onDescuentoChange?: () => void
+  isEcommerce?: boolean
 }
 
 interface PrinterSettings {
@@ -133,6 +135,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   onCancel,
   onClear,
   onDescuentoChange,
+  isEcommerce = false,
 }) => {
   const theme = useTheme()
   const { user } = useAuth()
@@ -148,9 +151,15 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
   const { mutateAsync: finalizarPedido, isPending: isFinalizarPending } = useRestPedidoFinalizar()
   const { mutateAsync: facturarPedido, isPending: isFacturarPending } = useRestPedidoFacturaRegistro()
   const { sendFactura } = useEnviarFacturaWhatsapp()
+  const { mutateAsync: changeOrderStatus, isPending: isChangeStatusPending } = useChangeOrderStatus()
 
   const isPending =
-    isRegistrarPending || isActualizarPending || isCancelarPending || isFinalizarPending || isFacturarPending
+    isRegistrarPending ||
+    isActualizarPending ||
+    isCancelarPending ||
+    isFinalizarPending ||
+    isFacturarPending ||
+    isChangeStatusPending
 
   const [loadingMessage, setLoadingMessage] = useState('Actualizando Pedido...')
 
@@ -160,7 +169,15 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
     else if (isFacturarPending) setLoadingMessage('Facturando Pedido...')
     else if (isFinalizarPending) setLoadingMessage('Finalizando Pedido...')
     else if (isActualizarPending) setLoadingMessage('Actualizando Pedido...')
-  }, [isRegistrarPending, isCancelarPending, isFacturarPending, isFinalizarPending, isActualizarPending])
+    else if (isChangeStatusPending) setLoadingMessage('Cambiando estado...')
+  }, [
+    isRegistrarPending,
+    isCancelarPending,
+    isFacturarPending,
+    isFinalizarPending,
+    isActualizarPending,
+    isChangeStatusPending,
+  ])
 
   const handleRegistrar = async () => {
     if (!mesaSeleccionada?.pedido) return false
@@ -1042,205 +1059,299 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
       {/* Acciones */}
       <Stack spacing={1}>
-        <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            size="large"
-            disabled={
-              !mesaSeleccionada?.pedido?._id ||
-              mesaSeleccionada.pedido._id.startsWith('nuevo-') ||
-              !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:IMPRIMIR_CUENTA')
-            }
-            onClick={handleImprimirCuenta}
-            onContextMenu={handleCuentaContextMenu}
-            sx={{
-              flex: 1,
-              flexDirection: 'column',
-              p: 1.5,
-              borderColor: 'divider',
-              color: 'text.secondary',
-              bgcolor: 'background.paper',
-              borderRadius: 3,
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              '&:hover': {
-                bgcolor: 'action.hover',
-                borderColor: 'divider',
-              },
-            }}
-          >
-            <ReceiptLongOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
-            Cuenta
-          </Button>
-          <Button
-            variant="outlined"
-            size="large"
-            disabled={
-              !mesaSeleccionada?.pedido?._id ||
-              mesaSeleccionada.pedido._id.startsWith('nuevo-') ||
-              !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:DIVIDIR_CUENTA')
-            }
-            onClick={handleOpenDividir}
-            sx={{
-              flex: 1,
-              flexDirection: 'column',
-              p: 1.5,
-              borderColor: 'divider',
-              color: 'text.secondary',
-              bgcolor: 'background.paper',
-              borderRadius: 3,
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              '&:hover': {
-                bgcolor: 'action.hover',
-                borderColor: 'divider',
-              },
-            }}
-          >
-            <CallSplitOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
-            Dividir
-          </Button>
-          <Button
-            variant="outlined"
-            size="large"
-            disabled={
-              !mesaSeleccionada?.pedido?._id ||
-              mesaSeleccionada.pedido._id.startsWith('nuevo-') ||
-              !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:TRANFERIR_MESA')
-            }
-            onClick={handleOpenTransferir}
-            sx={{
-              flex: 1,
-              flexDirection: 'column',
-              p: 1.5,
-              borderColor: 'divider',
-              color: 'text.secondary',
-              bgcolor: 'background.paper',
-              borderRadius: 3,
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              '&:hover': {
-                bgcolor: 'action.hover',
-                borderColor: 'divider',
-              },
-            }}
-          >
-            <SyncAltOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
-            Transferir
-          </Button>
-        </Stack>
+        {!isEcommerce ? (
+          <>
+            <Stack direction="row" spacing={1}>
+              <Button
+                variant="outlined"
+                size="large"
+                disabled={
+                  !mesaSeleccionada?.pedido?._id ||
+                  mesaSeleccionada.pedido._id.startsWith('nuevo-') ||
+                  !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:IMPRIMIR_CUENTA')
+                }
+                onClick={handleImprimirCuenta}
+                onContextMenu={handleCuentaContextMenu}
+                sx={{
+                  flex: 1,
+                  flexDirection: 'column',
+                  p: 1.5,
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  bgcolor: 'background.paper',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                    borderColor: 'divider',
+                  },
+                }}
+              >
+                <ReceiptLongOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                Cuenta
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                disabled={
+                  !mesaSeleccionada?.pedido?._id ||
+                  mesaSeleccionada.pedido._id.startsWith('nuevo-') ||
+                  !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:DIVIDIR_CUENTA')
+                }
+                onClick={handleOpenDividir}
+                sx={{
+                  flex: 1,
+                  flexDirection: 'column',
+                  p: 1.5,
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  bgcolor: 'background.paper',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                    borderColor: 'divider',
+                  },
+                }}
+              >
+                <CallSplitOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                Dividir
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                disabled={
+                  !mesaSeleccionada?.pedido?._id ||
+                  mesaSeleccionada.pedido._id.startsWith('nuevo-') ||
+                  !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:TRANFERIR_MESA')
+                }
+                onClick={handleOpenTransferir}
+                sx={{
+                  flex: 1,
+                  flexDirection: 'column',
+                  p: 1.5,
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  bgcolor: 'background.paper',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                    borderColor: 'divider',
+                  },
+                }}
+              >
+                <SyncAltOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                Transferir
+              </Button>
+            </Stack>
 
-        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-          <Button
-            variant="contained"
-            size="large"
-            disabled={!mesaSeleccionada || !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:CANCELAR_PEDIDO')}
-            onClick={handleCancelar}
-            sx={{
-              flex: 1,
-              flexDirection: 'column',
-              p: 1.5,
-              bgcolor: alpha(theme.palette.error.main, 0.08),
-              color: 'error.main',
-              borderRadius: 3,
-              textTransform: 'none',
-              fontWeight: 800,
-              fontSize: '0.85rem',
-              boxShadow: 'none',
-              border: '1px solid',
-              borderColor: 'transparent',
-              '&:hover': {
-                bgcolor: alpha(theme.palette.error.main, 0.12),
+            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+              <Button
+                variant="contained"
+                size="large"
+                disabled={
+                  !mesaSeleccionada ||
+                  !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:CANCELAR_PEDIDO')
+                }
+                onClick={handleCancelar}
+                sx={{
+                  flex: 1,
+                  flexDirection: 'column',
+                  p: 1.5,
+                  bgcolor: alpha(theme.palette.error.main, 0.08),
+                  color: 'error.main',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  boxShadow: 'none',
+                  border: '1px solid',
+                  borderColor: 'transparent',
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.error.main, 0.12),
+                    boxShadow: 'none',
+                  },
+                  '&.Mui-disabled': {
+                    bgcolor: 'action.disabledBackground',
+                  },
+                }}
+              >
+                <DeleteOutlineOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                Cancelar
+              </Button>
+              <Button
+                variant="contained"
+                size="large"
+                disabled={
+                  !mesaSeleccionada ||
+                  (!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')
+                    ? !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:REGISTRAR_PEDIDO')
+                    : !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:ACTUALIZAR_PEDIDO'))
+                }
+                sx={{
+                  flex: 1,
+                  flexDirection: 'column',
+                  p: 1.5,
+                  bgcolor: '#f0f4ff', // Light bluish purple
+                  color: '#4f46e5', // Indigo color
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  boxShadow: 'none',
+                  border: '1px solid',
+                  borderColor: 'transparent',
+                  '&:hover': {
+                    bgcolor: '#e0e7ff',
+                    boxShadow: 'none',
+                  },
+                  '&.Mui-disabled': {
+                    bgcolor: 'action.disabledBackground',
+                  },
+                }}
+                onClick={handleRegistrar}
+              >
+                <RoomServiceOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                {isPending
+                  ? 'Cargando...'
+                  : !mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')
+                    ? 'Registrar'
+                    : 'Actualizar'}
+              </Button>
+              <Button
+                variant="contained"
+                size="large"
+                disabled={
+                  !mesaSeleccionada ||
+                  !mesaSeleccionada.pedido ||
+                  !mesaSeleccionada.pedido.productos ||
+                  mesaSeleccionada.pedido.productos.length === 0 ||
+                  !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:COBRAR')
+                }
+                onClick={handleOpenCobro}
+                sx={{
+                  flex: 1,
+                  flexDirection: 'column',
+                  p: 1.5,
+                  bgcolor: '#2e7d32', // Solid Green
+                  color: '#ffffff',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  boxShadow: '0 4px 14px 0 rgba(46, 125, 50, 0.39)', // Nice green shadow
+                  border: '1px solid',
+                  borderColor: 'transparent',
+                  '&:hover': {
+                    bgcolor: '#1b5e20',
+                    boxShadow: '0 6px 20px rgba(46, 125, 50, 0.4)',
+                  },
+                  '&.Mui-disabled': {
+                    bgcolor: 'action.disabledBackground',
+                    color: 'action.disabled',
+                  },
+                }}
+              >
+                Cobrar
+              </Button>
+            </Stack>
+          </>
+        ) : (
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="contained"
+              size="large"
+              disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+              onClick={async () => {
+                if (!mesaSeleccionada?.pedido?._id) return
+                const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
+                try {
+                  await changeOrderStatus({ id: mesaSeleccionada.pedido._id, status: 'PREPARANDO', shop })
+                  if (onClear) onClear()
+                  if (onSuccess) onSuccess()
+                } catch (error) {
+                  console.error(error)
+                  showError(new Error('Error al cambiar estado'))
+                }
+              }}
+              sx={{
+                flex: 1,
+                flexDirection: 'column',
+                p: 1.5,
+                bgcolor: '#f0f4ff', // Light bluish purple
+                color: '#4f46e5', // Indigo color
+                borderRadius: 3,
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: '0.85rem',
                 boxShadow: 'none',
-              },
-              '&.Mui-disabled': {
-                bgcolor: 'action.disabledBackground',
-              },
-            }}
-          >
-            <DeleteOutlineOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            size="large"
-            disabled={
-              !mesaSeleccionada ||
-              (!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')
-                ? !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:REGISTRAR_PEDIDO')
-                : !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:ACTUALIZAR_PEDIDO'))
-            }
-            sx={{
-              flex: 1,
-              flexDirection: 'column',
-              p: 1.5,
-              bgcolor: '#f0f4ff', // Light bluish purple
-              color: '#4f46e5', // Indigo color
-              borderRadius: 3,
-              textTransform: 'none',
-              fontWeight: 800,
-              fontSize: '0.85rem',
-              boxShadow: 'none',
-              border: '1px solid',
-              borderColor: 'transparent',
-              '&:hover': {
-                bgcolor: '#e0e7ff',
-                boxShadow: 'none',
-              },
-              '&.Mui-disabled': {
-                bgcolor: 'action.disabledBackground',
-              },
-            }}
-            onClick={handleRegistrar}
-          >
-            <RoomServiceOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
-            {isPending
-              ? 'Cargando...'
-              : !mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')
-                ? 'Registrar'
-                : 'Actualizar'}
-          </Button>
-          <Button
-            variant="contained"
-            size="large"
-            disabled={
-              !mesaSeleccionada ||
-              !mesaSeleccionada.pedido ||
-              !mesaSeleccionada.pedido.productos ||
-              mesaSeleccionada.pedido.productos.length === 0 ||
-              !hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:COBRAR')
-            }
-            onClick={handleOpenCobro}
-            sx={{
-              flex: 1,
-              flexDirection: 'column',
-              p: 1.5,
-              bgcolor: '#2e7d32', // Solid Green
-              color: '#ffffff',
-              borderRadius: 3,
-              textTransform: 'none',
-              fontWeight: 800,
-              fontSize: '0.85rem',
-              boxShadow: '0 4px 14px 0 rgba(46, 125, 50, 0.39)', // Nice green shadow
-              border: '1px solid',
-              borderColor: 'transparent',
-              '&:hover': {
-                bgcolor: '#1b5e20',
-                boxShadow: '0 6px 20px rgba(46, 125, 50, 0.4)',
-              },
-              '&.Mui-disabled': {
-                bgcolor: 'action.disabledBackground',
-                color: 'action.disabled',
-              },
-            }}
-          >
-            <PaymentsOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
-            Cobrar
-          </Button>
-        </Stack>
+                border: '1px solid',
+                borderColor: 'transparent',
+                '&:hover': {
+                  bgcolor: '#e0e7ff',
+                  boxShadow: 'none',
+                },
+                '&.Mui-disabled': {
+                  bgcolor: 'action.disabledBackground',
+                },
+              }}
+            >
+              <RoomServiceOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+              Cocinar
+            </Button>
+            <Button
+              variant="contained"
+              size="large"
+              disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+              onClick={async () => {
+                if (!mesaSeleccionada?.pedido?._id) return
+                const isDelivery = mesaSeleccionada.pedido.mesa?.ubicacion === 'DELIVERY'
+                const status = isDelivery ? 'ENTREGADO' : 'LISTO_PARA_RECOGER'
+                const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
+                try {
+                  await changeOrderStatus({ id: mesaSeleccionada.pedido._id, status, shop })
+                  if (onClear) onClear()
+                  if (onSuccess) onSuccess()
+                } catch (error) {
+                  console.error(error)
+                  showError(new Error('Error al cambiar estado'))
+                }
+              }}
+              sx={{
+                flex: 1,
+                flexDirection: 'column',
+                p: 1.5,
+                bgcolor: '#2e7d32', // Solid Green
+                color: '#ffffff',
+                borderRadius: 3,
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: '0.85rem',
+                boxShadow: '0 4px 14px 0 rgba(46, 125, 50, 0.39)', // Nice green shadow
+                border: '1px solid',
+                borderColor: 'transparent',
+                '&:hover': {
+                  bgcolor: '#1b5e20',
+                  boxShadow: '0 6px 20px rgba(46, 125, 50, 0.4)',
+                },
+                '&.Mui-disabled': {
+                  bgcolor: 'action.disabledBackground',
+                  color: 'action.disabled',
+                },
+              }}
+            >
+              <CheckCircleOutlineOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+              {mesaSeleccionada?.pedido?.mesa?.ubicacion === 'DELIVERY' ? 'Entregado' : 'Listo'}
+            </Button>
+          </Stack>
+        )}
       </Stack>
 
       {/* Dialogo de cobro */}

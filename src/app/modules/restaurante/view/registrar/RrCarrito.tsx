@@ -90,6 +90,7 @@ interface RrCarritoProps {
   onRemoveProduct?: (index: number) => void
   onClientChange?: (cliente: any) => void
   onNotaChange?: (nota: string) => void
+  onTipoPedidoChange?: (tipo: TipoPedido) => void
   isPedidoDirty?: boolean
 }
 
@@ -99,6 +100,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
   onRemoveProduct,
   onClientChange,
   onNotaChange,
+  onTipoPedidoChange,
   isPedidoDirty = false,
 }) => {
   const theme = useTheme()
@@ -300,20 +302,13 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
         ? DeliveryDiningOutlinedIcon
         : StorefrontOutlinedIcon
 
-  const titleText =
-    tipoPedido === TIPO_PEDIDO.LLEVAR
-      ? 'Para Llevar'
-      : tipoPedido === TIPO_PEDIDO.DELIVERY
-        ? `Delivery – ${opcionesLlevar?.metodoDelivery === 'PEDIDOS_YA' ? 'PedidosYa' : 'Propio'}`
-        : mesaSeleccionada?.label || 'Mesa no seleccionada'
+  const titleText = mesaSeleccionada?.label || 'Mesa no seleccionada'
 
   const subtitleText =
     tipoPedido === TIPO_PEDIDO.LLEVAR
-      ? 'Pedido para recoger'
+      ? `Para Llevar – Área: ${nombreArea}`
       : tipoPedido === TIPO_PEDIDO.DELIVERY
-        ? opcionesLlevar?.metodoDelivery === 'PEDIDOS_YA' && opcionesLlevar?.nombreRepartidor
-          ? `Repartidor: ${opcionesLlevar.nombreRepartidor}`
-          : 'Envío a domicilio'
+        ? `Delivery ${opcionesLlevar?.metodoDelivery === 'PEDIDOS_YA' ? '(PedidosYa)' : '(Propio)'} – Área: ${nombreArea}`
         : `Área: ${nombreArea}`
 
   return (
@@ -485,10 +480,18 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
             open={openOpciones}
             onClose={() => setOpenOpciones(false)}
             tipoPedido={tipoPedido}
-            setTipoPedido={setTipoPedido}
+            setTipoPedido={(tipo) => {
+              setTipoPedido(tipo)
+              if (onTipoPedidoChange) onTipoPedidoChange(tipo)
+            }}
             mesaSeleccionada={mesaSeleccionada}
             opcionesLlevar={opcionesLlevar}
-            setOpcionesLlevar={setOpcionesLlevar}
+            setOpcionesLlevar={(opciones) => {
+              setOpcionesLlevar(opciones)
+              if (opciones?.cliente && onClientChange) {
+                onClientChange(opciones.cliente)
+              }
+            }}
           />
 
           {/* Modal de edición de complementos desde el carrito */}
@@ -954,7 +957,10 @@ const CartItem = ({
                 decimalScale={2}
                 min={0}
                 disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:EDITAR_PRECIO_ITEM')}
-                sx={{ bgcolor: 'background.default', '& .MuiOutlinedInput-input': { p: 1, fontSize: '0.85rem' } }}
+                sx={{
+                  bgcolor: 'background.default',
+                  '& .MuiOutlinedInput-input': { p: 1, fontSize: '0.85rem' },
+                }}
               />
             </Box>
             <Box sx={{ flex: 1 }}>
@@ -992,7 +998,10 @@ const CartItem = ({
                   decimalScale={2}
                   min={0}
                   disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:EDITAR_DESCUENTO_ITEM')}
-                  sx={{ bgcolor: 'background.default', '& .MuiOutlinedInput-input': { p: 1, fontSize: '0.85rem' } }}
+                  sx={{
+                    bgcolor: 'background.default',
+                    '& .MuiOutlinedInput-input': { p: 1, fontSize: '0.85rem' },
+                  }}
                 />
               )}
             </Box>
@@ -1016,7 +1025,11 @@ const CartItem = ({
               placeholder="Ej. Sin sal, extra mayonesa..."
               value={nota}
               onChange={(e) => setNota(e.target.value)}
-              sx={{ bgcolor: 'background.default', fontSize: '0.85rem', '& .MuiOutlinedInput-input': { p: 1 } }}
+              sx={{
+                bgcolor: 'background.default',
+                fontSize: '0.85rem',
+                '& .MuiOutlinedInput-input': { p: 1 },
+              }}
             />
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>

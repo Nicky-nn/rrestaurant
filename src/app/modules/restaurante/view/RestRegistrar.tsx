@@ -808,6 +808,21 @@ const RestRegistrar: FunctionComponent = () => {
     })
   }, [])
 
+  const handleTipoPedidoChange = useCallback((tipo: string) => {
+    setIsPedidoDirty(true)
+    setMesaSeleccionada((prev) => {
+      if (!prev) return prev
+      const pedidoActual = prev.pedido || { productos: [] }
+      return {
+        ...prev,
+        pedido: {
+          ...pedidoActual,
+          tipo,
+        } as any,
+      }
+    })
+  }, [])
+
   const cantidadItemsCarrito = mesaSeleccionada?.pedido?.productos?.length ?? 0
 
   return (
@@ -868,6 +883,7 @@ const RestRegistrar: FunctionComponent = () => {
               onRemoveProduct={handleRemoveProduct}
               onClientChange={handleClientChange}
               onNotaChange={handleNotaChange}
+              onTipoPedidoChange={handleTipoPedidoChange}
               isPedidoDirty={isPedidoDirty}
             />
           </Box>
