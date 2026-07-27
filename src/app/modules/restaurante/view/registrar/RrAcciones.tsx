@@ -2,8 +2,10 @@ import CallSplitOutlinedIcon from '@mui/icons-material/CallSplitOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
+import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined'
 import RoomServiceOutlinedIcon from '@mui/icons-material/RoomServiceOutlined'
 import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
+import QrCode2OutlinedIcon from '@mui/icons-material/QrCode2Outlined'
 import {
   alpha,
   Backdrop,
@@ -26,6 +28,7 @@ import { useSecurity } from '../../../../base/contexts/SecurityContext'
 import useAuth from '../../../../base/hooks/useAuth'
 import { MyGraphQlError } from '../../../../base/services/GraphqlError'
 import { SecureComponent } from '../../../../security'
+import { useQrDeliveryPdf } from '../../../ecommerce/hooks/useQrDeliveryPdf'
 import { useChangeOrderStatus } from '../../../ecommerce/mutations/useChangeOrderStatus'
 import PdfViewerDialog from '../../../reporte/components/PdfViewerDialog'
 import { MesaUI } from '../../interfaces/mesa.interface'
@@ -446,7 +449,17 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           codigoPuntoVenta: user.puntoVenta.codigo,
         },
       })
-      console.log('Pedido cancelado exitosamente')
+      console.log('Pedido cancelado exitosamente en Isicore')
+
+      // Sincronizar cancelación en nuestro Inbox
+      try {
+        const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
+        await changeOrderStatus({ id: pedido._id, status: 'CANCELADO', shop })
+        console.log('Pedido cancelado exitosamente en Inbox')
+      } catch (err) {
+        console.error('Error al sincronizar cancelación con Inbox:', err)
+      }
+
       if (onCancel) onCancel()
     } catch (error) {
       console.error('Error al cancelar pedido', error)
@@ -743,12 +756,25 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       setPagosRealizados([])
 
       // Imprimir Estado de Cuenta automáticamente si está configurado
-      if (debeImprimirEstadoCuentaAuto()) {
+      if (!isEcommerce && debeImprimirEstadoCuentaAuto()) {
         try {
           await imprimirEstadoCuenta(pedido, descuento + giftcard, getEstadoCuentaPrinter())
         } catch (err) {
           console.error('Error al imprimir estado de cuenta', err)
         }
+      }
+
+      const isDeliveryOrder = pedido.mesa?.ubicacion === 'DELIVERY' || pedido.tipo === 'DELIVERY'
+      if (isEcommerce) {
+        try {
+          const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
+          if (isDeliveryOrder && ['PREPARANDO', 'EN_PROCESO'].includes(pedido.state || '')) {
+            // Al cobrar un pedido de delivery en preparación, pasa automáticamente a ESPERANDO_DELIVERY
+            await changeOrderStatus({ id: pedido._id!, status: 'ESPERANDO_DELIVERY', shop })
+          } else if (!isDeliveryOrder && ['EN_CAMINO', 'LISTO_PARA_RECOGER', 'LISTO', 'PENDIENTE', 'EN_PROCESO'].includes(pedido.state || '')) {
+            await changeOrderStatus({ id: pedido._id!, status: 'ENTREGADO', shop })
+          }
+        } catch (e) { console.error('Error changing ecommerce status', e) }
       }
 
       if (onClear) onClear()
@@ -868,7 +894,7 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       setPagosRealizados([])
 
       // Imprimir Estado de Cuenta automáticamente si está configurado
-      if (debeImprimirEstadoCuentaAuto()) {
+      if (!isEcommerce && debeImprimirEstadoCuentaAuto()) {
         try {
           await imprimirEstadoCuenta(pedido, descuento + giftcard, getEstadoCuentaPrinter())
         } catch (err) {
@@ -881,6 +907,18 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
       const pdfUrl = facturaResponse?.factura?.representacionGrafica?.pdf || ''
       setFacturaPdfUrl(pdfUrl)
+
+      const isDeliveryOrder = pedido.mesa?.ubicacion === 'DELIVERY' || pedido.tipo === 'DELIVERY'
+      if (isEcommerce) {
+        try {
+          const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
+          if (isDeliveryOrder && ['PREPARANDO', 'EN_PROCESO'].includes(pedido.state || '')) {
+            await changeOrderStatus({ id: pedido._id!, status: 'EN_CAMINO', shop })
+          } else if (!isDeliveryOrder && ['EN_CAMINO', 'LISTO_PARA_RECOGER', 'LISTO', 'PENDIENTE', 'EN_PROCESO'].includes(pedido.state || '')) {
+            await changeOrderStatus({ id: pedido._id!, status: 'ENTREGADO', shop })
+          }
+        } catch (e) { console.error('Error changing ecommerce status', e) }
+      }
 
       setOpenFacturacionExitosaDialog(true)
 
@@ -915,6 +953,28 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
 
   const [pagosRealizados, setPagosRealizados] = useState<PagoRealizado[]>([])
   const { imprimirComanda, imprimirEstadoCuenta, imprimirFactura, generarUrlComanda } = useComandaPdf()
+  const { generateQrPdfUrl, pdfUrl: qrPdfUrl, clearPdfUrl: clearQrPdfUrl } = useQrDeliveryPdf()
+
+  // Handler manual del botón "Comanda"
+  const handleImprimirComanda = async () => {
+    if (!mesaSeleccionada?.pedido) return
+    const { pedido } = mesaSeleccionada
+    if (!pedido._id || pedido._id.startsWith('nuevo-')) return
+
+    let pedidoActual = pedido
+    if (isPedidoDirty) {
+      const response = await handleRegistrar()
+      if (!response) return
+      if (onSuccess) onSuccess(response)
+      pedidoActual = response as typeof pedido
+    }
+
+    try {
+      await imprimirComanda(pedidoActual, getComandaPrinter())
+    } catch (err) {
+      showError(new MyGraphQlError(err instanceof Error ? err : new Error('Error al imprimir comanda')))
+    }
+  }
 
   // Handler manual del botón "Cuenta" — guarda si hay cambios y luego imprime Estado de Cuenta
   const handleImprimirCuenta = async () => {
@@ -938,6 +998,18 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
       showError(
         new MyGraphQlError(err instanceof Error ? err : new Error('Error al imprimir estado de cuenta')),
       )
+    }
+  }
+
+  const handleImprimirQrDelivery = async () => {
+    if (!mesaSeleccionada?.pedido) return
+    const { pedido } = mesaSeleccionada
+    if (!pedido._id || pedido._id.startsWith('nuevo-')) return
+
+    try {
+      await generateQrPdfUrl(pedido, user?.miEmpresa?.tienda)
+    } catch (err) {
+      showError(new MyGraphQlError(err instanceof Error ? err : new Error('Error al generar QR de Delivery')))
     }
   }
 
@@ -1259,104 +1331,305 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
                   },
                 }}
               >
+                <PaymentsOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
                 Cobrar
               </Button>
             </Stack>
           </>
         ) : (
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant="contained"
-              size="large"
-              disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
-              onClick={async () => {
-                if (!mesaSeleccionada?.pedido?._id) return
-                const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
-                try {
-                  await changeOrderStatus({ id: mesaSeleccionada.pedido._id, status: 'PREPARANDO', shop })
-                  if (onClear) onClear()
-                  if (onSuccess) onSuccess()
-                } catch (error) {
-                  console.error(error)
-                  showError(new Error('Error al cambiar estado'))
-                }
-              }}
-              sx={{
-                flex: 1,
-                flexDirection: 'column',
-                p: 1.5,
-                bgcolor: '#f0f4ff', // Light bluish purple
-                color: '#4f46e5', // Indigo color
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 800,
-                fontSize: '0.85rem',
-                boxShadow: 'none',
-                border: '1px solid',
-                borderColor: 'transparent',
-                '&:hover': {
-                  bgcolor: '#e0e7ff',
+          <Box>
+            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+              <Button
+                variant="outlined"
+                size="large"
+                disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+                onClick={handleImprimirComanda}
+                sx={{
+                  flex: 1,
+                  flexDirection: 'column',
+                  p: 1.5,
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  bgcolor: 'background.paper',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                }}
+              >
+                <ReceiptLongOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                Comanda
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+                onClick={handleImprimirCuenta}
+                sx={{
+                  flex: 1,
+                  flexDirection: 'column',
+                  p: 1.5,
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  bgcolor: 'background.paper',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                }}
+              >
+                <ReceiptLongOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                Nota Venta
+              </Button>
+              {isEcommerce && (
+                <Button
+                  variant="outlined"
+                  size="large"
+                  disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+                  onClick={handleImprimirQrDelivery}
+                  sx={{
+                    flex: 1,
+                    flexDirection: 'column',
+                    p: 1.5,
+                    borderColor: 'divider',
+                    color: 'text.secondary',
+                    bgcolor: 'background.paper',
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  <QrCode2OutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                  QR
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                size="large"
+                disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+                onClick={handleCancelar}
+                sx={{
+                  flex: 1,
+                  flexDirection: 'column',
+                  p: 1.5,
+                  bgcolor: alpha(theme.palette.error.main, 0.08),
+                  color: 'error.main',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
                   boxShadow: 'none',
-                },
-                '&.Mui-disabled': {
-                  bgcolor: 'action.disabledBackground',
-                },
-              }}
-            >
-              <RoomServiceOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
-              Cocinar
-            </Button>
-            <Button
-              variant="contained"
-              size="large"
-              disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
-              onClick={async () => {
-                if (!mesaSeleccionada?.pedido?._id) return
-                const isDelivery = mesaSeleccionada.pedido.mesa?.ubicacion === 'DELIVERY'
-                const status = isDelivery ? 'ENTREGADO' : 'LISTO_PARA_RECOGER'
-                const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
-                try {
-                  await changeOrderStatus({ id: mesaSeleccionada.pedido._id, status, shop })
-                  if (onClear) onClear()
-                  if (onSuccess) onSuccess()
-                } catch (error) {
-                  console.error(error)
-                  showError(new Error('Error al cambiar estado'))
-                }
-              }}
-              sx={{
-                flex: 1,
-                flexDirection: 'column',
-                p: 1.5,
-                bgcolor: '#2e7d32', // Solid Green
-                color: '#ffffff',
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 800,
-                fontSize: '0.85rem',
-                boxShadow: '0 4px 14px 0 rgba(46, 125, 50, 0.39)', // Nice green shadow
-                border: '1px solid',
-                borderColor: 'transparent',
-                '&:hover': {
-                  bgcolor: '#1b5e20',
-                  boxShadow: '0 6px 20px rgba(46, 125, 50, 0.4)',
-                },
-                '&.Mui-disabled': {
-                  bgcolor: 'action.disabledBackground',
-                  color: 'action.disabled',
-                },
-              }}
-            >
-              <CheckCircleOutlineOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
-              {mesaSeleccionada?.pedido?.mesa?.ubicacion === 'DELIVERY' ? 'Entregado' : 'Listo'}
-            </Button>
-          </Stack>
+                  border: '1px solid',
+                  borderColor: 'transparent',
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.error.main, 0.12),
+                    boxShadow: 'none',
+                  },
+                }}
+              >
+                <DeleteOutlineOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                Cancelar
+              </Button>
+            </Stack>
+
+            <Stack direction="row" spacing={1}>
+              {(!mesaSeleccionada?.pedido?.state || ['NUEVO', 'PENDIENTE', 'ENVIADO'].includes(mesaSeleccionada.pedido.state)) && (
+                <Button
+                  variant="contained"
+                  size="large"
+                  disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+                  onClick={async () => {
+                    if (!mesaSeleccionada?.pedido?._id) return
+                    const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
+                    try {
+                      await changeOrderStatus({ id: mesaSeleccionada.pedido._id, status: 'PREPARANDO', shop })
+                      try {
+                        await handleImprimirComanda()
+                      } catch (e) {
+                        console.error('Error auto imprimiendo comanda al cocinar', e)
+                      }
+                      if (onClear) onClear()
+                      if (onSuccess) onSuccess()
+                    } catch (error) {
+                      console.error(error)
+                      showError(new Error('Error al cambiar estado'))
+                    }
+                  }}
+                  sx={{
+                    flex: 1,
+                    flexDirection: 'column',
+                    p: 1.5,
+                    bgcolor: '#f0f4ff', // Light bluish purple
+                    color: '#4f46e5', // Indigo color
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    boxShadow: 'none',
+                  }}
+                >
+                  <RoomServiceOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                  Cocinar
+                </Button>
+              )}
+
+              {['PREPARANDO', 'EN_PROCESO'].includes(mesaSeleccionada?.pedido?.state || '') && (
+                <Button
+                  variant="contained"
+                  size="large"
+                  disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+                  onClick={async () => {
+                    if (!mesaSeleccionada?.pedido?._id) return
+                    const isDelivery = mesaSeleccionada.pedido.mesa?.ubicacion === 'DELIVERY' || mesaSeleccionada.pedido.tipo === 'DELIVERY'
+                    
+                    if (isDelivery) {
+                      handleOpenCobro()
+                    } else {
+                      const status = 'LISTO_PARA_RECOGER'
+                      const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
+                      try {
+                        await changeOrderStatus({ id: mesaSeleccionada.pedido._id, status, shop })
+                        if (onClear) onClear()
+                        if (onSuccess) onSuccess()
+                      } catch (error) {
+                        console.error(error)
+                        showError(new Error('Error al cambiar estado'))
+                      }
+                    }
+                  }}
+                  sx={{
+                    flex: 1,
+                    flexDirection: 'column',
+                    p: 1.5,
+                    bgcolor: (mesaSeleccionada?.pedido?.mesa?.ubicacion === 'DELIVERY' || mesaSeleccionada?.pedido?.tipo === 'DELIVERY') ? '#0288d1' : '#2e7d32', 
+                    color: '#ffffff',
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    boxShadow: (mesaSeleccionada?.pedido?.mesa?.ubicacion === 'DELIVERY' || mesaSeleccionada?.pedido?.tipo === 'DELIVERY') ? '0 4px 14px 0 rgba(2, 136, 209, 0.39)' : '0 4px 14px 0 rgba(46, 125, 50, 0.39)',
+                  }}
+                >
+                  {(mesaSeleccionada?.pedido?.mesa?.ubicacion === 'DELIVERY' || mesaSeleccionada?.pedido?.tipo === 'DELIVERY') ? (
+                    <PaymentsOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                  ) : (
+                    <CheckCircleOutlineOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                  )}
+                  {(mesaSeleccionada?.pedido?.mesa?.ubicacion === 'DELIVERY' || mesaSeleccionada?.pedido?.tipo === 'DELIVERY') ? 'Despachar y Cobrar' : 'Listo'}
+                </Button>
+              )}
+
+              {mesaSeleccionada?.pedido?.state === 'EN_CAMINO' && (
+                <Button
+                  variant="contained"
+                  size="large"
+                  disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+                  onClick={async () => {
+                    if (!mesaSeleccionada?.pedido?._id) return
+                    const isCobrado = (mesaSeleccionada.pedido as any).originalState === 'FINALIZADO' || (mesaSeleccionada.pedido as any).originalState === 'ENTREGADO'
+                    if (isCobrado) {
+                      const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
+                      try {
+                        await changeOrderStatus({ id: mesaSeleccionada.pedido._id!, status: 'ENTREGADO', shop })
+                        if (onClear) onClear()
+                        if (onSuccess) onSuccess()
+                      } catch (e) {
+                        showError(new Error('Error al cambiar estado'))
+                      }
+                    } else {
+                      handleOpenCobro()
+                    }
+                  }}
+                  sx={{
+                    flex: 1,
+                    flexDirection: 'column',
+                    p: 1.5,
+                    bgcolor: '#0288d1',
+                    color: '#ffffff',
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    boxShadow: '0 4px 14px 0 rgba(2, 136, 209, 0.39)',
+                  }}
+                >
+                  <PaymentsOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                  Cobrar Delivery
+                </Button>
+              )}
+
+              {['LISTO_PARA_RECOGER', 'LISTO'].includes(mesaSeleccionada?.pedido?.state || '') && (
+                <Button
+                  variant="contained"
+                  size="large"
+                  disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-')}
+                  onClick={async () => {
+                    if (!mesaSeleccionada?.pedido?._id) return
+                    const isCobrado = (mesaSeleccionada.pedido as any).originalState === 'FINALIZADO' || (mesaSeleccionada.pedido as any).originalState === 'ENTREGADO'
+                    if (isCobrado) {
+                      const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
+                      try {
+                        await changeOrderStatus({ id: mesaSeleccionada.pedido._id!, status: 'ENTREGADO', shop })
+                        if (onClear) onClear()
+                        if (onSuccess) onSuccess()
+                      } catch (e) {
+                        showError(new Error('Error al cambiar estado'))
+                      }
+                    } else {
+                      handleOpenCobro()
+                    }
+                  }}
+                  sx={{
+                    flex: 1,
+                    flexDirection: 'column',
+                    p: 1.5,
+                    bgcolor: '#0288d1',
+                    color: '#ffffff',
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    boxShadow: '0 4px 14px 0 rgba(2, 136, 209, 0.39)',
+                  }}
+                >
+                  <CheckCircleOutlineOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                  Entregar Cliente
+                </Button>
+              )}
+
+              {mesaSeleccionada?.pedido?.state === 'ENTREGADO' && (
+                <Button
+                  variant="contained"
+                  size="large"
+                  disabled={!mesaSeleccionada?.pedido?._id || mesaSeleccionada.pedido._id.startsWith('nuevo-') || (mesaSeleccionada.pedido as any).originalState === 'FINALIZADO' || (mesaSeleccionada.pedido as any).originalState === 'ENTREGADO'}
+                  onClick={handleOpenCobro}
+                  sx={{
+                    flex: 1,
+                    flexDirection: 'column',
+                    p: 1.5,
+                    bgcolor: '#43a047',
+                    color: '#ffffff',
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    boxShadow: '0 4px 14px 0 rgba(67, 160, 71, 0.39)',
+                  }}
+                >
+                  <PaymentsOutlinedIcon sx={{ mb: 0.5, fontSize: '1.75rem' }} />
+                  Cobrar
+                </Button>
+              )}
+            </Stack>
+          </Box>
         )}
       </Stack>
 
       {/* Dialogo de cobro */}
       <RrCobroDialog
         open={openCobroDialog}
+        lockMetodoPagoId={(mesaSeleccionada?.pedido as any)?.metodoPagoInbox === 'qr' ? 7 : null}
         onClose={() => setOpenCobroDialog(false)}
         isProcessing={isPending}
         subtotal={subtotal}
@@ -1439,6 +1712,14 @@ const RrAcciones: FunctionComponent<RrAccionesProps> = ({
           if (reimprimirComandaPdfUrl) URL.revokeObjectURL(reimprimirComandaPdfUrl)
           setReimprimirComandaPdfUrl(null)
         }}
+      />
+
+      {/* Dialog previsualización QR Delivery */}
+      <PdfViewerDialog
+        open={!!qrPdfUrl}
+        pdfUrl={qrPdfUrl}
+        title="QR de Delivery"
+        onClose={() => clearQrPdfUrl()}
       />
 
       {/* Dialogo Dividir Cuenta */}

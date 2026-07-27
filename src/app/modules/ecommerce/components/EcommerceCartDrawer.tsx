@@ -177,6 +177,7 @@ const EcommerceCartDrawer: FunctionComponent<EcommerceCartDrawerProps> = ({ open
             onRemoveProduct={handleRemoveProduct}
             onClientChange={handleClientChange}
             onNotaChange={handleNotaChange}
+            isReadOnly={true}
           />
         </Box>
 

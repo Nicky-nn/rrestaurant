@@ -26,6 +26,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import dayjs, { Dayjs } from 'dayjs'
 import { GraphQLClient, gql } from 'graphql-request'
+import useAuth from '../../../base/hooks/useAuth'
 
 // New Icons
 import StarIcon from '@mui/icons-material/Star'
@@ -365,6 +366,9 @@ function SectionHeader({ children, icon }: { children: React.ReactNode; icon?: R
 }
 
 const AdsApp = () => {
+  const { user } = useAuth()
+  const shop = typeof user?.miEmpresa === 'string' ? user.miEmpresa : user?.miEmpresa?.tienda || 'sandbox'
+
   const [editorMode, setEditorMode] = useState<'list' | 'select' | 'design'>('list')
   const [elements, setElements] = useState<AppElement[]>([])
   const [bgColor, setBgColor] = useState('#ffffff')
@@ -403,13 +407,13 @@ const AdsApp = () => {
     try {
       const client = getInboxClient()
       const q = gql`
-        query AllBanes {
-          banners(shop: "sandbox") {
+        query AllBanes($shop: String!) {
+          banners(shop: $shop) {
             id shop publicId url fechaInicio fechaFin activo createdAt
           }
         }
       `
-      const data: any = await client.request(q)
+      const data: any = await client.request(q, { shop })
       setBanners(data.banners || [])
     } catch (e) {
       showError('Error al obtener banners.')
@@ -427,13 +431,13 @@ const AdsApp = () => {
     try {
       const client = getInboxClient()
       const q = gql`
-        query FIRMA {
-          cloudinarySignature(shop: "sandbox") {
+        query FIRMA($shop: String!) {
+          cloudinarySignature(shop: $shop) {
             signature timestamp apiKey cloudName
           }
         }
       `
-      const data: any = await client.request(q)
+      const data: any = await client.request(q, { shop })
       setCloudinaryAuth(data.cloudinarySignature)
       setEditorMode('select')
     } catch (e: any) {
@@ -483,9 +487,9 @@ const AdsApp = () => {
       
       const client = getInboxClient()
       const m = gql`
-        mutation Guardar($publicId: String!, $fechaInicio: String!, $fechaFin: String!) {
+        mutation Guardar($shop: String!, $publicId: String!, $fechaInicio: String!, $fechaFin: String!) {
           saveBanner(
-            shop: "sandbox"
+            shop: $shop
             publicId: $publicId
             fechaInicio: $fechaInicio
             fechaFin: $fechaFin
@@ -493,6 +497,7 @@ const AdsApp = () => {
         }
       `
       await client.request(m, {
+        shop,
         publicId: cloudData.public_id,
         fechaInicio: fechaInicio.startOf('day').format(),
         fechaFin: fechaFin.endOf('day').format()

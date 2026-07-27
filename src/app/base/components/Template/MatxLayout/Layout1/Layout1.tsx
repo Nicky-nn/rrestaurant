@@ -1,7 +1,8 @@
 import { Box, styled, ThemeProvider, useMediaQuery, useTheme } from '@mui/material'
 import { BoxProps } from '@mui/material/Box'
 import React, { useEffect, useRef } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useGlobalPendingOrders } from '../../../../../modules/ecommerce/hooks/useGlobalPendingOrders'
 
 import LayoutRestriccionV2 from '../../../../../modules/base/components/LayoutRestriccion/LayoutRestriccionV2.tsx'
 import { sidenavCompactWidth, sideNavWidth } from '../../../../../utils/constant'
@@ -59,6 +60,9 @@ const Layout1 = () => {
   const {
     leftSidebar: { mode: sidenavMode, show: showSidenav },
   } = layout1Settings
+
+  const { pendingCount } = useGlobalPendingOrders()
+  const navigate = useNavigate()
 
   // Obtener la ubicación actual
   const location = useLocation()
@@ -163,10 +167,31 @@ const Layout1 = () => {
         )}
 
         <LayoutContainer width={sidenavWidth} open={secondarySidebar.open}>
+          {pendingCount > 0 && (
+            <Box
+              sx={{
+                width: '100%',
+                bgcolor: '#f57c00', // Striking but not too aggressive orange/amber
+                color: 'white',
+                p: 1.5,
+                textAlign: 'center',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                zIndex: 999,
+                '&:hover': {
+                  bgcolor: '#ef6c00'
+                }
+              }}
+              onClick={() => navigate('/ecommerce')}
+            >
+              Tienes {pendingCount} pedido{pendingCount === 1 ? '' : 's'} en el ecommerce esperando por ser preparado{pendingCount === 1 ? '' : 's'}. Haz clic aquí para ir a Ecommerce.
+            </Box>
+          )}
+
           {!isCocina && layout1Settings.topbar.show && layout1Settings.topbar.fixed && (
             <>
               <ThemeProvider theme={topbarTheme}>
-                <Layout1Topbar fixed={true} className="elevation-z8" />
+                <Layout1Topbar fixed={true} className="elevation-z8" pendingCount={pendingCount} />
                 <LayoutRestriccionV2 />
               </ThemeProvider>
             </>
@@ -176,7 +201,7 @@ const Layout1 = () => {
             <StyledScrollBarSidenav>
               {!isCocina && layout1Settings.topbar.show && !layout1Settings.topbar.fixed && (
                 <ThemeProvider theme={topbarTheme}>
-                  <Layout1Topbar />
+                  <Layout1Topbar pendingCount={pendingCount} />
                   <LayoutRestriccionV2 />
                 </ThemeProvider>
               )}
@@ -194,7 +219,7 @@ const Layout1 = () => {
             <ContentBox>
               {!isCocina && layout1Settings.topbar.show && !layout1Settings.topbar.fixed && (
                 <ThemeProvider theme={topbarTheme}>
-                  <Layout1Topbar />
+                  <Layout1Topbar pendingCount={pendingCount} />
                   <LayoutRestriccionV2 />
                 </ThemeProvider>
               )}

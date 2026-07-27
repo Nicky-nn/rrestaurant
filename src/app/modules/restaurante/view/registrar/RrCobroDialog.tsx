@@ -60,6 +60,7 @@ export interface RrCobroDialogProps {
   onFacturar?: (metodoDefectoId?: number, metodoDefectoNombre?: string, numeroTarjeta?: string) => void
   /** Texto informativo del cliente, solo se muestra si no es el cliente 00 */
   clienteInfo?: string
+  lockMetodoPagoId?: number | null
 }
 
 const formatPrice = (value: number): string =>
@@ -81,6 +82,7 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
   onFinalizar,
   onFacturar,
   clienteInfo,
+  lockMetodoPagoId,
 }) => {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
@@ -96,17 +98,33 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
 
   useEffect(() => {
     if (metodosPago.length > 0 && !metodoSeleccionado) {
+      if (lockMetodoPagoId) {
+        const met = metodosPago.find((m) => m.codigoClasificador === lockMetodoPagoId)
+        if (met) {
+          setMetodoSeleccionado(lockMetodoPagoId)
+          setMetodoSeleccionadoObj(met)
+          return
+        }
+      }
       setMetodoSeleccionado(metodosPago[0].codigoClasificador ?? null)
       setMetodoSeleccionadoObj(metodosPago[0])
     }
-  }, [metodosPago, metodoSeleccionado])
+  }, [metodosPago, metodoSeleccionado, lockMetodoPagoId])
 
   useEffect(() => {
     if (open && metodosPago.length > 0) {
+      if (lockMetodoPagoId) {
+        const met = metodosPago.find((m) => m.codigoClasificador === lockMetodoPagoId)
+        if (met) {
+          setMetodoSeleccionado(lockMetodoPagoId)
+          setMetodoSeleccionadoObj(met)
+          return
+        }
+      }
       setMetodoSeleccionado(metodosPago[0].codigoClasificador ?? null)
       setMetodoSeleccionadoObj(metodosPago[0])
     }
-  }, [open, metodosPago])
+  }, [open, metodosPago, lockMetodoPagoId])
 
   // Si tenemos subtotal, calculamos el total dinámicamente para que se actualice
   // en tiempo real al modificar descuento/giftcard desde el propio diálogo.
@@ -266,7 +284,11 @@ const RrCobroDialog: FunctionComponent<RrCobroDialogProps> = ({
         componentsProps={{ tooltip: { sx: { fontSize: '0.75rem' } } }}
       >
         <ButtonBase
-          onClick={() => handleMetodoClick(metodo)}
+          onClick={() => {
+            if (lockMetodoPagoId && lockMetodoPagoId !== metodo.codigoClasificador) return
+            handleMetodoClick(metodo)
+          }}
+          disabled={Boolean(lockMetodoPagoId && lockMetodoPagoId !== metodo.codigoClasificador)}
           sx={{
             flex: '1 1 auto',
             maxWidth: 140,

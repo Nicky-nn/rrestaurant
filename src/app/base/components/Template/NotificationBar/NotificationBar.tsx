@@ -85,7 +85,7 @@ const Heading = styled('span')(({ theme }) => ({
  * @param container
  * @constructor
  */
-const NotificationBar: FC<any> = ({ container }: any) => {
+const NotificationBar: FC<any> = ({ container, pendingCount = 0 }: any) => {
   const { settings } = useSettings()
   const theme = useTheme()
   const secondary = theme.palette.text.secondary
@@ -102,7 +102,7 @@ const NotificationBar: FC<any> = ({ container }: any) => {
   return (
     <Fragment>
       <IconButton onClick={handleDrawerToggle}>
-        <Badge color="secondary" badgeContent={notifications?.length}>
+        <Badge color="secondary" badgeContent={(notifications?.length || 0) + pendingCount}>
           <Notifications sx={{ color: textColor }}>notifications</Notifications>
         </Badge>
       </IconButton>
@@ -122,8 +122,28 @@ const NotificationBar: FC<any> = ({ container }: any) => {
           <Box sx={{ width: sideNavWidth }}>
             <Notification>
               <Icon color="primary">notifications</Icon>
-              <h5>Notifications</h5>
+              <h5>Notificaciones</h5>
             </Notification>
+
+            {pendingCount > 0 && (
+              <Link to="/ecommerce" onClick={handleDrawerToggle} style={{ textDecoration: 'none' }}>
+                <Card sx={{ mx: 2, mb: 3 }} elevation={3}>
+                  <CardLeftContent>
+                    <Box display="flex">
+                      <Icon className="icon" color="error">
+                        shopping_cart
+                      </Icon>
+                      <Heading>Pedidos Ecommerce</Heading>
+                    </Box>
+                  </CardLeftContent>
+                  <Box sx={{ px: 2, pb: 2 }}>
+                    <Paragraph className="messageTime">
+                      Tienes {pendingCount} pedido{pendingCount === 1 ? '' : 's'} pendiente{pendingCount === 1 ? '' : 's'} de preparación.
+                    </Paragraph>
+                  </Box>
+                </Card>
+              </Link>
+            )}
 
             {notifications?.map((notification: any) => (
               <NotificationCard key={notification.id}>

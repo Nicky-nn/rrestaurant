@@ -132,6 +132,11 @@ export const navigations: NavigationProps[] = [
     icon: 'storefront',
     path: ecommerceRoutesMap.ecommerce.path,
   },
+  {
+    name: 'Repartidores',
+    icon: 'two_wheeler',
+    path: ecommerceRoutesMap.repartidores.path,
+  },
 ]
 
 /*

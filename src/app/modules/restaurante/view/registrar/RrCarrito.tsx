@@ -92,6 +92,7 @@ interface RrCarritoProps {
   onNotaChange?: (nota: string) => void
   onTipoPedidoChange?: (tipo: TipoPedido) => void
   isPedidoDirty?: boolean
+  isReadOnly?: boolean
 }
 
 const RrCarrito: FunctionComponent<RrCarritoProps> = ({
@@ -102,6 +103,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
   onNotaChange,
   onTipoPedidoChange,
   isPedidoDirty = false,
+  isReadOnly = false,
 }) => {
   const theme = useTheme()
   const [openOpciones, setOpenOpciones] = useState(false)
@@ -362,9 +364,11 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
             </Stack>
 
             {/* Lápiz para opciones */}
-            <IconButton size="small" sx={{ color: headerColor }} onClick={() => setOpenOpciones(true)}>
-              <EditOutlinedIcon fontSize="small" />
-            </IconButton>
+            {!isReadOnly && (
+              <IconButton size="small" sx={{ color: headerColor }} onClick={() => setOpenOpciones(true)}>
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+            )}
           </Box>
 
           {/* Buscador de cliente — siempre visible */}
@@ -407,6 +411,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
                   item={producto}
                   onUpdate={(updated) => onUpdateProduct?.(index, updated)}
                   onRemove={() => onRemoveProduct?.(index)}
+                  isReadOnly={isReadOnly}
                   onEditComplemento={(() => {
                     const art = (producto as any)._articulo
                     const tiene = art
@@ -450,6 +455,7 @@ const RrCarrito: FunctionComponent<RrCarritoProps> = ({
               Notas generales del pedido
             </Typography>
             <TextField
+              disabled={isReadOnly}
               multiline
               fullWidth
               minRows={1}
@@ -654,11 +660,13 @@ const CartItem = ({
   onUpdate,
   onRemove,
   onEditComplemento,
+  isReadOnly = false,
 }: {
   item: ArticuloOperacion
   onUpdate: (updated: ArticuloOperacion) => void
   onRemove: () => void
   onEditComplemento?: () => void
+  isReadOnly?: boolean
 }) => {
   const theme = useTheme()
   const { hasStaticPermission } = useSecurity()
@@ -790,13 +798,13 @@ const CartItem = ({
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
         <Box sx={{ flexGrow: 1, pr: 1 }}>
           <Typography
-            onClick={onEditComplemento}
+            onClick={isReadOnly ? undefined : onEditComplemento}
             sx={{
               fontSize: '0.95rem',
               fontWeight: 800,
               color: 'text.primary',
               lineHeight: 1.2,
-              ...(onEditComplemento && {
+              ...(!isReadOnly && onEditComplemento && {
                 textDecoration: 'underline',
                 textDecorationColor: 'text.disabled',
                 cursor: 'pointer',
@@ -830,86 +838,96 @@ const CartItem = ({
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', height: 28 }}>
             {/* Controles de Cantidad */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 1 }}>
-              <Tooltip title="Disminuir cantidad" enterDelay={1000}>
-                <IconButton
-                  onClick={() => handleCantidadChange(Math.max(1, cantidad - 1))}
-                  size="small"
-                  sx={{
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
-                    color: 'primary.main',
-                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
-                    width: 24,
-                    height: 24,
-                  }}
-                >
-                  <RemoveIcon sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
-                </IconButton>
-              </Tooltip>
-              <Typography sx={{ fontSize: '0.95rem', fontWeight: 800, minWidth: 16, textAlign: 'center' }}>
-                {cantidad}
-              </Typography>
-              <Tooltip title="Aumentar cantidad" enterDelay={1000}>
-                <IconButton
-                  onClick={() => handleCantidadChange(cantidad + 1)}
-                  size="small"
-                  sx={{
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
-                    color: 'primary.main',
-                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
-                    width: 24,
-                    height: 24,
-                  }}
-                >
-                  <AddIcon sx={{ fontSize: '0.9rem' }} />
-                </IconButton>
-              </Tooltip>
-            </Box>
+            {!isReadOnly ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 1 }}>
+                <Tooltip title="Disminuir cantidad" enterDelay={1000}>
+                  <IconButton
+                    onClick={() => handleCantidadChange(Math.max(1, cantidad - 1))}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      color: 'primary.main',
+                      '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
+                      width: 24,
+                      height: 24,
+                    }}
+                  >
+                    <RemoveIcon sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
+                  </IconButton>
+                </Tooltip>
+                <Typography sx={{ fontSize: '0.95rem', fontWeight: 800, minWidth: 16, textAlign: 'center' }}>
+                  {cantidad}
+                </Typography>
+                <Tooltip title="Aumentar cantidad" enterDelay={1000}>
+                  <IconButton
+                    onClick={() => handleCantidadChange(cantidad + 1)}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(theme.palette.primary.main, 0.1),
+                      color: 'primary.main',
+                      '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
+                      width: 24,
+                      height: 24,
+                    }}
+                  >
+                    <AddIcon sx={{ fontSize: '0.9rem' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+                <Typography sx={{ fontSize: '0.95rem', fontWeight: 800 }}>
+                  Cant: {cantidad}
+                </Typography>
+              </Box>
+            )}
 
             {/* Acciones */}
-            <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-              <Tooltip title="Editar precio, descuento y nota personalizada" enterDelay={1000}>
-                <IconButton
-                  size="small"
-                  onClick={() => setIsEditing(!isEditing)}
-                  sx={{
-                    bgcolor: isEditing ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                    color: isEditing ? 'primary.main' : 'text.secondary',
-                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) },
-                  }}
-                >
-                  <EditOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Marcar como cortesía (gratis)" enterDelay={1000}>
-                <IconButton
-                  size="small"
-                  onClick={() => {
-                    const next = !isCortesia
-                    setIsCortesia(next)
-                    onUpdate({ ...item, cortesia: next })
-                  }}
-                  disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:CORTESIA')}
-                  sx={{
-                    bgcolor: isCortesia ? alpha(theme.palette.success.main, 0.1) : 'transparent',
-                    color: isCortesia ? 'success.main' : 'text.secondary',
-                    '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.1) },
-                  }}
-                >
-                  <CardGiftcardOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Eliminar producto del carrito" enterDelay={1000}>
-                <IconButton
-                  size="small"
-                  onClick={onRemove}
-                  disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:ELIMINAR_PRODUCTO')}
-                  sx={{ color: 'text.secondary', '&:hover': { bgcolor: 'action.hover' } }}
-                >
-                  <DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-                </IconButton>
-              </Tooltip>
-            </Stack>
+            {!isReadOnly && (
+              <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+                <Tooltip title="Editar precio, descuento y nota personalizada" enterDelay={1000}>
+                  <IconButton
+                    size="small"
+                    onClick={() => setIsEditing(!isEditing)}
+                    sx={{
+                      bgcolor: isEditing ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                      color: isEditing ? 'primary.main' : 'text.secondary',
+                      '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) },
+                    }}
+                  >
+                    <EditOutlinedIcon sx={{ fontSize: '1.1rem' }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Marcar como cortesía (gratis)" enterDelay={1000}>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      const next = !isCortesia
+                      setIsCortesia(next)
+                      onUpdate({ ...item, cortesia: next })
+                    }}
+                    disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:CORTESIA')}
+                    sx={{
+                      bgcolor: isCortesia ? alpha(theme.palette.success.main, 0.1) : 'transparent',
+                      color: isCortesia ? 'success.main' : 'text.secondary',
+                      '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.1) },
+                    }}
+                  >
+                    <CardGiftcardOutlinedIcon sx={{ fontSize: '1.1rem' }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Eliminar producto del carrito" enterDelay={1000}>
+                  <IconButton
+                    size="small"
+                    onClick={onRemove}
+                    disabled={!hasStaticPermission('VENTAS_Y_PEDIDOS:REGISTRAR_PEDIDO:ELIMINAR_PRODUCTO')}
+                    sx={{ color: 'text.secondary', '&:hover': { bgcolor: 'action.hover' } }}
+                  >
+                    <DeleteOutlineOutlinedIcon sx={{ fontSize: '1.1rem' }} />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            )}
           </Box>
 
           {/* Fila del Total */}

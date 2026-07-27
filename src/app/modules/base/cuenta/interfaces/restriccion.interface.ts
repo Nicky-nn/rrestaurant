@@ -16,7 +16,7 @@ export interface UsuarioPuntoVentaRestriccionProps {
  */
 export interface UsuarioSucursalRestriccionProps {
   codigo: number
-  telefono: string
+  telefono?: string
   direccion: string
   departamento: {
     codigo: number
@@ -26,6 +26,12 @@ export interface UsuarioSucursalRestriccionProps {
   }
   municipio: string
   puntosVenta: Array<UsuarioPuntoVentaRestriccionProps>
+  coordenadas?: {
+    latitud: string
+    longitud: string
+  }
+  activoEcommerce?: boolean
+  integracionSiat?: boolean
 }
 
 /**

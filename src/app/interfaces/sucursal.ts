@@ -16,6 +16,7 @@ export interface DepartamentoProps {
  * @author isi-template
  */
 export interface SucursalProps {
+  coordenadas: any
   _id: string
   codigo: number
   departamento: DepartamentoProps

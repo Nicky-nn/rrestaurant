@@ -43,7 +43,10 @@ const buildComandaDefinition = (
 ) => {
   console.log('Carta de pedido:', pedido)
   const cliente = pedido.cliente?.razonSocial ?? 'Sin Razón Social'
-  const mesa = pedido.mesa?.nombre ?? '-'
+  const rawMesa = pedido.mesa?.nombre ?? '-'
+  const isEcommerce = rawMesa.startsWith('ecommerce-')
+  const nroPedidoEcommerce = isEcommerce ? rawMesa.replace('ecommerce-', '') : ''
+  const mesaDisplay = isEcommerce ? `NRO PEDIDO: ${nroPedidoEcommerce}` : `MESA: ${rawMesa}`
   const orden = pedido.numeroOrden ?? pedido.numeroPedido ?? '-'
   const ubicacion = getUbicacionLabel(pedido)
   const { fecha, hora } = formatFechaHora(pedido.updatedAt ?? pedido.createdAt)
@@ -262,8 +265,14 @@ const buildComandaDefinition = (
     content: [
       { text: options?.titulo || 'COMANDA', style: 'header' },
       subTituloMod ? { text: subTituloMod, style: 'subMod' } : {},
-      { text: `CLIENTE: ${cliente}`, style: 'subheader' },
-      { text: `MESA: ${mesa} - ORDEN: ${orden}`, style: 'subheader' },
+      {
+        columns: [
+          { text: `CLIENTE: ${cliente}` },
+          { text: `TIPO: ${pedido.tipo || 'SALÓN'}`, alignment: 'right' },
+        ],
+        style: 'subheader',
+      },
+      { text: `${mesaDisplay} - ORDEN: ${orden}`, style: 'subheader' },
       { text: `Ubc.: ${ubicacion}`, style: 'subheader' },
       { text: `Fecha: ${fecha}  Hora: ${hora}`, style: 'subheader' },
       {

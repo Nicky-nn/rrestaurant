@@ -115,7 +115,7 @@ const IconBox = styled('div')(({ theme }) => ({
  * @author isi-template
  * @constructor
  */
-const Layout1Topbar: FC<any> = () => {
+const Layout1Topbar: FC<any> = ({ pendingCount = 0 }) => {
   const theme = useTheme()
   const { settings, updateSettings }: any = useSettings()
   const { logout, user, updateTheme }: any = useAuth()
@@ -289,7 +289,7 @@ const Layout1Topbar: FC<any> = () => {
           {/*  }}*/}
           {/*/>*/}
           <NotificationProvider>
-            <NotificationBar />
+            <NotificationBar pendingCount={pendingCount} />
           </NotificationProvider>
           {/*<ThemeColorBarProvider>
             <ThemeColorBar />

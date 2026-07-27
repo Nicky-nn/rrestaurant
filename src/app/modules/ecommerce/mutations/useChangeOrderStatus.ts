@@ -26,7 +26,7 @@ const CHANGE_ORDER_STATUS_MUTATION = gql`
 
 interface ChangeOrderStatusInput {
   id: string
-  status: 'PENDIENTE' | 'PREPARANDO' | 'LISTO_PARA_RECOGER' | 'EN_CAMINO' | 'ENTREGADO' | 'CANCELADO'
+  status: 'PENDIENTE' | 'PREPARANDO' | 'LISTO_PARA_RECOGER' | 'ESPERANDO_DELIVERY' | 'EN_CAMINO' | 'ENTREGADO' | 'CANCELADO'
   shop: string
 }
 

@@ -131,6 +131,7 @@ const MatxVerticalNav: FC<any> = ({ items }: any) => {
           <InternalLink key={index}>
             <NavLink
               to={item.path!}
+              end
               className={({ isActive }) =>
                 isActive
                   ? `navItemActive ${mode === 'compact' && 'compactNavItem'}`

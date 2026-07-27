@@ -11,15 +11,36 @@ const gqlQuery = gql`
     usuarioRestriccion {
       sucursales {
         codigo
-        telefono
         direccion
+        municipio
         departamento {
           codigo
           codigoPais
           sigla
           departamento
         }
-        municipio
+        horariosAtencion {
+          zonaHoraria
+          dias {
+            diaSemana
+            abierto
+            turnos {
+              apertura
+              cierre
+            }
+          }
+          excepciones {
+            fecha
+            abierto
+            motivo
+          }
+        }
+        activoEcommerce
+        coordenadas {
+          latitud
+          longitud
+        }
+        integracionSiat
         puntosVenta {
           codigo
           tipoPuntoVenta {
