@@ -8,6 +8,8 @@ import PeopleIcon from "@mui/icons-material/People";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
 import SaveIcon from "@mui/icons-material/Save";
+import LaunchIcon from "@mui/icons-material/Launch";
+import SmartphoneIcon from "@mui/icons-material/Smartphone";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
 import TodayIcon from "@mui/icons-material/Today";
@@ -223,6 +225,42 @@ export const ReservasPage: FC = () => {
   });
   const [isLoadingConfig, setIsLoadingConfig] = useState(false);
   const [isSavingConfig, setIsSavingConfig] = useState(false);
+  const [previewSelectedDate, setPreviewSelectedDate] = useState<number>(0);
+  const [previewSelectedTime, setPreviewSelectedTime] = useState<number>(0);
+
+  const DIAS_CORTOS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+  const previewDates = useMemo(() => {
+    const dates = [];
+    const today = new Date();
+    const max = Math.min(config.anticipacionMaxDias || 14, 30);
+    for (let i = 0; i <= max; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const dayJs = d.getDay();
+      const isoDay = dayJs === 0 ? 7 : dayJs;
+      if (config.diasDisponibles.includes(isoDay)) {
+        dates.push({
+          label: i === 0 ? "Hoy" : i === 1 ? "Mañana" : DIAS_CORTOS[dayJs],
+          dayNum: d.getDate(),
+          month: d.getMonth() + 1,
+        });
+      }
+      if (dates.length >= 5) break;
+    }
+    return dates;
+  }, [config.diasDisponibles, config.anticipacionMaxDias]);
+
+  const previewTimes = useMemo(() => {
+    const [startH] = (config.horaInicio || "10:00").split(":").map(Number);
+    const [endH] = (config.horaFin || "22:00").split(":").map(Number);
+    const times: string[] = [];
+    for (let h = startH; h <= Math.min(endH, startH + 3); h++) {
+      times.push(String(h).padStart(2, "0") + ":00");
+      if (h < endH) times.push(String(h).padStart(2, "0") + ":30");
+    }
+    return times.slice(0, 6);
+  }, [config.horaInicio, config.horaFin]);
 
   // ─── DATA FETCHING ─────────────────────────────────────────────────────────
 
@@ -801,18 +839,21 @@ export const ReservasPage: FC = () => {
         </Stack>
       )}
 
-      {/* ─── TAB 1: CONFIGURACIÓN DE DISPONIBILIDAD ────────────────────────────── */}
+      {/* ─── TAB 1: CONFIGURACIÓN DE DISPONIBILIDAD CON PREVIEW EN VIVO ───────── */}
       {currentTab === 1 && (
-        <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
-          <CardContent sx={{ p: 4 }}>
-            {isLoadingConfig ? (
-              <Box sx={{ py: 6, textAlign: "center" }}>
-                <CircularProgress size={32} />
-                <Typography variant="body2" sx={{ mt: 1 }} color="text.secondary">
-                  Cargando configuración de la sucursal...
-                </Typography>
-              </Box>
-            ) : (
+        <Grid container spacing={3} alignItems="flex-start">
+          {/* COLUMNA IZQUIERDA: CONTROLES DE CONFIGURACIÓN */}
+          <Grid size={{ xs: 12, lg: 7 }}>
+            <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
+              <CardContent sx={{ p: 3.5 }}>
+                {isLoadingConfig ? (
+                  <Box sx={{ py: 6, textAlign: "center" }}>
+                    <CircularProgress size={32} />
+                    <Typography variant="body2" sx={{ mt: 1 }} color="text.secondary">
+                      Cargando configuración de la sucursal...
+                    </Typography>
+                  </Box>
+                ) : (
               <Stack spacing={4}>
                 {/* SWITCH ACTIVAR */}
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 2 }}>
@@ -1014,7 +1055,240 @@ export const ReservasPage: FC = () => {
             )}
           </CardContent>
         </Card>
-      )}
+      </Grid>
+
+      {/* COLUMNA DERECHA: PREVISUALIZACIÓN EN VIVO (MOCKUP CLIENTE) */}
+      <Grid size={{ xs: 12, lg: 5 }}>
+        <Box sx={{ position: { lg: "sticky" }, top: 20 }}>
+          <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, p: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <SmartphoneIcon color="primary" sx={{ fontSize: 22 }} />
+                <Typography variant="subtitle1" fontWeight={800}>
+                  Vista Previa en Vivo
+                </Typography>
+              </Box>
+              <Chip
+                label="Modo Cliente"
+                size="small"
+                sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, fontWeight: 700 }}
+              />
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2.5 }}>
+              Así verán tus clientes el módulo de reservas en tu tienda web. Cambia los días, horarios o topes y mira cómo se actualiza en tiempo real:
+            </Typography>
+
+            {/* MARCO DEL MÓVIL */}
+            <Box
+              sx={{
+                maxWidth: 340,
+                mx: "auto",
+                bgcolor: "#0F172A",
+                p: "10px",
+                borderRadius: "36px",
+                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+              }}
+            >
+              {/* PANTALLA INTERNA DEL MÓVIL */}
+              <Box
+                sx={{
+                  bgcolor: "#FFFFFF",
+                  borderRadius: "28px",
+                  p: 2,
+                  minHeight: 510,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+              >
+                {/* Notch / Parlante superior */}
+                <Box sx={{ width: 60, height: 4, bgcolor: "#CBD5E1", borderRadius: 4, mx: "auto", mb: 2 }} />
+
+                {/* Cabecera mini tienda */}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pb: 1.5, borderBottom: "1px solid #F1F5F9" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box sx={{ width: 32, height: 32, borderRadius: "50%", bgcolor: alpha(theme.palette.primary.main, 0.12), display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <RestaurantIcon sx={{ fontSize: 18, color: theme.palette.primary.main }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" fontWeight={800} sx={{ color: "#0F172A", lineHeight: 1.1 }}>
+                        {shop}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: "#64748B", fontSize: "0.68rem" }}>
+                        Sucursal #{codigoSucursal}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Chip
+                    label={config.activo ? "● Abierto" : "✕ Cerrado"}
+                    size="small"
+                    sx={{
+                      height: 22,
+                      fontSize: "0.65rem",
+                      fontWeight: 800,
+                      bgcolor: config.activo ? "#DCFCE7" : "#FEE2E2",
+                      color: config.activo ? "#166534" : "#991B1B",
+                    }}
+                  />
+                </Box>
+
+                {/* CONTENIDO INTERACTIVO SEGÚN ESTADO */}
+                {!config.activo ? (
+                  <Box sx={{ py: 6, textAlign: "center", px: 2 }}>
+                    <EventSeatIcon sx={{ fontSize: 48, color: "#94A3B8", mb: 1.5 }} />
+                    <Typography variant="subtitle2" fontWeight={800} sx={{ color: "#1E293B" }}>
+                      Reservas Pausadas
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "#64748B", display: "block", mt: 0.5 }}>
+                      Las reservaciones se encuentran temporalmente cerradas para esta sucursal.
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Stack spacing={2} sx={{ py: 1 }}>
+                    {/* 1. Selector de Días Dinámicos */}
+                    <Box>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.8 }}>
+                        <Typography variant="caption" fontWeight={800} sx={{ color: "#334155" }}>
+                          📅 ELIGE EL DÍA
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "#94A3B8", fontSize: "0.65rem" }}>
+                          {previewDates.length} días activos
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", gap: 0.8, overflowX: "auto", pb: 0.5, "&::-webkit-scrollbar": { display: "none" } }}>
+                        {previewDates.length === 0 ? (
+                          <Typography variant="caption" color="error">
+                            Ningún día habilitado
+                          </Typography>
+                        ) : (
+                          previewDates.map((d, idx) => {
+                            const isSelected = previewSelectedDate === idx;
+                            return (
+                              <Paper
+                                key={idx}
+                                elevation={0}
+                                onClick={() => setPreviewSelectedDate(idx)}
+                                sx={{
+                                  p: 1,
+                                  minWidth: 48,
+                                  textAlign: "center",
+                                  cursor: "pointer",
+                                  borderRadius: 2,
+                                  border: "1.5px solid",
+                                  borderColor: isSelected ? theme.palette.primary.main : "#E2E8F0",
+                                  bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.08) : "#F8FAFC",
+                                  transition: "all 0.15s",
+                                }}
+                              >
+                                <Typography variant="caption" fontWeight={700} sx={{ fontSize: "0.65rem", color: isSelected ? theme.palette.primary.main : "#64748B", display: "block" }}>
+                                  {d.label}
+                                </Typography>
+                                <Typography variant="body2" fontWeight={800} sx={{ color: isSelected ? theme.palette.primary.main : "#0F172A" }}>
+                                  {d.dayNum}
+                                </Typography>
+                              </Paper>
+                            );
+                          })
+                        )}
+                      </Box>
+                    </Box>
+
+                    {/* 2. Selector de Horarios Dinámicos */}
+                    <Box>
+                      <Typography variant="caption" fontWeight={800} sx={{ color: "#334155", display: "block", mb: 0.8 }}>
+                        ⏰ HORARIOS ({config.horaInicio || "10:00"} - {config.horaFin || "22:00"})
+                      </Typography>
+                      <Grid container spacing={0.8}>
+                        {previewTimes.map((h, idx) => {
+                          const isSelected = previewSelectedTime === idx;
+                          return (
+                            <Grid size={{ xs: 4 }} key={idx}>
+                              <Box
+                                onClick={() => setPreviewSelectedTime(idx)}
+                                sx={{
+                                  py: 0.6,
+                                  textAlign: "center",
+                                  borderRadius: 1.5,
+                                  cursor: "pointer",
+                                  fontSize: "0.75rem",
+                                  fontWeight: 700,
+                                  border: "1px solid",
+                                  borderColor: isSelected ? theme.palette.primary.main : "#E2E8F0",
+                                  bgcolor: isSelected ? theme.palette.primary.main : "#F8FAFC",
+                                  color: isSelected ? "#FFFFFF" : "#334155",
+                                }}
+                              >
+                                {h}
+                              </Box>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    </Box>
+
+                    {/* 3. Reglas y Capacidad en la Ficha del Cliente */}
+                    <Box sx={{ bgcolor: "#F8FAFC", p: 1.5, borderRadius: 2, border: "1px solid #E2E8F0" }}>
+                      <Typography variant="caption" fontWeight={800} sx={{ color: "#0F172A", display: "block", mb: 0.5 }}>
+                        Condiciones de Reserva:
+                      </Typography>
+                      <Stack spacing={0.4}>
+                        <Typography variant="caption" sx={{ color: "#475569", fontSize: "0.68rem" }}>
+                          ⏱️ Anticipación mín: <b>{config.anticipacionMinHoras || 1} hora(s)</b>
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "#475569", fontSize: "0.68rem" }}>
+                          📅 Agendar hasta: <b>{config.anticipacionMaxDias || 30} días adelante</b>
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "#475569", fontSize: "0.68rem" }}>
+                          👥 Capacidad por mesa: <b>{config.capacidadMaximaPersonas ? `Máx. ${config.capacidadMaximaPersonas} personas` : "Sin límite"}</b>
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "#475569", fontSize: "0.68rem" }}>
+                          🎟️ Cupo por horario: <b>{config.maxReservasPorHorario ? `${config.maxReservasPorHorario} reservas/franja` : "Ilimitado"}</b>
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "#475569", fontSize: "0.68rem" }}>
+                          📊 Límite total diario: <b>{config.maxReservasPorDia ? `${config.maxReservasPorDia} reservas/día` : "Sin tope"}</b>
+                        </Typography>
+                      </Stack>
+                    </Box>
+
+                    {/* Botón Reservar Simulado */}
+                    <Box
+                      sx={{
+                        py: 1,
+                        bgcolor: theme.palette.primary.main,
+                        color: "#FFFFFF",
+                        borderRadius: 2,
+                        textAlign: "center",
+                        fontWeight: 800,
+                        fontSize: "0.82rem",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.12)",
+                      }}
+                    >
+                      Confirmar Reserva
+                    </Box>
+                  </Stack>
+                )}
+
+                {/* Footer link a la tienda real */}
+                <Box sx={{ pt: 1.5, borderTop: "1px solid #F1F5F9", textAlign: "center" }}>
+                  <Button
+                    size="small"
+                    variant="text"
+                    startIcon={<LaunchIcon sx={{ fontSize: 14 }} />}
+                    component="a"
+                    href={`http://localhost:3000/${shop}`}
+                    target="_blank"
+                    sx={{ fontSize: "0.72rem", textTransform: "none", color: theme.palette.primary.main, fontWeight: 700 }}
+                  >
+                    Abrir tienda ecommerce en vivo ↗
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          </Card>
+        </Box>
+      </Grid>
+    </Grid>
+  )}
 
       {/* ─── MODAL ENVIAR RECORDATORIO ─────────────────────────────────────────── */}
       <Dialog open={reminderDialogOpen} onClose={() => setReminderDialogOpen(false)} maxWidth="sm" fullWidth>
