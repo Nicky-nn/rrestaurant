@@ -7,6 +7,7 @@ import { ncdGestionRoutesMap } from './modules/notaCreditoDebito/notaCreditoDebi
 import { reporteRoutesMap } from './modules/reporte/reporteRoutes'
 import { restauranteRoutesMap } from './modules/restaurante/restauranteRoutes'
 import { ecommerceRoutesMap } from './modules/ecommerce/ecommerceRoutes'
+
 export interface NavigationProps {
   name: string
   path?: string
@@ -130,26 +131,27 @@ export const navigations: NavigationProps[] = [
   {
     name: 'Ecomerce',
     icon: 'storefront',
-    path: ecommerceRoutesMap.ecommerce.path,
-  },
-  {
-    name: 'Repartidores',
-    icon: 'two_wheeler',
-    path: ecommerceRoutesMap.repartidores.path,
-  },
-]
-
-/*
-// Ejemplo de estructura con Hijos
-  {
-    name: 'Configuración',
-    icon: 'settings',
     children: [
       {
-        name: configuracionRoutesMap.parametrosSistema.name,
-        iconText: 'PSI',
-        path: configuracionRoutesMap.parametrosSistema.path,
+        name: 'Pedidos',
+        iconText: 'PD',
+        path: ecommerceRoutesMap.ecommerce.path,
+      },
+      {
+        name: 'Reservas',
+        iconText: 'RS',
+        path: ecommerceRoutesMap.reservas.path,
+      },
+      {
+        name: 'Repartidores',
+        iconText: 'RP',
+        path: ecommerceRoutesMap.repartidores.path,
+      },
+      {
+        name: 'Configuración Tienda',
+        iconText: 'CF',
+        path: ecommerceRoutesMap.config.path,
       },
     ],
-  }
-*/
+  },
+]
