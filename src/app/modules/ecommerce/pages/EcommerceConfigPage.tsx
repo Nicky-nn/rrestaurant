@@ -9,6 +9,7 @@ import {
   FormControl,
   FormControlLabel,
   Grid,
+  Paper,
   Radio,
   RadioGroup,
   Stack,
@@ -54,6 +55,9 @@ const GET_SHOP_CONFIG = gql`
         puntosEquivalenciaBs
         puntosMinimoCompra
         porcentajeMaximoPagoPuntos
+        permiteDelivery
+        permiteRecojo
+        permiteConsumoSalon
       }
     }
   }
@@ -71,6 +75,9 @@ const UPDATE_ECOMMERCE_CONFIG = gql`
       puntosEquivalenciaBs
       puntosMinimoCompra
       porcentajeMaximoPagoPuntos
+      permiteDelivery
+      permiteRecojo
+      permiteConsumoSalon
     }
   }
 `
@@ -85,6 +92,9 @@ interface FormState {
   puntosEquivalenciaBs: string
   puntosMinimoCompra: string
   porcentajeMaximoPagoPuntos: string
+  permiteDelivery: boolean
+  permiteRecojo: boolean
+  permiteConsumoSalon: boolean
 }
 
 const defaultForm: FormState = {
@@ -97,6 +107,9 @@ const defaultForm: FormState = {
   puntosEquivalenciaBs: '10',
   puntosMinimoCompra: '50',
   porcentajeMaximoPagoPuntos: '50',
+  permiteDelivery: true,
+  permiteRecojo: true,
+  permiteConsumoSalon: true,
 }
 
 const EcommerceConfigPage: FC = () => {
@@ -168,6 +181,9 @@ const EcommerceConfigPage: FC = () => {
             puntosEquivalenciaBs: cfg.puntosEquivalenciaBs?.toString() || '10',
             puntosMinimoCompra: cfg.puntosMinimoCompra?.toString() || '50',
             porcentajeMaximoPagoPuntos: cfg.porcentajeMaximoPagoPuntos?.toString() || '50',
+          permiteDelivery: cfg.permiteDelivery !== false,
+          permiteRecojo: cfg.permiteRecojo !== false,
+          permiteConsumoSalon: cfg.permiteConsumoSalon !== false,
         })
       }
     } catch (err: any) {
@@ -370,6 +386,9 @@ const EcommerceConfigPage: FC = () => {
         porcentajeMaximoPagoPuntos: form.porcentajeMaximoPagoPuntos
           ? parseFloat(form.porcentajeMaximoPagoPuntos)
           : null,
+        permiteDelivery: form.permiteDelivery,
+        permiteRecojo: form.permiteRecojo,
+        permiteConsumoSalon: form.permiteConsumoSalon,
       }
 
       const client = getInboxClient()
@@ -692,6 +711,112 @@ const EcommerceConfigPage: FC = () => {
                         />
                       </Box>
                     )}
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+
+                    {/* SECCIÓN: MODALIDADES DE PEDIDO */}
+          <Grid size={{ xs: 12 }}>
+            <Card sx={{ borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                  Modalidades de Pedido Aceptadas
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#64748B", mb: 3 }}>
+                  Activa o desactiva las formas de entrega de tu tienda. Solo las modalidades activas se mostrarán al cliente en el checkout.
+                </Typography>
+
+                <Grid container spacing={3}>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2.5,
+                        borderRadius: "10px",
+                        border: "1px solid",
+                        borderColor: form.permiteDelivery ? "primary.main" : "divider",
+                        bgcolor: form.permiteDelivery ? "rgba(25, 118, 210, 0.04)" : "background.paper",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          🛵 Delivery a Domicilio
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Permitir pedidos con envío a domicilio
+                        </Typography>
+                      </Box>
+                      <Switch
+                        checked={form.permiteDelivery}
+                        onChange={(e) => setForm({ ...form, permiteDelivery: e.target.checked })}
+                        color="primary"
+                      />
+                    </Paper>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2.5,
+                        borderRadius: "10px",
+                        border: "1px solid",
+                        borderColor: form.permiteRecojo ? "primary.main" : "divider",
+                        bgcolor: form.permiteRecojo ? "rgba(25, 118, 210, 0.04)" : "background.paper",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          🛍️ Retiro en Tienda / Takeaway
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Permitir pedidos para recoger en local
+                        </Typography>
+                      </Box>
+                      <Switch
+                        checked={form.permiteRecojo}
+                        onChange={(e) => setForm({ ...form, permiteRecojo: e.target.checked })}
+                        color="primary"
+                      />
+                    </Paper>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2.5,
+                        borderRadius: "10px",
+                        border: "1px solid",
+                        borderColor: form.permiteConsumoSalon ? "primary.main" : "divider",
+                        bgcolor: form.permiteConsumoSalon ? "rgba(25, 118, 210, 0.04)" : "background.paper",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          🍽️ Consumo en Salón / Mesa
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Permitir pedidos para comer en el restaurante
+                        </Typography>
+                      </Box>
+                      <Switch
+                        checked={form.permiteConsumoSalon}
+                        onChange={(e) => setForm({ ...form, permiteConsumoSalon: e.target.checked })}
+                        color="primary"
+                      />
+                    </Paper>
                   </Grid>
                 </Grid>
               </CardContent>
