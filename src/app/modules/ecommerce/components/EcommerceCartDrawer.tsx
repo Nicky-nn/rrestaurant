@@ -1,5 +1,8 @@
 import CloseIcon from '@mui/icons-material/Close';
-import { Alert, Box, Drawer, IconButton, Snackbar, Typography } from '@mui/material';
+import { Alert, Box, Button, Drawer, IconButton, Snackbar, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import Swal from 'sweetalert2';
+import { useConfirmScheduledOrder } from '../mutations/useConfirmScheduledOrder';
 import { FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
 
 import useAuth from '../../../base/hooks/useAuth';
@@ -18,6 +21,43 @@ const EcommerceCartDrawer: FunctionComponent<EcommerceCartDrawerProps> = ({ open
   const { user } = useAuth();
   const [mesaSeleccionada, setMesaSeleccionada] = useState<MesaUI | null>(null);
   const [isPedidoDirty, setIsPedidoDirty] = useState(false);
+  const { mutate: confirmScheduled, isPending: isConfirming } = useConfirmScheduledOrder();
+
+  const handleConfirmScheduledNow = async () => {
+    if (!pedido?._id) return;
+    const result = await Swal.fire({
+      title: '¿Enviar a cocina ahora?',
+      text: 'Este pedido fue programado para más tarde. Si lo envías ahora, entrará a comandas y cocina inmediatamente.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, enviar a cocina',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#7c3aed',
+    });
+
+    if (result.isConfirmed) {
+      confirmScheduled(pedido._id, {
+        onSuccess: (data: any) => {
+          if (data?.success) {
+            Swal.fire({
+              icon: 'success',
+              title: '¡Pedido enviado a cocina!',
+              text: 'El pedido fue registrado en Isicore y notificado a cocina.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+            onClose();
+          } else {
+            Swal.fire('Error', data?.message || 'No se pudo enviar a cocina', 'error');
+          }
+        },
+        onError: (err: any) => {
+          Swal.fire('Error', err?.message || 'Error al conectar con el servidor', 'error');
+        },
+      });
+    }
+  };
+
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; key: number }>({
     open: false,
     message: '',
@@ -169,6 +209,36 @@ const EcommerceCartDrawer: FunctionComponent<EcommerceCartDrawerProps> = ({ open
             <CloseIcon />
           </IconButton>
         </Box>
+
+        {((pedido as any)?.state === 'PROGRAMADO' || (pedido as any)?.scheduledAt) && (
+          <Box sx={{ mb: 1.5, p: 1.5, bgcolor: alpha('#7c3aed', 0.1), border: '1px solid #c4b5fd', borderRadius: '10px' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#6d28d9' }}>
+              📅 Pedido Programado
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#5b21b6', fontSize: '0.8rem', mt: 0.25 }}>
+              Programado para: {new Date((pedido as any).scheduledAt || pedido?.createdAt || Date.now()).toLocaleString([], { weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+            </Typography>
+            <Button
+              variant="contained"
+              fullWidth
+              disabled={isConfirming}
+              onClick={handleConfirmScheduledNow}
+              sx={{
+                mt: 1.5,
+                bgcolor: '#7c3aed',
+                '&:hover': { bgcolor: '#6d28d9' },
+                color: '#fff',
+                fontWeight: 'bold',
+                textTransform: 'none',
+                py: 0.75,
+                borderRadius: '8px',
+                fontSize: '0.85rem'
+              }}
+            >
+              {isConfirming ? 'Enviando a cocina...' : '⚡ Enviar a Cocina ahora'}
+            </Button>
+          </Box>
+        )}
 
         <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <RrCarrito

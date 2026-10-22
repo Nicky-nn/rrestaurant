@@ -152,7 +152,55 @@ const EcommercePage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidosData, listOrdersData])
 
-  let pedidos = [...allPedidos]
+    // Integrar pedidos programados de PostgreSQL que aún no existen en Isicore Mongo
+  const virtualScheduledPedidos = rawOrders
+    .filter((ro: any) => {
+      const roId = typeof ro === 'string' ? ro : ro.id || ro._id || ro.pedidoId || ro._idPedido
+      const existsInAll = allPedidos.some((p: any) => p._id === roId)
+      return !existsInAll && (ro.estadoInbox === 'PROGRAMADO' || Boolean(ro.scheduledAt))
+    })
+    .map((ro: any) => {
+      const isDelivery = ro.metodoEntrega?.toUpperCase() === 'DELIVERY'
+      const items = Array.isArray(ro.items) ? ro.items : []
+      return {
+        _id: ro.id || ro._id,
+        state: ro.estadoInbox || 'PROGRAMADO',
+        numeroOrden: ro.nroPedido,
+        numeroPedido: ro.nroPedido,
+        tipo: isDelivery ? 'DELIVERY' : 'LLEVAR',
+        tipoVenta: isDelivery ? 'DELIVERY' : 'LLEVAR',
+        mesa: {
+          nombre: isDelivery ? 'Delivery' : 'Para llevar',
+          ubicacion: isDelivery ? 'DELIVERY' : 'LLEVAR',
+        },
+        localizador: ro.scheduledAt
+          ? `📅 ${new Date(ro.scheduledAt).toLocaleDateString([], { day: '2-digit', month: '2-digit' })} ${new Date(ro.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+          : 'Programado',
+        productos: items.map((it: any) => ({
+          _id: it.id || it.article?._id,
+          nombreArticulo: it.article?.nombreArticulo || it.nombre || 'Artículo',
+          cantidad: it.quantity || 1,
+          precioTotal: ((Number(it.priceBase) || 0) + (Number(it.priceExtras) || 0) + (Number(it.priceMods) || 0)) * (Number(it.quantity) || 1),
+          precio: Number(it.priceBase) || 0,
+        })),
+        total: Number(ro.total || 0),
+        subtotal: Number(ro.subtotal || 0),
+        envio: Number(ro.envio || 0),
+        fechaDocumento: ro.createdAt,
+        createdAt: ro.createdAt,
+        scheduledAt: ro.scheduledAt,
+        cliente: {
+          razonSocial: ro.razonSocial || 'Cliente',
+          numeroDocumento: ro.nitCi,
+          nit: ro.nitCi,
+          direccion: ro.direccionEntrega,
+        },
+        isProgramado: true,
+        rawOrder: ro,
+      }
+    })
+
+  let pedidos = [...allPedidos, ...virtualScheduledPedidos]
 
   pedidos = pedidos.filter((pedido: any) => {
     const inboxOrder = rawOrders.find((o: any) => {
@@ -161,6 +209,10 @@ const EcommercePage: React.FC = () => {
     }) || {}
     const rawState2 = inboxOrder.estadoInbox || pedido.state || 'PENDIENTE'
     const orderState = rawState2 === 'ANULADO' ? 'CANCELADO' : rawState2
+
+    if (filter === 'programados') {
+      return orderState === 'PROGRAMADO' || Boolean(inboxOrder.scheduledAt)
+    }
 
     if (filter === 'entregado') {
       if (orderState !== 'ENTREGADO' && orderState !== 'FINALIZADO') return false
@@ -274,6 +326,7 @@ const EcommercePage: React.FC = () => {
             <ToggleButton value="todas">Todas</ToggleButton>
             <ToggleButton value="salon">Salón</ToggleButton>
             <ToggleButton value="llevar">Llevar</ToggleButton>
+            <ToggleButton value="programados">Programados</ToggleButton>
             <ToggleButton value="entregado">Entregado</ToggleButton>
           </ToggleButtonGroup>
         </Box>
@@ -311,15 +364,18 @@ const EcommercePage: React.FC = () => {
               )
                 statusType = 'success'
               else if (orderState === 'CANCELADO' || orderState === 'ANULADO') statusType = 'default'
+              else if (orderState === 'PROGRAMADO') statusType = 'secondary'
               else statusType = 'primary' // fallback
 
               let statusColorMain = theme.palette.primary.main
               if (statusType === 'default') {
                 statusColorMain = theme.palette.text.disabled
+              } else if (orderState === 'PROGRAMADO') {
+                statusColorMain = '#7c3aed'
               } else {
                 statusColorMain = (theme.palette as any)[statusType]?.main || theme.palette.primary.main
               }
-              const statusColorBg = alpha(statusColorMain, 0.15)
+              const statusColorBg = orderState === 'PROGRAMADO' ? alpha('#7c3aed', 0.15) : alpha(statusColorMain, 0.15)
 
               const isLlevar = pedido.tipoVenta === 'LLEVAR'
               const icon = isLlevar ? (
@@ -332,12 +388,14 @@ const EcommercePage: React.FC = () => {
               const locationText =
                 pedido.mesa?.nombre || pedido.localizador || (isLlevar ? 'Para llevar' : 'Sin asignar')
 
-              const rawDate = inboxOrder.createdAt || pedido.fechaDocumento
+              const rawDate = inboxOrder.scheduledAt || inboxOrder.createdAt || pedido.fechaDocumento
               let timeText = '00:00'
               if (rawDate) {
                 const d = new Date(rawDate)
                 if (!isNaN(d.getTime())) {
-                  timeText = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  timeText = orderState === 'PROGRAMADO'
+                    ? `📅 ${d.toLocaleDateString([], { day: '2-digit', month: '2-digit' })} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                    : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 }
               }
 

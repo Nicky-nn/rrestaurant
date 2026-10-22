@@ -88,6 +88,23 @@ const LIST_RESERVAS = gql`
   }
 `;
 
+const LIST_SCHEDULED_ORDERS = gql`
+  query ListScheduledOrders($shop: String!, $codigoSucursal: Int!) {
+    listOrders(
+      filter: {
+        shop: $shop,
+        codigoSucursal: $codigoSucursal,
+        estadoInbox: PROGRAMADO
+      },
+      page: 1,
+      limit: 100
+    ) {
+      totalCount
+      orders
+    }
+  }
+`;
+
 const GET_RESERVA_CONFIG = gql`
   query GetReservaConfig($shop: String!, $codigoSucursal: Int!) {
     getReservaConfig(shop: $shop, codigoSucursal: $codigoSucursal) {
@@ -212,6 +229,71 @@ export const ReservasPage: FC = () => {
   const [selectedReservaForReminder, setSelectedReservaForReminder] = useState<ReservaItem | null>(null);
   const [customReminderMsg, setCustomReminderMsg] = useState("");
   const [isSendingReminder, setIsSendingReminder] = useState(false);
+
+  // Estados Tab Pedidos Programados
+  const [scheduledOrders, setScheduledOrders] = useState<any[]>([]);
+  const [isLoadingScheduled, setIsLoadingScheduled] = useState(false);
+
+  const fetchScheduledOrders = async () => {
+    if (!shop) return;
+    try {
+      setIsLoadingScheduled(true);
+      const client = getInboxClient();
+      const res: any = await client.request(LIST_SCHEDULED_ORDERS, { shop, codigoSucursal });
+      setScheduledOrders(res?.listOrders?.orders || []);
+    } catch (err) {
+      console.error('Error fetching scheduled orders:', err);
+    } finally {
+      setIsLoadingScheduled(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentTab === 1) {
+      fetchScheduledOrders();
+    }
+  }, [currentTab, shop, codigoSucursal]);
+
+  const handleConfirmScheduled = async (orderId: string, nroPedido?: string) => {
+    const result = await Swal.fire({
+      title: '¿Enviar a cocina ahora?',
+      text: `El pedido #${nroPedido || orderId} se enviará a cocina y se registrará en comanda inmediatamente.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, enviar a cocina',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#7c3aed',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const client = getInboxClient();
+        const CONFIRM_MUTATION = gql`
+          mutation ConfirmScheduledOrder($orderId: String!) {
+            confirmScheduledOrder(orderId: $orderId) {
+              success
+              message
+              orderId
+            }
+          }
+        `;
+        const res: any = await client.request(CONFIRM_MUTATION, { orderId });
+        if (res?.confirmScheduledOrder?.success) {
+          Swal.fire({
+            icon: 'success',
+            title: '¡Pedido enviado a cocina!',
+            timer: 2000,
+            showConfirmButton: false,
+          });
+          fetchScheduledOrders();
+        } else {
+          Swal.fire('Error', res?.confirmScheduledOrder?.message || 'Error al enviar a cocina', 'error');
+        }
+      } catch (err: any) {
+        Swal.fire('Error', err?.message || 'Error al conectar', 'error');
+      }
+    }
+  };
 
   // Estados Tab Configuración
   const [config, setConfig] = useState<ReservaConfigData>({
@@ -547,6 +629,7 @@ export const ReservasPage: FC = () => {
               }}
             >
               <Tab icon={<EventSeatIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Listado de Reservas" />
+              <Tab icon={<AccessTimeIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Pedidos Programados" />
               <Tab icon={<SettingsIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Configuración y Días" />
             </Tabs>
           </Grid>
@@ -556,6 +639,19 @@ export const ReservasPage: FC = () => {
       {/* ─── TAB 0: LISTADO DE RESERVAS ────────────────────────────────────────── */}
       {currentTab === 0 && (
         <Stack spacing={3}>
+          {reservas.length === 0 && (
+            <Alert
+              severity="info"
+              sx={{ borderRadius: 2 }}
+              action={
+                <Button color="inherit" size="small" onClick={() => setCurrentTab(1)} sx={{ fontWeight: 700 }}>
+                  Ver Pedidos Programados
+                </Button>
+              }
+            >
+              ¿Buscabas pedidos de entrega o para llevar programados para una fecha futura? Puedes verlos en la pestaña <b>Pedidos Programados</b>.
+            </Alert>
+          )}
           {/* STATS CARDS */}
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
@@ -839,8 +935,170 @@ export const ReservasPage: FC = () => {
         </Stack>
       )}
 
-      {/* ─── TAB 1: CONFIGURACIÓN DE DISPONIBILIDAD CON PREVIEW EN VIVO ───────── */}
+      {/* ─── TAB 1: PEDIDOS PROGRAMADOS (ECOMMERCE) ────────────────────────── */}
       {currentTab === 1 && (
+        <Stack spacing={3}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                Pedidos de Ecommerce Programados
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Pedidos con entrega o recogida agendada para una fecha y hora futura.
+              </Typography>
+            </Box>
+            <Button
+              startIcon={<RefreshIcon />}
+              variant="outlined"
+              size="small"
+              onClick={fetchScheduledOrders}
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+            >
+              Actualizar
+            </Button>
+          </Box>
+
+          <TableContainer component={Paper} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, boxShadow: 'none' }}>
+            <Table>
+              <TableHead sx={{ bgcolor: theme.palette.action.hover }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}># PEDIDO</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>TIPO</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>HORA PROGRAMADA</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>CLIENTE</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>TOTAL</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>ITEMS</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>ESTADO</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">ACCIONES</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {isLoadingScheduled ? (
+                  <TableRow>
+                    <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                      <CircularProgress size={32} />
+                      <Typography variant="body2" sx={{ mt: 1 }} color="text.secondary">
+                        Cargando pedidos programados...
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : scheduledOrders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                      <TodayIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+                      <Typography variant="subtitle1" fontWeight={700}>
+                        No hay pedidos programados pendientes
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Cuando los clientes elijan 'Programar pedido' en el checkout, aparecerán aquí y en el Inbox de pedidos.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  scheduledOrders.map((ord) => {
+                    const isDelivery = ord.metodoEntrega?.toUpperCase() === 'DELIVERY';
+                    const items = Array.isArray(ord.items) ? ord.items : [];
+                    const itemsSummary = items.map((it: any) => `${it.quantity || 1}x ${it.article?.nombreArticulo || it.nombre || 'Item'}`).join(', ');
+
+                    return (
+                      <TableRow key={ord.id} hover>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={800} color="primary.main">
+                            #{ord.nroPedido || ord.id.slice(-6).toUpperCase()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={isDelivery ? 'DELIVERY' : 'LLEVAR'}
+                            size="small"
+                            sx={{
+                              height: 20,
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              bgcolor: isDelivery ? alpha('#0288d1', 0.1) : alpha('#ed6c02', 0.1),
+                              color: isDelivery ? '#0288d1' : '#ed6c02',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <AccessTimeIcon fontSize="small" sx={{ color: '#7c3aed' }} />
+                            <Typography variant="body2" fontWeight={700} sx={{ color: '#7c3aed' }}>
+                              {ord.scheduledAt
+                                ? `${new Date(ord.scheduledAt).toLocaleDateString([], { weekday: 'short', day: '2-digit', month: '2-digit' })} ${new Date(ord.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                : 'Programado'}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>
+                            {ord.razonSocial || 'Cliente'}
+                          </Typography>
+                          {ord.nitCi && (
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              NIT/CI: {ord.nitCi}
+                            </Typography>
+                          )}
+                          {ord.direccionEntrega && (
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ maxWidth: 200 }} noWrap title={ord.direccionEntrega}>
+                              📍 {ord.direccionEntrega}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={700}>
+                            Bs. {Number(ord.total || 0).toFixed(2)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 220 }}>
+                          <Typography variant="body2" color="text.secondary" noWrap title={itemsSummary}>
+                            {itemsSummary || '—'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label="PROGRAMADO"
+                            size="small"
+                            sx={{
+                              bgcolor: alpha('#7c3aed', 0.15),
+                              color: '#7c3aed',
+                              fontWeight: 700,
+                              fontSize: '0.7rem',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Tooltip title="Enviar a cocina inmediatamente">
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => handleConfirmScheduled(ord.id, ord.nroPedido)}
+                              sx={{
+                                bgcolor: '#7c3aed',
+                                '&:hover': { bgcolor: '#6d28d9' },
+                                color: '#fff',
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                fontSize: '0.75rem',
+                                borderRadius: '8px',
+                              }}
+                            >
+                              ⚡ Enviar a cocina
+                            </Button>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Stack>
+      )}
+
+      {/* ─── TAB 2: CONFIGURACIÓN DE DISPONIBILIDAD CON PREVIEW EN VIVO ───────── */}
+      {currentTab === 2 && (
         <Grid container spacing={3} alignItems="flex-start">
           {/* COLUMNA IZQUIERDA: CONTROLES DE CONFIGURACIÓN */}
           <Grid size={{ xs: 12, lg: 7 }}>
