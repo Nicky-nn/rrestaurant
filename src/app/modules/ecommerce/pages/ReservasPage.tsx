@@ -99,6 +99,8 @@ const GET_RESERVA_CONFIG = gql`
       anticipacionMinHoras
       anticipacionMaxDias
       capacidadMaximaPersonas
+      maxReservasPorHorario
+      maxReservasPorDia
       updatedAt
     }
   }
@@ -117,6 +119,8 @@ const UPSERT_RESERVA_CONFIG = gql`
       anticipacionMinHoras
       anticipacionMaxDias
       capacidadMaximaPersonas
+      maxReservasPorHorario
+      maxReservasPorDia
       updatedAt
     }
   }
@@ -179,6 +183,8 @@ interface ReservaConfigData {
   anticipacionMinHoras: number;
   anticipacionMaxDias: number;
   capacidadMaximaPersonas?: number;
+  maxReservasPorHorario?: number;
+  maxReservasPorDia?: number;
 }
 
 // ─── COMPONENTE PRINCIPAL ────────────────────────────────────────────────────
@@ -258,6 +264,8 @@ export const ReservasPage: FC = () => {
           anticipacionMinHoras: c.anticipacionMinHoras ?? 1,
           anticipacionMaxDias: c.anticipacionMaxDias ?? 30,
           capacidadMaximaPersonas: c.capacidadMaximaPersonas ?? 10,
+          maxReservasPorHorario: c.maxReservasPorHorario ?? undefined,
+          maxReservasPorDia: c.maxReservasPorDia ?? undefined,
         });
       }
     } catch (err: any) {
@@ -406,6 +414,8 @@ export const ReservasPage: FC = () => {
           anticipacionMinHoras: Number(config.anticipacionMinHoras),
           anticipacionMaxDias: Number(config.anticipacionMaxDias),
           capacidadMaximaPersonas: config.capacidadMaximaPersonas ? Number(config.capacidadMaximaPersonas) : null,
+          maxReservasPorHorario: config.maxReservasPorHorario ? Number(config.maxReservasPorHorario) : null,
+          maxReservasPorDia: config.maxReservasPorDia ? Number(config.maxReservasPorDia) : null,
         },
       });
 
@@ -929,36 +939,58 @@ export const ReservasPage: FC = () => {
                     Reglas de Reserva y Capacidad
                   </Typography>
                   <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, sm: 4 }}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
                         fullWidth
                         label="Anticipación Mínima (Horas)"
                         type="number"
                         value={config.anticipacionMinHoras}
                         onChange={(e) => setConfig((p) => ({ ...p, anticipacionMinHoras: parseInt(e.target.value) || 1 }))}
-                        helperText="Tiempo mínimo antes de la reserva (ej. 1 hora)"
+                        helperText="Tiempo mínimo previo antes de la reserva (ej. 1 hora)"
                         inputProps={{ min: 1 }}
                       />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
                         fullWidth
                         label="Anticipación Máxima (Días)"
                         type="number"
                         value={config.anticipacionMaxDias}
                         onChange={(e) => setConfig((p) => ({ ...p, anticipacionMaxDias: parseInt(e.target.value) || 30 }))}
-                        helperText="Máximo de días a futuro permitidos (ej. 30 días)"
+                        helperText="Máximo de días a futuro permitidos para agendar (ej. 30 días)"
                         inputProps={{ min: 1 }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <TextField
                         fullWidth
-                        label="Capacidad Máx. Personas"
+                        label="Máx. Personas por Mesa"
                         type="number"
                         value={config.capacidadMaximaPersonas || ""}
                         onChange={(e) => setConfig((p) => ({ ...p, capacidadMaximaPersonas: parseInt(e.target.value) || undefined }))}
-                        helperText="Límite de personas por mesa/reserva (opcional)"
+                        helperText="Límite de comensales por grupo/mesa (opcional)"
+                        inputProps={{ min: 1 }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <TextField
+                        fullWidth
+                        label="Máx. Reservas por Turno/Horario"
+                        type="number"
+                        value={config.maxReservasPorHorario || ""}
+                        onChange={(e) => setConfig((p) => ({ ...p, maxReservasPorHorario: parseInt(e.target.value) || undefined }))}
+                        helperText="Cupo de reservas simultáneas por franja horaria (ej. 3 mesas)"
+                        inputProps={{ min: 1 }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <TextField
+                        fullWidth
+                        label="Máx. Reservas Totales por Día"
+                        type="number"
+                        value={config.maxReservasPorDia || ""}
+                        onChange={(e) => setConfig((p) => ({ ...p, maxReservasPorDia: parseInt(e.target.value) || undefined }))}
+                        helperText="Tope diario de reservas para toda la fecha (opcional)"
                         inputProps={{ min: 1 }}
                       />
                     </Grid>
