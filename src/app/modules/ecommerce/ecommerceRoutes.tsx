@@ -14,7 +14,7 @@ export const ecommerceRoutesMap = {
   },
   reservas: {
     path: "/ecommerce/reservas",
-    name: "Reservas",
+    name: "Pedidos Programados",
     action: "GESTION_ECOMMERCE",
   },
   repartidores: {

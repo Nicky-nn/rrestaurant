@@ -138,8 +138,8 @@ export const navigations: NavigationProps[] = [
         path: ecommerceRoutesMap.ecommerce.path,
       },
       {
-        name: 'Reservas',
-        iconText: 'RS',
+        name: 'Pedidos Programados',
+        iconText: 'PP',
         path: ecommerceRoutesMap.reservas.path,
       },
       {

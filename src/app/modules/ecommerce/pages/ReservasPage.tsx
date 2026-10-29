@@ -1,19 +1,13 @@
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import CancelIcon from "@mui/icons-material/Cancel";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import EventSeatIcon from "@mui/icons-material/EventSeat";
-import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
-import PeopleIcon from "@mui/icons-material/People";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import RestaurantIcon from "@mui/icons-material/Restaurant";
 import SaveIcon from "@mui/icons-material/Save";
-import LaunchIcon from "@mui/icons-material/Launch";
-import SmartphoneIcon from "@mui/icons-material/Smartphone";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
 import TodayIcon from "@mui/icons-material/Today";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
 import {
   Alert,
   Box,
@@ -22,10 +16,6 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
   FormControlLabel,
   Grid,
@@ -61,32 +51,6 @@ import { getInboxClient } from "../api/inboxClient";
 import { ecommerceRoutesMap } from "../ecommerceRoutes";
 
 // ─── GRAPHQL QUERIES & MUTATIONS ─────────────────────────────────────────────
-
-const LIST_RESERVAS = gql`
-  query ListReservas($shop: String!, $codigoSucursal: Int!, $status: ReservaStatus, $fecha: String) {
-    listReservas(shop: $shop, codigoSucursal: $codigoSucursal, status: $status, fecha: $fecha) {
-      reservas {
-        id
-        shop
-        codigoSucursal
-        userId
-        clienteNombre
-        clienteTelefono
-        tipo
-        fecha
-        hora
-        personas
-        notas
-        status
-        notificacionEnviadaAt
-        confirmadoAt
-        createdAt
-        updatedAt
-      }
-      totalCount
-    }
-  }
-`;
 
 const LIST_SCHEDULED_ORDERS = gql`
   query ListScheduledOrders($shop: String!, $codigoSucursal: Int!) {
@@ -145,21 +109,15 @@ const UPSERT_RESERVA_CONFIG = gql`
   }
 `;
 
-const CONFIRM_RESERVA = gql`
-  mutation ConfirmReserva($reservaId: String!, $shop: String) {
-    confirmReserva(reservaId: $reservaId, shop: $shop)
-  }
-`;
-
-const CANCEL_RESERVA = gql`
-  mutation CancelReserva($id: String!, $shop: String!) {
-    cancelReserva(id: $id, shop: $shop)
-  }
-`;
-
-const SEND_RESERVA_REMINDER = gql`
-  mutation SendReservaReminder($id: String!, $shop: String!, $mensaje: String) {
-    sendReservaReminder(id: $id, shop: $shop, mensaje: $mensaje)
+const CONFIRM_SCHEDULED_ORDER = gql`
+  mutation ConfirmScheduledOrder($orderId: String!) {
+    confirmScheduledOrder(orderId: $orderId) {
+      success
+      message
+      orderId
+      nroPedido
+      order
+    }
   }
 `;
 
@@ -175,24 +133,7 @@ const DIAS_SEMANA = [
   { id: 7, label: "Domingo", short: "Dom" },
 ];
 
-interface ReservaItem {
-  id: string;
-  shop: string;
-  codigoSucursal: number;
-  userId?: string;
-  clienteNombre: string;
-  clienteTelefono: string;
-  tipo: string;
-  fecha: string;
-  hora: string;
-  personas?: number;
-  notas?: string;
-  status: "PENDIENTE" | "NOTIFICADO" | "CONFIRMADO" | "CANCELADO";
-  notificacionEnviadaAt?: string;
-  confirmadoAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+const DIAS_CORTOS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
 interface ReservaConfigData {
   activo: boolean;
@@ -217,83 +158,11 @@ export const ReservasPage: FC = () => {
 
   const [currentTab, setCurrentTab] = useState<number>(0);
 
-  // Estados Tab Reservas
-  const [reservas, setReservas] = useState<ReservaItem[]>([]);
-  const [isLoadingReservas, setIsLoadingReservas] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>("TODAS");
-  const [fechaFilter, setFechaFilter] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-
-  // Modal Recordatorio
-  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
-  const [selectedReservaForReminder, setSelectedReservaForReminder] = useState<ReservaItem | null>(null);
-  const [customReminderMsg, setCustomReminderMsg] = useState("");
-  const [isSendingReminder, setIsSendingReminder] = useState(false);
-
   // Estados Tab Pedidos Programados
   const [scheduledOrders, setScheduledOrders] = useState<any[]>([]);
   const [isLoadingScheduled, setIsLoadingScheduled] = useState(false);
-
-  const fetchScheduledOrders = async () => {
-    if (!shop) return;
-    try {
-      setIsLoadingScheduled(true);
-      const client = getInboxClient();
-      const res: any = await client.request(LIST_SCHEDULED_ORDERS, { shop, codigoSucursal });
-      setScheduledOrders(res?.listOrders?.orders || []);
-    } catch (err) {
-      console.error('Error fetching scheduled orders:', err);
-    } finally {
-      setIsLoadingScheduled(false);
-    }
-  };
-
-  useEffect(() => {
-    if (currentTab === 1) {
-      fetchScheduledOrders();
-    }
-  }, [currentTab, shop, codigoSucursal]);
-
-  const handleConfirmScheduled = async (orderId: string, nroPedido?: string) => {
-    const result = await Swal.fire({
-      title: '¿Enviar a cocina ahora?',
-      text: `El pedido #${nroPedido || orderId} se enviará a cocina y se registrará en comanda inmediatamente.`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, enviar a cocina',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#7c3aed',
-    });
-
-    if (result.isConfirmed) {
-      try {
-        const client = getInboxClient();
-        const CONFIRM_MUTATION = gql`
-          mutation ConfirmScheduledOrder($orderId: String!) {
-            confirmScheduledOrder(orderId: $orderId) {
-              success
-              message
-              orderId
-            }
-          }
-        `;
-        const res: any = await client.request(CONFIRM_MUTATION, { orderId });
-        if (res?.confirmScheduledOrder?.success) {
-          Swal.fire({
-            icon: 'success',
-            title: '¡Pedido enviado a cocina!',
-            timer: 2000,
-            showConfirmButton: false,
-          });
-          fetchScheduledOrders();
-        } else {
-          Swal.fire('Error', res?.confirmScheduledOrder?.message || 'Error al enviar a cocina', 'error');
-        }
-      } catch (err: any) {
-        Swal.fire('Error', err?.message || 'Error al conectar', 'error');
-      }
-    }
-  };
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [metodoFilter, setMetodoFilter] = useState<string>("TODOS");
 
   // Estados Tab Configuración
   const [config, setConfig] = useState<ReservaConfigData>({
@@ -310,63 +179,23 @@ export const ReservasPage: FC = () => {
   const [previewSelectedDate, setPreviewSelectedDate] = useState<number>(0);
   const [previewSelectedTime, setPreviewSelectedTime] = useState<number>(0);
 
-  const DIAS_CORTOS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  // ─── DATA FETCHING: PEDIDOS PROGRAMADOS ─────────────────────────────────────
 
-  const previewDates = useMemo(() => {
-    const dates = [];
-    const today = new Date();
-    const max = Math.min(config.anticipacionMaxDias || 14, 30);
-    for (let i = 0; i <= max; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      const dayJs = d.getDay();
-      const isoDay = dayJs === 0 ? 7 : dayJs;
-      if (config.diasDisponibles.includes(isoDay)) {
-        dates.push({
-          label: i === 0 ? "Hoy" : i === 1 ? "Mañana" : DIAS_CORTOS[dayJs],
-          dayNum: d.getDate(),
-          month: d.getMonth() + 1,
-        });
-      }
-      if (dates.length >= 5) break;
-    }
-    return dates;
-  }, [config.diasDisponibles, config.anticipacionMaxDias]);
-
-  const previewTimes = useMemo(() => {
-    const [startH] = (config.horaInicio || "10:00").split(":").map(Number);
-    const [endH] = (config.horaFin || "22:00").split(":").map(Number);
-    const times: string[] = [];
-    for (let h = startH; h <= Math.min(endH, startH + 3); h++) {
-      times.push(String(h).padStart(2, "0") + ":00");
-      if (h < endH) times.push(String(h).padStart(2, "0") + ":30");
-    }
-    return times.slice(0, 6);
-  }, [config.horaInicio, config.horaFin]);
-
-  // ─── DATA FETCHING ─────────────────────────────────────────────────────────
-
-  const fetchReservas = async () => {
+  const fetchScheduledOrders = async () => {
     if (!shop) return;
     try {
-      setIsLoadingReservas(true);
+      setIsLoadingScheduled(true);
       const client = getInboxClient();
-      const variables: any = { shop, codigoSucursal };
-      if (statusFilter !== "TODAS") {
-        variables.status = statusFilter;
-      }
-      if (fechaFilter) {
-        variables.fecha = fechaFilter;
-      }
-      const res: any = await client.request(LIST_RESERVAS, variables);
-      setReservas(res?.listReservas?.reservas || []);
-    } catch (err: any) {
-      console.error("Error al cargar reservas:", err);
-      // No alertar en 404 inicial
+      const res: any = await client.request(LIST_SCHEDULED_ORDERS, { shop, codigoSucursal });
+      setScheduledOrders(res?.listOrders?.orders || []);
+    } catch (err) {
+      console.error("Error fetching scheduled orders:", err);
     } finally {
-      setIsLoadingReservas(false);
+      setIsLoadingScheduled(false);
     }
   };
+
+  // ─── DATA FETCHING: CONFIGURACIÓN ──────────────────────────────────────────
 
   const fetchConfig = async () => {
     if (!shop) return;
@@ -375,127 +204,65 @@ export const ReservasPage: FC = () => {
       const client = getInboxClient();
       const res: any = await client.request(GET_RESERVA_CONFIG, { shop, codigoSucursal });
       if (res?.getReservaConfig) {
-        const c = res.getReservaConfig;
         setConfig({
-          activo: Boolean(c.activo),
-          diasDisponibles: Array.isArray(c.diasDisponibles) ? c.diasDisponibles : [1, 2, 3, 4, 5, 6, 7],
-          horaInicio: c.horaInicio || "10:00",
-          horaFin: c.horaFin || "22:00",
-          anticipacionMinHoras: c.anticipacionMinHoras ?? 1,
-          anticipacionMaxDias: c.anticipacionMaxDias ?? 30,
-          capacidadMaximaPersonas: c.capacidadMaximaPersonas ?? 10,
-          maxReservasPorHorario: c.maxReservasPorHorario ?? undefined,
-          maxReservasPorDia: c.maxReservasPorDia ?? undefined,
+          activo: Boolean(res.getReservaConfig.activo),
+          diasDisponibles: res.getReservaConfig.diasDisponibles || [1, 2, 3, 4, 5, 6, 7],
+          horaInicio: res.getReservaConfig.horaInicio || "10:00",
+          horaFin: res.getReservaConfig.horaFin || "22:00",
+          anticipacionMinHoras: res.getReservaConfig.anticipacionMinHoras ?? 1,
+          anticipacionMaxDias: res.getReservaConfig.anticipacionMaxDias ?? 30,
+          capacidadMaximaPersonas: res.getReservaConfig.capacidadMaximaPersonas || undefined,
+          maxReservasPorHorario: res.getReservaConfig.maxReservasPorHorario || undefined,
+          maxReservasPorDia: res.getReservaConfig.maxReservasPorDia || undefined,
         });
       }
-    } catch (err: any) {
-      console.error("Error al cargar configuración de reservas:", err);
+    } catch (err) {
+      console.error("Error al cargar configuración:", err);
     } finally {
       setIsLoadingConfig(false);
     }
   };
 
   useEffect(() => {
-    fetchReservas();
+    fetchScheduledOrders();
     fetchConfig();
-  }, [shop, codigoSucursal, statusFilter, fechaFilter]);
+  }, [shop, codigoSucursal]);
 
-  // ─── ACCIONES RESERVAS ─────────────────────────────────────────────────────
+  // ─── ACCIÓN: ENVIAR A COCINA ────────────────────────────────────────────────
 
-  const handleConfirmReserva = async (reserva: ReservaItem) => {
+  const handleConfirmScheduled = async (orderId: string, nroPedido?: string) => {
     const result = await Swal.fire({
-      title: "¿Confirmar reserva?",
-      text: `¿Deseas confirmar la reserva de ${reserva.clienteNombre} para el ${reserva.fecha} a las ${reserva.hora}?`,
+      title: "¿Enviar a cocina ahora?",
+      text: `El pedido #${nroPedido || orderId} se enviará a cocina y se registrará en comanda inmediatamente.`,
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: theme.palette.success.main,
-      cancelButtonColor: "#6c757d",
-      confirmButtonText: "Sí, confirmar",
+      confirmButtonText: "Sí, enviar a cocina",
       cancelButtonText: "Cancelar",
+      confirmButtonColor: "#7c3aed",
     });
 
     if (result.isConfirmed) {
       try {
         const client = getInboxClient();
-        await client.request(CONFIRM_RESERVA, { reservaId: reserva.id, shop });
-        Swal.fire({
-          icon: "success",
-          title: "¡Reserva Confirmada!",
-          text: "El estado ha sido actualizado a CONFIRMADO.",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        fetchReservas();
+        const res: any = await client.request(CONFIRM_SCHEDULED_ORDER, { orderId });
+        if (res?.confirmScheduledOrder?.success) {
+          Swal.fire({
+            icon: "success",
+            title: "¡Pedido enviado a cocina!",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+          fetchScheduledOrders();
+        } else {
+          Swal.fire("Error", res?.confirmScheduledOrder?.message || "Error al enviar a cocina", "error");
+        }
       } catch (err: any) {
-        Swal.fire("Error", err?.message || "No se pudo confirmar la reserva", "error");
+        Swal.fire("Error", err?.message || "Error al conectar", "error");
       }
     }
   };
 
-  const handleCancelReserva = async (reserva: ReservaItem) => {
-    const result = await Swal.fire({
-      title: "¿Cancelar reserva?",
-      text: `Se cancelará la reserva de ${reserva.clienteNombre}. Se notificará al cliente.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: theme.palette.error.main,
-      cancelButtonColor: "#6c757d",
-      confirmButtonText: "Sí, cancelar",
-      cancelButtonText: "Regresar",
-    });
-
-    if (result.isConfirmed) {
-      try {
-        const client = getInboxClient();
-        await client.request(CANCEL_RESERVA, { id: reserva.id, shop });
-        Swal.fire({
-          icon: "success",
-          title: "Reserva Cancelada",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        fetchReservas();
-      } catch (err: any) {
-        Swal.fire("Error", err?.message || "No se pudo cancelar la reserva", "error");
-      }
-    }
-  };
-
-  const handleOpenReminderModal = (reserva: ReservaItem) => {
-    setSelectedReservaForReminder(reserva);
-    setCustomReminderMsg(
-      `Hola ${reserva.clienteNombre}, te recordamos que tienes una reserva en nuestro restaurante para hoy ${reserva.fecha} a las ${reserva.hora} (${reserva.personas || 1} personas). ¿Confirmas tu asistencia?`
-    );
-    setReminderDialogOpen(true);
-  };
-
-  const handleSendReminder = async () => {
-    if (!selectedReservaForReminder) return;
-    try {
-      setIsSendingReminder(true);
-      const client = getInboxClient();
-      await client.request(SEND_RESERVA_REMINDER, {
-        id: selectedReservaForReminder.id,
-        shop,
-        mensaje: customReminderMsg,
-      });
-      setReminderDialogOpen(false);
-      Swal.fire({
-        icon: "success",
-        title: "¡Recordatorio Encolado!",
-        text: "El recordatorio se ha enviado por el canal de notificaciones y BullMQ.",
-        timer: 2500,
-        showConfirmButton: false,
-      });
-      fetchReservas();
-    } catch (err: any) {
-      Swal.fire("Error", err?.message || "No se pudo enviar el recordatorio", "error");
-    } finally {
-      setIsSendingReminder(false);
-    }
-  };
-
-  // ─── ACCIONES CONFIGURACIÓN ────────────────────────────────────────────────
+  // ─── ACCIONES: CONFIGURACIÓN ───────────────────────────────────────────────
 
   const handleToggleDay = (dayId: number) => {
     setConfig((prev) => {
@@ -542,7 +309,7 @@ export const ReservasPage: FC = () => {
       Swal.fire({
         icon: "success",
         title: "¡Configuración Guardada!",
-        text: "Los días y horarios de reserva se han actualizado correctamente.",
+        text: "Los días y horarios para pedidos programados se han actualizado correctamente.",
         timer: 2000,
         showConfirmButton: false,
       });
@@ -553,45 +320,75 @@ export const ReservasPage: FC = () => {
     }
   };
 
-  // ─── FILTRADO CLIENT-SIDE PARA BÚSQUEDA ──────────────────────────────────────
+  // ─── PREVIEW EN VIVO ───────────────────────────────────────────────────────
 
-  const filteredReservas = useMemo(() => {
-    return reservas.filter((item) => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      return (
-        item.clienteNombre.toLowerCase().includes(q) ||
-        item.clienteTelefono.includes(q) ||
-        (item.notas && item.notas.toLowerCase().includes(q))
-      );
-    });
-  }, [reservas, searchQuery]);
-
-  // Contadores para chips / stats
-  const stats = useMemo(() => {
-    return {
-      total: reservas.length,
-      pendientes: reservas.filter((r) => r.status === "PENDIENTE").length,
-      notificados: reservas.filter((r) => r.status === "NOTIFICADO").length,
-      confirmados: reservas.filter((r) => r.status === "CONFIRMADO").length,
-      cancelados: reservas.filter((r) => r.status === "CANCELADO").length,
-    };
-  }, [reservas]);
-
-  const renderStatusChip = (status: ReservaItem["status"]) => {
-    switch (status) {
-      case "PENDIENTE":
-        return <Chip label="Pendiente" size="small" sx={{ bgcolor: alpha(theme.palette.warning.main, 0.15), color: theme.palette.warning.dark, fontWeight: 700 }} />;
-      case "NOTIFICADO":
-        return <Chip label="Notificado (1h)" size="small" sx={{ bgcolor: alpha(theme.palette.info.main, 0.15), color: theme.palette.info.dark, fontWeight: 700 }} />;
-      case "CONFIRMADO":
-        return <Chip label="Confirmado" size="small" sx={{ bgcolor: alpha(theme.palette.success.main, 0.15), color: theme.palette.success.dark, fontWeight: 700 }} />;
-      case "CANCELADO":
-        return <Chip label="Cancelado" size="small" sx={{ bgcolor: alpha(theme.palette.error.main, 0.15), color: theme.palette.error.dark, fontWeight: 700 }} />;
-      default:
-        return <Chip label={status} size="small" />;
+  const previewDates = useMemo(() => {
+    const dates = [];
+    const today = new Date();
+    const max = Math.min(config.anticipacionMaxDias || 14, 30);
+    for (let i = 0; i <= max; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const dayJs = d.getDay();
+      const isoDay = dayJs === 0 ? 7 : dayJs;
+      if (config.diasDisponibles.includes(isoDay)) {
+        dates.push({
+          label: i === 0 ? "Hoy" : i === 1 ? "Mañana" : DIAS_CORTOS[dayJs],
+          dayNum: d.getDate(),
+          month: d.getMonth() + 1,
+        });
+      }
+      if (dates.length >= 5) break;
     }
-  };
+    return dates;
+  }, [config.diasDisponibles, config.anticipacionMaxDias]);
+
+  const previewTimes = useMemo(() => {
+    const [startH] = (config.horaInicio || "10:00").split(":").map(Number);
+    const [endH] = (config.horaFin || "22:00").split(":").map(Number);
+    const times: string[] = [];
+    for (let h = startH; h <= Math.min(endH, startH + 3); h++) {
+      times.push(String(h).padStart(2, "0") + ":00");
+      if (h < endH) times.push(String(h).padStart(2, "0") + ":30");
+    }
+    return times.slice(0, 6);
+  }, [config.horaInicio, config.horaFin]);
+
+  // ─── FILTRADO Y ESTADÍSTICAS ───────────────────────────────────────────────
+
+  const filteredOrders = useMemo(() => {
+    return scheduledOrders.filter((ord: any) => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch = !q || (
+        (ord.nroPedido && ord.nroPedido.toLowerCase().includes(q)) ||
+        (ord.id && ord.id.toLowerCase().includes(q)) ||
+        (ord.razonSocial && ord.razonSocial.toLowerCase().includes(q)) ||
+        (ord.nitCi && ord.nitCi.toLowerCase().includes(q)) ||
+        (ord.direccionEntrega && ord.direccionEntrega.toLowerCase().includes(q))
+      );
+
+      const metodo = (ord.metodoEntrega || "").toUpperCase();
+      const matchesMetodo =
+        metodoFilter === "TODOS" ||
+        (metodoFilter === "DELIVERY" && metodo === "DELIVERY") ||
+        (metodoFilter === "LLEVAR" && (metodo === "LLEVAR" || metodo === "RECOGER")) ||
+        (metodoFilter === "SALON" && (metodo === "SALON" || metodo === "MESA"));
+
+      return matchesSearch && matchesMetodo;
+    });
+  }, [scheduledOrders, searchQuery, metodoFilter]);
+
+  const stats = useMemo(() => {
+    const total = scheduledOrders.length;
+    const delivery = scheduledOrders.filter((o: any) => (o.metodoEntrega || "").toUpperCase() === "DELIVERY").length;
+    const llevar = scheduledOrders.filter((o: any) => {
+      const m = (o.metodoEntrega || "").toUpperCase();
+      return m === "LLEVAR" || m === "RECOGER";
+    }).length;
+    const montoTotal = scheduledOrders.reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0);
+
+    return { total, delivery, llevar, montoTotal };
+  }, [scheduledOrders]);
 
   return (
     <SimpleContainerBox>
@@ -599,7 +396,7 @@ export const ReservasPage: FC = () => {
         <Breadcrumb
           routeSegments={[
             { name: "Ecommerce", path: ecommerceRoutesMap.ecommerce.path },
-            { name: "Reservas" },
+            { name: "Pedidos Programados" },
           ]}
         />
       </div>
@@ -608,11 +405,11 @@ export const ReservasPage: FC = () => {
         <Grid container alignItems="center" justifyContent="space-between" spacing={2}>
           <Grid>
             <Typography variant="h5" sx={{ fontWeight: 800, color: theme.palette.text.primary, display: "flex", alignItems: "center", gap: 1 }}>
-              <RestaurantIcon color="primary" sx={{ fontSize: 28 }} />
-              Gestión de Reservaciones
+              <AccessTimeIcon color="primary" sx={{ fontSize: 28 }} />
+              Pedidos Programados
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Sucursal #{codigoSucursal} &bull; Tienda: <b>{shop}</b>
+              Sucursal #{codigoSucursal} &bull; Tienda: <b>{shop}</b> &bull; Agenda de entregas y retiros futuros
             </Typography>
           </Grid>
           <Grid>
@@ -628,337 +425,117 @@ export const ReservasPage: FC = () => {
                 border: `1px solid ${theme.palette.divider}`,
               }}
             >
-              <Tab icon={<EventSeatIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Listado de Reservas" />
-              <Tab icon={<AccessTimeIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Pedidos Programados" />
+              <Tab icon={<AccessTimeIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Listado de Pedidos Programados" />
               <Tab icon={<SettingsIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Configuración y Días" />
             </Tabs>
           </Grid>
         </Grid>
       </Box>
 
-      {/* ─── TAB 0: LISTADO DE RESERVAS ────────────────────────────────────────── */}
+      {/* ─── TAB 0: LISTADO DE PEDIDOS PROGRAMADOS ─────────────────────────────── */}
       {currentTab === 0 && (
         <Stack spacing={3}>
-          {reservas.length === 0 && (
-            <Alert
-              severity="info"
-              sx={{ borderRadius: 2 }}
-              action={
-                <Button color="inherit" size="small" onClick={() => setCurrentTab(1)} sx={{ fontWeight: 700 }}>
-                  Ver Pedidos Programados
-                </Button>
-              }
-            >
-              ¿Buscabas pedidos de entrega o para llevar programados para una fecha futura? Puedes verlos en la pestaña <b>Pedidos Programados</b>.
-            </Alert>
-          )}
           {/* STATS CARDS */}
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
                 <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    TOTAL RESERVAS
+                    TOTAL PROGRAMADOS
                   </Typography>
-                  <Typography variant="h5" fontWeight={800} color="primary.main">
+                  <Typography variant="h5" fontWeight={800} sx={{ color: "#7c3aed" }}>
                     {stats.total}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
                 <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    PENDIENTES
+                    DELIVERY
                   </Typography>
-                  <Typography variant="h5" fontWeight={800} sx={{ color: theme.palette.warning.main }}>
-                    {stats.pendientes}
+                  <Typography variant="h5" fontWeight={800} sx={{ color: "#0288d1" }}>
+                    {stats.delivery}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
                 <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    RECORDADOS (1H)
+                    PARA LLEVAR / RECOJO
                   </Typography>
-                  <Typography variant="h5" fontWeight={800} sx={{ color: theme.palette.info.main }}>
-                    {stats.notificados}
+                  <Typography variant="h5" fontWeight={800} sx={{ color: "#ed6c02" }}>
+                    {stats.llevar}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
                 <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    CONFIRMADOS
+                    MONTO TOTAL (BS.)
                   </Typography>
                   <Typography variant="h5" fontWeight={800} sx={{ color: theme.palette.success.main }}>
-                    {stats.confirmados}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-              <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
-                <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    CANCELADOS
-                  </Typography>
-                  <Typography variant="h5" fontWeight={800} sx={{ color: theme.palette.error.main }}>
-                    {stats.cancelados}
+                    Bs. {stats.montoTotal.toFixed(2)}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
           </Grid>
 
-          {/* FILTERS & SEARCH */}
-          <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
-            <CardContent>
-              <Grid container spacing={2} alignItems="center">
-                <Grid size={{ xs: 12, sm: 4, md: 3 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    placeholder="Buscar por cliente o teléfono..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon fontSize="small" />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 3, md: 2.5 }}>
-                  <Select
-                    fullWidth
-                    size="small"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <MenuItem value="TODAS">Todos los Estados</MenuItem>
-                    <MenuItem value="PENDIENTE">Pendientes</MenuItem>
-                    <MenuItem value="NOTIFICADO">Notificados</MenuItem>
-                    <MenuItem value="CONFIRMADO">Confirmados</MenuItem>
-                    <MenuItem value="CANCELADO">Cancelados</MenuItem>
-                  </Select>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 3, md: 2.5 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="date"
-                    label="Fecha de Reserva"
-                    InputLabelProps={{ shrink: true }}
-                    value={fechaFilter}
-                    onChange={(e) => setFechaFilter(e.target.value)}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 2, md: 4 }} sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-                  {fechaFilter && (
-                    <Button size="small" variant="text" onClick={() => setFechaFilter("")}>
-                      Limpiar fecha
-                    </Button>
-                  )}
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={isLoadingReservas ? <CircularProgress size={16} /> : <RefreshIcon />}
-                    onClick={fetchReservas}
-                    disabled={isLoadingReservas}
-                  >
-                    Actualizar
-                  </Button>
-                </Grid>
+          {/* BARRA DE FILTROS */}
+          <Paper sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, boxShadow: "none" }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid size={{ xs: 12, sm: 6, md: 5 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Buscar por # Pedido, Cliente, Dirección..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </Grid>
-            </CardContent>
-          </Card>
 
-          {/* TABLE OF RESERVAS */}
-          <TableContainer component={Paper} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
-            <Table size="medium">
-              <TableHead sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>Cliente</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Tipo</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Fecha y Hora</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Personas</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Notas</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Estado</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {isLoadingReservas ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                      <CircularProgress size={32} />
-                      <Typography variant="body2" sx={{ mt: 1 }} color="text.secondary">
-                        Cargando reservas...
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : filteredReservas.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                      <EventSeatIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
-                      <Typography variant="subtitle1" fontWeight={600} color="text.secondary">
-                        No hay reservas encontradas
-                      </Typography>
-                      <Typography variant="body2" color="text.disabled">
-                        {statusFilter !== "TODAS" || fechaFilter || searchQuery
-                          ? "Intenta cambiar o limpiar los filtros."
-                          : "Cuando los clientes hagan reservas desde la web, aparecerán aquí."}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredReservas.map((item) => {
-                    const cleanPhone = item.clienteTelefono.replace(/[^0-9]/g, "");
-                    const waLink = cleanPhone.startsWith("591")
-                      ? `https://wa.me/${cleanPhone}`
-                      : `https://wa.me/591${cleanPhone}`;
+              <Grid size={{ xs: 12, sm: 4, md: 3 }}>
+                <Select
+                  fullWidth
+                  size="small"
+                  value={metodoFilter}
+                  onChange={(e) => setMetodoFilter(e.target.value)}
+                >
+                  <MenuItem value="TODOS">Todos los tipos</MenuItem>
+                  <MenuItem value="DELIVERY">Solo Delivery</MenuItem>
+                  <MenuItem value="LLEVAR">Solo Para Llevar</MenuItem>
+                  <MenuItem value="SALON">Solo Salón / Mesa</MenuItem>
+                </Select>
+              </Grid>
 
-                    return (
-                      <TableRow key={item.id} hover>
-                        <TableCell>
-                          <Typography variant="subtitle2" fontWeight={700}>
-                            {item.clienteNombre}
-                          </Typography>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            <Typography variant="caption" color="text.secondary">
-                              {item.clienteTelefono}
-                            </Typography>
-                            {cleanPhone && (
-                              <Tooltip title="Chatear en WhatsApp">
-                                <IconButton
-                                  size="small"
-                                  component="a"
-                                  href={waLink}
-                                  target="_blank"
-                                  sx={{ color: "#25D366", p: 0.2 }}
-                                >
-                                  <WhatsAppIcon sx={{ fontSize: 16 }} />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            icon={item.tipo === "SALON" ? <EventSeatIcon sx={{ fontSize: 16 }} /> : <RestaurantIcon sx={{ fontSize: 16 }} />}
-                            label={item.tipo === "SALON" ? "Mesa / Salón" : "Para Recoger"}
-                            size="small"
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <CalendarMonthIcon fontSize="small" color="action" />
-                            <Box>
-                              <Typography variant="body2" fontWeight={600}>
-                                {item.fecha}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                                <AccessTimeIcon sx={{ fontSize: 14 }} /> {item.hora}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            <PeopleIcon fontSize="small" color="action" />
-                            <Typography variant="body2" fontWeight={600}>
-                              {item.personas ? `${item.personas} pers.` : "—"}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ maxWidth: 220 }}>
-                          <Typography variant="body2" color="text.secondary" noWrap title={item.notas || ""}>
-                            {item.notas || "—"}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>{renderStatusChip(item.status)}</TableCell>
-                        <TableCell align="center">
-                          <Stack direction="row" spacing={0.5} justifyContent="center">
-                            {item.status !== "CONFIRMADO" && item.status !== "CANCELADO" && (
-                              <Tooltip title="Confirmar Reserva">
-                                <IconButton
-                                  size="small"
-                                  sx={{ color: theme.palette.success.main }}
-                                  onClick={() => handleConfirmReserva(item)}
-                                >
-                                  <CheckCircleIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            )}
+              <Grid size={{ xs: 12, sm: 2, md: 4 }} sx={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  onClick={fetchScheduledOrders}
+                  sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                >
+                  Actualizar
+                </Button>
+              </Grid>
+            </Grid>
+          </Paper>
 
-                            {item.status !== "CANCELADO" && (
-                              <Tooltip title="Enviar Recordatorio (1h antes o manual)">
-                                <IconButton
-                                  size="small"
-                                  sx={{ color: theme.palette.info.main }}
-                                  onClick={() => handleOpenReminderModal(item)}
-                                >
-                                  <NotificationsActiveIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-
-                            {item.status !== "CANCELADO" && (
-                              <Tooltip title="Cancelar Reserva">
-                                <IconButton
-                                  size="small"
-                                  sx={{ color: theme.palette.error.main }}
-                                  onClick={() => handleCancelReserva(item)}
-                                >
-                                  <CancelIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Stack>
-      )}
-
-      {/* ─── TAB 1: PEDIDOS PROGRAMADOS (ECOMMERCE) ────────────────────────── */}
-      {currentTab === 1 && (
-        <Stack spacing={3}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                Pedidos de Ecommerce Programados
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Pedidos con entrega o recogida agendada para una fecha y hora futura.
-              </Typography>
-            </Box>
-            <Button
-              startIcon={<RefreshIcon />}
-              variant="outlined"
-              size="small"
-              onClick={fetchScheduledOrders}
-              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
-            >
-              Actualizar
-            </Button>
-          </Box>
-
-          <TableContainer component={Paper} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, boxShadow: 'none' }}>
+          {/* TABLA DE PEDIDOS PROGRAMADOS */}
+          <TableContainer component={Paper} sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, boxShadow: "none" }}>
             <Table>
               <TableHead sx={{ bgcolor: theme.palette.action.hover }}>
                 <TableRow>
@@ -982,23 +559,26 @@ export const ReservasPage: FC = () => {
                       </Typography>
                     </TableCell>
                   </TableRow>
-                ) : scheduledOrders.length === 0 ? (
+                ) : filteredOrders.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
-                      <TodayIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+                      <TodayIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
                       <Typography variant="subtitle1" fontWeight={700}>
                         No hay pedidos programados pendientes
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Cuando los clientes elijan 'Programar pedido' en el checkout, aparecerán aquí y en el Inbox de pedidos.
+                        Cuando los clientes elijan 'Programar pedido' en el checkout, aparecerán listados aquí.
                       </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  scheduledOrders.map((ord) => {
-                    const isDelivery = ord.metodoEntrega?.toUpperCase() === 'DELIVERY';
+                  filteredOrders.map((ord: any) => {
+                    const isDelivery = (ord.metodoEntrega || "").toUpperCase() === "DELIVERY";
+                    const isLlevar = (ord.metodoEntrega || "").toUpperCase() === "LLEVAR" || (ord.metodoEntrega || "").toUpperCase() === "RECOGER";
                     const items = Array.isArray(ord.items) ? ord.items : [];
-                    const itemsSummary = items.map((it: any) => `${it.quantity || 1}x ${it.article?.nombreArticulo || it.nombre || 'Item'}`).join(', ');
+                    const itemsSummary = items
+                      .map((it: any) => `${it.quantity || 1}x ${it.article?.nombreArticulo || it.nombre || "Item"}`)
+                      .join(", ");
 
                     return (
                       <TableRow key={ord.id} hover>
@@ -1009,30 +589,31 @@ export const ReservasPage: FC = () => {
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={isDelivery ? 'DELIVERY' : 'LLEVAR'}
+                            icon={isDelivery ? <LocalShippingIcon sx={{ "&&": { fontSize: 14 } }} /> : <ShoppingBagIcon sx={{ "&&": { fontSize: 14 } }} />}
+                            label={isDelivery ? "DELIVERY" : isLlevar ? "LLEVAR" : "SALÓN"}
                             size="small"
                             sx={{
-                              height: 20,
-                              fontSize: '0.7rem',
+                              height: 22,
+                              fontSize: "0.7rem",
                               fontWeight: 700,
-                              bgcolor: isDelivery ? alpha('#0288d1', 0.1) : alpha('#ed6c02', 0.1),
-                              color: isDelivery ? '#0288d1' : '#ed6c02',
+                              bgcolor: isDelivery ? alpha("#0288d1", 0.1) : isLlevar ? alpha("#ed6c02", 0.1) : alpha(theme.palette.text.secondary, 0.1),
+                              color: isDelivery ? "#0288d1" : isLlevar ? "#ed6c02" : theme.palette.text.secondary,
                             }}
                           />
                         </TableCell>
                         <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <AccessTimeIcon fontSize="small" sx={{ color: '#7c3aed' }} />
-                            <Typography variant="body2" fontWeight={700} sx={{ color: '#7c3aed' }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <AccessTimeIcon fontSize="small" sx={{ color: "#7c3aed" }} />
+                            <Typography variant="body2" fontWeight={700} sx={{ color: "#7c3aed" }}>
                               {ord.scheduledAt
-                                ? `${new Date(ord.scheduledAt).toLocaleDateString([], { weekday: 'short', day: '2-digit', month: '2-digit' })} ${new Date(ord.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                                : 'Programado'}
+                                ? `${new Date(ord.scheduledAt).toLocaleDateString([], { weekday: "short", day: "2-digit", month: "2-digit" })} ${new Date(ord.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                                : "Programado"}
                             </Typography>
                           </Box>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontWeight={600}>
-                            {ord.razonSocial || 'Cliente'}
+                            {ord.razonSocial || "Cliente"}
                           </Typography>
                           {ord.nitCi && (
                             <Typography variant="caption" color="text.secondary" display="block">
@@ -1040,7 +621,7 @@ export const ReservasPage: FC = () => {
                             </Typography>
                           )}
                           {ord.direccionEntrega && (
-                            <Typography variant="caption" color="text.secondary" display="block" sx={{ maxWidth: 200 }} noWrap title={ord.direccionEntrega}>
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ maxWidth: 220 }} noWrap title={ord.direccionEntrega}>
                               📍 {ord.direccionEntrega}
                             </Typography>
                           )}
@@ -1052,7 +633,7 @@ export const ReservasPage: FC = () => {
                         </TableCell>
                         <TableCell sx={{ maxWidth: 220 }}>
                           <Typography variant="body2" color="text.secondary" noWrap title={itemsSummary}>
-                            {itemsSummary || '—'}
+                            {itemsSummary || "—"}
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -1060,10 +641,10 @@ export const ReservasPage: FC = () => {
                             label="PROGRAMADO"
                             size="small"
                             sx={{
-                              bgcolor: alpha('#7c3aed', 0.15),
-                              color: '#7c3aed',
+                              bgcolor: alpha("#7c3aed", 0.15),
+                              color: "#7c3aed",
                               fontWeight: 700,
-                              fontSize: '0.7rem',
+                              fontSize: "0.7rem",
                             }}
                           />
                         </TableCell>
@@ -1074,13 +655,14 @@ export const ReservasPage: FC = () => {
                               size="small"
                               onClick={() => handleConfirmScheduled(ord.id, ord.nroPedido)}
                               sx={{
-                                bgcolor: '#7c3aed',
-                                '&:hover': { bgcolor: '#6d28d9' },
-                                color: '#fff',
-                                textTransform: 'none',
+                                bgcolor: "#7c3aed",
+                                "&:hover": { bgcolor: "#6d28d9" },
+                                color: "#fff",
+                                textTransform: "none",
                                 fontWeight: 700,
-                                fontSize: '0.75rem',
-                                borderRadius: '8px',
+                                fontSize: "0.75rem",
+                                borderRadius: "8px",
+                                whiteSpace: "nowrap",
                               }}
                             >
                               ⚡ Enviar a cocina
@@ -1097,8 +679,8 @@ export const ReservasPage: FC = () => {
         </Stack>
       )}
 
-      {/* ─── TAB 2: CONFIGURACIÓN DE DISPONIBILIDAD CON PREVIEW EN VIVO ───────── */}
-      {currentTab === 2 && (
+      {/* ─── TAB 1: CONFIGURACIÓN DE DISPONIBILIDAD CON PREVIEW EN VIVO ───────── */}
+      {currentTab === 1 && (
         <Grid container spacing={3} alignItems="flex-start">
           {/* COLUMNA IZQUIERDA: CONTROLES DE CONFIGURACIÓN */}
           <Grid size={{ xs: 12, lg: 7 }}>
@@ -1112,473 +694,276 @@ export const ReservasPage: FC = () => {
                     </Typography>
                   </Box>
                 ) : (
-              <Stack spacing={4}>
-                {/* SWITCH ACTIVAR */}
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 2 }}>
-                  <Box>
-                    <Typography variant="subtitle1" fontWeight={700}>
-                      Habilitar Sistema de Reservas
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Permite a los clientes agendar reservas de mesa o pedidos anticipados desde la tienda online.
-                    </Typography>
-                  </Box>
-                  <Switch
-                    checked={config.activo}
-                    onChange={(e) => setConfig((p) => ({ ...p, activo: e.target.checked }))}
-                    color="primary"
-                  />
-                </Box>
-
-                <Divider />
-
-                {/* DÍAS DISPONIBLES */}
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-                    Días Disponibles para Reservas
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Selecciona qué días de la semana la sucursal acepta reservaciones.
-                  </Typography>
-
-                  <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                    <Button size="small" variant="outlined" onClick={handleSelectAllDays}>
-                      Todos los días
-                    </Button>
-                    <Button size="small" variant="outlined" onClick={handleSelectWeekdays}>
-                      Lunes a Viernes
-                    </Button>
-                    <Button size="small" variant="outlined" onClick={handleSelectWeekends}>
-                      Fines de Semana
-                    </Button>
-                  </Stack>
-
-                  <Grid container spacing={1.5}>
-                    {DIAS_SEMANA.map((dia) => {
-                      const isSelected = config.diasDisponibles.includes(dia.id);
-                      return (
-                        <Grid size={{ xs: 6, sm: 3, md: 1.7 }} key={dia.id}>
-                          <Paper
-                            onClick={() => handleToggleDay(dia.id)}
-                            elevation={0}
-                            sx={{
-                              p: 1.5,
-                              textAlign: "center",
-                              cursor: "pointer",
-                              border: `2px solid ${isSelected ? theme.palette.primary.main : theme.palette.divider}`,
-                              bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.08) : "background.paper",
-                              borderRadius: 2,
-                              transition: "all 0.2s",
-                              "&:hover": {
-                                borderColor: theme.palette.primary.main,
-                              },
-                            }}
-                          >
-                            <Typography variant="body2" fontWeight={700} color={isSelected ? "primary.main" : "text.primary"}>
-                              {dia.label}
-                            </Typography>
-                            <Chip
-                              size="small"
-                              label={isSelected ? "Abierto" : "Cerrado"}
-                              sx={{
-                                mt: 0.5,
-                                fontSize: "0.65rem",
-                                height: 20,
-                                bgcolor: isSelected ? alpha(theme.palette.success.main, 0.15) : alpha(theme.palette.error.main, 0.1),
-                                color: isSelected ? theme.palette.success.dark : theme.palette.error.dark,
-                                fontWeight: 700,
-                              }}
-                            />
-                          </Paper>
-                        </Grid>
-                      );
-                    })}
-                  </Grid>
-                </Box>
-
-                <Divider />
-
-                {/* HORARIO DE RESERVAS */}
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-                    Horario de Atención para Reservas
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Franja horaria durante la cual los comensales pueden agendar su visita.
-                  </Typography>
-                  <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        fullWidth
-                        label="Hora de Inicio"
-                        type="time"
-                        value={config.horaInicio}
-                        onChange={(e) => setConfig((p) => ({ ...p, horaInicio: e.target.value }))}
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        fullWidth
-                        label="Hora de Cierre / Límite"
-                        type="time"
-                        value={config.horaFin}
-                        onChange={(e) => setConfig((p) => ({ ...p, horaFin: e.target.value }))}
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    </Grid>
-                  </Grid>
-                </Box>
-
-                <Divider />
-
-                {/* REGLAS DE ANTICIPACIÓN Y CAPACIDAD */}
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-                    Reglas de Reserva y Capacidad
-                  </Typography>
-                  <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        fullWidth
-                        label="Anticipación Mínima (Horas)"
-                        type="number"
-                        value={config.anticipacionMinHoras}
-                        onChange={(e) => setConfig((p) => ({ ...p, anticipacionMinHoras: parseInt(e.target.value) || 1 }))}
-                        helperText="Tiempo mínimo previo antes de la reserva (ej. 1 hora)"
-                        inputProps={{ min: 1 }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        fullWidth
-                        label="Anticipación Máxima (Días)"
-                        type="number"
-                        value={config.anticipacionMaxDias}
-                        onChange={(e) => setConfig((p) => ({ ...p, anticipacionMaxDias: parseInt(e.target.value) || 30 }))}
-                        helperText="Máximo de días a futuro permitidos para agendar (ej. 30 días)"
-                        inputProps={{ min: 1 }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <TextField
-                        fullWidth
-                        label="Máx. Personas por Mesa"
-                        type="number"
-                        value={config.capacidadMaximaPersonas || ""}
-                        onChange={(e) => setConfig((p) => ({ ...p, capacidadMaximaPersonas: parseInt(e.target.value) || undefined }))}
-                        helperText="Límite de comensales por grupo/mesa (opcional)"
-                        inputProps={{ min: 1 }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <TextField
-                        fullWidth
-                        label="Máx. Reservas por Turno/Horario"
-                        type="number"
-                        value={config.maxReservasPorHorario || ""}
-                        onChange={(e) => setConfig((p) => ({ ...p, maxReservasPorHorario: parseInt(e.target.value) || undefined }))}
-                        helperText="Cupo de reservas simultáneas por franja horaria (ej. 3 mesas)"
-                        inputProps={{ min: 1 }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <TextField
-                        fullWidth
-                        label="Máx. Reservas Totales por Día"
-                        type="number"
-                        value={config.maxReservasPorDia || ""}
-                        onChange={(e) => setConfig((p) => ({ ...p, maxReservasPorDia: parseInt(e.target.value) || undefined }))}
-                        helperText="Tope diario de reservas para toda la fecha (opcional)"
-                        inputProps={{ min: 1 }}
-                      />
-                    </Grid>
-                  </Grid>
-                </Box>
-
-                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    color="primary"
-                    startIcon={isSavingConfig ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                    onClick={handleSaveConfig}
-                    disabled={isSavingConfig}
-                    sx={{ px: 4, py: 1.2, fontWeight: 700 }}
-                  >
-                    Guardar Configuración
-                  </Button>
-                </Box>
-              </Stack>
-            )}
-          </CardContent>
-        </Card>
-      </Grid>
-
-      {/* COLUMNA DERECHA: PREVISUALIZACIÓN EN VIVO (MOCKUP CLIENTE) */}
-      <Grid size={{ xs: 12, lg: 5 }}>
-        <Box sx={{ position: { lg: "sticky" }, top: 20 }}>
-          <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, p: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <SmartphoneIcon color="primary" sx={{ fontSize: 22 }} />
-                <Typography variant="subtitle1" fontWeight={800}>
-                  Vista Previa en Vivo
-                </Typography>
-              </Box>
-              <Chip
-                label="Modo Cliente"
-                size="small"
-                sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, fontWeight: 700 }}
-              />
-            </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2.5 }}>
-              Así verán tus clientes el módulo de reservas en tu tienda web. Cambia los días, horarios o topes y mira cómo se actualiza en tiempo real:
-            </Typography>
-
-            {/* MARCO DEL MÓVIL */}
-            <Box
-              sx={{
-                maxWidth: 340,
-                mx: "auto",
-                bgcolor: "#0F172A",
-                p: "10px",
-                borderRadius: "36px",
-                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
-              }}
-            >
-              {/* PANTALLA INTERNA DEL MÓVIL */}
-              <Box
-                sx={{
-                  bgcolor: "#FFFFFF",
-                  borderRadius: "28px",
-                  p: 2,
-                  minHeight: 510,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                }}
-              >
-                {/* Notch / Parlante superior */}
-                <Box sx={{ width: 60, height: 4, bgcolor: "#CBD5E1", borderRadius: 4, mx: "auto", mb: 2 }} />
-
-                {/* Cabecera mini tienda */}
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pb: 1.5, borderBottom: "1px solid #F1F5F9" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Box sx={{ width: 32, height: 32, borderRadius: "50%", bgcolor: alpha(theme.palette.primary.main, 0.12), display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <RestaurantIcon sx={{ fontSize: 18, color: theme.palette.primary.main }} />
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" fontWeight={800} sx={{ color: "#0F172A", lineHeight: 1.1 }}>
-                        {shop}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "#64748B", fontSize: "0.68rem" }}>
-                        Sucursal #{codigoSucursal}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Chip
-                    label={config.activo ? "● Abierto" : "✕ Cerrado"}
-                    size="small"
-                    sx={{
-                      height: 22,
-                      fontSize: "0.65rem",
-                      fontWeight: 800,
-                      bgcolor: config.activo ? "#DCFCE7" : "#FEE2E2",
-                      color: config.activo ? "#166534" : "#991B1B",
-                    }}
-                  />
-                </Box>
-
-                {/* CONTENIDO INTERACTIVO SEGÚN ESTADO */}
-                {!config.activo ? (
-                  <Box sx={{ py: 6, textAlign: "center", px: 2 }}>
-                    <EventSeatIcon sx={{ fontSize: 48, color: "#94A3B8", mb: 1.5 }} />
-                    <Typography variant="subtitle2" fontWeight={800} sx={{ color: "#1E293B" }}>
-                      Reservas Pausadas
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: "#64748B", display: "block", mt: 0.5 }}>
-                      Las reservaciones se encuentran temporalmente cerradas para esta sucursal.
-                    </Typography>
-                  </Box>
-                ) : (
-                  <Stack spacing={2} sx={{ py: 1 }}>
-                    {/* 1. Selector de Días Dinámicos */}
-                    <Box>
-                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.8 }}>
-                        <Typography variant="caption" fontWeight={800} sx={{ color: "#334155" }}>
-                          📅 ELIGE EL DÍA
+                  <Stack spacing={4}>
+                    {/* SWITCH ACTIVAR */}
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 2 }}>
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          Habilitar Pedidos Programados
                         </Typography>
-                        <Typography variant="caption" sx={{ color: "#94A3B8", fontSize: "0.65rem" }}>
-                          {previewDates.length} días activos
+                        <Typography variant="body2" color="text.secondary">
+                          Permite a los clientes elegir fecha y hora futura para su pedido desde el checkout del ecommerce.
                         </Typography>
                       </Box>
-                      <Box sx={{ display: "flex", gap: 0.8, overflowX: "auto", pb: 0.5, "&::-webkit-scrollbar": { display: "none" } }}>
-                        {previewDates.length === 0 ? (
-                          <Typography variant="caption" color="error">
-                            Ningún día habilitado
-                          </Typography>
-                        ) : (
-                          previewDates.map((d, idx) => {
-                            const isSelected = previewSelectedDate === idx;
-                            return (
-                              <Paper
-                                key={idx}
-                                elevation={0}
-                                onClick={() => setPreviewSelectedDate(idx)}
+                      <Switch
+                        checked={config.activo}
+                        onChange={(e) => setConfig({ ...config, activo: e.target.checked })}
+                        color="primary"
+                      />
+                    </Box>
+
+                    {/* DÍAS DISPONIBLES */}
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                        Días Habilitados para Pedidos Anticipados
+                      </Typography>
+                      <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
+                        <Button size="small" variant="outlined" onClick={handleSelectAllDays} sx={{ fontSize: "0.75rem", borderRadius: 1.5, textTransform: "none" }}>
+                          Todos los días
+                        </Button>
+                        <Button size="small" variant="outlined" onClick={handleSelectWeekdays} sx={{ fontSize: "0.75rem", borderRadius: 1.5, textTransform: "none" }}>
+                          Lunes a Viernes
+                        </Button>
+                        <Button size="small" variant="outlined" onClick={handleSelectWeekends} sx={{ fontSize: "0.75rem", borderRadius: 1.5, textTransform: "none" }}>
+                          Fines de semana
+                        </Button>
+                      </Stack>
+                      <Grid container spacing={1}>
+                        {DIAS_SEMANA.map((dia) => {
+                          const isSelected = config.diasDisponibles.includes(dia.id);
+                          return (
+                            <Grid size={{ xs: 6, sm: 3, md: 1.7 }} key={dia.id}>
+                              <Card
+                                onClick={() => handleToggleDay(dia.id)}
                                 sx={{
-                                  p: 1,
-                                  minWidth: 48,
+                                  p: 1.5,
                                   textAlign: "center",
                                   cursor: "pointer",
                                   borderRadius: 2,
-                                  border: "1.5px solid",
-                                  borderColor: isSelected ? theme.palette.primary.main : "#E2E8F0",
-                                  bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.08) : "#F8FAFC",
-                                  transition: "all 0.15s",
+                                  border: "2px solid",
+                                  borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
+                                  bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.08) : "background.paper",
+                                  transition: "all 0.2s",
                                 }}
                               >
-                                <Typography variant="caption" fontWeight={700} sx={{ fontSize: "0.65rem", color: isSelected ? theme.palette.primary.main : "#64748B", display: "block" }}>
-                                  {d.label}
+                                <Typography variant="body2" fontWeight={700} color={isSelected ? "primary.main" : "text.secondary"}>
+                                  {dia.short}
                                 </Typography>
-                                <Typography variant="body2" fontWeight={800} sx={{ color: isSelected ? theme.palette.primary.main : "#0F172A" }}>
-                                  {d.dayNum}
+                                <Typography variant="caption" color="text.secondary">
+                                  {dia.label}
                                 </Typography>
-                              </Paper>
-                            );
-                          })
-                        )}
-                      </Box>
-                    </Box>
-
-                    {/* 2. Selector de Horarios Dinámicos */}
-                    <Box>
-                      <Typography variant="caption" fontWeight={800} sx={{ color: "#334155", display: "block", mb: 0.8 }}>
-                        ⏰ HORARIOS ({config.horaInicio || "10:00"} - {config.horaFin || "22:00"})
-                      </Typography>
-                      <Grid container spacing={0.8}>
-                        {previewTimes.map((h, idx) => {
-                          const isSelected = previewSelectedTime === idx;
-                          return (
-                            <Grid size={{ xs: 4 }} key={idx}>
-                              <Box
-                                onClick={() => setPreviewSelectedTime(idx)}
-                                sx={{
-                                  py: 0.6,
-                                  textAlign: "center",
-                                  borderRadius: 1.5,
-                                  cursor: "pointer",
-                                  fontSize: "0.75rem",
-                                  fontWeight: 700,
-                                  border: "1px solid",
-                                  borderColor: isSelected ? theme.palette.primary.main : "#E2E8F0",
-                                  bgcolor: isSelected ? theme.palette.primary.main : "#F8FAFC",
-                                  color: isSelected ? "#FFFFFF" : "#334155",
-                                }}
-                              >
-                                {h}
-                              </Box>
+                              </Card>
                             </Grid>
                           );
                         })}
                       </Grid>
                     </Box>
 
-                    {/* 3. Reglas y Capacidad en la Ficha del Cliente */}
-                    <Box sx={{ bgcolor: "#F8FAFC", p: 1.5, borderRadius: 2, border: "1px solid #E2E8F0" }}>
-                      <Typography variant="caption" fontWeight={800} sx={{ color: "#0F172A", display: "block", mb: 0.5 }}>
-                        Condiciones de Reserva:
+                    {/* RANGO DE HORARIOS */}
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+                        Horario de Entrega / Retiro Programado
                       </Typography>
-                      <Stack spacing={0.4}>
-                        <Typography variant="caption" sx={{ color: "#475569", fontSize: "0.68rem" }}>
-                          ⏱️ Anticipación mín: <b>{config.anticipacionMinHoras || 1} hora(s)</b>
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: "#475569", fontSize: "0.68rem" }}>
-                          📅 Agendar hasta: <b>{config.anticipacionMaxDias || 30} días adelante</b>
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: "#475569", fontSize: "0.68rem" }}>
-                          👥 Capacidad por mesa: <b>{config.capacidadMaximaPersonas ? `Máx. ${config.capacidadMaximaPersonas} personas` : "Sin límite"}</b>
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: "#475569", fontSize: "0.68rem" }}>
-                          🎟️ Cupo por horario: <b>{config.maxReservasPorHorario ? `${config.maxReservasPorHorario} reservas/franja` : "Ilimitado"}</b>
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: "#475569", fontSize: "0.68rem" }}>
-                          📊 Límite total diario: <b>{config.maxReservasPorDia ? `${config.maxReservasPorDia} reservas/día` : "Sin tope"}</b>
-                        </Typography>
-                      </Stack>
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <TextField
+                            label="Hora de Inicio"
+                            type="time"
+                            fullWidth
+                            size="small"
+                            value={config.horaInicio}
+                            onChange={(e) => setConfig({ ...config, horaInicio: e.target.value })}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <TextField
+                            label="Hora de Cierre"
+                            type="time"
+                            fullWidth
+                            size="small"
+                            value={config.horaFin}
+                            onChange={(e) => setConfig({ ...config, horaFin: e.target.value })}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </Grid>
+                      </Grid>
                     </Box>
 
-                    {/* Botón Reservar Simulado */}
-                    <Box
-                      sx={{
-                        py: 1,
-                        bgcolor: theme.palette.primary.main,
-                        color: "#FFFFFF",
-                        borderRadius: 2,
-                        textAlign: "center",
-                        fontWeight: 800,
-                        fontSize: "0.82rem",
-                        boxShadow: "0 4px 10px rgba(0,0,0,0.12)",
-                      }}
-                    >
-                      Confirmar Reserva
+                    {/* REGLAS DE ANTICIPACIÓN */}
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+                        Reglas de Anticipación
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <TextField
+                            label="Anticipación Mínima (Horas)"
+                            type="number"
+                            fullWidth
+                            size="small"
+                            value={config.anticipacionMinHoras}
+                            onChange={(e) => setConfig({ ...config, anticipacionMinHoras: Math.max(0, Number(e.target.value)) })}
+                            helperText="Tiempo mínimo antes de la hora fijada (ej. 1 hora)"
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <TextField
+                            label="Anticipación Máxima (Días)"
+                            type="number"
+                            fullWidth
+                            size="small"
+                            value={config.anticipacionMaxDias}
+                            onChange={(e) => setConfig({ ...config, anticipacionMaxDias: Math.max(1, Number(e.target.value)) })}
+                            helperText="Con cuántos días de antelación se puede agendar (ej. 14 o 30 días)"
+                          />
+                        </Grid>
+                      </Grid>
+                    </Box>
+
+                    {/* CUPOS MÁXIMOS */}
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+                        Cupos Máximos de Pedidos Programados (Capacidad)
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <TextField
+                            label="Máx. Pedidos por Franja Horaria"
+                            type="number"
+                            fullWidth
+                            size="small"
+                            value={config.maxReservasPorHorario || ""}
+                            onChange={(e) => setConfig({ ...config, maxReservasPorHorario: e.target.value ? Math.max(1, Number(e.target.value)) : undefined })}
+                            helperText="Tope de pedidos por intervalo de 30 min (ej. 5 pedidos)"
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <TextField
+                            label="Máx. Pedidos por Día Completo"
+                            type="number"
+                            fullWidth
+                            size="small"
+                            value={config.maxReservasPorDia || ""}
+                            onChange={(e) => setConfig({ ...config, maxReservasPorDia: e.target.value ? Math.max(1, Number(e.target.value)) : undefined })}
+                            helperText="Tope total diario de pedidos programados (opcional)"
+                          />
+                        </Grid>
+                      </Grid>
+                    </Box>
+
+                    <Divider />
+
+                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<SaveIcon />}
+                        disabled={isSavingConfig}
+                        onClick={handleSaveConfig}
+                        sx={{ borderRadius: 2, px: 4, py: 1, textTransform: "none", fontWeight: 700 }}
+                      >
+                        {isSavingConfig ? "Guardando..." : "Guardar Configuración"}
+                      </Button>
                     </Box>
                   </Stack>
                 )}
+              </CardContent>
+            </Card>
+          </Grid>
 
-                {/* Footer link a la tienda real */}
-                <Box sx={{ pt: 1.5, borderTop: "1px solid #F1F5F9", textAlign: "center" }}>
-                  <Button
-                    size="small"
-                    variant="text"
-                    startIcon={<LaunchIcon sx={{ fontSize: 14 }} />}
-                    component="a"
-                    href={`http://localhost:3000/${shop}`}
-                    target="_blank"
-                    sx={{ fontSize: "0.72rem", textTransform: "none", color: theme.palette.primary.main, fontWeight: 700 }}
-                  >
-                    Abrir tienda ecommerce en vivo ↗
-                  </Button>
+          {/* COLUMNA DERECHA: PREVIEW EN VIVO */}
+          <Grid size={{ xs: 12, lg: 5 }}>
+            <Card sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, position: "sticky", top: 20 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="subtitle1" fontWeight={800} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  📱 Vista Previa en Vivo (Cliente)
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Así se ve el selector de fecha y hora cuando tus clientes eligen 'Programar pedido' en el checkout:
+                </Typography>
+
+                <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.04), border: `1.5px dashed ${alpha(theme.palette.primary.main, 0.3)}` }}>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                    1. Fechas Disponibles
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ overflowX: "auto", pb: 1, mb: 2 }}>
+                    {previewDates.map((item, idx) => {
+                      const isSelected = previewSelectedDate === idx;
+                      return (
+                        <Box
+                          key={idx}
+                          onClick={() => setPreviewSelectedDate(idx)}
+                          sx={{
+                            minWidth: 64,
+                            p: 1,
+                            textAlign: "center",
+                            borderRadius: 2,
+                            cursor: "pointer",
+                            bgcolor: isSelected ? theme.palette.primary.main : "background.paper",
+                            color: isSelected ? "#fff" : "text.primary",
+                            border: "1px solid",
+                            borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
+                          }}
+                        >
+                          <Typography variant="caption" sx={{ display: "block", fontWeight: 600 }}>
+                            {item.label}
+                          </Typography>
+                          <Typography variant="body2" fontWeight={800}>
+                            {item.dayNum}/{item.month}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                    2. Horarios Habilitados
+                  </Typography>
+                  <Grid container spacing={1} sx={{ mb: 2 }}>
+                    {previewTimes.map((time, idx) => {
+                      const isSelected = previewSelectedTime === idx;
+                      return (
+                        <Grid size={{ xs: 4 }} key={idx}>
+                          <Box
+                            onClick={() => setPreviewSelectedTime(idx)}
+                            sx={{
+                              p: 1,
+                              textAlign: "center",
+                              borderRadius: 1.5,
+                              cursor: "pointer",
+                              bgcolor: isSelected ? theme.palette.primary.main : "background.paper",
+                              color: isSelected ? "#fff" : "text.primary",
+                              border: "1px solid",
+                              borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
+                              fontSize: "0.85rem",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {time}
+                          </Box>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+
+                  <Divider sx={{ my: 1.5 }} />
+
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    ⏱️ Anticipación mín: <b>{config.anticipacionMinHoras}h</b> &bull; Máx: <b>{config.anticipacionMaxDias} días</b>
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    🎟️ Tope por franja: <b>{config.maxReservasPorHorario ? `${config.maxReservasPorHorario} pedidos` : "Ilimitado"}</b>
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    📊 Tope total diario: <b>{config.maxReservasPorDia ? `${config.maxReservasPorDia} pedidos` : "Sin tope"}</b>
+                  </Typography>
                 </Box>
-              </Box>
-            </Box>
-          </Card>
-        </Box>
-      </Grid>
-    </Grid>
-  )}
-
-      {/* ─── MODAL ENVIAR RECORDATORIO ─────────────────────────────────────────── */}
-      <Dialog open={reminderDialogOpen} onClose={() => setReminderDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>Enviar Recordatorio al Cliente</DialogTitle>
-        <DialogContent dividers>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Este mensaje se enviará a la cola BullMQ de recordatorios y notificará en tiempo real al cliente:
-          </Typography>
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="Mensaje del Recordatorio"
-            value={customReminderMsg}
-            onChange={(e) => setCustomReminderMsg(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setReminderDialogOpen(false)} color="inherit">
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSendReminder}
-            disabled={isSendingReminder}
-            startIcon={isSendingReminder ? <CircularProgress size={16} /> : <NotificationsActiveIcon />}
-          >
-            Enviar Ahora
-          </Button>
-        </DialogActions>
-      </Dialog>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
     </SimpleContainerBox>
   );
 };
