@@ -383,13 +383,13 @@ const AdsApp = () => {
 
   const [banners, setBanners] = useState<any[]>([])
   const [isLoadingBanners, setIsLoadingBanners] = useState(false)
-  const [cloudinaryAuth, setCloudinaryAuth] = useState<any>(null)
-  const [isFetchingSignature, setIsFetchingSignature] = useState(false)
 
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [fechaInicio, setFechaInicio] = useState<Dayjs | null>(dayjs())
   const [fechaFin, setFechaFin] = useState<Dayjs | null>(dayjs().add(1, 'month'))
   const [isSaving, setIsSaving] = useState(false)
+  const [pendingVideoFile, setPendingVideoFile] = useState<File | null>(null)
+  const [pendingVideoUrl, setPendingVideoUrl] = useState<string>('')
 
   const getInboxClient = () => {
     const token = localStorage.getItem('accessToken') || ''
@@ -400,6 +400,24 @@ const AdsApp = () => {
     return new GraphQLClient(rawUrl, {
       headers: { Authorization: `Bearer ${token}` }
     })
+  }
+
+  const getImageUploadEndpoint = () => {
+    let rawUrl = import.meta.env.ISI_API_INBOX_URL || 'http://localhost:4000/api'
+    if (rawUrl.startsWith('/')) {
+      rawUrl = window.location.origin + rawUrl
+    }
+    const clean = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl
+    return clean.endsWith('/api') ? `${clean}/upload-image` : `${clean}/api/upload-image`
+  }
+
+  const getVideoUploadEndpoint = () => {
+    let rawUrl = import.meta.env.ISI_API_INBOX_URL || 'http://localhost:4000/api'
+    if (rawUrl.startsWith('/')) {
+      rawUrl = window.location.origin + rawUrl
+    }
+    const clean = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl
+    return clean.endsWith('/api') ? `${clean}/upload-video` : `${clean}/api/upload-video`
   }
 
   const fetchBanners = async () => {
@@ -426,91 +444,127 @@ const AdsApp = () => {
     if (editorMode === 'list') fetchBanners()
   }, [editorMode])
 
-  const goSelectMode = async () => {
-    setIsFetchingSignature(true)
+  const goSelectMode = () => {
+    setEditorMode('select')
+  }
+
+  const handleDeleteBanner = async (bannerId: string) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este banner?')) return
     try {
       const client = getInboxClient()
-      const q = gql`
-        query FIRMA($shop: String!) {
-          cloudinarySignature(shop: $shop) {
-            signature timestamp apiKey cloudName
-          }
+      const m = gql`
+        mutation EliminarBanner($id: String!) {
+          deleteBanner(id: $id)
         }
       `
-      const data: any = await client.request(q, { shop })
-      setCloudinaryAuth(data.cloudinarySignature)
-      setEditorMode('select')
+      await client.request(m, { id: bannerId })
+      fetchBanners()
     } catch (e: any) {
-      console.error("GraphQL Error [FIRMA]:", e)
-      showError('Error al obtener firma de Cloudinary. Revisa la consola.')
-    } finally {
-      setIsFetchingSignature(false)
+      showError('Error al eliminar banner: ' + (e.message || String(e)))
     }
   }
 
   const handleSaveBanner = async () => {
     if (!fechaInicio || !fechaFin) return showError('Debe seleccionar fechas.')
-    if (!cloudinaryAuth) return showError('No hay firma de Cloudinary. Vuelve al listado e intenta crear de nuevo.')
     
     setIsSaving(true)
     setSelectedId(null)
     setEditingTextId(null)
     try {
-      await new Promise((r) => requestAnimationFrame(r))
-      await new Promise((r) => setTimeout(r, 200))
-      const cv = await html2canvas(canvasRef.current!, {
-        scale: 4,
-        useCORS: true,
-        backgroundColor: useAutoGradient ? null : bgColor,
-        logging: false,
-      })
-      
-      const blob: Blob = await new Promise((resolve, reject) => {
-        cv.toBlob(b => {
-          if (b) resolve(b)
-          else reject(new Error('Blob creation failed'))
-        }, 'image/png')
-      })
-      
-      const fd = new FormData()
-      fd.append('file', blob)
-      fd.append('api_key', cloudinaryAuth.apiKey)
-      fd.append('timestamp', String(cloudinaryAuth.timestamp))
-      fd.append('signature', cloudinaryAuth.signature)
+      const token = localStorage.getItem('accessToken') || ''
+      let uploadData: any = null
+      let cv: HTMLCanvasElement | null = null
 
-      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryAuth.cloudName}/image/upload`, {
-        method: 'POST',
-        body: fd
-      })
-      if (!cloudRes.ok) throw new Error('Error subiendo imagen a Cloudinary')
-      const cloudData = await cloudRes.json()
+      if (pendingVideoFile) {
+        // Subida y compresión de video a S3 (MinIO) mediante FFmpeg
+        const endpoint = `${getVideoUploadEndpoint()}?shop=${shop}&target=banner`
+        const uploadRes = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': pendingVideoFile.type || 'video/mp4',
+          },
+          body: pendingVideoFile,
+        })
+
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Error comprimiendo y subiendo el video a S3')
+        }
+
+        uploadData = await uploadRes.json()
+      } else {
+        await new Promise((r) => requestAnimationFrame(r))
+        await new Promise((r) => setTimeout(r, 200))
+        cv = await html2canvas(canvasRef.current!, {
+          scale: 4,
+          useCORS: true,
+          backgroundColor: useAutoGradient ? null : bgColor,
+          logging: false,
+        })
+        
+        const blob: Blob = await new Promise((resolve, reject) => {
+          cv!.toBlob(b => {
+            if (b) resolve(b)
+            else reject(new Error('Blob creation failed'))
+          }, 'image/png')
+        })
+        
+        const endpoint = `${getImageUploadEndpoint()}?shop=${shop}&type=banner`
+
+        const uploadRes = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'image/png',
+          },
+          body: blob,
+        })
+
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Error subiendo la imagen')
+        }
+
+        uploadData = await uploadRes.json()
+      }
       
       const client = getInboxClient()
       const m = gql`
-        mutation Guardar($shop: String!, $publicId: String!, $fechaInicio: String!, $fechaFin: String!) {
+        mutation Guardar($shop: String!, $publicId: String!, $url: String!, $fechaInicio: String, $fechaFin: String) {
           saveBanner(
             shop: $shop
             publicId: $publicId
+            url: $url
             fechaInicio: $fechaInicio
             fechaFin: $fechaFin
-          ) { id }
+          ) { id url }
         }
       `
       await client.request(m, {
         shop,
-        publicId: cloudData.public_id,
+        publicId: uploadData.id || uploadData.url,
+        url: uploadData.url,
         fechaInicio: fechaInicio.startOf('day').format(),
         fechaFin: fechaFin.endOf('day').format()
       })
       
-      const a = document.createElement('a')
-      a.href = cv.toDataURL('image/png')
-      a.download = 'banner-restaurante.png'
-      a.click()
+      if (cv) {
+        const a = document.createElement('a')
+        a.href = cv.toDataURL('image/png')
+        a.download = 'banner-restaurante.png'
+        a.click()
+      }
       
+      setPendingVideoFile(null)
+      if (pendingVideoUrl) {
+        URL.revokeObjectURL(pendingVideoUrl)
+        setPendingVideoUrl('')
+      }
       setShowSaveModal(false)
       setEditorMode('list')
       setElements([])
+      fetchBanners()
     } catch (e: any) {
       showError('Error al guardar: ' + e.message)
     } finally {
@@ -843,9 +897,32 @@ const AdsApp = () => {
     setEditorMode('design')
   }
 
+  const isVideoBanner = (url?: string) => {
+    if (!url) return false
+    return /\.(mp4|webm|mov|ogg)(\?|$)/i.test(url) || url.includes('banner-video-')
+  }
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isLogo = false, isFullBanner = false) => {
-    if (!e.target.files?.[0]) return
-    const url = URL.createObjectURL(e.target.files[0])
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (isFullBanner && file.type.startsWith('video/')) {
+      if (pendingVideoUrl) URL.revokeObjectURL(pendingVideoUrl)
+      const videoObjectUrl = URL.createObjectURL(file)
+      setPendingVideoFile(file)
+      setPendingVideoUrl(videoObjectUrl)
+      setShowSaveModal(true)
+      e.target.value = ''
+      return
+    }
+
+    setPendingVideoFile(null)
+    if (pendingVideoUrl) {
+      URL.revokeObjectURL(pendingVideoUrl)
+      setPendingVideoUrl('')
+    }
+
+    const url = URL.createObjectURL(file)
     const img = new Image()
     img.onload = async () => {
       const id = Math.random().toString(36).substr(2, 9)
@@ -888,6 +965,7 @@ const AdsApp = () => {
       }
     }
     img.src = url
+    e.target.value = ''
   }
 
   const toggleBgRemoval = async () => {
@@ -975,13 +1053,138 @@ const AdsApp = () => {
     if (selectedId === id) setSelectedId(null)
   }
 
+  const handleCloseSaveModal = () => {
+    if (isSaving) return
+    setShowSaveModal(false)
+    if (pendingVideoFile) {
+      setPendingVideoFile(null)
+      if (pendingVideoUrl) {
+        URL.revokeObjectURL(pendingVideoUrl)
+        setPendingVideoUrl('')
+      }
+    }
+  }
+
+  const saveModalAndSnackbar = (
+    <>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Dialog open={showSaveModal} onClose={handleCloseSaveModal} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }} sx={{ zIndex: 100000 }}>
+          <DialogTitle fontWeight={800} color="#0f172a">
+            {pendingVideoFile ? 'Publicar Video Promocional' : 'Publicar Banner'}
+          </DialogTitle>
+          <DialogContent>
+            {pendingVideoFile && pendingVideoUrl && (
+              <Box sx={{ mb: 3, mt: 1 }}>
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: 220,
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    bgcolor: '#0f172a',
+                    border: '1px solid #e2e8f0',
+                    mb: 1.5,
+                    position: 'relative',
+                  }}
+                >
+                  <video
+                    src={pendingVideoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      filter: 'blur(24px) saturate(1.5) brightness(0.45)',
+                      transform: 'scale(1.2)',
+                    }}
+                  />
+                  <video
+                    src={pendingVideoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controls
+                    style={{
+                      position: 'relative',
+                      zIndex: 1,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      display: 'block',
+                    }}
+                  />
+                </Box>
+                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                  <strong>{pendingVideoFile.name}</strong> ({(pendingVideoFile.size / 1024 / 1024).toFixed(1)} MB) — Se comprimirá automáticamente con <strong>FFmpeg</strong> y se subirá a <strong>S3 (MinIO)</strong>.
+                </Alert>
+              </Box>
+            )}
+            <Typography variant="body2" color="#64748b" mb={3} mt={1}>
+              {pendingVideoFile
+                ? 'Selecciona el rango de fechas en los que este video promocional estará activo en tu restaurante.'
+                : 'Selecciona el rango de fechas en los que este banner estará activo en tu restaurante. Al confirmar, el banner se subirá al servidor y se descargará una copia localmente.'}
+            </Typography>
+            <Stack spacing={3} mt={1}>
+              <DatePicker
+                label="Fecha de Inicio"
+                value={fechaInicio}
+                onChange={(newValue) => setFechaInicio(newValue)}
+                format="DD/MM/YYYY"
+                slotProps={{ 
+                  textField: { fullWidth: true },
+                  popper: { sx: { zIndex: 100005 } },
+                  dialog: { sx: { zIndex: 100005 } }
+                }}
+              />
+              <DatePicker
+                label="Fecha de Fin"
+                value={fechaFin}
+                onChange={(newValue) => setFechaFin(newValue)}
+                format="DD/MM/YYYY"
+                slotProps={{ 
+                  textField: { fullWidth: true },
+                  popper: { sx: { zIndex: 100005 } },
+                  dialog: { sx: { zIndex: 100005 } }
+                }}
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ p: 3, pt: 0 }}>
+            <Button onClick={handleCloseSaveModal} color="inherit" disabled={isSaving} sx={{ fontWeight: 600 }}>Cancelar</Button>
+            <Button onClick={handleSaveBanner} variant="contained" disabled={isSaving || !fechaInicio || !fechaFin} sx={{ fontWeight: 700, borderRadius: 2, px: 3, bgcolor: '#3b82f6' }} disableElevation>
+              {isSaving
+                ? (pendingVideoFile ? 'Comprimiendo video y subiendo a S3...' : 'Guardando y Subiendo...')
+                : 'Confirmar Guardado'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </LocalizationProvider>
+
+      <Snackbar open={!!errorMsg} anchorOrigin={{ vertical: 'top', horizontal: 'center' }} sx={{ zIndex: 100000 }}>
+        <Alert
+          severity="error"
+          variant="filled"
+          sx={{ fontWeight: 700, borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }}
+        >
+          {errorMsg}
+        </Alert>
+      </Snackbar>
+    </>
+  )
+
   if (editorMode === 'list') {
     return (
       <Box sx={{ p: 4, minHeight: '100vh', bgcolor: '#f8fafc' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Typography variant="h4" fontWeight="900" color="#0f172a">Gestión de Banners</Typography>
-          <Button variant="contained" startIcon={isFetchingSignature ? <CircularProgress size={20} color="inherit" /> : <AddIcon />} onClick={goSelectMode} disabled={isFetchingSignature} sx={{ bgcolor: '#3b82f6', '&:hover': { bgcolor: '#2563eb' }, borderRadius: 2, px: 3 }}>
-            {isFetchingSignature ? 'Conectando...' : 'Crear Nuevo Banner'}
+          <Button variant="contained" startIcon={<AddIcon />} onClick={goSelectMode} sx={{ bgcolor: '#3b82f6', '&:hover': { bgcolor: '#2563eb' }, borderRadius: 2, px: 3 }}>
+            Crear Nuevo Banner
           </Button>
         </Box>
         
@@ -996,14 +1199,23 @@ const AdsApp = () => {
                   <TableCell sx={{ fontWeight: '800', color: '#475569' }}>ESTADO</TableCell>
                   <TableCell sx={{ fontWeight: '800', color: '#475569' }}>FECHA INICIO</TableCell>
                   <TableCell sx={{ fontWeight: '800', color: '#475569' }}>FECHA FIN</TableCell>
+                  <TableCell sx={{ fontWeight: '800', color: '#475569', textAlign: 'right' }}>ACCIONES</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {banners.map((b) => (
                   <TableRow key={b.id} sx={{ '&:hover': { bgcolor: '#f8fafc' } }}>
                     <TableCell>
-                      <Box sx={{ width: 140, height: 44, borderRadius: 2, overflow: 'hidden', border: '1px solid #e2e8f0', bgcolor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {b.url ? <img src={b.url} alt="banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon sx={{ color: '#cbd5e1' }} />}
+                      <Box sx={{ width: 140, height: 44, borderRadius: 2, overflow: 'hidden', border: '1px solid #e2e8f0', bgcolor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                        {b.url ? (
+                          isVideoBanner(b.url) ? (
+                            <video src={b.url} muted autoPlay loop playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                          ) : (
+                            <img src={b.url} alt="banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          )
+                        ) : (
+                          <ImageIcon sx={{ color: '#cbd5e1' }} />
+                        )}
                       </Box>
                     </TableCell>
                     <TableCell>
@@ -1015,11 +1227,16 @@ const AdsApp = () => {
                     </TableCell>
                     <TableCell sx={{ color: '#334155', fontWeight: 600 }}>{dayjs(b.fechaInicio).format('DD/MM/YYYY')}</TableCell>
                     <TableCell sx={{ color: '#334155', fontWeight: 600 }}>{dayjs(b.fechaFin).format('DD/MM/YYYY')}</TableCell>
+                    <TableCell sx={{ textAlign: 'right' }}>
+                      <IconButton size="small" onClick={() => handleDeleteBanner(b.id)} sx={{ color: '#ef4444', '&:hover': { bgcolor: '#fee2e2' } }}>
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {banners.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} sx={{ textAlign: 'center', py: 8, color: '#64748b' }}>
+                    <TableCell colSpan={5} sx={{ textAlign: 'center', py: 8, color: '#64748b' }}>
                       <CampaignIcon sx={{ fontSize: 64, color: '#cbd5e1', mb: 2 }} />
                       <Typography variant="h6">No tienes banners creados todavía</Typography>
                       <Typography variant="body2">Tus promociones activas aparecerán aquí.</Typography>
@@ -1036,35 +1253,40 @@ const AdsApp = () => {
 
   if (editorMode === 'select') {
     return (
-      <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'transparent' }}>
-        <Typography variant="h3" fontWeight="900" mb={2} color="#0f172a">Banners Promocionales</Typography>
-        <Typography variant="h6" color="#64748b" mb={6}>¿Qué te gustaría hacer hoy?</Typography>
-        <Stack direction="row" spacing={4}>
-          <Box 
-            onClick={() => setEditorMode('list')} 
-            sx={{ position: 'absolute', top: 40, left: 40, p: 1, cursor: 'pointer', color: '#64748b', '&:hover': { color: '#0f172a' }, display: 'flex', alignItems: 'center', gap: 1 }}
-          >
-            <ArrowBackIosNewIcon sx={{ fontSize: 16 }} /> Volver al listado
-          </Box>
-          <Box 
-            onClick={() => fileInputRef.current?.click()} 
-            sx={{ p: 5, cursor: 'pointer', textAlign: 'center', width: 320, borderRadius: 6, bgcolor: '#ffffff', border: '1px solid #e2e8f0', transition: 'all 0.2s', '&:hover': { borderColor: '#3b82f6', transform: 'translateY(-4px)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' } }}
-          >
-            <CloudUploadIcon sx={{ fontSize: 64, color: '#3b82f6', mb: 2 }} />
-            <Typography variant="h5" fontWeight="bold" mb={1} color="#0f172a">Subir mi diseño</Typography>
-            <Typography variant="body2" color="#64748b">Tengo mi propio banner diseñado. Se ajustará al tamaño oficial ({CANVAS_WIDTH}x{CANVAS_HEIGHT}px).</Typography>
-            <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={(e) => handleImageUpload(e, false, true)} />
-          </Box>
-          <Box 
-            onClick={loadDefaultDesign} 
-            sx={{ p: 5, cursor: 'pointer', textAlign: 'center', width: 320, borderRadius: 6, bgcolor: '#ffffff', border: '1px solid #e2e8f0', transition: 'all 0.2s', '&:hover': { borderColor: '#3b82f6', transform: 'translateY(-4px)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' } }}
-          >
-            <PaletteIcon sx={{ fontSize: 64, color: '#10b981', mb: 2 }} />
-            <Typography variant="h5" fontWeight="bold" mb={1} color="#0f172a">Diseñar Aquí</Typography>
-            <Typography variant="body2" color="#64748b">Usar el editor avanzado para crear un banner espectacular desde cero.</Typography>
-          </Box>
-        </Stack>
-      </Box>
+      <>
+        <Box sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'transparent' }}>
+          <Typography variant="h3" fontWeight="900" mb={2} color="#0f172a">Banners Promocionales</Typography>
+          <Typography variant="h6" color="#64748b" mb={6}>¿Qué te gustaría hacer hoy?</Typography>
+          <Stack direction="row" spacing={4}>
+            <Box 
+              onClick={() => setEditorMode('list')} 
+              sx={{ position: 'absolute', top: 40, left: 40, p: 1, cursor: 'pointer', color: '#64748b', '&:hover': { color: '#0f172a' }, display: 'flex', alignItems: 'center', gap: 1 }}
+            >
+              <ArrowBackIosNewIcon sx={{ fontSize: 16 }} /> Volver al listado
+            </Box>
+            <Box 
+              onClick={() => fileInputRef.current?.click()} 
+              sx={{ p: 5, cursor: 'pointer', textAlign: 'center', width: 320, borderRadius: 6, bgcolor: '#ffffff', border: '1px solid #e2e8f0', transition: 'all 0.2s', '&:hover': { borderColor: '#3b82f6', transform: 'translateY(-4px)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' } }}
+            >
+              <CloudUploadIcon sx={{ fontSize: 64, color: '#3b82f6', mb: 2 }} />
+              <Typography variant="h5" fontWeight="bold" mb={1} color="#0f172a">Subir mi diseño</Typography>
+              <Typography variant="body2" color="#64748b">
+                Sube tu propio banner en <strong>imagen o video</strong>. Se ajustará al tamaño oficial ({CANVAS_WIDTH}x{CANVAS_HEIGHT}px).
+              </Typography>
+              <input type="file" accept="image/*,video/*" hidden ref={fileInputRef} onChange={(e) => handleImageUpload(e, false, true)} />
+            </Box>
+            <Box 
+              onClick={loadDefaultDesign} 
+              sx={{ p: 5, cursor: 'pointer', textAlign: 'center', width: 320, borderRadius: 6, bgcolor: '#ffffff', border: '1px solid #e2e8f0', transition: 'all 0.2s', '&:hover': { borderColor: '#3b82f6', transform: 'translateY(-4px)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' } }}
+            >
+              <PaletteIcon sx={{ fontSize: 64, color: '#10b981', mb: 2 }} />
+              <Typography variant="h5" fontWeight="bold" mb={1} color="#0f172a">Diseñar Aquí</Typography>
+              <Typography variant="body2" color="#64748b">Usar el editor avanzado para crear un banner espectacular desde cero.</Typography>
+            </Box>
+          </Stack>
+        </Box>
+        {saveModalAndSnackbar}
+      </>
     )
   }
 
@@ -1456,56 +1678,7 @@ const AdsApp = () => {
         </Box>
       </Box>
 
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <Dialog open={showSaveModal} onClose={() => setShowSaveModal(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }} sx={{ zIndex: 100000 }}>
-          <DialogTitle fontWeight={800} color="#0f172a">Publicar Banner</DialogTitle>
-          <DialogContent>
-            <Typography variant="body2" color="#64748b" mb={3} mt={1}>
-              Selecciona el rango de fechas en los que este banner estará activo en tu restaurante. Al confirmar, el banner se subirá al servidor y se descargará una copia localmente.
-            </Typography>
-            <Stack spacing={3} mt={1}>
-              <DatePicker
-                label="Fecha de Inicio"
-                value={fechaInicio}
-                onChange={(newValue) => setFechaInicio(newValue)}
-                format="DD/MM/YYYY"
-                slotProps={{ 
-                  textField: { fullWidth: true },
-                  popper: { sx: { zIndex: 100005 } },
-                  dialog: { sx: { zIndex: 100005 } }
-                }}
-              />
-              <DatePicker
-                label="Fecha de Fin"
-                value={fechaFin}
-                onChange={(newValue) => setFechaFin(newValue)}
-                format="DD/MM/YYYY"
-                slotProps={{ 
-                  textField: { fullWidth: true },
-                  popper: { sx: { zIndex: 100005 } },
-                  dialog: { sx: { zIndex: 100005 } }
-                }}
-              />
-            </Stack>
-          </DialogContent>
-          <DialogActions sx={{ p: 3, pt: 0 }}>
-            <Button onClick={() => setShowSaveModal(false)} color="inherit" disabled={isSaving} sx={{ fontWeight: 600 }}>Cancelar</Button>
-            <Button onClick={handleSaveBanner} variant="contained" disabled={isSaving || !fechaInicio || !fechaFin} sx={{ fontWeight: 700, borderRadius: 2, px: 3, bgcolor: '#3b82f6' }} disableElevation>
-              {isSaving ? 'Guardando y Subiendo...' : 'Confirmar Guardado'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </LocalizationProvider>
-
-      <Snackbar open={!!errorMsg} anchorOrigin={{ vertical: 'top', horizontal: 'center' }} sx={{ zIndex: 100000 }}>
-        <Alert
-          severity="error"
-          variant="filled"
-          sx={{ fontWeight: 700, borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }}
-        >
-          {errorMsg}
-        </Alert>
-      </Snackbar>
+      {saveModalAndSnackbar}
     </>
   )
 }

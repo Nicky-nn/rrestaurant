@@ -5,6 +5,7 @@ const EcommercePage = lazy(() => import("./pages/EcommercePage"));
 const RepartidoresPage = lazy(() => import("./pages/RepartidoresPage"));
 const EcommerceConfigPage = lazy(() => import("./pages/EcommerceConfigPage"));
 const ReservasPage = lazy(() => import("./pages/ReservasPage"));
+const CatalogoPromosPage = lazy(() => import("./pages/CatalogoPromosPage"));
 
 export const ecommerceRoutesMap = {
   ecommerce: {
@@ -15,6 +16,11 @@ export const ecommerceRoutesMap = {
   reservas: {
     path: "/ecommerce/reservas",
     name: "Pedidos Programados",
+    action: "GESTION_ECOMMERCE",
+  },
+  catalogoPromos: {
+    path: "/ecommerce/catalogo-promos",
+    name: "Catálogo y Promociones",
     action: "GESTION_ECOMMERCE",
   },
   repartidores: {
@@ -38,6 +44,11 @@ const ecommerceRoutes = [
   {
     path: ecommerceRoutesMap.reservas.path,
     element: <ReservasPage />,
+    auth: authRoles.admin,
+  },
+  {
+    path: ecommerceRoutesMap.catalogoPromos.path,
+    element: <CatalogoPromosPage />,
     auth: authRoles.admin,
   },
   {
