@@ -1,7 +1,10 @@
 import {
   Campaign,
   Close,
+  CloudUpload,
   ConfirmationNumber,
+  Delete,
+  Image as ImageIcon,
   LocalOffer,
   NewReleases,
   NotificationsActive,
@@ -87,7 +90,63 @@ export const SendBroadcastDialog: FC<SendBroadcastDialogProps> = ({
   const [message, setMessage] = useState<string>('')
   const [couponCode, setCouponCode] = useState<string>('')
   const [imageUrl, setImageUrl] = useState<string>('')
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false)
   const [sending, setSending] = useState<boolean>(false)
+
+  const handleUploadImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return
+    const file = e.target.files[0]
+
+    if (!file.type.startsWith('image/')) {
+      Swal.fire('Formato no válido', 'Por favor selecciona un archivo de imagen válido (.jpg, .png, .webp).', 'warning')
+      return
+    }
+
+    try {
+      setUploadingImage(true)
+      const token = localStorage.getItem('accessToken') || ''
+      let rawUrl =
+        (import.meta as any).env.VITE_ISI_API_INBOX_URL ||
+        (import.meta as any).env.ISI_API_INBOX_URL ||
+        'https://api-ecommerce.isipaid.net/api'
+      if (rawUrl.startsWith('/')) rawUrl = window.location.origin + rawUrl
+      const base = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl
+      const endpoint = base.endsWith('/api')
+        ? `${base}/upload-image?shop=${shopId}&type=promo`
+        : `${base}/api/upload-image?shop=${shopId}&type=promo`
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': file.type || 'image/jpeg',
+        },
+        body: file,
+      })
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({ error: 'Error al subir imagen' }))
+        throw new Error(errJson.error || `Error ${res.status}`)
+      }
+
+      const data = await res.json()
+      if (data?.url) {
+        setImageUrl(data.url)
+        Swal.fire({
+          icon: 'success',
+          title: '¡Imagen cargada!',
+          text: 'La imagen fue subida y optimizada con éxito en Cloudflare CDN.',
+          timer: 2000,
+          showConfirmButton: false,
+        })
+      }
+    } catch (err: any) {
+      console.error('[SendBroadcastDialog] Error subiendo imagen:', err)
+      Swal.fire('Error al subir imagen', err.message || 'No se pudo subir la imagen al servidor.', 'error')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
 
   // Autocompletar sugerencias amigables al cambiar de tipo
   const handleTypeChange = (
@@ -339,16 +398,59 @@ export const SendBroadcastDialog: FC<SendBroadcastDialogProps> = ({
                 />
               )}
 
-              {/* URL de imagen opcional */}
-              <TextField
-                fullWidth
-                size="small"
-                label="URL de imagen promocional (opcional)"
-                placeholder="https://ejemplo.com/banner-promo.jpg"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                helperText="En teléfonos Android/Desktop se mostrará como banner expandido."
-              />
+              {/* Imagen promocional (Subir o URL) */}
+              <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                  IMAGEN O BANNER PROMOCIONAL (OPCIONAL)
+                </Typography>
+
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    size="small"
+                    startIcon={uploadingImage ? <CircularProgress size={16} /> : <CloudUpload />}
+                    disabled={uploadingImage}
+                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
+                  >
+                    {uploadingImage ? 'Subiendo imagen...' : 'Subir desde mi equipo'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={handleUploadImageFile}
+                    />
+                  </Button>
+
+                  {imageUrl && (
+                    <Button
+                      variant="text"
+                      color="error"
+                      size="small"
+                      startIcon={<Delete />}
+                      onClick={() => setImageUrl('')}
+                      sx={{ textTransform: 'none', fontSize: 12 }}
+                    >
+                      Quitar imagen
+                    </Button>
+                  )}
+                </Stack>
+
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="O pega una URL externa de imagen"
+                  placeholder="https://ejemplo.com/banner-promo.jpg"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  helperText="Se mostrará expandida en notificaciones de Android, Chrome y en la PWA."
+                  slotProps={{
+                    input: {
+                      startAdornment: <ImageIcon sx={{ fontSize: 18, color: '#94a3b8', mr: 1 }} />,
+                    },
+                  }}
+                />
+              </Box>
             </Stack>
           </Grid>
 

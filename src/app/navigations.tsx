@@ -148,6 +148,11 @@ export const navigations: NavigationProps[] = [
         path: ecommerceRoutesMap.catalogoPromos.path,
       },
       {
+        name: 'Cupones de Descuento',
+        iconText: 'CD',
+        path: ecommerceRoutesMap.cupones.path,
+      },
+      {
         name: 'Repartidores',
         iconText: 'RP',
         path: ecommerceRoutesMap.repartidores.path,

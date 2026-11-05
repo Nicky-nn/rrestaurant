@@ -427,7 +427,15 @@ const EcommercePage: React.FC = () => {
               return (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }} key={pedido._id}>
                   <Card
-                    onClick={() => setSelectedPedido({ ...pedido, state: orderState, originalState: pedido.state, metodoPagoInbox: inboxOrder.metodoPago })}
+                    onClick={() => setSelectedPedido({
+                      ...pedido,
+                      state: orderState,
+                      originalState: pedido.state,
+                      metodoPagoInbox: inboxOrder.metodoPago,
+                      couponCode: inboxOrder.couponCode,
+                      descuento: inboxOrder.descuento,
+                      puntosCanjeados: inboxOrder.puntosCanjeados,
+                    })}
                     sx={{
                       borderRadius: '16px',
                       boxShadow: 'none',
@@ -470,6 +478,32 @@ const EcommercePage: React.FC = () => {
                             )}
                             {!isDeliveryOrder && !isLlevarOrder && (
                               <Chip label="SALÓN" size="small" sx={{ height: 18, fontSize: '0.65rem', bgcolor: alpha(theme.palette.text.secondary, 0.1), color: theme.palette.text.secondary, fontWeight: 'bold' }} />
+                            )}
+                            {inboxOrder.couponCode && (
+                              <Chip
+                                label={`🎟️ ${inboxOrder.couponCode}`}
+                                size="small"
+                                sx={{
+                                  height: 18,
+                                  fontSize: '0.65rem',
+                                  bgcolor: alpha(theme.palette.success.main, 0.12),
+                                  color: theme.palette.success.main,
+                                  fontWeight: 'bold',
+                                }}
+                              />
+                            )}
+                            {Number(inboxOrder.puntosCanjeados) > 0 && (
+                              <Chip
+                                label={`⭐ ${inboxOrder.puntosCanjeados} pts`}
+                                size="small"
+                                sx={{
+                                  height: 18,
+                                  fontSize: '0.65rem',
+                                  bgcolor: alpha('#F59E0B', 0.15),
+                                  color: '#D97706',
+                                  fontWeight: 'bold',
+                                }}
+                              />
                             )}
                           </Typography>
                           <Typography

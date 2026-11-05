@@ -240,6 +240,32 @@ const EcommerceCartDrawer: FunctionComponent<EcommerceCartDrawerProps> = ({ open
           </Box>
         )}
 
+        {/* Banner de Cupón o Canje de Puntos aplicado al pedido */}
+        {(pedido as any)?.couponCode && (
+          <Box sx={{ p: 1.5, mx: 2, mb: 1, bgcolor: '#f0fdf4', border: '1px dashed #22c55e', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#16a34a' }}>
+              🎟️ Cupón: {(pedido as any).couponCode}
+            </Typography>
+            {(pedido as any)?.descuento && Number((pedido as any).descuento) > 0 && (
+              <Typography sx={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#16a34a' }}>
+                - Bs. {Number((pedido as any).descuento).toFixed(2)}
+              </Typography>
+            )}
+          </Box>
+        )}
+        {(pedido as any)?.puntosCanjeados && Number((pedido as any).puntosCanjeados) > 0 && (
+          <Box sx={{ p: 1.5, mx: 2, mb: 1, bgcolor: '#fffbeb', border: '1px dashed #f59e0b', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#d97706' }}>
+              ⭐ Canje de Puntos: {(pedido as any).puntosCanjeados} pts
+            </Typography>
+            {(pedido as any)?.descuento && Number((pedido as any).descuento) > 0 && (
+              <Typography sx={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#d97706' }}>
+                - Bs. {Number((pedido as any).descuento).toFixed(2)}
+              </Typography>
+            )}
+          </Box>
+        )}
+
         <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <RrCarrito
             mesaSeleccionada={mesaSeleccionada}
